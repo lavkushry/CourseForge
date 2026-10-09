@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -243,6 +243,47 @@ def build_syllabus(body: CourseBody):
         raise HTTPException(422, str(exc)) from exc
     except Exception as exc:
         raise HTTPException(503, 'Syllabus AI unavailable; check Ollama models') from exc
+
+
+class LearningPathBody(BaseModel):
+    courses: list[str] = Field(min_length=1, max_length=8)
+    goal: str = Field(min_length=3, max_length=180)
+    use_ai: bool = True
+
+
+class PathStepBody(BaseModel):
+    completed: bool
+
+
+@app.get('/api/learning-paths')
+def list_learning_paths():
+    return {'paths': learning_paths.list_paths()}
+
+
+@app.post('/api/learning-paths', status_code=201)
+def create_learning_path(body: LearningPathBody):
+    try:
+        return learning_paths.generate(body.courses, body.goal, use_ai=body.use_ai)
+    except learning_paths.PathInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/learning-paths/{path_id}')
+def get_learning_path(path_id: str):
+    try:
+        return learning_paths.get_path(path_id)
+    except learning_paths.PathNotFound as exc:
+        raise HTTPException(404, 'Learning path not found') from exc
+
+
+@app.put('/api/learning-paths/{path_id}/steps/{step_id}')
+def update_learning_path_step(path_id: str, step_id: str, body: PathStepBody):
+    try:
+        return learning_paths.mark_step(path_id, step_id, body.completed)
+    except learning_paths.PathNotFound as exc:
+        raise HTTPException(404, 'Learning path or step not found') from exc
+    except learning_paths.PathInputError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 class CardCreateBody(CourseBody):
