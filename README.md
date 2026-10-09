@@ -21,6 +21,14 @@ This is an **advanced single-user local prototype**. Unit and media-extraction i
 
 **Deliberate safety limit:** AI can propose other practice exercises in the tutor, but it cannot run arbitrary generated commands. Only pre-reviewed lab templates have executable graders. The Kubernetes lab performs static checks by default; cluster API dry-run is opt-in and does not deploy actual workloads.
 
+## Cross-course prerequisite learning roadmaps (P1)
+
+CourseForge combines existing source-linked course syllabi into a single goal-oriented roadmap. It collapses repeated topics across different courses, retains exact source video timestamps, and suggests prerequisites with local Ollama. Unknown and cyclic dependencies are rejected. A conservative, clearly labeled offline fallback is available.
+
+Open **Learning → Study paths**, generate each source course syllabus, then select up to eight courses and enter a learning goal. Explicitly mark topic steps as complete after understanding them; watching a video does not assert mastery. Saved roadmaps flag source-syllabus changes and preserve unchanged completions on refresh.
+
+See [P1 implementation guide](docs/P1_PREREQUISITE_PATHS.md) for API details, prerequisites, tests and limitations.
+
 ## Requirements
 
 - Mac or Linux computer, ideally 16 GB+ RAM for multiple AI models. A faster CPU/GPU helps significantly.
