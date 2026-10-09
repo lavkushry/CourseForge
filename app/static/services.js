@@ -38,5 +38,8 @@
   const startAssessment = (pathId,stepId,count=3) => request(`/api/learning-paths/${encodeURIComponent(pathId)}/steps/${encodeURIComponent(stepId)}/assessments`,json('POST',{count}));
   const submitAssessment = (id,answers) => request(`/api/assessments/${encodeURIComponent(id)}/attempts`,json('POST',{answers}));
   const assessmentHistory = (pathId,stepId=null) => request(`/api/learning-paths/${encodeURIComponent(pathId)}/assessment-history${stepId?'?step_id='+encodeURIComponent(stepId):''}`);
-  window.CourseForgeServices = Object.freeze({startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  const practiceRecommendations = (id) => request(`/api/learning-paths/${encodeURIComponent(id)}/practice-recommendations`);
+  const practiceHistory = (id,step=null) => request(`/api/learning-paths/${encodeURIComponent(id)}/practice-history${step?'?step_id='+encodeURIComponent(step):''}`);
+  const startRecommendedPractice = (id,step,slug) => request(`/api/learning-paths/${encodeURIComponent(id)}/steps/${encodeURIComponent(step)}/practice/${encodeURIComponent(slug)}/start`,{method:'POST'});
+  window.CourseForgeServices = Object.freeze({practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();

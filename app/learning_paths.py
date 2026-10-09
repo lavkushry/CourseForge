@@ -267,6 +267,12 @@ def get_path(path_id: str, db_path: Path | None = None) -> dict:
     mastery = mastery_for_path(path_id, db_path)
     for step in result['steps']:
         step['mastery'] = mastery.get(step['id'])
+    from .practice import outcomes_for_path
+    practice = outcomes_for_path(path_id, db_path)
+    for step in result['steps']:
+        step['practice'] = practice.get(step['id'], {'attempts': 0, 'passed_labs': [], 'labs': {}})
+    result['lab_attempts'] = sum(item['attempts'] for item in practice.values())
+    result['topics_with_passed_labs'] = sum(bool(item['passed_labs']) for item in practice.values())
     result['assessed_topics'] = len(mastery)
     result['topics_needing_practice'] = sum(x['status'] == 'needs_practice' for x in mastery.values())
     for step in result['steps']:

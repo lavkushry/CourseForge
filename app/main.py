@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -370,6 +370,32 @@ def grade_review(card_id: str, body: GradeBody):
         raise HTTPException(404, 'Review card not found')
 
 
+@app.get('/api/learning-paths/{path_id}/practice-recommendations')
+def practice_recommendations(path_id: str):
+    try:
+        return practice.recommend(path_id)
+    except practice.PracticeNotFound:
+        raise HTTPException(404, 'Learning path not found')
+
+
+@app.get('/api/learning-paths/{path_id}/practice-history')
+def practice_history(path_id: str, step_id: str | None = None):
+    try:
+        return {'attempts': practice.history(path_id, step_id)}
+    except (practice.PracticeNotFound, learning_paths.PathNotFound):
+        raise HTTPException(404, 'Learning path or topic not found')
+
+
+@app.post('/api/learning-paths/{path_id}/steps/{step_id}/practice/{slug}/start', status_code=201)
+def start_recommended_practice(path_id: str, step_id: str, slug: str):
+    try:
+        return practice.start_recommended(path_id, step_id, slug)
+    except (practice.PracticeNotFound, learning_paths.PathNotFound):
+        raise HTTPException(404, 'Learning path, topic, or lab not found')
+    except practice.PracticeInputError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 @app.get('/api/labs')
 def lab_catalog():
     return {'labs':labs.list_labs()}
@@ -412,7 +438,11 @@ class LabSubmitBody(BaseModel):
 @app.post('/api/lab-sessions/{session_id}/submit')
 def submit_lab(session_id: str, body: LabSubmitBody):
     try:
-        return labs.submit_lab(session_id, kind=body.validate_in_kind)
+        result = labs.submit_lab(session_id, kind=body.validate_in_kind)
+        linked = practice.record_verified_grade(session_id, result)
+        if linked:
+            result['practice_attempt'] = linked
+        return result
     except KeyError:
         raise HTTPException(404,'Lab not found')
     except (ValueError, RuntimeError) as exc:

@@ -89,7 +89,7 @@ Start Qdrant and **build the dedicated lab grader image**:
 ```bash
 docker compose up -d
 docker build -f docker/lab.Dockerfile -t courseforge-lab:local .
-# Only required for PySpark exercises (downloads Java and Spark):
+# Required only when running the PySpark exercise (larger download):
 docker build -f docker/lab-spark.Dockerfile -t courseforge-lab-spark:local .
 python scripts/doctor.py
 ```
@@ -256,7 +256,16 @@ Under **Learning → Study paths**, select a saved multi-course roadmap and clic
 
 Read [P1_MASTERY_ASSESSMENTS.md](docs/P1_MASTERY_ASSESSMENTS.md) for endpoints, data model, test coverage, and live-device acceptance steps.
 
-## P1 Step 5 — Practical lab tracks
-CourseForge now includes SQL and PySpark data exercises, Dockerfile and Ansible static assessments, backend request-validation tests, and the existing Python/shell/Kubernetes exercises. Every reviewed grader runs inside a restricted, network-disabled local Docker container. The Spark exercise uses the separate Java + PySpark image and a larger fixed resource budget.
+## P1 Step 5: Expanded practical lab tracks
 
-**Limitations:** Dockerfile and Ansible assessments inspect configuration structure; they do not build images, execute playbooks, or prove production readiness. Real container execution (including Spark) must be verified on your machine using `python scripts/lab_smoke.py` and `python scripts/lab_smoke.py --spark`. This local single-user sandbox is not suitable for hostile remote learners. See `docs/P1_LAB_TRACKS.md`.
+There are eight pre-reviewed exercises. SQL runs fixture-based SELECT queries in a disposable in-memory SQLite database inside restricted Docker. PySpark runs local DataFrame fixtures inside an optional Java + PySpark grading image. Python API request handling and the existing Python and shell exercises use hidden functional fixtures. Dockerfiles and Ansible playbooks are examined with deterministic **static checks only**—their image is not built and their playbook is not executed.
+
+Build the standard image and separate PySpark image as shown above. Configure `LAB_IMAGE` and `LAB_SPARK_IMAGE` if necessary. PySpark grading has 2 GiB/2 CPU limits and 120-second timeout, and all labs prohibit networking, extra capabilities, privilege escalation and writable workspace bind mounts. The UI shows type/level and filters by subject.
+
+**Safety limit:** The grader containers share the local host kernel. They are not hardened isolation for untrusted remote users. Do not expose this single-user FastAPI instance to the public internet. No generated command runs outside the reviewed lab templates. See [`docs/P1_LAB_TRACKS.md`](docs/P1_LAB_TRACKS.md) for grading contracts, fixtures, and real-device smoke tests.
+
+## Adaptive practice — P1 Step 6
+
+The **Study Paths** view now recommends curated labs for topics where your latest concept-check result indicates a gap. Recommendations use deterministic topic matching and separately track graded lab attempts, without claiming that a passed exercise proves concept mastery. The **Labs** view includes a saved-path selector, prioritized exercises, and append-only history of verified grader results. A failed attempt raises retry priority; a pass leads to a recommendation to reassess the concept. Unsupported topics do not receive fabricated labs.
+
+See [`docs/P1_ADAPTIVE_PRACTICE.md`](docs/P1_ADAPTIVE_PRACTICE.md) for API, safety, rubric, and test details. Live Docker/PySpark checks remain an explicit local acceptance requirement.

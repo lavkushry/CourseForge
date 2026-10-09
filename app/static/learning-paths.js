@@ -32,6 +32,9 @@ async function loadLearningPaths(selectedId=null){
 }
 async function showLearningPath(id){
   const path=await services.learningPath(id);activeLearningPath=path.id;
+  const practice=await services.practiceRecommendations(id);
+  const recommendationsByStep=new Map();
+  for(const item of practice.recommendations){if(!recommendationsByStep.has(item.step_id))recommendationsByStep.set(item.step_id,[]);recommendationsByStep.get(item.step_id).push(item);}
   $$('#savedPathList .saved-path').forEach(node=>node.setAttribute('aria-pressed',String(node.dataset.pathId===path.id)));
   $('#crossPathDetail').hidden=false;
   $('#crossPathTitle').textContent=path.goal;
@@ -64,8 +67,10 @@ async function showLearningPath(id){
     assess.addEventListener('click',()=>window.CourseForgeAssessments.begin(path.id,step));
     card.append(assess);
     if(step.watched_sources)card.append(make('p','path-evidence',`${step.watched_sources} source video${step.watched_sources===1?'':'s'} watched. Confirm understanding before marking done.`));
+    window.CourseForgePractice?.decorateStep(card,path,step,recommendationsByStep.get(step.id)||[]);
     list.append(card);
   }
+  window.CourseForgePractice?.showSelectedPath(path.id);
 }
 $('#crossPathForm').addEventListener('submit',async event=>{
   event.preventDefault();

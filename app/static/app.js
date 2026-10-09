@@ -150,32 +150,48 @@ $$('[data-quality]').forEach(button=>button.addEventListener('click',async()=>{i
 $('#reviewSource').addEventListener('click',()=>{if(state.activeCard)openVideo(state.activeCard.video_id,state.activeCard.source_start).catch(err=>toast(err.message,true))});
 let labCatalogCache=[];
 function paintLabCatalog(){
- const list=$('#labCatalog');list.setAttribute('aria-busy','false');list.replaceChildren();
- const filtered=labCatalogCache.filter(l=>$('#labCategoryFilter').value==='all'||l.category===$('#labCategoryFilter').value);
- if(!filtered.length){list.append(make('p','muted','No exercises found for this category.'));return;}
- for(const lab of filtered){
-  const button=make('button','lab-card');button.type='button';button.setAttribute('aria-label','Start '+lab.title);
-  const symbol=make('span','lab-symbol');symbol.append(icon('code'));button.append(symbol);
-  button.append(make('span','lab-meta',(lab.category||'Practice')+' · '+(lab.level||'Guided')));
-  button.append(make('strong','',lab.title));button.append(make('small','',lab.objective));
-  button.append(make('span','lab-cta',lab.type==='static'?'Check configuration →':'Start practice →'));
-  button.addEventListener('click',async()=>{try{
-   const session=await request('/api/labs/'+encodeURIComponent(lab.slug)+'/start',{method:'POST'});
-   state.currentLab=session;$('#labEditor').hidden=false;$('#labTitle').textContent=session.title;
-   $('#labObjective').textContent=session.objective;$('#labFilename').textContent=session.filename+' · Session '+session.session_id;
-   $('#labCode').value=session.content;$('#kindCheck').parentElement.hidden=session.type!=='kubernetes';
-   $('#kindCheck').checked=false;$('#labResult').replaceChildren();
-   $$('.lab-card').forEach(x=>x.classList.remove('selected'));button.classList.add('selected');
-   $('#labEditor').scrollIntoView({behavior:'smooth',block:'start'});
-  }catch(err){toast(err.message,true)}});
-  list.append(button);
- }
+  const list=$('#labCatalog');list.setAttribute('aria-busy','false');list.replaceChildren();
+  const choice=$('#labCategoryFilter').value;
+  const filtered=labCatalogCache.filter(lab=>choice==='all'||lab.category===choice);
+  if(!filtered.length){list.append(make('p','muted','No exercises in this category.'));return;}
+  for(const lab of filtered){
+    const button=make('button','lab-card');button.type='button';
+    button.setAttribute('aria-label',`Start ${lab.title}`);
+    const symbol=make('span','lab-symbol');symbol.append(icon('code'));button.append(symbol);
+    button.append(make('span','lab-meta',`${lab.category||'Practice'} · ${lab.level||'Guided'}`));
+    button.append(make('strong','',lab.title));button.append(make('small','',lab.objective));
+    button.append(make('span','lab-cta',lab.type==='static'?'Check configuration →':'Start practice →'));
+    button.addEventListener('click',async()=>{try{
+      const session=await request(`/api/labs/${encodeURIComponent(lab.slug)}/start`,{method:'POST'});
+      activateLabSession(session,button);
+    }catch(err){toast(err.message,true)}});
+    list.append(button);
+  }
 }
+function activateLabSession(session,selectedButton=null){
+  state.currentLab=session;
+  navigate('labs',true);
+  $('#labEditor').hidden=false;
+  $('#labTitle').textContent=session.title;
+  $('#labObjective').textContent=session.objective;
+  $('#labFilename').textContent=`${session.filename} · Session ${session.session_id}`;
+  $('#labCode').value=session.content;
+  $('#kindCheck').parentElement.hidden=session.type!=='kubernetes';
+  $('#kindCheck').checked=false;
+  $('#labResult').replaceChildren();
+  $$('.lab-card').forEach(x=>x.classList.remove('selected'));
+  if(selectedButton)selectedButton.classList.add('selected');
+  if(session.practice_context){
+    $('#labResult').textContent='Linked practice for your learning path. Only a verified grader result updates the practice history.';
+  }
+  $('#labEditor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+window.CourseForgeLabs=Object.freeze({openSession:activateLabSession});
 async function loadLabs(){const {labs}=await request('/api/labs');labCatalogCache=labs;paintLabCatalog();}
 $('#labCategoryFilter').addEventListener('change',paintLabCatalog);
 async function saveLab(){if(!state.currentLab)return;return request(`/api/lab-sessions/${state.currentLab.session_id}/file`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:$('#labCode').value})});}
 $('#saveLabBtn').addEventListener('click',async()=>{try{await saveLab();toast('Solution saved locally.')}catch(err){toast(err.message,true)}});
-$('#submitLabBtn').addEventListener('click',async()=>{if(!state.currentLab)return;const btn=$('#submitLabBtn');btn.disabled=true;$('#labResult').textContent=state.currentLab.type==='static'?'Running static safety checks in Docker…':'Running checks in isolated Docker…';try{await saveLab();const result=await request(`/api/lab-sessions/${state.currentLab.session_id}/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({validate_in_kind:$('#kindCheck').checked})});const target=$('#labResult');target.replaceChildren();target.append(make('strong','',result.passed?'All checks passed':'Some checks need attention'));for(const check of result.checks||[])target.append(make('div','grade-check',`${check.passed?'PASS':'FAIL'} · ${check.name}${check.details?' — '+check.details:''}`));if(result.kind)target.append(make('div','grade-check',result.kind.skipped?result.kind.reason:result.kind.details));}catch(err){$('#labResult').textContent=err.message}finally{btn.disabled=false}});
+$('#submitLabBtn').addEventListener('click',async()=>{if(!state.currentLab)return;const btn=$('#submitLabBtn');btn.disabled=true;$('#labResult').textContent=state.currentLab.type==='static'?'Running static safety checks in restricted Docker…':'Running tests in isolated Docker…';try{await saveLab();const result=await request(`/api/lab-sessions/${state.currentLab.session_id}/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({validate_in_kind:$('#kindCheck').checked})});const target=$('#labResult');target.replaceChildren();target.append(make('strong','',result.passed?'All checks passed':'Some checks need attention'));for(const check of result.checks||[])target.append(make('div','grade-check',`${check.passed?'PASS':'FAIL'} · ${check.name}${check.details?' — '+check.details:''}`));if(result.kind)target.append(make('div','grade-check',result.kind.skipped?result.kind.reason:result.kind.details));if(result.practice_attempt){target.append(make('p','muted',result.practice_attempt.passed?'Verified practice pass saved. Take another topic check to confirm understanding.':'Practice attempt saved. Review failed checks and retry.'));window.dispatchEvent(new CustomEvent('courseforge:practicegraded',{detail:result.practice_attempt}));}}catch(err){$('#labResult').textContent=err.message}finally{btn.disabled=false}});
 
 // Analytics reflect actual persisted self-reviews and completions, not speculative scores.
 async function loadInsights(){
@@ -222,7 +238,7 @@ $('#conceptCheckBtn').addEventListener('click',()=>{state.mode='quiz';$$('.mode'
 function recordConceptSignal(signal){const answer=state.lastAnswer;if(!answer)return;try{const history=JSON.parse(localStorage.getItem('courseforge-concept-feedback')||'[]');history.unshift({feedback:signal,summary:answer.slice(0,120),date:new Date().toISOString()});localStorage.setItem('courseforge-concept-feedback',JSON.stringify(history.slice(0,60)));}catch{}toast(signal==='confident'?'Confidence recorded on this device.':'Marked for extra practice on this device. Review the cited lecture next.');}
 $('#conceptConfident').addEventListener('click',()=>recordConceptSignal('confident'));
 $('#conceptUnsure').addEventListener('click',()=>recordConceptSignal('unsure'));
-function renderPlannedLabs(){const target=$('#plannedLabs');target.replaceChildren();for(const note of ['No external network','No Docker socket or production kubeconfig','Read-only workspace mounts','CPU, memory and timeout limits']){const card=make('div','planned-lab');card.append(make('strong','',note));target.append(card);}}
+function renderPlannedLabs(){const target=$('#plannedLabs');target.replaceChildren();for(const text of ['No external networks', 'No Docker socket or production kubeconfig', 'Read-only solution mounts', 'CPU, memory and execution limits']){const card=make('div','planned-lab');card.append(make('strong','',text));target.append(card);}}
 async function loadSettings(){const result=await request('/api/health');$('#settingsPaths').textContent=`Courses: ${result.courses_dir} · Local data: ${result.data_dir}`;}
 function syncGoal(){let value='30';try{value=localStorage.getItem('courseforge-daily-goal')||'30';}catch{}if(!['15','30','45','60'].includes(value))value='30';$('#goalMinutes').value=value;$('#settingsGoal').value=value;}
 for(const selector of ['#goalMinutes','#settingsGoal'])$(selector).addEventListener('change',event=>{const value=event.target.value;try{localStorage.setItem('courseforge-daily-goal',value)}catch{}syncGoal();toast(`Daily target set to ${value} minutes on this device.`)});
