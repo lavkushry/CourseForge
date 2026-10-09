@@ -1,127 +1,94 @@
+/* P1 · cross-course learning roadmap; complements v3 without altering the core player. */
 'use strict';
-/* P1 cross-course paths: progressive enhancement over CourseForge Studio v3. */
 (() => {
-  const $ = s => document.querySelector(s);
-  const $$ = s => [...document.querySelectorAll(s)];
-  const api = window.CourseForgeServices;
-  let activeId = null;
-  const node = (tag, cls='', value='') => {
-    const el = document.createElement(tag);
-    if(cls) el.className=cls;
-    if(value) el.textContent=value;
-    return el;
-  };
-  const time = s => {
-    const n=Math.max(0,Math.floor(Number(s)||0));
-    return [Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(x=>String(x).padStart(2,'0')).join(':');
-  };
-  const report = err => toast(err.message||String(err),true);
-  function courseChoices() {
-    const target=$('#pathCourseChoices');
-    const old=new Set($$('#pathCourseChoices input:checked').map(x=>x.value));
-    target.replaceChildren();
-    const eligible=groupCourses().filter(x=>x.indexed);
-    if(!eligible.length) {
-      target.append(node('p','muted','Import and index your videos first, then build each course syllabus below.'));
-      return;
-    }
-    for(const course of eligible) {
-      const label=node('label','path-course-option');
-      const input=node('input');input.type='checkbox';input.value=course.name;
-      input.checked=old.has(course.name);
-      label.append(input,node('span','',course.title||course.name));
-      target.append(label);
-    }
+let activeLearningPath=null;
+function renderPathCourseChoices(){
+  const list=$('#pathCourseChoices');
+  const chosen=new Set($$('#pathCourseChoices input:checked').map(el=>el.value));
+  list.replaceChildren();
+  const available=groupCourses().filter(c=>c.indexed);
+  if(!available.length){list.append(make('p','muted','No indexed courses yet. Scan and process lectures, then generate each course syllabus below.'));return;}
+  for(const course of available){
+    const label=make('label','path-course-option');
+    const box=make('input');box.type='checkbox';box.value=course.name;box.checked=chosen.has(course.name);
+    label.append(box,make('span','',course.title||course.name));list.append(label);
   }
-  async function loadPaths(preferred=null) {
-    const {paths}=await api.learningPaths();
-    const target=$('#savedPathList');target.replaceChildren();
-    if(!paths.length) {
-      target.append(node('p','muted','No saved roadmaps yet. Build individual course syllabi, then create a combined plan.'));
-      $('#crossPathDetail').hidden=true;
-      return;
-    }
-    for(const path of paths) {
-      const button=node('button','saved-path');
-      button.type='button';button.dataset.pathId=path.id;
-      button.append(node('strong','',path.goal));
-      button.append(node('small','',path.courses.length+' courses · '+path.steps.length+' topics · '+path.completion_percent+'% complete'+(path.outdated?' · Refresh needed':'')));
-      button.addEventListener('click',()=>showPath(path.id).catch(report));
-      target.append(button);
-    }
-    const picked=paths.find(x=>x.id===(preferred||activeId))||paths[0];
-    await showPath(picked.id);
+}
+function pathStatusMessage(message){$('#crossPathHint').textContent=message;}
+async function loadLearningPaths(selectedId=null){
+  const {paths}=await services.learningPaths();
+  const target=$('#savedPathList');target.replaceChildren();
+  if(!paths.length){target.append(make('p','muted','No saved roadmaps yet. Generate individual syllabi first, then build a combined plan.'));$('#crossPathDetail').hidden=true;return;}
+  for(const path of paths){
+    const button=make('button','saved-path');button.type='button';button.dataset.pathId=path.id;
+    button.append(make('strong','',path.goal));
+    button.append(make('small','',`${path.courses.length} courses · ${path.steps.length} topics · ${path.completion_percent}% completed${path.outdated?' · Needs refresh':''}`));
+    button.setAttribute('aria-pressed',String((selectedId||activeLearningPath)===path.id));
+    button.addEventListener('click',()=>showLearningPath(path.id).catch(err=>toast(err.message,true)));
+    target.append(button);
   }
-  async function showPath(id) {
-    const path=await api.learningPath(id);
-    activeId=path.id;
-    $$('#savedPathList .saved-path').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.pathId===id)));
-    $('#crossPathDetail').hidden=false;
-    $('#crossPathTitle').textContent=path.goal;
-    $('#crossPathMeta').textContent=path.courses.join(' + ')+' · '+path.steps.length+' unique topics · '+path.topics_collapsed+' overlaps grouped · '+(path.inference==='ai'?'AI-suggested prerequisites':'Conservative local rules');
-    $('#crossPathPercent').textContent=path.completion_percent+'%';
-    $('#crossPathProgressBar').style.width=path.completion_percent+'%';
-    $('#crossPathHint').textContent=path.outdated
-      ? 'One or more source syllabi changed. Rebuild this roadmap to incorporate the latest lessons.'
-      : 'Mark a step complete when you understand it. Watching a video does not automatically establish mastery.';
-    const target=$('#crossPathSteps');target.replaceChildren();
-    const lookup=new Map(path.steps.map(s=>[s.id,s]));
-    for(const step of path.steps) {
-      const unlocked=step.prerequisites.every(p=>lookup.get(p)?.completed);
-      const card=node('article','cross-step'+(step.completed?' complete':''));
-      const header=node('div','cross-step-head'),description=node('div');
-      description.append(node('span','step-index','STEP '+String(step.order).padStart(2,'0')+(step.goal_focus?' · Goal focus':'')));
-      description.append(node('h4','',step.title));
-      const done=node('label','path-check'),checkbox=node('input');
-      checkbox.type='checkbox';checkbox.checked=Boolean(step.completed);
-      checkbox.disabled=!unlocked&&!step.completed;
-      checkbox.setAttribute('aria-label','Mark '+step.title+(step.completed?' incomplete':' complete'));
-      checkbox.addEventListener('change',async()=>{
-        const value=checkbox.checked;checkbox.disabled=true;
-        try {
-          await api.completeLearningStep(path.id,step.id,value);
-          await loadPaths(path.id);
-        } catch(err) {
-          checkbox.checked=!value;checkbox.disabled=false;report(err);
-        }
-      });
-      done.append(checkbox,node('span','',step.completed?'Done':unlocked?'Mark done':'Locked'));
-      header.append(description,done);card.append(header);
-      if(step.objectives?.length)card.append(node('p','cross-objectives',step.objectives.join(' · ')));
-      if(step.prerequisites.length)card.append(node('p','path-prereqs','Requires: '+step.prerequisites.map(p=>lookup.get(p)?.title||'Unknown').join(', ')));
-      const sources=node('div','cross-references');
-      for(const source of step.sources) {
-        const btn=node('button','source-chip',source.course+' · '+source.video_title+' · '+time(source.start));
-        btn.type='button';
-        btn.addEventListener('click',()=>openVideo(source.video_id,source.start).catch(report));
-        sources.append(btn);
-      }
-      card.append(sources);
-      if(step.watched_sources)card.append(node('p','path-evidence',step.watched_sources+' supporting source video(s) watched; confirm your understanding.'));
-      target.append(card);
-    }
+  const chosen=paths.find(x=>x.id===(selectedId||activeLearningPath))||paths[0];
+  await showLearningPath(chosen.id);
+}
+async function showLearningPath(id){
+  const path=await services.learningPath(id);activeLearningPath=path.id;
+  $$('#savedPathList .saved-path').forEach(node=>node.setAttribute('aria-pressed',String(node.dataset.pathId===path.id)));
+  $('#crossPathDetail').hidden=false;
+  $('#crossPathTitle').textContent=path.goal;
+  $('#crossPathMeta').textContent=`${path.courses.join(' + ')} · ${path.steps.length} unique topics · ${path.topics_collapsed} redundant sources grouped · ${path.inference==='ai'?'AI-suggested dependencies':'Conservative local rules'}`;
+  $('#crossPathPercent').textContent=path.completion_percent+'%';
+  $('#crossPathProgressBar').style.width=path.completion_percent+'%';
+  pathStatusMessage(path.outdated?'Some source syllabi changed. Rebuild this path to include the latest indexed topics.':'Complete prerequisites first. Watched video links do not automatically mark a concept as mastered.');
+  const list=$('#crossPathSteps');list.replaceChildren();
+  const lookup=new Map(path.steps.map(s=>[s.id,s]));
+  for(const step of path.steps){
+    const unlocked=step.prerequisites.every(pre=>lookup.get(pre)?.completed);
+    const card=make('article','cross-step'+(step.completed?' complete':''));
+    const top=make('div','cross-step-head');
+    const title=make('div');title.append(make('span','step-index',`STEP ${String(step.order).padStart(2,'0')}${step.goal_focus?' · Goal focus':''}`),make('h4','',step.title));
+    const done=make('label','path-check');
+    const box=make('input');box.type='checkbox';box.checked=Boolean(step.completed);box.disabled=!unlocked&&!step.completed;box.setAttribute('aria-label',`Mark ${step.title} ${step.completed?'incomplete':'complete'}`);
+    box.addEventListener('change',async()=>{box.disabled=true;try{const updated=await services.completeLearningStep(path.id,step.id,box.checked);await showLearningPath(updated.id);await loadLearningPaths(updated.id);}catch(err){toast(err.message,true);box.checked=!box.checked;box.disabled=false;}});
+    done.append(box,make('span','',step.completed?'Done':unlocked?'Mark done':'Locked'));
+    top.append(title,done);card.append(top);
+    if(step.objectives?.length)card.append(make('p','cross-objectives',step.objectives.join(' · ')));
+    if(step.prerequisites.length){const req=make('p','path-prereqs','Requires: '+step.prerequisites.map(k=>lookup.get(k)?.title||'Unknown').join(', '));card.append(req)}
+    const refs=make('div','cross-references');
+    for(const source of step.sources){const btn=make('button','source-chip',`${source.course} · ${source.video_title} · ${prettyTime(source.start)}`);btn.type='button';btn.addEventListener('click',()=>openVideo(source.video_id,source.start).catch(err=>toast(err.message,true)));refs.append(btn)}
+    card.append(refs);
+    const mastery=step.mastery;
+    const signal=make('div','assessment-topic-signal',mastery?`Latest practice: ${mastery.last_score}% · ${mastery.attempts} attempt${mastery.attempts===1?'':'s'} · ${mastery.status.replaceAll('_',' ')}`:'Not assessed yet');
+    card.append(signal);
+    const assess=make('button','btn btn-outline assessment-trigger',mastery?'Try another topic check':'Assess this topic');
+    assess.type='button';assess.dataset.assessStep=step.id;
+    assess.addEventListener('click',()=>window.CourseForgeAssessments.begin(path.id,step));
+    card.append(assess);
+    if(step.watched_sources)card.append(make('p','path-evidence',`${step.watched_sources} source video${step.watched_sources===1?'':'s'} watched. Confirm understanding before marking done.`));
+    list.append(card);
   }
-  $('#crossPathForm').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const courses=$$('#pathCourseChoices input:checked').map(x=>x.value);
-    if(!courses.length)return toast('Select an indexed course first.',true);
-    if(courses.length>8)return toast('Choose up to eight courses.',true);
-    const button=$('#createPathBtn');button.disabled=true;
-    button.textContent='Planning topic prerequisites…';
-    try {
-      const path=await api.createLearningPath(courses,$('#pathGoal').value.trim(),$('#pathUseAI').checked);
-      await loadPaths(path.id);
-      toast(path.steps.length+' source-linked concepts ready.');
-    } catch(err) {report(err)}
-    finally {button.disabled=false;button.textContent='Build cross-course roadmap →'}
-  });
-  $('#reloadPathsBtn').addEventListener('click',()=>loadPaths().catch(report));
-  function refresh() {
-    courseChoices();
-    loadPaths().catch(report);
-  }
-  $$('[data-nav="syllabus"]').forEach(button=>button.addEventListener('click',refresh));
-  window.addEventListener('hashchange',()=>{if(location.hash==='#syllabus')refresh()});
-  // The core v3 library load starts asynchronously in app.js.
-  loadLibrary().then(()=>{courseChoices();loadPaths().catch(report)}).catch(report);
+}
+$('#crossPathForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const courses=$$('#pathCourseChoices input:checked').map(x=>x.value);
+  if(!courses.length)return toast('Select one or more indexed courses with generated syllabi.',true);
+  if(courses.length>8)return toast('Choose at most eight courses.',true);
+  const button=$('#createPathBtn');button.disabled=true;button.textContent='Planning topics and prerequisites…';
+  try{const path=await services.createLearningPath(courses,$('#pathGoal').value.trim(),$('#pathUseAI').checked);
+    await loadLearningPaths(path.id);toast(`${path.steps.length} source-linked steps ready.`);
+  }catch(err){toast(err.message,true)}finally{button.disabled=false;button.textContent='Build cross-course roadmap →'}
+});
+$('#reloadPathsBtn').addEventListener('click',()=>loadLearningPaths().catch(err=>toast(err.message,true)));
+
+async function initCrossPaths(){
+  try {await loadLibrary();renderPathCourseChoices();await loadLearningPaths();}
+  catch(err){toast(err.message,true)}
+}
+$$('[data-nav="syllabus"]').forEach(button=>button.addEventListener('click',()=>{
+  renderPathCourseChoices();loadLearningPaths().catch(err=>toast(err.message,true));
+}));
+window.addEventListener('hashchange',()=>{if(location.hash==='#syllabus'){
+  renderPathCourseChoices();loadLearningPaths().catch(err=>toast(err.message,true));
+}});
+window.CourseForgeLearningPaths = Object.freeze({show:showLearningPath});
+initCrossPaths();
 })();

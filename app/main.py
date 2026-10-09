@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -283,6 +283,58 @@ def update_learning_path_step(path_id: str, step_id: str, body: PathStepBody):
     except learning_paths.PathNotFound as exc:
         raise HTTPException(404, 'Learning path or step not found') from exc
     except learning_paths.PathInputError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+class AssessmentCreateBody(BaseModel):
+    count: int = Field(default=3, ge=3, le=5)
+
+
+class AssessmentAnswersBody(BaseModel):
+    answers: dict[str, int] = Field(min_length=3, max_length=5)
+
+
+@app.post('/api/learning-paths/{path_id}/steps/{step_id}/assessments', status_code=201)
+def create_topic_assessment(path_id: str, step_id: str, body: AssessmentCreateBody):
+    try:
+        return assessments.create(path_id, step_id, count=body.count)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except assessments.AssessmentInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(503, 'Assessment AI unavailable. Check Ollama and indexed lecture content.') from exc
+
+
+@app.get('/api/assessments/{assessment_id}')
+def get_topic_assessment(assessment_id: str):
+    try:
+        return assessments.get(assessment_id)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.post('/api/assessments/{assessment_id}/attempts', status_code=201)
+def submit_topic_assessment(assessment_id: str, body: AssessmentAnswersBody):
+    try:
+        return assessments.submit(assessment_id, body.answers)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except assessments.AssessmentInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/learning-paths/{path_id}/assessment-history')
+def topic_assessment_history(path_id: str, step_id: str | None = None):
+    try:
+        return {'attempts': assessments.history(path_id, step_id)}
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
         raise HTTPException(409, str(exc)) from exc
 
 

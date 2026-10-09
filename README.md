@@ -21,13 +21,14 @@ This is an **advanced single-user local prototype**. Unit and media-extraction i
 
 **Deliberate safety limit:** AI can propose other practice exercises in the tutor, but it cannot run arbitrary generated commands. Only pre-reviewed lab templates have executable graders. The Kubernetes lab performs static checks by default; cluster API dry-run is opt-in and does not deploy actual workloads.
 
-## Cross-course prerequisite learning roadmaps (P1)
 
-CourseForge combines existing source-linked course syllabi into a single goal-oriented roadmap. It collapses repeated topics across different courses, retains exact source video timestamps, and suggests prerequisites with local Ollama. Unknown and cyclic dependencies are rejected. A conservative, clearly labeled offline fallback is available.
+## P1: Cross-course, prerequisite-aware learning roadmaps
 
-Open **Learning → Study paths**, generate each source course syllabus, then select up to eight courses and enter a learning goal. Explicitly mark topic steps as complete after understanding them; watching a video does not assert mastery. Saved roadmaps flag source-syllabus changes and preserve unchanged completions on refresh.
+CourseForge can combine existing source-linked course syllabi into a single goal-oriented path, merge repeated topics across different courses, and suggest prerequisites without fabricating lectures. From **Learning → Study paths**, build each course syllabus first; then select up to eight courses, enter a concrete goal, and build a combined roadmap.
 
-See [P1 implementation guide](docs/P1_PREREQUISITE_PATHS.md) for API details, prerequisites, tests and limitations.
+Saved roadmaps preserve exact lecture timestamps and your explicit step completions. Inferred prerequisite edges are validated against known topic IDs and cycles are rejected. Watching a source video does **not** automatically claim you mastered its concept. The planner defaults to local Ollama suggestions and labels conservative local-rule fallback when Ollama is unavailable.
+
+Read [`docs/P1_PREREQUISITE_PATHS.md`](docs/P1_PREREQUISITE_PATHS.md) for API details, source-fidelity constraints, testing and limitations.
 
 ## Requirements
 
@@ -246,3 +247,9 @@ For a real-device confidence check before deploying this release, use the [P0 va
 Open **Library → Edit details** on a course card to edit its title, instructor, category, tags, or cover image. Course covers are generated from video frames when possible and cached under `DATA_DIR/covers`. Custom images are stored locally after validation and re-encoding; there are no external thumbnail downloads or invented metadata. Library filters/search respect saved categories and tags. Original folder names remain the stable internal course IDs, so saved lesson progress and source references are preserved.
 
 API and testing details: [`docs/P1_COURSE_CATALOG.md`](docs/P1_COURSE_CATALOG.md).
+
+## P1 Step 4: Topic-level assessments
+
+Under **Learning → Study paths**, select a saved multi-course roadmap and click **Assess this topic**. CourseForge generates a short, source-linked multiple-choice knowledge check from indexed lecture excerpts via your local Ollama model. Complete the questions to see deterministic grading, feedback, suggested video timestamps and your latest per-topic practice signal. Results and attempt history persist in SQLite. Quiz scores do **not** automatically complete roadmap steps, and AI-authored explanations may require verification against the original recording. No questions are invented when course excerpts or the local model are unavailable.
+
+Read [P1_MASTERY_ASSESSMENTS.md](docs/P1_MASTERY_ASSESSMENTS.md) for endpoints, data model, test coverage, and live-device acceptance steps.
