@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>CourseForge — Local AI Learning</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><span class="logo">CF</span><div><strong>CourseForge</strong><small>LOCAL AI LEARNING STUDIO</small></div></div>
+    <div class="header-right"><span class="privacy">● Everything stays local</span><button id="scanBtn" class="btn btn-primary">↻ Scan Library</button></div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header"><span class="eyebrow">YOUR LIBRARY</span><span id="countLabel" class="count">0 videos</span></div>
+      <div id="courseList" class="courses"></div>
+      <div class="sidebar-footer"><span class="eyebrow">IMPORT STATUS</span><div id="jobSummary" class="job-summary">No jobs yet</div><button id="refreshBtn" class="btn btn-subtle full">Refresh status</button></div>
+    </aside>
+    <main class="content">
+      <div class="welcome">
+        <div><div class="eyebrow highlight">YOUR LEARNING COMMAND CENTER</div><h1>Learn the knowledge.<br><em>Skip the repetition.</em></h1><p>Ask questions across your local video library, find the original lecture, and practice with AI-generated labs.</p></div>
+        <div class="stat-grid"><div class="stat"><b id="statVideos">0</b><span>Videos</span></div><div class="stat"><b id="statIndexed">0</b><span>Indexed</span></div><div class="stat"><b id="statCourses">0</b><span>Courses</span></div></div>
+      </div>
+      <div class="workspace">
+        <section class="tutor-panel">
+          <div class="section-title"><div><span class="eyebrow">YOUR PERSONAL INSTRUCTOR</span><h2>Ask your courses</h2></div><div class="dot">AI</div></div>
+          <div class="scope-row"><label for="scope">Search scope</label><select id="scope"><option value="all">Entire library</option></select></div>
+          <div class="modes" role="group" aria-label="Learning mode">
+            <button class="mode active" data-mode="explain">Explain</button><button class="mode" data-mode="notes">Notes</button><button class="mode" data-mode="quiz">Quiz</button><button class="mode" data-mode="lab">Hands-on lab</button>
+          </div>
+          <form id="askForm" class="question-box"><textarea id="question" placeholder="e.g. Teach me Kubernetes Services using my course material, then give me a mini lab..." rows="4" required minlength="2"></textarea><div class="question-footer"><span>Answers link back to lecture timestamps</span><button id="askBtn" class="btn btn-primary" type="submit">Ask Tutor ↗</button></div></form>
+          <div id="notice" role="status" aria-live="polite"></div>
+          <div id="answerPanel" hidden><div class="answer-label"><span class="eyebrow highlight">TUTOR RESPONSE</span><button id="copyBtn" class="btn btn-subtle">Copy</button></div><pre id="answer"></pre><h3>Evidence from your courses</h3><div id="sources" class="source-list"></div></div>
+        </section>
+        <section class="media-panel"><div class="section-title"><div><span class="eyebrow">SOURCE EXPLORER</span><h2>Lecture player</h2></div></div><div id="emptyPlayer" class="empty-player"><div class="play-icon">▶</div><strong>Select a lecture or citation</strong><p>Open any video and jump to the section the AI referenced.</p></div><video id="player" controls preload="metadata" hidden></video><div id="playingDetails" class="playing-details" hidden><div class="eyebrow">NOW VIEWING</div><h3 id="playingTitle"></h3><div id="playingCourse" class="meta"></div><div class="toolbar"><button id="reindexBtn" class="btn btn-subtle">Reindex this lecture</button><button id="markCompleteBtn" class="btn btn-subtle">Mark completed</button></div><h4>Lecture timeline</h4><div id="timeline" class="timeline"></div></div><div class="note">OCR reads visible words, code and terminal output. Changed screenshots can be interpreted by your local Ollama vision model; open the source for verification.</div></section>
+      </div>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
