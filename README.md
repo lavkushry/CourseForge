@@ -232,3 +232,7 @@ gh auth login
 ```
 
 The script publishes to `lavkushry/courseforge-local`. It refuses to overwrite an existing repository or remote. The GitHub connection in ChatGPT can push code to an existing repository, but it cannot create new repositories. As an alternative, create an empty private `courseforge-local` repository at https://github.com/new, then ask ChatGPT to publish the source using the connected GitHub tool.
+
+## P0 end-to-end acceptance gate
+
+For a real-device confidence check before deploying this release, use the [P0 validation runbook](docs/P0_VALIDATION.md). Run `python scripts/validate_local.py --video-id "VIDEO_ID" --lab-smoke --real-inference` after indexing a short lecture. It verifies local service readiness, HTTP Range playback, source timestamps and notes, a restricted Docker grader, and genuine Whisper/Ollama/Qdrant processing. Live AI/model checks **cannot run in GitHub-hosted CI** and must be completed with your own video files and local models. Do not merge solely on the basis of the mocked-model CI suite.
