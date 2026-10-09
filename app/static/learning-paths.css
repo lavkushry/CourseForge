@@ -1,0 +1,48 @@
+/* P1 source-grounded multi-course learning roadmaps, using Studio v3 tokens. */
+.cross-path-panel {margin-bottom:26px;padding:clamp(18px,3vw,29px)}
+.cross-path-panel .panel-top h2 {margin:8px 0;font-size:21px}
+.path-form {display:grid;gap:15px;max-width:990px;margin:19px 0 12px}
+.path-course-fieldset {border:1px solid var(--line);border-radius:12px;padding:13px 15px;min-width:0}
+.path-course-fieldset legend {font-size:12px;font-weight:730;color:var(--ink-soft);padding:0 7px}
+.path-course-choices {display:flex;flex-wrap:wrap;gap:10px;padding:7px 0}
+.path-course-option {display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);border-radius:9px;padding:9px 12px;color:var(--ink-soft);background:var(--surface-2);cursor:pointer;max-width:100%}
+.path-course-option:has(input:checked) {border-color:var(--accent);color:var(--accent-text);background:var(--accent-subtle)}
+.path-course-option span {overflow-wrap:anywhere;font-size:12px;font-weight:700}
+.path-toggle {display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--ink-soft);font-size:12px}
+.path-toggle input,.path-check input,.path-course-option input {accent-color:var(--accent);width:16px;height:16px}
+.path-disclaimer {font-size:11px;line-height:1.6}
+.path-existing {border-top:1px solid var(--line);padding:20px 0}
+.saved-path-list {display:flex;gap:9px;flex-wrap:wrap}
+.saved-path {display:grid;gap:6px;text-align:left;padding:12px 15px;border:1px solid var(--line-strong);background:var(--surface-2);border-radius:12px;max-width:330px;color:var(--ink)}
+.saved-path[aria-pressed="true"] {background:var(--accent-subtle);border-color:var(--accent)}
+.saved-path strong {font-size:13px}
+.saved-path small {font-size:11px;color:var(--muted)}
+.cross-path-detail {border-top:1px solid var(--line);padding-top:20px}
+.path-overview {display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.path-overview h3 {margin:6px 0;font-size:22px}
+.path-overview p {font-size:12px}
+.path-progress {text-align:center;display:grid;gap:2px;padding:10px 16px;border-radius:12px;background:var(--accent-subtle);color:var(--accent-text)}
+.path-progress strong {font-size:22px}
+.path-progress span {font-size:10px;font-weight:650}
+.cross-path-detail>.progress-track {margin:8px 0 15px}
+.cross-path-steps {display:grid;gap:14px;margin-top:22px}
+.cross-step {border:1px solid var(--line);border-radius:15px;background:var(--surface-2);padding:17px 19px}
+.cross-step.complete {border-color:var(--success);background:var(--success-bg)}
+.cross-step-head {display:flex;justify-content:space-between;align-items:start;gap:16px}
+.cross-step h4 {margin:5px 0 10px;font-size:16px;line-height:1.35}
+.step-index {font-weight:800;letter-spacing:.09em;font-size:10px;color:var(--accent-text)}
+.path-check {display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-size:11px;color:var(--ink-soft);font-weight:750}
+.cross-objectives,.path-prereqs,.path-evidence {font-size:11px;line-height:1.55;margin:0 0 10px}
+.path-prereqs {color:var(--accent-text);font-weight:650}
+.cross-references {display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
+.source-chip {max-width:100%;overflow-wrap:anywhere;text-align:left;border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--ink-soft);background:var(--surface)}
+.source-chip:hover {border-color:var(--accent);color:var(--accent-text)}
+@media(max-width:670px) {
+  .cross-path-panel {padding:17px}
+  .cross-step-head {flex-direction:column}
+  .path-form>.btn {white-space:normal}
+  .saved-path {max-width:100%;width:100%}
+}
+@media(prefers-reduced-motion:reduce) {
+  .cross-step,.saved-path,.path-course-option {scroll-behavior:auto;transition:none}
+}
