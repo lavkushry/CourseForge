@@ -77,6 +77,8 @@ def init_db(path: Path | None = None) -> None:
     ensure_schema(path)
     from .labs import ensure_schema as ensure_lab_schema
     ensure_lab_schema(path)
+    from .learning_paths import ensure_schema as ensure_path_schema
+    ensure_path_schema(path)
 
 
 def fetch_videos(path: Path | None = None) -> list[dict]:
