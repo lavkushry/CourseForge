@@ -28,5 +28,11 @@
   const updateCourse = (id,data) => request(`/api/courses/${encodeURIComponent(id)}`,json('PATCH',data));
   const uploadCover = (id,file) => request(`/api/courses/${encodeURIComponent(id)}/cover`,{method:'PUT',headers:{'Content-Type':file.type},body:file});
   const resetCover = (id) => request(`/api/courses/${encodeURIComponent(id)}/cover`,{method:'DELETE'});
-  window.CourseForgeServices = Object.freeze({request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  /** @typedef {{id:string,title:string,order:number,prerequisites:string[],sources:Array<{video_id:string,video_title:string,start:number,course:string}>,completed:boolean,watched_sources:number,goal_focus:boolean}} PathStep */
+  /** @typedef {{id:string,goal:string,courses:string[],steps:PathStep[],inference:string,completion_percent:number,outdated:boolean,next_step_id:string|null}} LearningPath */
+  const learningPaths = () => request('/api/learning-paths');
+  const learningPath = (id) => request(`/api/learning-paths/${encodeURIComponent(id)}`);
+  const createLearningPath = (courses,goal,use_ai=true) => request('/api/learning-paths',json('POST',{courses,goal,use_ai}));
+  const completeLearningStep = (id,step,completed) => request(`/api/learning-paths/${encodeURIComponent(id)}/steps/${encodeURIComponent(step)}`,json('PUT',{completed}));
+  window.CourseForgeServices = Object.freeze({learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();
