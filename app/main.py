@@ -24,7 +24,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title='CourseForge Local', version='0.2.0', docs_url='/api/docs',
+app = FastAPI(title='CourseForge Local', version='0.3.0', docs_url='/api/docs',
               redoc_url=None, lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1', '[::1]', 'testserver'])
 
