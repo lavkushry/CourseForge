@@ -118,3 +118,26 @@ button:disabled { opacity:.6;cursor:not-allowed; }
 .chat-turn strong { color:var(--accent-text);font-size:11px; }
 .chat-turn p { color:var(--ink-soft);margin:5px 0 0;overflow-wrap:anywhere; }
 .followup-row .btn { white-space:normal;text-align:left;font-size:11px; }
+
+/* P1 local course catalog editing */
+.course-tile {position:relative;min-width:0;}
+.course-tile .course-card {width:100%;height:100%;display:flex;flex-direction:column;}
+.course-tile .course-body {flex:1;}
+.course-tile .course-cover {overflow:hidden;position:relative;}
+.course-cover-img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;}
+.course-cover.has-image .cover-label {position:relative;z-index:2;background:rgba(18,23,38,.82);color:#fff;border-radius:6px;padding:4px 8px;}
+.course-cover.has-image .cover-symbol {opacity:0;}
+.course-edit-btn {position:absolute;z-index:3;top:10px;right:10px;border-radius:7px;padding:7px 10px;border:1px solid rgba(255,255,255,.36);background:rgba(19,24,45,.92);color:white;font-size:11px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.15);cursor:pointer;}
+.course-edit-btn:hover,.course-edit-btn:focus-visible {background:#2e3460;outline:2px solid #a2b4ff;outline-offset:2px;}
+.course-tags {display:flex;gap:5px;flex-wrap:wrap;margin:5px 0 10px;}
+.course-tag {border-radius:5px;background:var(--accent-subtle);color:var(--accent-text);font-size:10px;padding:3px 6px;}
+.course-edit-dialog {color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);width:min(570px,calc(100vw - 30px));max-height:min(90vh,840px);padding:0;}
+.course-edit-dialog::backdrop {background:rgba(9,14,30,.7);backdrop-filter:blur(3px);}
+.course-edit-form {display:grid;gap:16px;padding:28px;}
+.course-edit-form .field {min-width:0;max-width:none;}
+.editor-heading h2 {margin:6px 0;font-size:22px;}
+.editor-heading p {margin:0;font-size:12px;}
+.editor-actions {display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+.editor-actions-spacer {flex:1;}
+.field-error {margin:0;color:#e65b5b;font-size:12px;min-height:1em;}
+@media(max-width:670px){.course-edit-form {padding:18px;} .editor-actions-spacer {display:none;} }

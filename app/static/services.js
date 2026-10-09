@@ -22,9 +22,11 @@
   const notes = (id) => request(`/api/videos/${encodeURIComponent(id)}/notes`);
   const saveNote = (id, position, content) => request(`/api/videos/${encodeURIComponent(id)}/notes`, json('POST', {position, content}));
   const deleteNote = (id) => request(`/api/notes/${encodeURIComponent(id)}`, {method:'DELETE'});
-  // TODO: expose optional instructor, author-provided tags, thumbnails and course rating
-  // through a validated local course-manifest API. Never invent these values.
-  /** @returns {{instructor:null,rating:null,thumbnail:null}} */
-  const unavailableCourseMetadata = () => ({instructor:null, rating:null, thumbnail:null});
-  window.CourseForgeServices = Object.freeze({request, json, videos, progress, insights, notes, saveNote, deleteNote, unavailableCourseMetadata});
+  /** @typedef {{id:string,title:string,instructor:string|null,category:string|null,tags:string[],cover_url:string,cover_kind:string|null}} CourseMeta */
+  /** @returns {Promise<{courses:CourseMeta[]}>} */
+  const courses = () => request('/api/courses');
+  const updateCourse = (id,data) => request(`/api/courses/${encodeURIComponent(id)}`,json('PATCH',data));
+  const uploadCover = (id,file) => request(`/api/courses/${encodeURIComponent(id)}/cover`,{method:'PUT',headers:{'Content-Type':file.type},body:file});
+  const resetCover = (id) => request(`/api/courses/${encodeURIComponent(id)}/cover`,{method:'DELETE'});
+  window.CourseForgeServices = Object.freeze({request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();

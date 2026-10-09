@@ -71,6 +71,8 @@ def init_db(path: Path | None = None) -> None:
         CREATE VIRTUAL TABLE IF NOT EXISTS chunk_fts USING fts5(chunk_id UNINDEXED, text);
         ''')
     # Learning schema is idempotent and runs on upgrades without losing existing lectures.
+    from .course_metadata import ensure_schema as ensure_course_schema
+    ensure_course_schema(path)
     from .study import ensure_schema
     ensure_schema(path)
     from .labs import ensure_schema as ensure_lab_schema

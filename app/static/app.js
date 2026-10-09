@@ -3,7 +3,7 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const services = window.CourseForgeServices;
-const state = {videos:[], jobs:[], progress:new Map(), mode:'explain', view:'home', libraryFilter:'all', search:'', selectedId:null, currentVideoId:null, lastAnswer:'', currentLab:null, dueCards:[], activeCard:null, lastSavedPosition:-1, toastTimer:null, insights:null, librarySort:'recent', category:'all', theme:{mode:'system',accent:'indigo'}};
+const state = {videos:[], jobs:[], progress:new Map(), mode:'explain', view:'home', libraryFilter:'all', search:'', selectedId:null, currentVideoId:null, lastAnswer:'', currentLab:null, dueCards:[], activeCard:null, lastSavedPosition:-1, toastTimer:null, insights:null, librarySort:'recent', category:'all', theme:{mode:'system',accent:'indigo'}, courseMeta:new Map(), coverRevision:0, editingCourse:null};
 const prettyTime = (seconds) => {const n=Math.max(0,Math.floor(Number(seconds)||0));return `${String(Math.floor(n/3600)).padStart(2,'0')}:${String(Math.floor(n%3600/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;};
 const icon = (name) => {const el=document.createElementNS('http://www.w3.org/2000/svg','svg');el.setAttribute('class','icon');const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href',`#i-${name}`);el.append(use);return el;};
 const make = (tag,cls='',text='') => {const el=document.createElement(tag);if(cls)el.className=cls;if(text)el.textContent=text;return el;};
@@ -31,19 +31,72 @@ loadTheme();
 $('#todayLabel').textContent=new Intl.DateTimeFormat(undefined,{month:'long',day:'numeric',year:'numeric'}).format(new Date());
 const colorways=[['#493eb8','#9285ed','{ }','ENGINEERING'],['#06685f','#4bd4ac','<>','DEVELOPMENT'],['#d66c39','#f7c68a','01','DATA'],['#305b92','#72aff8','⌘','TECHNOLOGY'],['#903b81','#e39ad2','✦','CREATIVE'],['#414c70','#8797cc','//','COURSE']];
 function coverFor(course){let hash=0;for(const c of course)hash=((hash*31)+c.charCodeAt(0))>>>0;const lower=course.toLowerCase();let index=hash%colorways.length;if(/kubernetes|ansible|docker|devops|cloud|linux/i.test(lower))index=0;if(/java|python|javascript|backend|go\b|program/i.test(lower))index=1;if(/data|sql|spark|databricks|analytics|machine learning/i.test(lower))index=2;return colorways[index];}
-function groupCourses(){const groups=new Map();for(const video of state.videos){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}return [...groups].map(([name,videos])=>{const completed=videos.filter(v=>state.progress.get(v.id)?.completed).length;const watched=videos.reduce((acc,v)=>acc+(state.progress.get(v.id)?.percent||0),0);const percent=Math.round(watched/videos.length);const indexed=videos.filter(v=>v.status==='done').length;const lastActivity=Math.max(...videos.map(v=>Date.parse(state.progress.get(v.id)?.updated_at||'')||0),0);return {name,videos,completed,percent,indexed,lastActivity};}).sort((a,b)=>b.lastActivity-a.lastActivity||a.name.localeCompare(b.name));}
+function groupCourses(){const groups=new Map();for(const video of state.videos){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}return [...groups].map(([name,videos])=>{const completed=videos.filter(v=>state.progress.get(v.id)?.completed).length;const watched=videos.reduce((acc,v)=>acc+(state.progress.get(v.id)?.percent||0),0);const percent=Math.round(watched/videos.length);const indexed=videos.filter(v=>v.status==='done').length;const lastActivity=Math.max(...videos.map(v=>Date.parse(state.progress.get(v.id)?.updated_at||'')||0),0);return {name,videos,completed,percent,indexed,lastActivity,...(state.courseMeta.get(name)||{})};}).sort((a,b)=>b.lastActivity-a.lastActivity||a.name.localeCompare(b.name));}
 function formatDuration(seconds){const n=Number(seconds)||0;const hours=Math.floor(n/3600);const minutes=Math.round((n%3600)/60);return hours?`${hours}h ${minutes}m`:`${minutes}m`;}
 function openCourse(course){const lessons=state.videos.filter(v=>v.course===course.name);$('#lessonCourse').value=course.name;renderLessons();const recent=lessons.find(v=>{const p=state.progress.get(v.id);return p&&!p.completed&&p.percent>0;})||lessons.find(v=>!state.progress.get(v.id)?.completed)||lessons[0];navigate('learning');if(recent)openVideo(recent.id).catch(err=>toast(err.message,true));}
-function buildCourseCard(course){const button=make('button','course-card');button.type='button';button.style.cssText='border:1px solid var(--line);padding:0;text-align:left;color:inherit';const [a,b,symbol,category]=coverFor(course.name);const cover=make('div','course-cover');cover.style.setProperty('--cover-a',a);cover.style.setProperty('--cover-b',b);cover.append(make('span','cover-label',category));cover.append(make('span','cover-symbol',symbol));button.append(cover);const body=make('div','course-body');body.append(make('div','course-category',course.indexed===course.videos.length?'AI-ready learning':'Your local collection'));body.append(make('h3','',course.name));const length=course.videos.reduce((total,v)=>total+(Number(v.duration)||0),0);body.append(make('div','course-meta',`${course.videos.length} lessons · ${formatDuration(length)} of video`));body.append(make('div','course-byline','Local video collection · Not rated'));const topicBadge=make('span','course-topic',courseCategory(course.name));body.append(topicBadge);const line=make('div','course-progress-line');line.append(make('span','',`${course.completed} of ${course.videos.length} completed`));line.append(make('b','',`${course.percent}%`));body.append(line);const progress=make('div','progress-track');const bar=make('span');bar.style.width=course.percent+'%';progress.append(bar);body.append(progress);const bottom=make('div','course-bottom');bottom.append(make('span','',course.percent===100?'Review course':course.percent>0?'Continue learning':'Start learning'));bottom.append(icon('arrow'));body.append(bottom);button.append(body);button.addEventListener('click',()=>openCourse(course));return button;}
+function buildCourseCard(course){
+  const tile=make('div','course-tile');
+  const button=make('button','course-card');button.type='button';button.style.cssText='border:1px solid var(--line);padding:0;text-align:left;color:inherit';
+  const [a,b,symbol,category]=coverFor(course.name);const cover=make('div','course-cover');
+  cover.style.setProperty('--cover-a',a);cover.style.setProperty('--cover-b',b);
+  cover.append(make('span','cover-label',course.category||category));cover.append(make('span','cover-symbol',symbol));
+  if(course.cover_url){const img=make('img','course-cover-img');img.src=course.cover_url+'?rev='+state.coverRevision;img.alt='';img.loading='lazy';img.decoding='async';img.addEventListener('load',()=>cover.classList.add('has-image'));img.addEventListener('error',()=>img.remove());cover.append(img);}
+  button.append(cover);
+  const body=make('div','course-body');
+  body.append(make('div','course-category',course.indexed===course.videos.length?'AI-ready learning':'Your local collection'));
+  body.append(make('h3','',course.title||course.name));
+  const length=course.videos.reduce((total,v)=>total+(Number(v.duration)||0),0);
+  body.append(make('div','course-meta',`${course.videos.length} lessons · ${formatDuration(length)} of video`));
+  body.append(make('div','course-byline',course.instructor?`By ${course.instructor}`:'Instructor not provided'));
+  body.append(make('span','course-topic',course.category||courseCategory(course.name)));
+  if(course.tags?.length){const tags=make('div','course-tags');for(const tag of course.tags.slice(0,3))tags.append(make('span','course-tag',tag));body.append(tags);}
+  const line=make('div','course-progress-line');line.append(make('span','',`${course.completed} of ${course.videos.length} completed`));line.append(make('b','',`${course.percent}%`));body.append(line);
+  const progress=make('div','progress-track');const bar=make('span');bar.style.width=course.percent+'%';progress.append(bar);body.append(progress);
+  const bottom=make('div','course-bottom');bottom.append(make('span','',course.percent===100?'Review course':course.percent>0?'Continue learning':'Start learning'));bottom.append(icon('arrow'));body.append(bottom);
+  button.append(body);button.addEventListener('click',()=>openCourse(course));
+  tile.append(button);
+  if(course.cover_url){const edit=make('button','course-edit-btn','Edit details');edit.type='button';edit.setAttribute('aria-label',`Edit details for ${course.title||course.name}`);edit.addEventListener('click',()=>openCourseEditor(course));tile.append(edit);}
+  return tile;
+}
+function openCourseEditor(course){
+  state.editingCourse=course.name;
+  $('#courseEditTitle').value=course.title||course.name;
+  $('#courseEditInstructor').value=course.instructor||'';
+  $('#courseEditCategory').value=course.category||'';
+  $('#courseEditTags').value=(course.tags||[]).join(', ');
+  $('#courseEditFile').value='';
+  $('#courseCoverReset').hidden=course.cover_kind!=='custom';
+  $('#courseEditError').textContent='';
+  $('#courseEditHeading').textContent=`Edit ${course.title||course.name}`;
+  $('#courseEditDialog').showModal();$('#courseEditTitle').focus();
+}
+$('#courseEditCancel').addEventListener('click',()=>$('#courseEditDialog').close());
+$('#courseEditDialog').addEventListener('close',()=>{state.editingCourse=null;});
+$('#courseEditForm').addEventListener('submit',async event=>{
+  event.preventDefault();const course=state.editingCourse;if(!course)return;
+  const save=$('#courseEditSave');save.disabled=true;$('#courseEditError').textContent='';
+  try{
+    const tags=$('#courseEditTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+    const data={title:$('#courseEditTitle').value.trim(),instructor:$('#courseEditInstructor').value.trim(),category:$('#courseEditCategory').value.trim(),tags};
+    let updated=await services.updateCourse(course,data);
+    const file=$('#courseEditFile').files[0];
+    if(file){if(file.size>4*1024*1024)throw new Error('Image must be smaller than 4 MiB');updated=await services.uploadCover(course,file);}
+    state.courseMeta.set(course,updated);state.coverRevision++;renderCatalog();$('#courseEditDialog').close();toast('Course details updated.');
+  }catch(error){$('#courseEditError').textContent=error.message;}finally{save.disabled=false;}
+});
+$('#courseCoverReset').addEventListener('click',async()=>{
+  const course=state.editingCourse;if(!course)return;
+  try{await services.resetCover(course);const {courses}=await services.courses();state.courseMeta=new Map(courses.map(c=>[c.id,c]));state.coverRevision++;renderCatalog();$('#courseEditDialog').close();toast('Automatic video cover restored.');}catch(error){$('#courseEditError').textContent=error.message;}
+});
 function courseCategory(name){return (/kubernetes|ansible|docker|devops|cloud|linux/i.test(name)?'DevOps':/data|spark|sql|databricks|analytics/i.test(name)?'Data engineering':/java|backend|python|javascript|golang|web/i.test(name)?'Development':'Other');}
 function renderCatalog(){const all=groupCourses();$('#featuredCourses').setAttribute('aria-busy','false');$('#courseCatalog').setAttribute('aria-busy','false');$('#statCourses').textContent=all.length;$('#statVideos').textContent=state.videos.length;$('#statIndexed').textContent=state.videos.filter(v=>v.status==='done').length;$('#statCompleted').textContent=state.videos.filter(v=>state.progress.get(v.id)?.completed).length;$('#sideCourseCount').textContent=all.length;$('#countLabel').textContent=`${state.videos.length} videos`;
   const featured=$('#featuredCourses');featured.replaceChildren();for(const course of all.slice(0,3))featured.append(buildCourseCard(course));if(!all.length){const hint=make('div','panel empty-featured');hint.append(make('h3','','Your learning library starts here'));hint.append(make('p','','Connect your local video folder in .env, then scan to organize your courses.'));const c=make('button','btn btn-primary','Scan my library');c.addEventListener('click',scanLibrary);hint.append(c);featured.append(hint);}
-  const categorySelect=$('#categoryFilter');const categories=[...new Set(all.map(c=>courseCategory(c.name)))].sort();const oldCategory=categorySelect.value;categorySelect.replaceChildren(new Option('All categories','all'));categories.forEach(c=>categorySelect.add(new Option(c,c)));categorySelect.value=categories.includes(oldCategory)?oldCategory:'all';state.category=categorySelect.value;
-  let visible=all.filter(c=>c.name.toLowerCase().includes(state.search)||c.videos.some(v=>v.title.toLowerCase().includes(state.search)));
-  if(state.category!=='all')visible=visible.filter(c=>courseCategory(c.name)===state.category);
+  const categorySelect=$('#categoryFilter');const categories=[...new Set(all.map(c=>c.category||courseCategory(c.name)))].sort();const oldCategory=categorySelect.value;categorySelect.replaceChildren(new Option('All categories','all'));categories.forEach(c=>categorySelect.add(new Option(c,c)));categorySelect.value=categories.includes(oldCategory)?oldCategory:'all';state.category=categorySelect.value;
+  let visible=all.filter(c=>[c.name,c.title||'',c.instructor||'',...(c.tags||[])].some(t=>t.toLowerCase().includes(state.search))||c.videos.some(v=>v.title.toLowerCase().includes(state.search)));
+  if(state.category!=='all')visible=visible.filter(c=>(c.category||courseCategory(c.name))===state.category);
   if(state.libraryFilter==='active')visible=visible.filter(c=>c.percent>0&&c.percent<100);
   if(state.libraryFilter==='completed')visible=visible.filter(c=>c.percent===100);
-  if(state.librarySort==='title')visible.sort((a,b)=>a.name.localeCompare(b.name));else if(state.librarySort==='duration')visible.sort((a,b)=>b.videos.reduce((sum,v)=>sum+(v.duration||0),0)-a.videos.reduce((sum,v)=>sum+(v.duration||0),0));else if(state.librarySort==='progress')visible.sort((a,b)=>b.percent-a.percent);
+  if(state.librarySort==='title')visible.sort((a,b)=>(a.title||a.name).localeCompare(b.title||b.name));else if(state.librarySort==='duration')visible.sort((a,b)=>b.videos.reduce((sum,v)=>sum+(v.duration||0),0)-a.videos.reduce((sum,v)=>sum+(v.duration||0),0));else if(state.librarySort==='progress')visible.sort((a,b)=>b.percent-a.percent);
   $('#libraryCount').textContent=`Showing ${visible.length} of ${all.length} courses`;
   $('#libraryEmpty').hidden=!!visible.length||!!all.length;
   const catalog=$('#courseCatalog');catalog.replaceChildren();for(const course of visible)catalog.append(buildCourseCard(course));if(!visible.length&&all.length){const hint=make('p','muted',state.search?'No courses match your search. Try a different keyword.':'No courses match this filter yet.');catalog.append(hint);}
@@ -55,7 +108,7 @@ function renderLessons(){const course=$('#lessonCourse').value;const list=$('#co
   $('#lessonCount').textContent=`${index} lessons`;
 }
 function renderJobs(){const active=state.jobs.filter(j=>j.status==='processing');const queued=state.jobs.filter(j=>j.status==='queued');const failed=state.jobs.filter(j=>j.status==='failed');$('#jobSummary').textContent=active.length?`Indexing: ${active[0].title}`:queued.length?`${queued.length} queued · ${failed.length} failed`:failed.length?`${failed.length} imports need attention`:'Your library is ready';}
-async function loadLibrary(){const [{videos},{jobs},{progress}]=await Promise.all([request('/api/videos'),request('/api/jobs'),request('/api/progress')]);state.videos=videos;state.jobs=jobs;state.progress=new Map(progress.map(p=>[p.video_id,p]));renderCatalog();renderSelects();renderLessons();renderJobs();}
+async function loadLibrary(){const [{videos},{jobs},{progress},catalog]=await Promise.all([request('/api/videos'),request('/api/jobs'),request('/api/progress'),services.courses().catch(()=>({courses:[]}))]);state.videos=videos;state.jobs=jobs;state.progress=new Map(progress.map(p=>[p.video_id,p]));state.courseMeta=new Map((catalog.courses||[]).map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}
 async function scanLibrary(){for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=true;try{const result=await request('/api/scan',{method:'POST'});await loadLibrary();toast(`Found ${result.found} videos · ${result.imported} new · ${result.changed} changed. Processing continues in the worker.`);}catch(err){toast(err.message,true)}finally{for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=false;}}
 for(const selector of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(selector).addEventListener('click',scanLibrary);
 $('#refreshBtn').addEventListener('click',()=>loadLibrary().catch(err=>toast(err.message,true)));

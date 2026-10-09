@@ -47,4 +47,8 @@ def test_js_service_layer_typed_and_source_linked():
     service=(STATIC/'services.js').read_text()
     for keyword in ('@typedef','/api/videos','/api/progress','/api/studio/insights','/api/notes/'):
         assert keyword in service
-    assert 'unavailableCourseMetadata' in service
+    for keyword in ('/api/courses', 'uploadCover', 'resetCover', 'updateCourse'):
+        assert keyword in service
+    html=(STATIC/'index.html').read_text()
+    for element_id in ('courseEditDialog','courseEditTitle','courseEditInstructor','courseEditCategory','courseEditTags','courseEditFile','courseEditSave'):
+        assert f'id="{element_id}"' in html

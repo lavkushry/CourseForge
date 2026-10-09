@@ -219,20 +219,22 @@ The automated test suite mocks ML model inference and vector DB calls to remain 
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the prior system design and [`docs/V2_IMPLEMENTATION.md`](docs/V2_IMPLEMENTATION.md) for all new service boundaries, SQLite schema changes, endpoints, safety controls, tests and next production-hardening tasks. FastAPI explorer: **http://127.0.0.1:8000/api/docs**.
 
-## Publish the source to your GitHub account
+## v3 interface refresh — CourseForge Learning Studio
 
-If you received the GitHub-ready ZIP, it already contains an initialized Git repository and an initial commit. Course videos, runtime data, model files, local environment settings, private keys and database files are excluded by `.gitignore`.
+The frontend now includes an Overview, searchable My Library, focused Learning Room, AI Tutor, Study Paths, Flashcards and Practice Labs. The prior v2 single-page markup did not contain all study panel controls required by its JavaScript; v3 restores those workflows with dedicated views. The interface has a **light/dark/system** theme switcher and **indigo/teal/rose** accents, saved locally in the browser.
 
-To create a **private** repository and push the full source from macOS:
+There is **no frontend build step**. Run the same local FastAPI and worker commands from the installation section above, then refresh `http://127.0.0.1:8000/`. The theme controls are under the settings icon in the top bar. Use `/` to focus course search. Use **Scan courses** after configuring `COURSES_DIR`; nested lecture folders remain part of their top-level course folder.
 
-```bash
-brew install gh
-gh auth login
-./scripts/publish_github.sh
-```
+To review UI architecture, breakpoints and design tokens, see [`docs/UI_V3.md`](docs/UI_V3.md).
 
-The script publishes to `lavkushry/courseforge-local`. It refuses to overwrite an existing repository or remote. The GitHub connection in ChatGPT can push code to an existing repository, but it cannot create new repositories. As an alternative, create an empty private `courseforge-local` repository at https://github.com/new, then ask ChatGPT to publish the source using the connected GitHub tool.
+This is an original local-course interface informed by common patterns from Coursera and Udemy. It is not an integration with either service and cannot fetch protected courses from those platforms. All course videos must already be present on disk with appropriate access rights.
 
 ## P0 end-to-end acceptance gate
 
 For a real-device confidence check before deploying this release, use the [P0 validation runbook](docs/P0_VALIDATION.md). Run `python scripts/validate_local.py --video-id "VIDEO_ID" --lab-smoke --real-inference` after indexing a short lecture. It verifies local service readiness, HTTP Range playback, source timestamps and notes, a restricted Docker grader, and genuine Whisper/Ollama/Qdrant processing. Live AI/model checks **cannot run in GitHub-hosted CI** and must be completed with your own video files and local models. Do not merge solely on the basis of the mocked-model CI suite.
+
+## P1: Edit local course details and covers
+
+Open **Library → Edit details** on a course card to edit its title, instructor, category, tags, or cover image. Course covers are generated from video frames when possible and cached under `DATA_DIR/covers`. Custom images are stored locally after validation and re-encoding; there are no external thumbnail downloads or invented metadata. Library filters/search respect saved categories and tags. Original folder names remain the stable internal course IDs, so saved lesson progress and source references are preserved.
+
+API and testing details: [`docs/P1_COURSE_CATALOG.md`](docs/P1_COURSE_CATALOG.md).

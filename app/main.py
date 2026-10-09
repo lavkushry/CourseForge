@@ -7,14 +7,14 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .config import settings
 from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio
+from . import syllabus, study, labs, reviews, studio, course_metadata
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -62,6 +62,76 @@ def scan():
 @app.get('/api/videos')
 def videos():
     return {'videos': fetch_videos()}
+
+
+@app.get('/api/courses')
+def courses_catalog():
+    return {'courses': course_metadata.list_courses()}
+
+
+class CourseMetadataBody(BaseModel):
+    title: str | None = Field(default=None, max_length=160)
+    instructor: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, max_length=80)
+    tags: list[str] = Field(default_factory=list, max_length=12)
+
+    @field_validator('tags')
+    @classmethod
+    def validate_tags(cls, tags: list[str]) -> list[str]:
+        cleaned = [tag.strip() for tag in tags]
+        if any(not tag or len(tag) > 32 for tag in cleaned):
+            raise ValueError('Tags must contain 1–32 characters')
+        if len({tag.casefold() for tag in cleaned}) != len(cleaned):
+            raise ValueError('Tags must be unique')
+        return cleaned
+
+
+@app.patch('/api/courses/{course_id}')
+def edit_course(course_id: str, body: CourseMetadataBody):
+    try:
+        return course_metadata.save_course(course_id, body.model_dump(exclude_unset=True))
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+
+
+@app.get('/api/courses/{course_id}/cover')
+def course_cover(course_id: str):
+    try:
+        cover = course_metadata.get_or_generate_cover(course_id)
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    if not cover:
+        raise HTTPException(404, 'No video frame available for thumbnail')
+    return FileResponse(cover, media_type='image/jpeg', headers={'Cache-Control': 'private, no-store'})
+
+
+@app.put('/api/courses/{course_id}/cover')
+async def upload_course_cover(course_id: str, request: Request):
+    if request.headers.get('content-type', '').split(';')[0] not in course_metadata.ALLOWED_MIME:
+        raise HTTPException(415, 'Use a JPEG, PNG or WebP image')
+    # Abort oversized requests while streaming; never buffer unbounded uploads.
+    parts, size = [], 0
+    async for part in request.stream():
+        size += len(part)
+        if size > course_metadata.MAX_IMAGE_BYTES:
+            raise HTTPException(413, 'Cover must be smaller than 4 MiB')
+        parts.append(part)
+    try:
+        course_metadata.set_cover(course_id, b''.join(parts), request.headers['content-type'].split(';')[0])
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return course_metadata.get_course(course_id)
+
+
+@app.delete('/api/courses/{course_id}/cover')
+def remove_course_cover(course_id: str):
+    try:
+        course_metadata.reset_cover(course_id)
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    return {'cover_kind': None}
 
 
 @app.get('/api/jobs')
