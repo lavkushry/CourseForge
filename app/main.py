@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews
+from . import syllabus, study, labs, reviews, studio
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -24,7 +24,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title='CourseForge Local', version='0.2.0', docs_url='/api/docs',
+app = FastAPI(title='CourseForge Local', version='0.3.0', docs_url='/api/docs',
               redoc_url=None, lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1', '[::1]', 'testserver'])
 
@@ -254,3 +254,38 @@ def submit_lab(session_id: str, body: LabSubmitBody):
         raise HTTPException(404,'Lab not found')
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(503,str(exc)) from exc
+
+
+@app.get('/api/studio/insights')
+def studio_insights():
+    return studio.insights()
+
+
+class VideoNoteBody(BaseModel):
+    content: str = Field(min_length=1, max_length=3000)
+    position: float = Field(ge=0, lt=1e9)
+
+
+@app.get('/api/videos/{video_id}/notes')
+def video_notes(video_id: str):
+    if not fetch_video(video_id):
+        raise HTTPException(404, 'Video not found')
+    return {'notes': study.list_notes(video_id)}
+
+
+@app.post('/api/videos/{video_id}/notes', status_code=201)
+def create_video_note(video_id: str, body: VideoNoteBody):
+    try:
+        return study.add_note(video_id, body.position, body.content)
+    except KeyError:
+        raise HTTPException(404, 'Video not found')
+    except ValueError:
+        raise HTTPException(422, 'Invalid note')
+
+
+@app.delete('/api/notes/{note_id}', status_code=204)
+def remove_video_note(note_id: str):
+    try:
+        study.delete_note(note_id)
+    except KeyError:
+        raise HTTPException(404, 'Note not found')

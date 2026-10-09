@@ -23,6 +23,10 @@ def ensure_schema(path: Path | None = None) -> None:
         CREATE TABLE IF NOT EXISTS review_attempts(
           id INTEGER PRIMARY KEY AUTOINCREMENT, card_id TEXT NOT NULL REFERENCES review_cards(id),
           quality INTEGER NOT NULL CHECK(quality BETWEEN 0 AND 5), reviewed_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS video_notes(
+          id TEXT PRIMARY KEY,video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+          position REAL NOT NULL DEFAULT 0,content TEXT NOT NULL,created_at TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS notes_video_idx ON video_notes(video_id,created_at);
         CREATE TABLE IF NOT EXISTS syllabi(
           course TEXT PRIMARY KEY, content_json TEXT NOT NULL,
           generated_at TEXT NOT NULL, source_fingerprint TEXT NOT NULL);
@@ -46,7 +50,8 @@ def set_progress(video_id: str, *, percent: int, position: float, path: Path | N
 def get_progress(course: str | None = None, path: Path | None = None) -> list[dict]:
     with connect(path) as db:
         sql = '''SELECT v.id AS video_id,v.course,v.title,COALESCE(p.percent,0) AS percent,
-                        COALESCE(p.position,0) AS position,COALESCE(p.completed,0) AS completed
+                        COALESCE(p.position,0) AS position,COALESCE(p.completed,0) AS completed,
+                        p.updated_at AS updated_at
                  FROM videos v LEFT JOIN video_progress p ON p.video_id=v.id'''
         params = []
         if course:
@@ -116,3 +121,30 @@ def grade_card(card_id: str, quality: int, *, path: Path | None = None,
         db.execute('INSERT INTO review_attempts(card_id,quality,reviewed_at) VALUES(?,?,?)',
                    (card_id, quality, instant.isoformat(timespec='seconds')))
         return {'id': card_id, 'repetitions': reps, 'interval_days': interval, 'ease': ease, 'due_at': next_due}
+
+
+def list_notes(video_id: str, path: Path | None = None) -> list[dict]:
+    with connect(path) as db:
+        return [dict(r) for r in db.execute(
+            'SELECT id,video_id,position,content,created_at FROM video_notes WHERE video_id=? ORDER BY created_at DESC,id DESC',
+            (video_id,))]
+
+
+def add_note(video_id: str, position: float, content: str, path: Path | None = None) -> dict:
+    if not content.strip() or not 0 <= position < 1e9:
+        raise ValueError('Invalid note')
+    row = {'id': str(uuid4()), 'video_id': video_id, 'position': position,
+           'content': content.strip()[:3000], 'created_at': utcnow()}
+    with connect(path) as db:
+        if not db.execute('SELECT 1 FROM videos WHERE id=?', (video_id,)).fetchone():
+            raise KeyError(video_id)
+        db.execute('''INSERT INTO video_notes(id,video_id,position,content,created_at)
+                      VALUES(:id,:video_id,:position,:content,:created_at)''', row)
+    return row
+
+
+def delete_note(note_id: str, path: Path | None = None) -> None:
+    with connect(path) as db:
+        cursor = db.execute('DELETE FROM video_notes WHERE id=?', (note_id,))
+        if not cursor.rowcount:
+            raise KeyError(note_id)
