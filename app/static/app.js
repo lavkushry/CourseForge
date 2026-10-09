@@ -148,10 +148,34 @@ $('#loadDueBtn').addEventListener('click',()=>loadDue().catch(err=>toast(err.mes
 $('#revealAnswerBtn').addEventListener('click',()=>{$('#reviewAnswer').hidden=false;$('#revealAnswerBtn').hidden=true;$('#reviewGrades').hidden=false});
 $$('[data-quality]').forEach(button=>button.addEventListener('click',async()=>{if(!state.activeCard)return;button.disabled=true;try{await request(`/api/reviews/${state.activeCard.id}/grade`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quality:Number(button.dataset.quality)})});showReview();loadInsights().catch(()=>{});}catch(err){toast(err.message,true)}finally{button.disabled=false}}));
 $('#reviewSource').addEventListener('click',()=>{if(state.activeCard)openVideo(state.activeCard.video_id,state.activeCard.source_start).catch(err=>toast(err.message,true))});
-async function loadLabs(){const {labs}=await request('/api/labs');$('#labCatalog').setAttribute('aria-busy','false');const list=$('#labCatalog');list.replaceChildren();for(const lab of labs){const button=make('button','lab-card');const symbol=make('span','lab-symbol');symbol.append(icon('code'));button.append(symbol);button.append(make('strong','',lab.title));button.append(make('small','',lab.objective));button.append(make('span','lab-cta','Start practice →'));button.addEventListener('click',async()=>{try{const session=await request(`/api/labs/${encodeURIComponent(lab.slug)}/start`,{method:'POST'});state.currentLab=session;$('#labEditor').hidden=false;$('#labTitle').textContent=session.title;$('#labObjective').textContent=session.objective;$('#labFilename').textContent=`${session.filename} · Session ${session.session_id}`;$('#labCode').value=session.content;$('#kindCheck').parentElement.hidden=session.type!=='kubernetes';$('#kindCheck').checked=false;$('#labResult').replaceChildren();$$('.lab-card').forEach(x=>x.classList.remove('selected'));button.classList.add('selected');$('#labEditor').scrollIntoView({behavior:'smooth',block:'start'});}catch(err){toast(err.message,true)}});list.append(button);}}
+let labCatalogCache=[];
+function paintLabCatalog(){
+ const list=$('#labCatalog');list.setAttribute('aria-busy','false');list.replaceChildren();
+ const filtered=labCatalogCache.filter(l=>$('#labCategoryFilter').value==='all'||l.category===$('#labCategoryFilter').value);
+ if(!filtered.length){list.append(make('p','muted','No exercises found for this category.'));return;}
+ for(const lab of filtered){
+  const button=make('button','lab-card');button.type='button';button.setAttribute('aria-label','Start '+lab.title);
+  const symbol=make('span','lab-symbol');symbol.append(icon('code'));button.append(symbol);
+  button.append(make('span','lab-meta',(lab.category||'Practice')+' · '+(lab.level||'Guided')));
+  button.append(make('strong','',lab.title));button.append(make('small','',lab.objective));
+  button.append(make('span','lab-cta',lab.type==='static'?'Check configuration →':'Start practice →'));
+  button.addEventListener('click',async()=>{try{
+   const session=await request('/api/labs/'+encodeURIComponent(lab.slug)+'/start',{method:'POST'});
+   state.currentLab=session;$('#labEditor').hidden=false;$('#labTitle').textContent=session.title;
+   $('#labObjective').textContent=session.objective;$('#labFilename').textContent=session.filename+' · Session '+session.session_id;
+   $('#labCode').value=session.content;$('#kindCheck').parentElement.hidden=session.type!=='kubernetes';
+   $('#kindCheck').checked=false;$('#labResult').replaceChildren();
+   $$('.lab-card').forEach(x=>x.classList.remove('selected'));button.classList.add('selected');
+   $('#labEditor').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){toast(err.message,true)}});
+  list.append(button);
+ }
+}
+async function loadLabs(){const {labs}=await request('/api/labs');labCatalogCache=labs;paintLabCatalog();}
+$('#labCategoryFilter').addEventListener('change',paintLabCatalog);
 async function saveLab(){if(!state.currentLab)return;return request(`/api/lab-sessions/${state.currentLab.session_id}/file`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:$('#labCode').value})});}
 $('#saveLabBtn').addEventListener('click',async()=>{try{await saveLab();toast('Solution saved locally.')}catch(err){toast(err.message,true)}});
-$('#submitLabBtn').addEventListener('click',async()=>{if(!state.currentLab)return;const btn=$('#submitLabBtn');btn.disabled=true;$('#labResult').textContent='Running checks in isolated Docker…';try{await saveLab();const result=await request(`/api/lab-sessions/${state.currentLab.session_id}/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({validate_in_kind:$('#kindCheck').checked})});const target=$('#labResult');target.replaceChildren();target.append(make('strong','',result.passed?'All checks passed':'Some checks need attention'));for(const check of result.checks||[])target.append(make('div','grade-check',`${check.passed?'PASS':'FAIL'} · ${check.name}${check.details?' — '+check.details:''}`));if(result.kind)target.append(make('div','grade-check',result.kind.skipped?result.kind.reason:result.kind.details));}catch(err){$('#labResult').textContent=err.message}finally{btn.disabled=false}});
+$('#submitLabBtn').addEventListener('click',async()=>{if(!state.currentLab)return;const btn=$('#submitLabBtn');btn.disabled=true;$('#labResult').textContent=state.currentLab.type==='static'?'Running static safety checks in Docker…':'Running checks in isolated Docker…';try{await saveLab();const result=await request(`/api/lab-sessions/${state.currentLab.session_id}/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({validate_in_kind:$('#kindCheck').checked})});const target=$('#labResult');target.replaceChildren();target.append(make('strong','',result.passed?'All checks passed':'Some checks need attention'));for(const check of result.checks||[])target.append(make('div','grade-check',`${check.passed?'PASS':'FAIL'} · ${check.name}${check.details?' — '+check.details:''}`));if(result.kind)target.append(make('div','grade-check',result.kind.skipped?result.kind.reason:result.kind.details));}catch(err){$('#labResult').textContent=err.message}finally{btn.disabled=false}});
 
 // Analytics reflect actual persisted self-reviews and completions, not speculative scores.
 async function loadInsights(){
@@ -198,7 +222,7 @@ $('#conceptCheckBtn').addEventListener('click',()=>{state.mode='quiz';$$('.mode'
 function recordConceptSignal(signal){const answer=state.lastAnswer;if(!answer)return;try{const history=JSON.parse(localStorage.getItem('courseforge-concept-feedback')||'[]');history.unshift({feedback:signal,summary:answer.slice(0,120),date:new Date().toISOString()});localStorage.setItem('courseforge-concept-feedback',JSON.stringify(history.slice(0,60)));}catch{}toast(signal==='confident'?'Confidence recorded on this device.':'Marked for extra practice on this device. Review the cited lecture next.');}
 $('#conceptConfident').addEventListener('click',()=>recordConceptSignal('confident'));
 $('#conceptUnsure').addEventListener('click',()=>recordConceptSignal('unsure'));
-function renderPlannedLabs(){const target=$('#plannedLabs');target.replaceChildren();for(const topic of ['SQL','PySpark','Docker','Ansible','Backend engineering']){const card=make('div','planned-lab');card.append(make('strong','',topic));card.append(make('span','tag','Coming soon · grader not available'));target.append(card);}}
+function renderPlannedLabs(){const target=$('#plannedLabs');target.replaceChildren();for(const note of ['No external network','No Docker socket or production kubeconfig','Read-only workspace mounts','CPU, memory and timeout limits']){const card=make('div','planned-lab');card.append(make('strong','',note));target.append(card);}}
 async function loadSettings(){const result=await request('/api/health');$('#settingsPaths').textContent=`Courses: ${result.courses_dir} · Local data: ${result.data_dir}`;}
 function syncGoal(){let value='30';try{value=localStorage.getItem('courseforge-daily-goal')||'30';}catch{}if(!['15','30','45','60'].includes(value))value='30';$('#goalMinutes').value=value;$('#settingsGoal').value=value;}
 for(const selector of ['#goalMinutes','#settingsGoal'])$(selector).addEventListener('change',event=>{const value=event.target.value;try{localStorage.setItem('courseforge-daily-goal',value)}catch{}syncGoal();toast(`Daily target set to ${value} minutes on this device.`)});

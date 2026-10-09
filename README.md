@@ -15,7 +15,7 @@ This is an **advanced single-user local prototype**. Unit and media-extraction i
 | De-duplicated syllabus | Local model extracts topics from sampled lecture excerpts; merges lexical and embedding-similar topics; preserves sources |
 | Watch history | Saves current playback position, percentage and completion locally in SQLite |
 | Spaced repetition | Source-linked flashcards, answer reveal and learner quality 0–5; SM-2 interval scheduling |
-| Verifiable practice | Three **curated** labs: Python, shell and Kubernetes manifest; submit code for automatic tests in a locked-down Docker runner |
+| Verifiable practice | Eight **curated** labs: Python, shell, Kubernetes, SQL, PySpark, Docker, Ansible and backend API; submit code for automatic tests in a locked-down Docker runner |
 | Optional kind check | Kubernetes server-side dry-run in dedicated project-created `courseforge-lab` cluster only; never uses normal kubeconfig |
 | Verification | `pytest`, FFmpeg integration, API tests, grader checks, and an optional real-model E2E CLI |
 
@@ -89,6 +89,8 @@ Start Qdrant and **build the dedicated lab grader image**:
 ```bash
 docker compose up -d
 docker build -f docker/lab.Dockerfile -t courseforge-lab:local .
+# Only required for PySpark exercises (downloads Java and Spark):
+docker build -f docker/lab-spark.Dockerfile -t courseforge-lab-spark:local .
 python scripts/doctor.py
 ```
 
@@ -253,3 +255,8 @@ API and testing details: [`docs/P1_COURSE_CATALOG.md`](docs/P1_COURSE_CATALOG.md
 Under **Learning → Study paths**, select a saved multi-course roadmap and click **Assess this topic**. CourseForge generates a short, source-linked multiple-choice knowledge check from indexed lecture excerpts via your local Ollama model. Complete the questions to see deterministic grading, feedback, suggested video timestamps and your latest per-topic practice signal. Results and attempt history persist in SQLite. Quiz scores do **not** automatically complete roadmap steps, and AI-authored explanations may require verification against the original recording. No questions are invented when course excerpts or the local model are unavailable.
 
 Read [P1_MASTERY_ASSESSMENTS.md](docs/P1_MASTERY_ASSESSMENTS.md) for endpoints, data model, test coverage, and live-device acceptance steps.
+
+## P1 Step 5 — Practical lab tracks
+CourseForge now includes SQL and PySpark data exercises, Dockerfile and Ansible static assessments, backend request-validation tests, and the existing Python/shell/Kubernetes exercises. Every reviewed grader runs inside a restricted, network-disabled local Docker container. The Spark exercise uses the separate Java + PySpark image and a larger fixed resource budget.
+
+**Limitations:** Dockerfile and Ansible assessments inspect configuration structure; they do not build images, execute playbooks, or prove production readiness. Real container execution (including Spark) must be verified on your machine using `python scripts/lab_smoke.py` and `python scripts/lab_smoke.py --spark`. This local single-user sandbox is not suitable for hostile remote learners. See `docs/P1_LAB_TRACKS.md`.

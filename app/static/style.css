@@ -141,3 +141,12 @@ button:disabled { opacity:.6;cursor:not-allowed; }
 .editor-actions-spacer {flex:1;}
 .field-error {margin:0;color:#e65b5b;font-size:12px;min-height:1em;}
 @media(max-width:670px){.course-edit-form {padding:18px;} .editor-actions-spacer {display:none;} }
+
+/* P1.5: hands-on lab catalog */
+.lab-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 20px}
+.lab-controls .input-label{margin:0}
+.lab-controls select{max-width:190px}
+.lab-controls p{flex:1 1 310px;margin:0;font-size:12px}
+.lab-meta{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.lab-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:600px){.lab-controls{align-items:stretch}.lab-controls select{max-width:none;width:100%}}

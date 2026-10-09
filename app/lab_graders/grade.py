@@ -77,8 +77,10 @@ def k8s_lab():
                   selector.get('app')=='learning-api' and port.get('targetPort')==8080)]
 
 
+from tracks import sql_lab, pyspark_lab, docker_lab, ansible_lab, backend_lab
+
 def main():
-    tasks={'python-log-analysis':python_lab,'shell-http-analysis':shell_lab,'k8s-resilient-service':k8s_lab}
+    tasks={'python-log-analysis':python_lab,'shell-http-analysis':shell_lab,'k8s-resilient-service':k8s_lab,'sql-customer-revenue':sql_lab,'pyspark-order-analytics':pyspark_lab,'docker-hardened-service':docker_lab,'ansible-idempotent-web':ansible_lab,'backend-request-handler':backend_lab}
     if len(sys.argv)!=2 or sys.argv[1] not in tasks:
         sys.exit(2)
     try:
