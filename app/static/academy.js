@@ -12,7 +12,7 @@
   const clearMessage=()=>{el('academyMessage').hidden=true;};
   const resetBrowser=()=>{history.replaceState(null,'','/');location.reload();};
   function page(title){
-    leaveLesson();el('appShell').hidden=true;el('academyContent').hidden=false;
+    leaveLesson();document.body.classList.remove('in-learning');el('appShell').hidden=true;el('academyContent').hidden=false;
     const root=el('academyContent');root.replaceChildren(node('h1','',title));clearMessage();return root;
   }
   function table(headers,rows){
@@ -240,12 +240,12 @@
     fetch(`/api/activity/${a.id}/heartbeat`,{method:'POST',keepalive:true,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':account.csrf},body:JSON.stringify({sequence:++a.sequence,visible,elapsed_seconds:elapsed,ended:true})}).catch(()=>{});
   }
   function leaveLesson(){
-    window.CourseForgeNative?.stop();
+    window.CourseForgeStudio?.cancelNext();window.CourseForgeNative?.stop();window.CourseForgePlayerSession?.close();
     stopActivity();window.CourseForgeCancelVideoOpen?.();el('lecturePlayerWrap')?.replaceChildren();
   }
   async function startActivity(id,current=true){
     const eligible=()=>typeof current==='function'?current():current;
-    if(!eligible())return;const r=await api(`/api/videos/${id}/activity-session`,json('POST',{}));
+    if(!eligible())return;const r=await api(`/api/videos/${id}/activity-session`,json('POST',{player_session_id:window.CourseForgePlayerSession?.current()||null}));
     if(!eligible()||state.currentVideoId!==id||el('appShell').hidden||state.view!=='learning')return;
     activity={id:r.id,sequence:0,last:performance.now(),visible:document.visibilityState==='visible',pending:false};
   }

@@ -206,7 +206,7 @@ def test_playback_tokens_are_bound_and_single_use(academy_env,monkeypatch):
     frame=a.get(session['vault_url']);assert frame.status_code==200 and 'iframe' in frame.text
     assert a.get(session['vault_url']).status_code==403
     assert 'frame-ancestors' in frame.headers['content-security-policy']
-    session=a.post('/api/videos/lecture/playback-session',json={}).json()
+    session=a.post('/api/videos/lecture/playback-session',json={'player_session_id':session['player_session_id']}).json()
     with db.connect() as conn:conn.execute("UPDATE playback_sessions SET expires_at='2000-01-01' WHERE user_id=?",(ua['id'],))
     assert a.get(session['vault_url']).status_code==403
     assert a.get('/api/videos/lecture/stream').status_code==409
@@ -277,7 +277,7 @@ def test_upgrade_preserves_pre_account_data(tmp_path,monkeypatch):
     migrations.migrate(p);migrations.migrate(p)
     user=auth.bootstrap_admin('owner@courseforge.test','Owner',PASSWORD,p)
     with db.connect(p) as conn:
-        assert [r[0] for r in conn.execute('SELECT version FROM schema_migrations ORDER BY version')]==[1,2,3]
+        assert [r[0] for r in conn.execute('SELECT version FROM schema_migrations ORDER BY version')]==[1,2,3,4]
         assert conn.execute('SELECT user_id FROM video_notes').fetchone()[0]==user['id']
         assert conn.execute('SELECT percent,position FROM video_progress').fetchone()[:]==(100,50)
         assert conn.execute('SELECT user_id FROM daily_plan_items').fetchone()[0]==user['id']
@@ -400,6 +400,7 @@ def test_console_upgrade_preserves_existing_session_totals_and_device(tmp_path,m
     path=tmp_path/'v1.sqlite3'
     with monkeypatch.context() as m:
         m.setattr(migrations,'migrate_console',lambda *_:None)
+        m.setattr(migrations,'migrate_player_ownership',lambda *_:None)
         db.init_db(path)
     user=auth.bootstrap_admin('owner@courseforge.test','Owner',PASSWORD,path)
     with db.connect(path) as conn:

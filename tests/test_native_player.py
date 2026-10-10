@@ -70,11 +70,7 @@ def test_tracking_separates_pauses_seeks_duplicates_and_tabs(academy_env,monkeyp
     assert event('seeking',100,5,1030)['playing_seconds']==15
     event('seeked',100);event('playing',100)
     assert event('heartbeat',110,10,1040)['playing_seconds']==25
-    second=c.post('/api/videos/lecture/native-session',json={}).json()['id']
-    for seq,pos in [(1,0),(2,10)]:
-        clock[0]=1040+(seq-1)*10
-        r=c.post('/api/player/'+second+'/events',json={'sequence':seq,'event':'playing' if seq==1 else 'heartbeat','position':pos,'duration':120,'elapsed_seconds':0 if seq==1 else 10})
-        assert r.json()['playing_seconds']==0
+    assert c.post('/api/videos/lecture/native-session',json={}).status_code==409
     totals=c.get('/api/me/playback').json()['lessons'][0]
     assert totals['position']==110 and totals['coverage_percent']==20
     assert event('heartbeat',120,10,1050)['playing_seconds']==35
@@ -82,7 +78,7 @@ def test_tracking_separates_pauses_seeks_duplicates_and_tabs(academy_env,monkeyp
     assert event('heartbeat',120,10,1061)['accepted'] is False
     assert c.get(session['media_url']).status_code==403
     assert c.get('/api/admin/playback').status_code==403
-    assert admin.get('/api/admin/playback').json()['total']==2
+    assert admin.get('/api/admin/playback').json()['total']==1
     assert admin.get('/api/admin/playback?course=Private').json()['total']==0
     assert admin.get('/api/admin/users/'+user['id']).json()['playback'][0]['playing_seconds']==35
     exported=admin.get('/api/admin/playback/export')
@@ -147,3 +143,98 @@ def test_cold_stream_is_prepared_before_range_delivery(monkeypatch):
     assert seen==[('POST','api.na-backend.odysee.com'),('HEAD','secure.odycdn.com')]
     native.source_for(info);assert len(seen)==2
     native._SOURCES.clear()
+
+
+def test_tab_takeover_does_not_credit_the_previous_tabs_interval(academy_env,monkeypatch):
+    from app import player_sessions
+    _,_,_,student,_=academy_env;c,_=student();authorize(monkeypatch)
+    clock=[1000.];monkeypatch.setattr(native.time,'time',lambda:clock[0])
+    first=c.post('/api/videos/lecture/native-session',json={}).json()
+    def event(sid,seq,kind,pos,elapsed,at):
+        clock[0]=at
+        r=c.post('/api/player/'+sid+'/events',json={'sequence':seq,'event':kind,'position':pos,
+            'duration':120,'elapsed_seconds':elapsed})
+        assert r.status_code==200,r.text
+        return r.json()
+    event(first['id'],1,'playing',0,0,1000)
+    assert event(first['id'],2,'heartbeat',10,10,1010)['playing_seconds']==10
+    clock[0]=1015
+    conflict=c.post('/api/videos/lecture/player-session',json={})
+    assert conflict.status_code==409
+    shared=c.post('/api/videos/lecture/player-session',json={'take_over':True}).json()['id']
+    second=c.post('/api/videos/lecture/native-session',json={'player_session_id':shared}).json()['id']
+    assert event(first['id'],3,'heartbeat',20,10,1016)['reason']=='ownership_lost'
+    assert native.stream_session_active(first['id']) is False
+    assert event(second,1,'playing',10,5,1021)['playing_seconds']==0
+    assert event(second,2,'heartbeat',20,10,1031)['playing_seconds']==10
+    assert c.get('/api/me/playback').json()['lessons'][0]['playing_seconds']==20
+    duplicate=event(second,2,'heartbeat',20,10,1032)
+    assert duplicate['accepted'] is False and duplicate['reason']=='duplicate'
+    assert duplicate['position']==20 and duplicate['playing_seconds']==10
+    # A disconnected player loses ownership. Reclaim resets its time baseline.
+    assert event(second,3,'heartbeat',60,20,1071)['reason']=='ownership_lost'
+    assert c.post('/api/player-sessions/'+shared+'/claim',json={}).status_code==200
+    assert event(second,4,'heartbeat',60,20,1071)['playing_seconds']==10
+    event(second,5,'playing',60,0,1071)
+    assert event(second,6,'heartbeat',70,10,1081)['playing_seconds']==20
+
+
+def test_live_playback_report_excludes_revoked_course_access(academy_env,monkeypatch):
+    _,_,admin,student,_=academy_env;c,user=student();authorize(monkeypatch)
+    sid=c.post('/api/videos/lecture/native-session',json={}).json()['id']
+    assert c.post('/api/player/'+sid+'/events',json={'sequence':1,'event':'playing',
+        'position':0,'duration':120,'elapsed_seconds':0}).status_code==200
+    assert admin.get('/api/admin/playback?status=live').json()['total']==1
+    assert admin.put('/api/admin/users/'+user['id']+'/enrollments',
+        json={'course':'SQL','enrolled':False}).status_code==200
+    assert admin.get('/api/admin/playback?status=live').json()['total']==0
+    assert admin.get('/api/admin/playback').json()['total']==1
+
+
+def test_heartbeat_recovers_a_lost_pause_event(academy_env,monkeypatch):
+    _,_,admin,student,_=academy_env;c,_=student();authorize(monkeypatch)
+    sid=c.post('/api/videos/lecture/native-session',json={}).json()['id']
+    clock=[1000.];monkeypatch.setattr(native.time,'time',lambda:clock[0])
+    def send(seq,event,pos,elapsed,playback_state=None):
+        body={'sequence':seq,'event':event,'position':pos,'duration':120,'elapsed_seconds':elapsed}
+        if playback_state:body['playback_state']=playback_state
+        r=c.post('/api/player/'+sid+'/events',json=body);assert r.status_code==200,r.text
+        return r.json()
+    send(1,'playing',0,0)
+    clock[0]=1010
+    send(2,'heartbeat',10,10,'playing')
+    assert admin.get('/api/admin/playback?status=live').json()['total']==1
+    # The browser paused, but that transition request never reached the server.
+    clock[0]=1020
+    pause=send(3,'heartbeat',10,0,'pause')
+    assert pause['playing_seconds']==10 and pause['tracking_active'] is False
+    assert admin.get('/api/admin/playback?status=live').json()['total']==0
+    # The next heartbeat also repairs a missing playing transition, without
+    # crediting the unverified interval before its new baseline.
+    clock[0]=1030
+    resume=send(4,'heartbeat',15,5,'playing')
+    assert resume['playing_seconds']==10 and resume['tracking_active'] is True
+    clock[0]=1040
+    assert send(5,'heartbeat',25,10,'playing')['playing_seconds']==20
+
+
+def test_provider_authorization_recovers_a_sleeping_wallet_once(monkeypatch):
+    import httpx
+    from app import media
+    seen=[]
+    def rpc(request):
+        method=json.loads(request.content)['method'];seen.append(method)
+        if len(seen)==1:
+            return httpx.Response(200,json={'error':{'code':-32500,'data':{'name':'ComponentsNotStartedError'},'message':'Wallet not started'}})
+        if method=='status':return httpx.Response(200,json={'result':{'is_running':True}})
+        return httpx.Response(200,json={'result':{'signature':'signed','signing_ts':'1'}})
+    with httpx.Client(transport=httpx.MockTransport(rpc)) as client:
+        assert media.sdk_call(client,'channel_sign',{})['signature']=='signed'
+    assert seen==['channel_sign','status','channel_sign']
+    seen.clear()
+    def failed(request):
+        seen.append(json.loads(request.content)['method'])
+        return httpx.Response(200,json={'error':{'data':{'name':'ComponentsNotStartedError'},'message':'secret account data'}})
+    with httpx.Client(transport=httpx.MockTransport(failed)) as client:
+        with pytest.raises(main.HTTPException) as exc:media.sdk_call(client,'channel_sign',{})
+    assert seen==['channel_sign','status','channel_sign'] and 'secret' not in str(exc.value.detail)

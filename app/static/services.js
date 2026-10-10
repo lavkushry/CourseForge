@@ -12,8 +12,9 @@
     const response = await fetch(path, {...options, headers});
     const body = response.status === 204 ? {} : await response.json().catch(() => ({}));
     if (!response.ok) {
-      const error = new Error(typeof body.detail === 'string' ? body.detail : `Request failed (${response.status})`);
+      const error = new Error(typeof body.detail === 'string' ? body.detail : body.detail?.message || `Request failed (${response.status})`);
       error.status = response.status;
+      error.detail = body.detail;
       if(response.status===401 && window.CourseForgeAccount?.user) window.dispatchEvent(new Event('courseforge-session-expired'));
       throw error;
     }

@@ -57,6 +57,7 @@ def test_workspace_controls_fit_their_containers(browser, width):
         def show(view):
             page.evaluate('''view => {
               document.querySelectorAll('[data-view]').forEach(e=>e.hidden=e.dataset.view!==view);
+              document.body.classList.toggle('in-learning',view==='learning');
             }''', view)
 
         show('library')
@@ -91,12 +92,15 @@ def test_workspace_controls_fit_their_containers(browser, width):
           const wrap=document.createElement('div');wrap.id='lecturePlayerWrap';wrap.className='lecture-player-wrap';
           document.querySelector('.player-shell').append(wrap);
         }''')
+        page.add_script_tag(content=(STATIC / 'player-tracking.js').read_text())
+        page.add_script_tag(type='module',content=(STATIC / 'vendor/media-chrome-4.19.3.js').read_text())
+        page.wait_for_function("!!customElements.get('media-controller')")
         page.add_script_tag(content=(STATIC / 'native-player.js').read_text())
-        page.evaluate('''() => {
+        page.evaluate('''async () => {
           const wrap=document.querySelector('#lecturePlayerWrap');
-          CourseForgeNative.open(wrap,{id:'layout-only',title:'Layout check'},
+          await CourseForgeNative.open(wrap,{id:'layout-only',title:'Layout check'},
             {id:'layout-only',watermark:'Layout check',start_pos:0,media_url:''},()=>{});
-          wrap.append(CourseForgeNative.toolbar());
+
         }''')
         check('native-player toolbar is clipped', '''() => {
           const shell=document.querySelector('.player-shell').getBoundingClientRect();
@@ -107,6 +111,25 @@ def test_workspace_controls_fit_their_containers(browser, width):
           const stage=document.querySelector('.native-player-stage').getBoundingClientRect();
           return Math.abs(stage.width/stage.height-16/9)<.02;
         }''')
+        if width==390:
+            # The real controls must lock for touch and remain unlockable from
+            # a keyboard. A brief accidental touch cannot unlock playback.
+            page.locator('[aria-label="Lock player controls"]').click()
+            assert page.evaluate('CourseForgeNative.locked()')
+            assert page.locator('.native-controls').evaluate('(e)=>e.inert')
+            box=page.locator('.player-unlock').bounding_box()
+            page.mouse.move(box['x']+10,box['y']+10)
+            page.mouse.down()
+            page.wait_for_timeout(200)
+            page.mouse.up()
+            assert page.evaluate('CourseForgeNative.locked()')
+            page.keyboard.press('Escape')
+            assert not page.evaluate('CourseForgeNative.locked()')
+            page.locator('.native-player-stage').focus()
+            page.keyboard.press('l')
+            assert page.evaluate('CourseForgeNative.locked()')
+            page.keyboard.press('Enter')
+            assert not page.evaluate('CourseForgeNative.locked()')
         assert not failures, f'{width}px: ' + '; '.join(failures)
     finally:
         page.close()

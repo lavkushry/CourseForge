@@ -98,6 +98,7 @@ def migrate(path: Path | None = None) -> None:
         if db.execute('SELECT 1 FROM schema_migrations WHERE version=1').fetchone():
             migrate_console(db)
             migrate_player(db)
+            migrate_player_ownership(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -132,6 +133,7 @@ def migrate(path: Path | None = None) -> None:
             db.execute('PRAGMA foreign_keys=ON')
         migrate_console(db)
         migrate_player(db)
+        migrate_player_ownership(db)
 
 
 def migrate_console(db):
@@ -186,6 +188,35 @@ def migrate_player(db):
             duration REAL NOT NULL DEFAULT 0,ranges_json TEXT NOT NULL DEFAULT '[]',updated_at TEXT NOT NULL,
             PRIMARY KEY(user_id,video_id))''')
         db.execute("INSERT INTO schema_migrations VALUES(3,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+
+
+def migrate_player_ownership(db):
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=4').fetchone():return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute("""CREATE TABLE player_sessions(id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            auth_session_id TEXT NOT NULL REFERENCES auth_sessions(id) ON DELETE CASCADE,
+            video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,mode TEXT NOT NULL,
+            expires_at TEXT NOT NULL,created_at TEXT NOT NULL,last_sequence INTEGER NOT NULL DEFAULT 0,
+            closed INTEGER NOT NULL DEFAULT 0)""")
+        db.execute('CREATE INDEX player_session_date ON player_sessions(created_at)')
+        db.execute("""CREATE TABLE player_ownership(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            session_id TEXT NOT NULL REFERENCES player_sessions(id) ON DELETE CASCADE,expires_at REAL NOT NULL)""")
+        db.execute("""CREATE TABLE player_preferences(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            speed REAL NOT NULL DEFAULT 1,autoplay INTEGER NOT NULL DEFAULT 0,theater INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL)""")
+        db.execute('ALTER TABLE native_sessions ADD COLUMN player_session_id TEXT REFERENCES player_sessions(id) ON DELETE SET NULL')
+        db.execute('ALTER TABLE playback_sessions ADD COLUMN player_session_id TEXT REFERENCES player_sessions(id) ON DELETE SET NULL')
+        db.execute('ALTER TABLE activity_sessions ADD COLUMN player_session_id TEXT REFERENCES player_sessions(id) ON DELETE SET NULL')
+        # Old, currently open players must reopen once for the new ownership protocol.
+        db.execute("UPDATE native_sessions SET closed=1,state='closed'")
+        db.execute('UPDATE playback_sessions SET consumed=1')
+        db.execute("INSERT INTO schema_migrations VALUES(4,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
         db.commit()
     except BaseException:
         db.rollback()

@@ -156,8 +156,12 @@ def activity_report(days: int, q: str, course: str, status: str, offset: int, li
         params.extend([needle]*3)
     if course:
         where.append('v.course=?');params.append(course)
-    live = 'l.activity_id=a.id AND l.expires_at>? AND s.expires_at>? AND u.suspended=0'
-    live_params = [time.time(), utcnow()]
+    live = '''a.closed=0 AND l.activity_id=a.id AND l.expires_at>? AND s.expires_at>?
+        AND u.suspended=0 AND u.verified=1 AND (u.role='admin' OR EXISTS (SELECT 1 FROM enrollments e
+        JOIN course_publication p ON p.course=e.course WHERE e.user_id=a.user_id AND e.course=v.course AND p.published=1))
+        AND (a.player_session_id IS NULL OR EXISTS (SELECT 1 FROM player_ownership po JOIN player_sessions ps ON ps.id=po.session_id
+        WHERE po.session_id=a.player_session_id AND ps.closed=0 AND po.expires_at>?))'''
+    live_params = [time.time(), utcnow(), time.time()]
     if status == 'live':
         where.append('('+live+')');params.extend(live_params)
     joins = '''FROM activity_sessions a JOIN users u ON u.id=a.user_id JOIN videos v ON v.id=a.video_id

@@ -81,16 +81,26 @@ def my_learning(request: Request):
             'activity_seconds':seconds,'time_basis':'visible_lesson_activity','completion_basis':'self_reported'}
 
 
+class ActivityOpen(BaseModel):
+    player_session_id: str | None = Field(default=None,max_length=80)
+
+
 @router.post('/api/videos/{video_id}/activity-session',status_code=201)
-def open_activity(video_id: str,request: Request):
+def open_activity(video_id: str,request: Request,body: ActivityOpen=ActivityOpen()):
     user=auth.require_user(request);video=fetch_video(video_id)
     if not video:raise HTTPException(404,'Video not found')
     auth.rate_limit('activity-open:'+user['id'],90,60)
+    psid=body.player_session_id
+    if psid:
+        from . import player_sessions
+        with connect() as db:
+            row=player_sessions.owned(db,psid,user)
+            if row['video_id']!=video_id:raise HTTPException(403,'Player lesson does not match')
     sid='act_'+secrets.token_hex(16);now=time.time()
     with connect() as db:
-        db.execute('''INSERT INTO activity_sessions(id,user_id,auth_session_id,video_id,last_heartbeat,created_at,device,ip)
-            VALUES(?,?,?,?,?,?,?,?)''',(sid,user['id'],user['session_id'],video_id,now,utcnow(),
-            request.headers.get('user-agent','')[:220],auth.client_ip(request)))
+        db.execute('''INSERT INTO activity_sessions(id,user_id,auth_session_id,video_id,last_heartbeat,created_at,device,ip,player_session_id)
+            VALUES(?,?,?,?,?,?,?,?,?)''',(sid,user['id'],user['session_id'],video_id,now,utcnow(),
+            request.headers.get('user-agent','')[:220],auth.client_ip(request),psid))
         db.execute('''INSERT INTO lesson_visits VALUES(?,?,?,?) ON CONFLICT(user_id,course)
             DO UPDATE SET video_id=excluded.video_id,updated_at=excluded.updated_at''',(user['id'],video['course'],video_id,utcnow()))
         db.execute('INSERT OR IGNORE INTO activity_leases VALUES(?,?,?)',(user['id'],sid,now+20))
@@ -119,6 +129,9 @@ def heartbeat(sid: str,body: HeartbeatBody,request: Request):
             return {'activity_seconds':row['activity_seconds'],'accepted':False,'basis':'visible_lesson_activity'}
         lease=db.execute('SELECT * FROM activity_leases WHERE user_id=?',(user['id'],)).fetchone()
         eligible=not lease or lease['expires_at']<=now or lease['activity_id']==sid
+        if row['player_session_id']:
+            from . import player_sessions
+            eligible=eligible and player_sessions.is_owner(db,row['player_session_id'])
         # A gap longer than a normal heartbeat isn't evidence that the lesson
         # stayed visible while the browser was sleeping or disconnected.
         gap=now-row['last_heartbeat']
@@ -387,6 +400,8 @@ def cleanup_records():
         db.execute('DELETE FROM activity_leases WHERE expires_at<?',(time.time(),))
         db.execute('DELETE FROM native_sessions WHERE created_at<?',(cutoff,))
         db.execute('DELETE FROM native_leases WHERE expires_at<?',(time.time(),))
+        db.execute('DELETE FROM player_ownership WHERE expires_at<?',(time.time(),))
+        db.execute('DELETE FROM player_sessions WHERE expires_at<?',(utcnow(),))
         db.execute('DELETE FROM auth_sessions WHERE expires_at<?',(utcnow(),))
         db.execute('DELETE FROM account_tokens WHERE expires_at<?',(utcnow(),))
         db.execute('DELETE FROM playback_sessions WHERE expires_at<?',(utcnow(),))

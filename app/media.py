@@ -115,6 +115,37 @@ def _sync_provider_mappings():
     return {'mapped':mapped,'lectures':total,'mappings_updated':changed,'durations_added':durations,'error':error}
 
 
+def sdk_call(client, method, params):
+    """Recover a sleeping Odysee SDK once, without a client retry loop.
+
+    Odysee's own client calls status before using wallet-backed SDK methods.
+    Never expose the RPC error data: it can contain account identifiers.
+    """
+    for attempt in range(2):
+        response=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m='+method,
+            headers={'X-Lbry-Auth-Token':os.getenv('ODYSEE_AUTH_TOKEN','')},
+            json={'jsonrpc':'2.0','id':1,'method':method,'params':params})
+        response.raise_for_status()
+        payload=response.json()
+        if not isinstance(payload,dict):raise ValueError('Invalid provider response')
+        error=payload.get('error') or {}
+        if not error:
+            result=payload.get('result') or {}
+            if not isinstance(result,dict):raise ValueError('Invalid provider result')
+            return result
+        if not isinstance(error,dict):raise ValueError('Invalid provider error')
+        data=error.get('data') or {}
+        if not isinstance(data,dict):data={}
+        if attempt==0 and data.get('name')=='ComponentsNotStartedError':
+            ready=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=status',
+                headers={'X-Lbry-Auth-Token':os.getenv('ODYSEE_AUTH_TOKEN','')},
+                json={'jsonrpc':'2.0','id':1,'method':'status','params':{}})
+            ready.raise_for_status()
+            continue
+        raise HTTPException(503,'Odysee authorization is temporarily unavailable. Retry shortly.',headers={'Retry-After':'30'})
+    raise HTTPException(503,'Odysee is starting its playback service. Retry shortly.',headers={'Retry-After':'30'})
+
+
 def signed_embed(info: dict) -> str:
     key=(info['claim_name'],info['claim_id']);now=time.time()
     cached=_SIGNATURES.get(key)
@@ -124,10 +155,7 @@ def signed_embed(info: dict) -> str:
         raise HTTPException(503,'Odysee playback is not configured. Please contact the administrator.')
     try:
         with httpx.Client(timeout=8) as client:
-            response=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=channel_sign',
-                headers={'X-Lbry-Auth-Token':token},json={'jsonrpc':'2.0','id':1,'method':'channel_sign',
-                    'params':{'channel_id':channel,'hexdata':info['claim_id'].encode().hex()}})
-            response.raise_for_status();result=response.json().get('result') or {}
+            result=sdk_call(client,'channel_sign',{'channel_id':channel,'hexdata':info['claim_id'].encode().hex()})
             if not result.get('signature') or not result.get('signing_ts'):raise ValueError('No signature')
             url=f"https://odysee.com/$/embed/{quote(info['claim_name'],safe='')}/{quote(info['claim_id'],safe='')}?"+urlencode({'signature':result['signature'],'signature_ts':result['signing_ts']})
             _SIGNATURES[key]=(now+120,url)
@@ -138,6 +166,7 @@ def signed_embed(info: dict) -> str:
 
 class PlaybackBody(BaseModel):
     start_pos: float = Field(default=0,ge=0,lt=1e9,allow_inf_nan=False)
+    player_session_id: str | None = Field(default=None,max_length=80)
 
 
 @router.get('/api/videos/{video_id}/player-capabilities')
@@ -164,15 +193,21 @@ def create_playback(video_id: str, body: PlaybackBody, request: Request):
     except HTTPException:
         learning_event(user['id'],'playback_authorization_failed',video_id,'Provider authorization unavailable')
         raise
+    from . import player_sessions
+    psid=player_sessions.binding(video_id,'embedded',body.player_session_id,request)
     token=secrets.token_urlsafe(32)
     with connect() as db:
-        db.execute('INSERT INTO playback_sessions VALUES(?,?,?,?,?,?,0)',
-            ('pb_'+secrets.token_hex(16),user['id'],user['session_id'],video_id,auth.digest(token),auth.expiry(1)))
+        db.execute('BEGIN IMMEDIATE')
+        if not player_sessions.is_owner(db,psid):raise HTTPException(409,'Playback ownership expired. Reopen the lesson.')
+        db.execute("UPDATE native_sessions SET closed=1,state='closed' WHERE player_session_id=?",(psid,))
+        db.execute("UPDATE player_sessions SET mode='embedded' WHERE id=?",(psid,))
+        db.execute('INSERT INTO playback_sessions(id,user_id,auth_session_id,video_id,token_hash,expires_at,consumed,player_session_id) VALUES(?,?,?,?,?,?,0,?)',
+            ('pb_'+secrets.token_hex(16),user['id'],user['session_id'],video_id,auth.digest(token),auth.expiry(1),psid))
         # Actual frame issuance has a short TTL, independent of the login TTL.
         db.execute("UPDATE playback_sessions SET expires_at=strftime('%Y-%m-%dT%H:%M:%S+00:00','now','+2 minutes') WHERE token_hash=?",(auth.digest(token),))
     learning_event(user['id'],'player_authorized',video_id)
     watermark=f"{user['name']} · {user['id'][-6:]}"
-    return {'vault_url':f'/api/videos/{video_id}/vault-frame?t={token}&start={round(body.start_pos,3)}',
+    return {'player_session_id':psid,'vault_url':f'/api/videos/{video_id}/vault-frame?t={token}&start={round(body.start_pos,3)}',
             'watermark':watermark,'capabilities':CAPABILITIES}
 
 
@@ -185,14 +220,17 @@ def playback_frame(video_id: str,t: str,request: Request,start: float=0):
     if not math.isfinite(start) or not 0<=start<1e9:raise HTTPException(422,'Invalid lesson timestamp')
     with connect() as db:
         db.execute('BEGIN IMMEDIATE')
-        row=db.execute('''SELECT id FROM playback_sessions WHERE token_hash=? AND user_id=?
+        row=db.execute('''SELECT id,player_session_id FROM playback_sessions WHERE token_hash=? AND user_id=?
             AND auth_session_id=? AND video_id=? AND consumed=0 AND expires_at>?''',
             (auth.digest(t),user['id'],user['session_id'],video_id,utcnow())).fetchone()
-        if not row:raise HTTPException(403,'Playback session expired. Reopen the lesson.')
+        from . import player_sessions
+        if not row or not player_sessions.is_owner(db,row['player_session_id']):raise HTTPException(403,'Playback session expired. Reopen the lesson.')
         db.execute('UPDATE playback_sessions SET consumed=1 WHERE id=?',(row['id'],))
     info=provider_info(video)
     if not info:raise HTTPException(409,'Lecture upload unavailable')
     url=html.escape(signed_embed(info)+'&'+urlencode({'t':round(start,3)}),quote=True)
+    with connect() as db:
+        if not player_sessions.is_owner(db,row['player_session_id']):raise HTTPException(403,'Playback ownership ended. Reopen the lesson.')
     from .academy import learning_event
     learning_event(user['id'],'player_frame_opened',video_id,f'Start requested: {round(start,3)}s')
     watermark=html.escape(f"{user['name']} · {user['id'][-6:]}")

@@ -6,7 +6,6 @@ Watching is measured from browser events and cannot establish attention.
 import asyncio
 import json
 import math
-import os
 import re
 import secrets
 import threading
@@ -21,7 +20,7 @@ from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 from starlette.concurrency import run_in_threadpool
 
-from . import auth, media
+from . import auth, media, player_sessions
 from .db import connect, fetch_video, utcnow
 
 router = APIRouter()
@@ -56,12 +55,8 @@ def source_for(info):
         signature = {k:v[0] for k,v in parse_qs(urlsplit(embed).query).items()}
         try:
             with httpx.Client(timeout=10) as client:
-                response = client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=get',
-                    headers={'X-Lbry-Auth-Token':os.getenv('ODYSEE_AUTH_TOKEN','')},
-                    json={'jsonrpc':'2.0','id':1,'method':'get',
-                          'params':{'uri':f"lbry://{info['claim_name']}#{info['claim_id']}", **signature}})
-                response.raise_for_status()
-                source = validate_source((response.json().get('result') or {}).get('streaming_url'))
+                result=media.sdk_call(client,'get',{'uri':f"lbry://{info['claim_name']}#{info['claim_id']}", **signature})
+                source=validate_source(result.get('streaming_url'))
                 # Odysee prepares a stream with HEAD before serving ranges;
                 # requesting bytes first can return 429 for a cold upload.
                 # Follow only approved CDN redirects and stop on rate limits.
@@ -93,17 +88,27 @@ def create_native(video_id: str, body: media.PlaybackBody, request: Request):
     info = media.provider_info(video)
     if not info:raise HTTPException(409, 'This lecture is awaiting its Odysee upload.')
     auth.rate_limit('native-open:'+user['id'], 60, 60)
-    source_for(info)
+    psid=player_sessions.binding(video_id,'native',body.player_session_id,request)
+    try:source_for(info)
+    except HTTPException:
+        from .academy import learning_event
+        learning_event(user['id'],'playback_authorization_failed',video_id,'Provider authorization unavailable')
+        raise
     token = secrets.token_urlsafe(32); sid = 'np_'+secrets.token_hex(16)
     with connect() as db:
+        db.execute('BEGIN IMMEDIATE')
+        if not player_sessions.is_owner(db,psid):raise HTTPException(409,'Playback ownership expired. Reopen the lesson.')
+        db.execute("UPDATE native_sessions SET closed=1,state='closed' WHERE player_session_id=?",(psid,))
+        db.execute('DELETE FROM native_leases WHERE user_id=?',(user['id'],))
+        db.execute("UPDATE player_sessions SET mode='native' WHERE id=?",(psid,))
         db.execute('''INSERT INTO native_sessions(id,user_id,auth_session_id,video_id,token_hash,
-            expires_at,created_at,device,ip,last_heartbeat,position,duration)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)''',
+            expires_at,created_at,device,ip,last_heartbeat,position,duration,player_session_id)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (sid,user['id'],user['session_id'],video_id,auth.digest(token),auth.expiry(6),utcnow(),
-             request.headers.get('user-agent','')[:220],auth.client_ip(request),time.time(),body.start_pos,video['duration'] or 0))
+             request.headers.get('user-agent','')[:220],auth.client_ip(request),time.time(),body.start_pos,video['duration'] or 0,psid))
     from .academy import learning_event
     learning_event(user['id'],'native_player_opened',video_id)
-    return {'id':sid,'media_url':f'/api/videos/{video_id}/media/{sid}?t={token}',
+    return {'id':sid,'player_session_id':psid,'media_url':f'/api/videos/{video_id}/media/{sid}?t={token}',
             'start_pos':body.start_pos,'watermark':f"{user['name']} · {user['id'][-6:]}",
             'capabilities':CAPABILITIES}
 
@@ -114,10 +119,11 @@ def authorize_media(video_id, sid, token, request):
     if not video:raise HTTPException(404, 'Video not found')
     if len(token)>100:raise HTTPException(403, 'Invalid media session')
     with connect() as db:
-        valid = db.execute('''SELECT id FROM native_sessions WHERE id=? AND token_hash=? AND user_id=?
+        valid = db.execute('''SELECT id,player_session_id FROM native_sessions WHERE id=? AND token_hash=? AND user_id=?
             AND auth_session_id=? AND video_id=? AND expires_at>? AND closed=0''',
             (sid,auth.digest(token),user['id'],user['session_id'],video_id,utcnow())).fetchone()
-    if not valid:raise HTTPException(403, 'Media session expired. Reopen the lesson.')
+        active=bool(valid and player_sessions.is_owner(db,valid['player_session_id']))
+    if not active:raise HTTPException(403, 'Media session expired. Reopen the lesson.')
     info = media.provider_info(video)
     if not info:raise HTTPException(409, 'Lecture upload unavailable')
     return source_for(info)
@@ -125,11 +131,11 @@ def authorize_media(video_id, sid, token, request):
 
 def stream_session_active(sid):
     with connect() as db:
-        row=db.execute('''SELECT n.user_id,u.role,v.course FROM native_sessions n
+        row=db.execute('''SELECT n.user_id,u.role,v.course,n.player_session_id FROM native_sessions n
             JOIN auth_sessions s ON s.id=n.auth_session_id JOIN users u ON u.id=n.user_id
             JOIN videos v ON v.id=n.video_id WHERE n.id=? AND n.closed=0 AND n.expires_at>?
             AND s.expires_at>? AND u.verified=1 AND u.suspended=0''',(sid,utcnow(),utcnow())).fetchone()
-        if not row:return False
+        if not row or not player_sessions.is_owner(db,row['player_session_id']):return False
         if row['role']=='admin':return True
         return bool(db.execute('''SELECT 1 FROM enrollments e JOIN course_publication p ON p.course=e.course
             WHERE e.user_id=? AND e.course=? AND p.published=1''',(row['user_id'],row['course'])).fetchone())
@@ -138,6 +144,8 @@ def stream_session_active(sid):
 @router.api_route('/api/videos/{video_id}/media/{sid}', methods=['GET','HEAD'])
 async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(max_length=100)):
     source, embed = await run_in_threadpool(authorize_media, video_id, sid, t, request)
+    if not await run_in_threadpool(stream_session_active,sid):
+        raise HTTPException(403,'Playback ownership ended. Reopen the lesson.')
     range_value = request.headers.get('range','bytes=0-')
     if not re.fullmatch(r'bytes=(?:\d{1,16}-\d{0,16}|-\d{1,16})', range_value):
         raise HTTPException(416, 'One byte range is supported per request.')
@@ -207,6 +215,7 @@ class PlaybackEvent(BaseModel):
     duration: float=Field(ge=0,lt=1e7,allow_inf_nan=False)
     elapsed_seconds: float=Field(ge=0,le=20,allow_inf_nan=False)
     rate: float=Field(default=1,ge=.25,le=4,allow_inf_nan=False)
+    playback_state: Literal['playing','pause','waiting','hidden'] | None = None
 
 
 def merge_range(ranges, start, end):
@@ -232,20 +241,39 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
             (sid,user['id'],user['session_id'])).fetchone()
         if not row:raise HTTPException(404,'Player session not found')
         auth.require_course(user,row['course'])
+        total=db.execute('SELECT * FROM native_totals WHERE user_id=? AND video_id=?',
+            (user['id'],row['video_id'])).fetchone()
+        ranges=json.loads(total['ranges_json']) if total else []
+        lease=db.execute('SELECT * FROM native_leases WHERE user_id=?',(user['id'],)).fetchone()
+        if not player_sessions.is_owner(db,row['player_session_id']):
+            return {'accepted':False,'reason':'ownership_lost','tracking_active':False,'resume_saved':False}
+        if body.event not in ('hidden','closed'):
+            db.execute('UPDATE player_ownership SET expires_at=? WHERE session_id=?',(now+player_sessions.LEASE_SECONDS,row['player_session_id']))
+        eligible=not lease or lease['expires_at']<=now or lease['session_id']==sid
         if row['closed'] or row['expires_at']<=utcnow() or body.sequence<=row['last_sequence']:
-            return {'accepted':False,'playing_seconds':row['playing_seconds']}
+            reason=('closed' if row['closed'] else 'expired' if row['expires_at']<=utcnow()
+                    else 'duplicate' if body.sequence==row['last_sequence'] else 'out_of_order')
+            return {'accepted':False,'reason':reason,'playing_seconds':row['playing_seconds'],
+                'position':row['position'],'coverage_percent':min(100,math.floor(
+                    sum(b-a for a,b in ranges)/row['duration']*100)) if row['duration'] else 0,
+                'tracking_active':reason=='duplicate' and eligible and row['state']=='playing',
+                'resume_saved':reason=='duplicate' and eligible and row['state']!='standby',
+                'basis':'browser_reported_playback'}
         duration=row['measured_duration'] or body.duration or row['duration']
         position=min(body.position,duration) if duration else body.position
         gap=now-row['last_heartbeat'];advance=position-row['position']
-        lease=db.execute('SELECT * FROM native_leases WHERE user_id=?',(user['id'],)).fetchone()
-        eligible=not lease or lease['expires_at']<=now or lease['session_id']==sid
         # A seek can update resume position, but not watched coverage. Playback
         # must move at the declared rate within a normal server heartbeat gap.
         seconds=0
         if eligible and body.event!='seeking' and row['state']=='playing' and 0<gap<=30 and 0<advance<=min(gap,20)*body.rate+1:
             seconds=min(body.elapsed_seconds,gap,advance/body.rate,20)
-        state = (row['state'] if body.event in ('heartbeat','ratechange')
+        state = ((body.playback_state or row['state']) if body.event in ('heartbeat','ratechange')
                  else 'pause' if body.event=='seeked' else body.event)
+        # A waiting tab must establish its own baseline before gaining time.
+        # Otherwise its first heartbeat after takeover can double-count the
+        # interval already recorded by the previous lease holder.
+        if state=='standby':state='playing'
+        if state=='playing' and not eligible:state='standby'
         closed=body.event=='closed'
         if eligible and not closed and state=='playing':
             db.execute('''INSERT INTO native_leases VALUES(?,?,?) ON CONFLICT(user_id)
@@ -254,8 +282,7 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
         db.execute('''UPDATE native_sessions SET last_sequence=?,last_heartbeat=?,position=?,duration=?,
             state=?,playing_seconds=playing_seconds+?,closed=? WHERE id=?''',
             (body.sequence,now,position,duration,state,seconds,int(closed),sid))
-        total=db.execute('SELECT * FROM native_totals WHERE user_id=? AND video_id=?',(user['id'],row['video_id'])).fetchone()
-        ranges=json.loads(total['ranges_json']) if total else []
+        if closed:db.execute('DELETE FROM native_leases WHERE user_id=? AND session_id=?',(user['id'],sid))
         if seconds:ranges=merge_range(ranges,max(row['position'],position-seconds*body.rate),position)
         # Another tab cannot overwrite the active tab's resume position.
         if eligible:
@@ -274,6 +301,7 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
             db.execute('INSERT INTO learning_events(user_id,video_id,event_type,details,created_at) VALUES(?,?,?,?,?)',
                 (user['id'],row['video_id'],'player_'+body.event,f'{position:.1f}s',utcnow()))
     return {'accepted':True,'playing_seconds':row['playing_seconds']+seconds,'position':position,
+            'tracking_active':eligible and state=='playing','resume_saved':eligible,
             'coverage_percent':min(100,math.floor(sum(b-a for a,b in ranges)/duration*100)) if duration else 0,
             'basis':'browser_reported_playback'}
 
@@ -294,6 +322,13 @@ def my_playback(request: Request):
     return {'lessons':playback_totals(user['id']),'basis':'browser_reported_playback'}
 
 
+_LIVE_PLAYBACK = '''EXISTS (SELECT 1 FROM player_ownership po JOIN player_sessions ps ON ps.id=po.session_id
+    WHERE ps.id=n.player_session_id AND ps.closed=0 AND po.expires_at>?) AND n.closed=0 AND n.state='playing' AND l.session_id=n.id AND l.expires_at>?
+    AND s.expires_at>? AND u.verified=1 AND u.suspended=0 AND (u.role='admin' OR EXISTS (
+        SELECT 1 FROM enrollments e JOIN course_publication p ON p.course=e.course
+        WHERE e.user_id=n.user_id AND e.course=v.course AND p.published=1))'''
+
+
 @router.get('/api/admin/playback')
 def playback_report(request: Request, days: int=Query(30,ge=1,le=90),q: str=Query('',max_length=120),
                     offset: int=Query(0,ge=0),limit: int=Query(25,ge=1,le=100),
@@ -308,14 +343,14 @@ def playback_report(request: Request, days: int=Query(30,ge=1,le=90),q: str=Quer
     args=[cutoff,needle,needle,needle]
     if course:where+=' AND v.course=?';args.append(course)
     if status=='live':
-        where+=' AND n.closed=0 AND l.session_id=n.id AND l.expires_at>? AND s.expires_at>? AND u.suspended=0'
-        args.extend([time.time(),utcnow()])
+        where+=' AND ('+_LIVE_PLAYBACK+')'
+        args.extend([time.time(),time.time(),utcnow()])
     with connect() as db:
         count=db.execute('SELECT COUNT(*) '+joins+where,args).fetchone()[0]
         rows=[dict(r) for r in db.execute('''SELECT n.id,n.user_id,u.name,u.email,v.title,v.course,n.state,
             n.playing_seconds,n.position,n.duration,n.device,n.ip,n.created_at,
-            (n.closed=0 AND l.session_id=n.id AND l.expires_at>? AND s.expires_at>? AND u.suspended=0) live '''+
-            joins+where+' ORDER BY n.created_at DESC LIMIT ? OFFSET ?',(time.time(),utcnow(),*args,limit,offset))]
+            COALESCE(('''+_LIVE_PLAYBACK+'''),0) live '''+
+            joins+where+' ORDER BY n.created_at DESC LIMIT ? OFFSET ?',(time.time(),time.time(),utcnow(),*args,limit,offset))]
     return {'sessions':rows,'total':count,'offset':offset,'basis':'Browser-reported playback; does not establish attention.'}
 
 

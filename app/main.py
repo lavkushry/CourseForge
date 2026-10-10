@@ -101,6 +101,8 @@ async def guard_local_actions(request: Request, call_next):
         learner_courses.reset(course_token)
 
 app.include_router(auth.router)
+from .player_sessions import router as player_sessions_router
+app.include_router(player_sessions_router)
 from .academy import router as academy_router, learning_event
 from .tasks import router as task_router, enqueue
 app.include_router(academy_router)
