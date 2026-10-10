@@ -496,6 +496,71 @@ def list_viewer_analytics():
     }
 
 
+@app.get('/api/materials')
+def list_course_materials(course: str | None = None):
+    import os
+    root = settings.courses_dir.resolve()
+    items = []
+    if root.exists():
+        for c_name in sorted(os.listdir(root)):
+            if c_name.startswith('.'):
+                continue
+            if course and c_name != course:
+                continue
+            c_path = root / c_name
+            if not c_path.is_dir():
+                continue
+            for fname in sorted(os.listdir(c_path)):
+                if fname.startswith('.') or fname.lower().endswith('.mp4'):
+                    continue
+                fpath = c_path / fname
+                if not fpath.is_file():
+                    continue
+                ext = fpath.suffix.lower().lstrip('.')
+                items.append({
+                    "course": c_name,
+                    "name": fname,
+                    "ext": ext,
+                    "size_kb": round(fpath.stat().st_size / 1024, 1),
+                    "url": f"/api/materials/{c_name}/{fname}",
+                })
+    return {"materials": items, "total": len(items)}
+
+
+@app.get('/api/materials/{course}/{filename}')
+def get_course_material(course: str, filename: str):
+    import json
+    from fastapi.responses import HTMLResponse
+    root = settings.courses_dir.resolve()
+    target = (root / course / filename).resolve()
+    if not target.is_file() or ".." in course or ".." in filename:
+        raise HTTPException(status_code=404, detail="Study material not found")
+    ext = target.suffix.lower()
+    if ext == '.ipynb':
+        try:
+            nb = json.loads(target.read_text(errors='ignore'))
+            cells_html = []
+            for idx, cell in enumerate(nb.get('cells', []), 1):
+                ctype = cell.get('cell_type', 'code')
+                src = ''.join(cell.get('source', []))
+                import html as _h
+                esc = _h.escape(src)
+                if ctype == 'markdown':
+                    cells_html.append(f"<div style='padding:12px 16px;background:#161f33;border-radius:8px;margin-bottom:10px;white-space:pre-wrap;line-height:1.5'>{esc}</div>")
+                else:
+                    cells_html.append(f"<div style='margin-bottom:10px'><div style='font-size:11px;color:#74c0fc;margin-bottom:4px'>In [{idx}]:</div><pre style='margin:0;padding:12px;background:#0b0f19;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:auto;color:#e9ecef;font-size:13px'>{esc}</pre></div>")
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{filename}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}</style></head><body><h2>📓 {filename}</h2>{''.join(cells_html)}</body></html>"
+            return HTMLResponse(page)
+        except Exception:
+            pass
+    if ext in ('.py', '.txt', '.sql', '.csv', '.md', '.json'):
+        import html as _h
+        raw = target.read_text(errors='ignore')[:200000]
+        page = f"<!doctype html><html><head><meta charset='utf-8'><title>{filename}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}pre{{background:#0b0f19;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);overflow:auto;font-size:13px;line-height:1.5}}</style></head><body><h2>📄 {filename}</h2><pre>{_h.escape(raw)}</pre></body></html>"
+        return HTMLResponse(page)
+    return FileResponse(target, content_disposition_type='inline')
+
+
 _ODYSEE_CACHE: dict = {"last_sync": 0.0, "by_prefix": {}, "by_name": {}, "embeds": {}}
 
 
