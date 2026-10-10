@@ -53,5 +53,11 @@
   const weeklyCalendar = (week) => request(`/api/planner/weeks/${encodeURIComponent(week)}`);
   const generateWeeklyCalendar = (week_start,tz_offset_minutes,refresh=false) => request('/api/planner/weeks',json('POST',{week_start,tz_offset_minutes,refresh}));
   const savePlannerActual = (id,actual_minutes) => request(`/api/planner/items/${encodeURIComponent(id)}/actual`,json('PUT',{actual_minutes}));
-  window.CourseForgeServices = Object.freeze({weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  /** @typedef {{id:string,mode:'focus'|'break',status:'running'|'paused'|'finished'|'cancelled',duration_seconds:number,elapsed_seconds:number,remaining_seconds:number}} FocusSession */
+  const beginFocus = (body) => request('/api/focus/sessions',json('POST',body));
+  const focusAction = (id,action) => request(`/api/focus/sessions/${encodeURIComponent(id)}/actions`,json('POST',{action}));
+  const activeFocus = () => request('/api/focus/active');
+  const focusHistory = () => request('/api/focus/history');
+  const focusAnalytics = (week,offset) => request(`/api/focus/analytics/${encodeURIComponent(week)}?tz_offset_minutes=${encodeURIComponent(offset)}`);
+  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();

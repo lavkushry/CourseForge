@@ -87,6 +87,8 @@ def init_db(path: Path | None = None) -> None:
     ensure_planner_schema(path)
     from .weekly import ensure_schema as ensure_weekly_schema
     ensure_weekly_schema(path)
+    from .focus import ensure_schema as ensure_focus_schema
+    ensure_focus_schema(path)
 
 
 def fetch_videos(path: Path | None = None) -> list[dict]:
