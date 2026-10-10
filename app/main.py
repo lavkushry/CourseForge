@@ -28,6 +28,7 @@ async def lifespan(_app: FastAPI):
     init_db()
     from .academy import maintenance_loop
     import asyncio
+    _app.state.media_slots = asyncio.Semaphore(24)
     maintenance = asyncio.create_task(maintenance_loop())
     yield
     maintenance.cancel()
@@ -303,6 +304,8 @@ def get_course_material(course: str, filename: str):
 from .media import provider_info as find_odysee_info
 from .media import router as media_router
 app.include_router(media_router)
+from .native_player import router as native_router
+app.include_router(native_router)
 
 
 @app.api_route('/api/videos/{video_id}/stream', methods=['GET', 'HEAD'])

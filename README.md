@@ -2,7 +2,7 @@
 
 **Organize your course library, learn with source-linked AI tools, and manage student access and progress.** Verified accounts protect private notes, study plans, assessments and labs. Published courses support free enrollment. Administrators can inspect learning and access reports, suspend accounts and manage course publication.
 
-For hosting, administrator setup, email configuration and database recovery, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md). Administration includes student invitations, course publishing, player session filters and CSV export, service reports, and an audit log. Invitations let students choose their password without an email service. The player embeds unlisted Odysee uploads and opens notes, bookmarks, and manually saved resume points at their timestamps. Lesson activity and self-reported completion remain separate from verified playback or assessment performance. The AI and Docker tools require their configured local services.
+For hosting, administrator setup, email configuration and database recovery, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md). Administration includes student invitations, course publishing, player session filters and CSV export, service reports, and an audit log. Invitations let students choose their password without an email service. The CourseForge player streams authorized Odysee uploads through an account-bound media gateway, saves resume positions automatically, and records browser-reported playback and content coverage. The embedded fallback keeps manual resume points. Lesson-page activity and self-reported completion remain separate from playback or assessment performance. The AI and Docker tools require their configured local services.
 
 ## Step 10 — Real-device acceptance gate
 
@@ -148,7 +148,7 @@ The de-duplication is approximate, not a guarantee that all paraphrases are equi
 
 ### 3. Track learning and review
 
-Use the embedded player controls to play and seek. CourseForge records visible lesson activity and your explicit completion choice. Enter timestamps when saving notes or bookmarks; selecting one reopens the player at that timestamp. Save a resume point to reopen a lecture at your chosen position. Cross-origin playback does not supply automatic position capture or verified watch time.
+Use the player controls to play, seek, change speed and volume, or enter fullscreen with the viewer watermark. Playback position saves automatically. Use current timestamp fills your note and bookmark forms; selecting a saved reference seeks to that timestamp. Browser-reported playback time and unique content coverage are separate from visible lesson activity and explicit completion. Pauses, seek jumps, duplicate packets and parallel tabs do not add watched time. The embedded fallback supports manual resume points when native delivery is unavailable. Neither mode is encrypted DRM or proof of attention.
 
 Select your course, enter a topic, and click **Generate 5 cards** in **Spaced repetition**. Click **Reveal answer**, self-rate `Again (0)`, `Hard (3)`, `Good (4)` or `Easy (5)`. These ratings determine the next due date through an SM-2 style scheduler. Use **Review due cards** on future days. This is *self-rated* active recall, not objective answer grading; check original sources for accuracy.
 

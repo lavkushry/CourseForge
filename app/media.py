@@ -143,7 +143,8 @@ class PlaybackBody(BaseModel):
 @router.get('/api/videos/{video_id}/player-capabilities')
 def capabilities(video_id: str):
     if not fetch_video(video_id):raise HTTPException(404,'Video not found')
-    return CAPABILITIES
+    from .native_player import CAPABILITIES as native_capabilities
+    return dict(native_capabilities, embedded_fallback=CAPABILITIES)
 
 
 @router.post('/api/videos/{video_id}/vault-session')

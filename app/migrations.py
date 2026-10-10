@@ -97,6 +97,7 @@ def migrate(path: Path | None = None) -> None:
         db.execute('CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY,applied_at TEXT NOT NULL)')
         if db.execute('SELECT 1 FROM schema_migrations WHERE version=1').fetchone():
             migrate_console(db)
+            migrate_player(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -130,6 +131,7 @@ def migrate(path: Path | None = None) -> None:
         finally:
             db.execute('PRAGMA foreign_keys=ON')
         migrate_console(db)
+        migrate_player(db)
 
 
 def migrate_console(db):
@@ -156,6 +158,34 @@ def migrate_console(db):
             last_success TEXT,summary_json TEXT NOT NULL DEFAULT '{}',last_error TEXT NOT NULL DEFAULT '')''')
         db.execute('CREATE INDEX activity_date ON activity_sessions(created_at)')
         db.execute("INSERT INTO schema_migrations VALUES(2,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+
+
+
+def migrate_player(db):
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=3').fetchone():return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute('''CREATE TABLE native_sessions(id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            auth_session_id TEXT NOT NULL,video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+            token_hash TEXT NOT NULL UNIQUE,expires_at TEXT NOT NULL,created_at TEXT NOT NULL,
+            device TEXT NOT NULL,ip TEXT NOT NULL,last_sequence INTEGER NOT NULL DEFAULT 0,
+            last_heartbeat REAL NOT NULL,position REAL NOT NULL DEFAULT 0,duration REAL NOT NULL DEFAULT 0,
+            state TEXT NOT NULL DEFAULT 'ready',playing_seconds REAL NOT NULL DEFAULT 0,
+            closed INTEGER NOT NULL DEFAULT 0)''')
+        db.execute('CREATE INDEX native_session_date ON native_sessions(created_at)')
+        db.execute('''CREATE TABLE native_leases(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            session_id TEXT NOT NULL,expires_at REAL NOT NULL)''')
+        db.execute('''CREATE TABLE native_totals(user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+            playing_seconds REAL NOT NULL DEFAULT 0,position REAL NOT NULL DEFAULT 0,
+            duration REAL NOT NULL DEFAULT 0,ranges_json TEXT NOT NULL DEFAULT '[]',updated_at TEXT NOT NULL,
+            PRIMARY KEY(user_id,video_id))''')
+        db.execute("INSERT INTO schema_migrations VALUES(3,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
         db.commit()
     except BaseException:
         db.rollback()

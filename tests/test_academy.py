@@ -277,7 +277,7 @@ def test_upgrade_preserves_pre_account_data(tmp_path,monkeypatch):
     migrations.migrate(p);migrations.migrate(p)
     user=auth.bootstrap_admin('owner@courseforge.test','Owner',PASSWORD,p)
     with db.connect(p) as conn:
-        assert [r[0] for r in conn.execute('SELECT version FROM schema_migrations ORDER BY version')]==[1,2]
+        assert [r[0] for r in conn.execute('SELECT version FROM schema_migrations ORDER BY version')]==[1,2,3]
         assert conn.execute('SELECT user_id FROM video_notes').fetchone()[0]==user['id']
         assert conn.execute('SELECT percent,position FROM video_progress').fetchone()[:]==(100,50)
         assert conn.execute('SELECT user_id FROM daily_plan_items').fetchone()[0]==user['id']

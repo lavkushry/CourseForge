@@ -199,6 +199,7 @@ def overview(request: Request):
                 'enrollments':scalar('SELECT COUNT(*) FROM enrollments'),
                 'completed_lessons':scalar('SELECT COUNT(*) FROM video_progress WHERE completed=1'),
                 'activity_seconds':scalar('SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals'),
+                'playing_seconds':scalar('SELECT COALESCE(SUM(playing_seconds),0) FROM native_totals'),
                 'courses':scalar('SELECT COUNT(DISTINCT course) FROM videos'),
                 'available_lectures':scalar('SELECT COUNT(*) FROM lecture_providers'),
                 'lectures':scalar('SELECT COUNT(*) FROM videos'),
@@ -261,6 +262,8 @@ def user_detail(uid: str,request: Request):
         result['lesson_activity']=[dict(r) for r in db.execute('''SELECT v.title,v.course,t.activity_seconds,t.updated_at
             FROM lesson_activity_totals t JOIN videos v ON v.id=t.video_id WHERE t.user_id=? ORDER BY t.updated_at DESC''',(uid,))]
         result['note_count']=db.execute('SELECT COUNT(*) FROM video_notes WHERE user_id=?',(uid,)).fetchone()[0]
+    from .native_player import playback_totals
+    result['playback']=playback_totals(uid)
     return result
 
 
@@ -382,6 +385,8 @@ def cleanup_records():
         db.execute('DELETE FROM admin_audit WHERE created_at<?',(cutoff,))
         db.execute('DELETE FROM activity_sessions WHERE created_at<?',(cutoff,))
         db.execute('DELETE FROM activity_leases WHERE expires_at<?',(time.time(),))
+        db.execute('DELETE FROM native_sessions WHERE created_at<?',(cutoff,))
+        db.execute('DELETE FROM native_leases WHERE expires_at<?',(time.time(),))
         db.execute('DELETE FROM auth_sessions WHERE expires_at<?',(utcnow(),))
         db.execute('DELETE FROM account_tokens WHERE expires_at<?',(utcnow(),))
         db.execute('DELETE FROM playback_sessions WHERE expires_at<?',(utcnow(),))

@@ -6,6 +6,7 @@ import json
 import os
 import secrets
 import time
+from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -14,7 +15,8 @@ from pydantic import BaseModel, Field
 
 from . import auth, course_metadata
 from .db import connect, utcnow
-from .media import CAPABILITIES, sync_provider_mappings
+from .media import sync_provider_mappings
+from .native_player import CAPABILITIES
 
 router = APIRouter()
 
@@ -27,6 +29,7 @@ def audit(actor: str, action: str, resource: str):
 
 def audit_change(actor: str, method: str, path: str, body: dict):
     """Describe the action without persisting request bodies or credentials."""
+    if path.endswith('/role'):return
     action=method+' '+path
     yes=lambda key:str(body.get(key,'')).casefold() in ('true','1','on','yes','y','t')
     if path=='/api/admin/invitations':action='Student invited'
@@ -232,3 +235,31 @@ def provider_sync(request: Request):
     admin=auth.require_admin(request)
     auth.rate_limit('provider-sync:'+admin['id'],1,60)
     return sync_provider_mappings()
+
+
+class RoleBody(BaseModel):
+    role: Literal['admin','student']
+    current_password: str=Field(min_length=1,max_length=128)
+
+
+@router.put('/api/admin/users/{uid}/role')
+def change_role(uid: str,body: RoleBody,request: Request):
+    admin=auth.require_admin(request)
+    auth.rate_limit('admin-role:'+admin['id'],5,900)
+    if not auth.check_password(admin['password_hash'],body.current_password):
+        raise HTTPException(403,'Your current password is incorrect')
+    with connect() as db:
+        db.execute('BEGIN IMMEDIATE')
+        target=db.execute('SELECT role,verified,suspended FROM users WHERE id=?',(uid,)).fetchone()
+        if not target:raise HTTPException(404,'Account not found')
+        if target['role']==body.role:return {'changed':False,'role':body.role,'session_revoked':False}
+        if body.role=='admin' and (not target['verified'] or target['suspended']):
+            raise HTTPException(409,'Activate and restore the account before promoting it.')
+        if body.role=='student' and db.execute("SELECT COUNT(*) FROM users WHERE role='admin' AND verified=1 AND suspended=0").fetchone()[0]<=1:
+            raise HTTPException(409,'The last active administrator cannot be demoted.')
+        db.execute('UPDATE users SET role=? WHERE id=?',(body.role,uid))
+        db.execute('DELETE FROM auth_sessions WHERE user_id=?',(uid,))
+        db.execute('DELETE FROM account_tokens WHERE user_id=?',(uid,))
+        db.execute('INSERT INTO admin_audit(actor_id,action,resource,created_at) VALUES(?,?,?,?)',
+            (admin['id'],'Account role changed',f"{uid} / {target['role']} to {body.role}",utcnow()))
+    return {'changed':True,'role':body.role,'session_revoked':uid==admin['id']}

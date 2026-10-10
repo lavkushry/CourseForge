@@ -110,7 +110,8 @@
     const password=field(f,'New password (optional)','password','password',false);password.minLength=12;password.autocomplete='new-password';submitButton(f,'Save account');
     heading(root,'Signed-in devices');const sessions=await api('/api/auth/sessions');
     root.append(table(['Device','Last active','Session'],sessions.sessions.map(s=>[s.device||'Browser',date(s.last_seen),s.current?'This device':button('Revoke',async()=>{await api(`/api/auth/sessions/${s.id}`,{method:'DELETE'});await myAccount();})])));
-    heading(root,'Learning and access data','We record lesson activity, self-reported completion, assessment results, and access events. Visible lesson activity is an estimate of time in the lesson page; it does not prove video playback or attention. Access logs are kept for 30 days and activity events for 90 days. Your learning records remain until account deletion. Administrators can review learning and access records.');
+    heading(root,'Learning and access data','We record browser-reported playback, resume positions, lesson activity, self-reported completion, assessment results, and access events. Playback records cannot establish attention. The embedded fallback only records visible lesson activity. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until account deletion. Administrators can review learning and access records.');
+    const playback=await api('/api/me/playback');root.append(table(['Lecture','Playback time','Resume position','Content coverage'],playback.lessons.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%'])));
     if(account.user.role!=='admin'){
       const deletion=form(root,'Delete your account and learning records',async data=>{await api('/api/me',json('DELETE',{password:data.get('password')}));resetBrowser();});
       field(deletion,'Confirm password','password','password');submitButton(deletion,'Delete my account');
@@ -120,7 +121,7 @@
     const root=adminPage('Administration');root.append(button('Refresh',adminHome));
     const report=await api('/api/admin/overview');
     const metrics=node('div','academy-metrics');
-    for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Reported completions',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
+    for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Reported completions',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
       const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));metrics.append(card);
     }root.append(metrics);
     heading(root,'Recent student activity',report.activity_basis+'. '+report.completion_basis+'.');
@@ -149,6 +150,12 @@
       if(!r.user.suspended)actions.append(button(r.user.verified?'Issue recovery link':'Reissue invitation',async()=>{const link=await api(`/api/admin/users/${uid}/account-link`,json('POST',{}));privateLink(root,link.account_url,link.expires_at,link.message);}));
     }
     actions.append(button('Revoke all sessions',async()=>{await api(`/api/admin/users/${uid}/sessions`,{method:'DELETE'});await adminStudent(uid);}));root.append(actions);
+    if(r.user.verified&&!r.user.suspended){
+      const roleForm=form(root,'Account role',async data=>{const result=await api(`/api/admin/users/${uid}/role`,json('PUT',{role:data.get('role'),current_password:data.get('current_password')}));if(result.session_revoked)return resetBrowser();await adminStudent(uid);message(result.changed?'Account role changed. Previous sessions were revoked.':'Account role is unchanged.');});
+      roleForm.append(node('p','muted','Administrators manage all courses and student accounts. Confirm this change with your own current password.'));
+      const roleSelect=node('select','form-input');roleSelect.name='role';roleSelect.setAttribute('aria-label','Account role');for(const value of ['student','admin'])roleSelect.add(new Option(value,value,false,r.user.role===value));roleForm.append(roleSelect);
+      field(roleForm,'Your current password','current_password','password').autocomplete='current-password';submitButton(roleForm,'Change role');
+    }
     root.append(node('p','academy-lead',`${minutes(r.activity_seconds)} of recorded lesson activity · ${r.note_count} saved notes`));
     heading(root,'Course access');root.append(table(['Course','Enrolled','Access'],r.enrollments.map(e=>[e.course,date(e.created_at),button('Revoke course access',async()=>{await api(`/api/admin/users/${uid}/enrollments`,json('PUT',{course:e.course,enrolled:false}));await adminStudent(uid);})])));
     const courses=await api('/api/admin/courses');const grant=form(root,'Grant a course',async data=>{await api(`/api/admin/users/${uid}/enrollments`,json('PUT',{course:data.get('course'),enrolled:true}));await adminStudent(uid);});
@@ -156,6 +163,7 @@
     heading(root,'Lesson completion','Students report completion themselves. This is separate from assessment and lab performance.');root.append(table(['Lecture','Course','Completion','Updated'],r.lessons.map(l=>[l.title,l.course,l.completed?'Reported complete':'Incomplete',date(l.updated_at)])));
     heading(root,'Last opened lessons');root.append(table(['Lecture','Course','Opened'],r.recent_lessons.map(l=>[l.title,l.course,date(l.updated_at)])));
     heading(root,'Lesson activity','Cumulative visible lesson activity remains available after detailed sessions expire.');root.append(table(['Lecture','Course','Activity','Last recorded'],r.lesson_activity.map(l=>[l.title,l.course,minutes(l.activity_seconds),date(l.updated_at)])));
+    heading(root,'Playback tracking','Browser-reported playback and content coverage are separate from lesson-page activity and explicit completion.');root.append(table(['Lecture','Playback','Resume','Coverage','Last saved'],r.playback.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%',date(l.updated_at)])));
     heading(root,'Assessment results');root.append(table(['Topic','Score','Correct','Completed'],r.assessments.map(a=>[a.step_id,`${a.score}%`,`${a.correct_count}/${a.total_count}`,date(a.completed_at)])));
     heading(root,'Practice labs');root.append(table(['Lab','Status','Updated'],r.labs.map(l=>[l.slug,l.status,date(l.updated_at)])));
     heading(root,'Recall practice');root.append(table(['Self-rating (0–5)','Reviewed'],r.reviews.map(a=>[a.quality,date(a.reviewed_at)])));
@@ -184,6 +192,11 @@
     const root=adminPage('Player activity','player');
     root.append(node('p','academy-lead','Inspect lesson sessions, visible activity, devices, and access. Live means a lesson page is sending heartbeats; it does not establish that the video is playing.'));
     const criteria={days:'30',q:'',course:'',status:'all',...filters};
+    const playback=await api('/api/admin/playback?'+new URLSearchParams({...criteria,offset}));
+    heading(root,'Video playback',playback.basis);
+    root.append(table(['Student','Lecture','State','Playback time','Position','Opened','Device and IP'],playback.sessions.map(s=>[button(s.name,()=>adminStudent(s.user_id)),s.title,s.live?'Playing':s.state,minutes(s.playing_seconds),prettyTime(s.position),date(s.created_at),[s.device,s.ip].join(' · ')])));
+    const playbackPager=node('div','toolbar');if(offset)playbackPager.append(button('Previous playback sessions',()=>adminPlayer(criteria,Math.max(0,offset-25))));if(offset+25<playback.total)playbackPager.append(button('Next playback sessions',()=>adminPlayer(criteria,offset+25)));root.append(playbackPager);
+    const playbackExport=node('a','btn btn-outline','Export playback CSV');playbackExport.href='/api/admin/playback/export?'+new URLSearchParams(criteria);playbackExport.download='courseforge-playback.csv';root.append(playbackExport);
     const f=form(root,'Filter sessions',data=>adminPlayer(Object.fromEntries(data)));
     field(f,'Student name, email, or lecture','q','search',false).value=criteria.q;
     selectField(f,'Period','days',[['Last 7 days','7'],['Last 30 days','30'],['Last 90 days','90']],criteria.days);
@@ -206,7 +219,7 @@
     root.append(node('p','',`${r.email.provider} email: ${r.email.configured?'Configured':'Awaiting server credentials'}. ${r.pending_invitations} pending invitations.`));
     if(!r.email.configured)root.append(node('p','muted','Set SMTP_FROM, SMTP_USER, and SMTP_PASSWORD in the server environment, then restart CourseForge. Student activation and recovery links can be issued in Students.'));
     heading(root,'Course readiness');root.append(table(['Course','Publication','Lectures','Cloud mappings','Measured durations'],r.courses.map(c=>[c.course,c.published?'Published':'Draft',c.lessons,c.mapped,c.measured_durations])));
-    heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Timestamp links: ${r.player.timestamp_launch?'Supported':'Unavailable'}.`),node('p','muted','The embedded provider manages playback speed, quality, seeking, and captions when supplied. CourseForge records player authorization and frame openings separately from visible lesson activity. Automatic playback-position capture is unavailable for this provider.'));
+    heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Automatic resume: ${r.player.automatic_resume?'Supported':'Unavailable'}.`),node('p','muted','The CourseForge player supports seeking, speed, volume, fullscreen, timestamp capture, automatic resume, and browser-reported playback tracking. Original video quality is delivered by Odysee. The embedded fallback supports manual resume points and visible lesson activity. Authenticated streaming and the viewer watermark provide access control and deterrence; they are not encrypted DRM.'));
     root.append(button('Refresh Odysee mappings',async()=>{const result=await api('/api/admin/provider-sync',json('POST',{}));await adminSystem();message(result.in_progress?'A mapping refresh is already running.':result.error||`${result.mapped}/${result.lectures} lectures mapped. ${result.durations_added} durations added.`,Boolean(result.error));}));
     heading(root,'Service reports');root.append(table(['Service','Last report','Last successful report','Status'],Object.entries(r.service_checks).map(([name,s])=>[name.replaceAll('_',' '),date(s.last_attempt),date(s.last_success),s.last_error||s.summary.state||(s.summary.mapped!==undefined?`${s.summary.mapped}/${s.summary.lectures} mapped`:'Reported')])));
     heading(root,'Learning task queue');root.append(table(['Status','Tasks'],Object.entries(r.tasks)));
@@ -227,6 +240,7 @@
     fetch(`/api/activity/${a.id}/heartbeat`,{method:'POST',keepalive:true,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':account.csrf},body:JSON.stringify({sequence:++a.sequence,visible,elapsed_seconds:elapsed,ended:true})}).catch(()=>{});
   }
   function leaveLesson(){
+    window.CourseForgeNative?.stop();
     stopActivity();window.CourseForgeCancelVideoOpen?.();el('lecturePlayerWrap')?.replaceChildren();
   }
   async function startActivity(id,current=true){
