@@ -38,9 +38,17 @@ loadTheme();
 $('#todayLabel').textContent=new Intl.DateTimeFormat(undefined,{month:'long',day:'numeric',year:'numeric'}).format(new Date());
 const colorways=[['#493eb8','#9285ed','{ }','ENGINEERING'],['#06685f','#4bd4ac','<>','DEVELOPMENT'],['#d66c39','#f7c68a','01','DATA'],['#305b92','#72aff8','⌘','TECHNOLOGY'],['#903b81','#e39ad2','','CREATIVE'],['#414c70','#8797cc','//','COURSE']];
 function coverFor(course){let hash=0;for(const c of course)hash=((hash*31)+c.charCodeAt(0))>>>0;const lower=course.toLowerCase();let index=hash%colorways.length;if(/kubernetes|ansible|docker|devops|cloud|linux/i.test(lower))index=0;if(/java|python|javascript|backend|go\b|program/i.test(lower))index=1;if(/data|sql|spark|databricks|analytics|machine learning/i.test(lower))index=2;return colorways[index];}
-function groupCourses(){const groups=new Map();for(const video of state.videos){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}return [...groups].map(([name,videos])=>{const completed=videos.filter(v=>state.progress.get(v.id)?.completed).length;const percent=Math.round(completed/videos.length*100);const indexed=videos.filter(v=>v.status==='done').length;const lastActivity=Math.max(...videos.map(v=>Date.parse(state.progress.get(v.id)?.updated_at||'')||0),0);return {name,videos,completed,percent,indexed,lastActivity,...(state.courseMeta.get(name)||{})};}).sort((a,b)=>b.lastActivity-a.lastActivity||a.name.localeCompare(b.name));}
+function groupCourses(){const groups=new Map();for(const video of state.videos){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}return [...groups].map(([name,videos])=>{const materials=(state.materials||[]).filter(m=>m.course===name);const completed=videos.filter(v=>state.progress.get(v.id)?.completed).length;const percent=Math.round(completed/videos.length*100);const indexed=videos.filter(v=>v.status==='done').length;const lastActivity=Math.max(...videos.map(v=>Date.parse(state.progress.get(v.id)?.updated_at||'')||0),0);return {name,videos,materials,completed,percent,indexed,lastActivity,...(state.courseMeta.get(name)||{})};}).sort((a,b)=>b.lastActivity-a.lastActivity||a.name.localeCompare(b.name));}
 function lessonTitle(title){return String(title||'').replace(/^\[\d+(?: Part\d+)?\]\s*/, '').replace(/\s*(?:\[Live\]|\(Live\))\s*/gi,' ').trim();}
 function formatDuration(seconds){const total=Math.round((Number(seconds)||0)/60);if(!total)return '';const hours=Math.floor(total/60),minutes=total%60;return hours?`${hours}h${minutes?' '+minutes+'m':''}`:`${minutes}m`;}
+function getCourseFlow(course=''){
+  const vids=state.videos.filter(v=>!course||v.course===course).map(v=>({...v,item_type:'video',flow_order:Number(v.flow_order??9999)}));
+  const mats=(state.materials||[]).filter(m=>!course||m.course===course).map(m=>({...m,item_type:'material',flow_order:Number(m.flow_order??9999)}));
+  return [...vids,...mats].sort((a,b)=>a.course.localeCompare(b.course)||(a.flow_order-b.flow_order)||((a.item_type==='video'?0:1)-(b.item_type==='video'?0:1))||String(a.title||a.name).localeCompare(String(b.title||b.name)));
+}
+function materialIcon(ext){const e=String(ext||'').toLowerCase();return e==='ipynb'?'📓':e==='pdf'?'📄':e==='pptx'?'📊':e==='zip'?'📦':(e==='py'||e==='sql')?'🐍':(e==='csv'||e==='parquet'||e==='json')?'🗂️':'📝';}
+function openFlowItem(item){if(!item)return Promise.resolve();return item.item_type==='material'?openMaterial(item):openVideo(item.id);}
+window.getCourseFlow=getCourseFlow;window.openFlowItem=openFlowItem;
 function openCourse(course){const lessons=state.videos.filter(v=>v.course===course.name);$('#lessonCourse').value=course.name;renderLessons();const recent=lessons.find(v=>v.id===window.CourseForgeAccount?.lastLessons?.[course.name])||lessons.find(v=>{const p=state.progress.get(v.id);return p&&!p.completed&&p.percent>0;})||lessons.find(v=>!state.progress.get(v.id)?.completed)||lessons[0];navigate('learning');if(recent)openVideo(recent.id).catch(err=>toast(err.message,true));}
 function buildCourseCard(course){
   const tile=make('div','course-tile');
@@ -54,7 +62,8 @@ function buildCourseCard(course){
   body.append(make('div','course-category','Your course'));
   body.append(make('h3','',course.title||course.name));
   const length=course.videos.reduce((total,v)=>total+(Number(v.duration)||0),0);
-  body.append(make('div','course-meta',`${course.videos.length} lessons${course.videos.every(v=>v.duration)&&length?' · '+formatDuration(length):''}`));
+  const matCount=(course.materials||[]).length;
+  body.append(make('div','course-meta',`${course.videos.length} lectures${matCount?` · ${matCount} study files`:''}${course.videos.every(v=>v.duration)&&length?' · '+formatDuration(length):''}`));
   if(course.instructor)body.append(make('div','course-byline',`By ${course.instructor}`));
   body.append(make('span','course-topic',course.category||courseCategory(course.name)));
   if(course.tags?.length){const tags=make('div','course-tags');for(const tag of course.tags.slice(0,3))tags.append(make('span','course-tag',tag));body.append(tags);}
@@ -97,7 +106,7 @@ $('#courseCoverReset').addEventListener('click',async()=>{
   try{await services.resetCover(course);const {courses}=await services.courses();state.courseMeta=new Map(courses.map(c=>[c.id,c]));state.coverRevision++;renderCatalog();$('#courseEditDialog').close();toast('Automatic video cover restored.');}catch(error){$('#courseEditError').textContent=error.message;}
 });
 function courseCategory(name){return (/kubernetes|ansible|docker|devops|cloud|linux/i.test(name)?'DevOps':/data|spark|sql|databricks|analytics/i.test(name)?'Data engineering':/java|backend|python|javascript|golang|web/i.test(name)?'Development':'Other');}
-function renderCatalog(){const all=groupCourses();$('#featuredCourses').setAttribute('aria-busy','false');$('#courseCatalog').setAttribute('aria-busy','false');$('#statCourses').textContent=all.length;$('#statVideos').textContent=state.videos.length;$('#statIndexed').textContent=state.videos.filter(v=>v.status==='done').length;$('#statCompleted').textContent=state.videos.filter(v=>state.progress.get(v.id)?.completed).length;$('#sideCourseCount').textContent=all.length;$('#countLabel').textContent=`${state.videos.length} videos`;
+function renderCatalog(){const all=groupCourses();const totalMats=(state.materials||[]).length;$('#featuredCourses').setAttribute('aria-busy','false');$('#courseCatalog').setAttribute('aria-busy','false');$('#statCourses').textContent=all.length;$('#statVideos').textContent=state.videos.length;$('#statIndexed').textContent=state.videos.filter(v=>v.status==='done').length;$('#statCompleted').textContent=state.videos.filter(v=>state.progress.get(v.id)?.completed).length;$('#sideCourseCount').textContent=all.length;$('#countLabel').textContent=`${state.videos.length} lectures · ${totalMats} study files`;
   const featured=$('#featuredCourses');featured.replaceChildren();for(const course of all.slice(0,3))featured.append(buildCourseCard(course));if(!all.length){const hint=make('div','panel empty-featured');hint.append(make('h3','','Your learning library starts here'));const admin=window.CourseForgeAccount?.user?.role==='admin';hint.append(make('p','',admin?'Import a course to organize your library.':'Enroll in a published course to start learning.'));const c=make('button','btn btn-primary',admin?'Scan my library':'Browse courses');c.addEventListener('click',admin?scanLibrary:()=>document.getElementById('catalogNav').click());hint.append(c);featured.append(hint);}
   const categorySelect=$('#categoryFilter');const categories=[...new Set(all.map(c=>c.category||courseCategory(c.name)))].sort();const oldCategory=categorySelect.value;categorySelect.replaceChildren(new Option('All categories','all'));categories.forEach(c=>categorySelect.add(new Option(c,c)));categorySelect.value=categories.includes(oldCategory)?oldCategory:'all';state.category=categorySelect.value;
   let visible=all.filter(c=>[c.name,c.title||'',c.instructor||'',...(c.tags||[])].some(t=>t.toLowerCase().includes(state.search))||c.videos.some(v=>v.title.toLowerCase().includes(state.search)));
@@ -109,16 +118,46 @@ function renderCatalog(){const all=groupCourses();$('#featuredCourses').setAttri
   $('#libraryEmpty').hidden=!!visible.length||!!all.length;
   const catalog=$('#courseCatalog');catalog.replaceChildren();for(const course of visible)catalog.append(buildCourseCard(course));if(!visible.length&&all.length){const hint=make('p','muted',state.search?'No courses match your search. Try a different keyword.':'No courses match this filter yet.');catalog.append(hint);}
 }
-function renderSelects(){const courses=groupCourses();for(const id of ['#scope','#studyCourse','#lessonCourse']){const select=$(id);const old=select.value;select.replaceChildren();if(id==='#scope')select.add(new Option('Entire course library','all'));else if(id==='#studyCourse')select.add(new Option('Choose a course',''));else select.add(new Option('All courses',''));for(const c of courses){if(id==='#studyCourse'&&!c.indexed)continue;select.add(new Option(`${c.title||c.name}${id==='#scope'?' ('+c.videos.length+')':''}`,id==='#scope'?'course:'+c.name:c.name));}if([...select.options].some(x=>x.value===old))select.value=old;else if(id==='#studyCourse'&&select.options.length>1)select.selectedIndex=1;}
+function renderSelects(){const courses=groupCourses();for(const id of ['#scope','#studyCourse','#lessonCourse']){const select=$(id);const old=select.value;select.replaceChildren();if(id==='#scope')select.add(new Option('Entire course library','all'));else if(id==='#studyCourse')select.add(new Option('Choose a course',''));else select.add(new Option('All courses',''));for(const c of courses){if(id==='#studyCourse'&&!c.indexed)continue;const totalItems=c.videos.length+(c.materials?.length||0);select.add(new Option(`${c.title||c.name}${id==='#scope'?' ('+totalItems+')':''}`,id==='#scope'?'course:'+c.name:c.name));}if([...select.options].some(x=>x.value===old))select.value=old;else if(id==='#studyCourse'&&select.options.length>1)select.selectedIndex=1;}
   const scope=$('#scope');const selected=scope.value;for(const v of state.videos){scope.add(new Option(`↳ ${v.title}`,'video:'+v.id));}if([...scope.options].some(x=>x.value===selected))scope.value=selected;
 }
 function getViewerName(){return window.CourseForgeAccount?.user?.name || '';}
 function openMaterialsModal(course=null){return window.CourseForgeAcademy?.materials(course);}
-function renderLessons(){const course=$('#lessonCourse').value;const list=$('#courseList');list.replaceChildren();const groups=new Map();for(const video of state.videos.filter(v=>!course||v.course===course)){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}let index=0;for(const [name,lessons] of groups){list.append(make('div','lesson-course-label',name));for(const v of lessons){index++;const btn=make('a','lesson-link'+(state.currentVideoId===v.id?' active':''));btn.dataset.vid=v.id;btn.href='#learning/'+encodeURIComponent(v.id);if(state.currentVideoId===v.id)btn.setAttribute('aria-current','true');const number=make('span','lesson-number',String(index).padStart(2,'0'));if(state.progress.get(v.id)?.completed){number.replaceChildren(icon('check'));number.setAttribute('aria-label','Completed');}btn.append(number);const t=make('span','lesson-text');t.append(make('span','name',lessonTitle(v.title)));const p=state.progress.get(v.id);const baseStatus=p?.completed?'Completed':p?.position>0?'In progress':v.cloud_ready?'':'Coming soon';t.append(make('span','status',[formatDuration(v.duration),baseStatus].filter(Boolean).join(' · ')));btn.append(t);btn.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();openVideo(v.id).catch(err=>toast(err.message,true));});list.append(btn);}}
-  $('#lessonCount').textContent=`${index} lessons`;
+function renderLessons(){
+  const course=$('#lessonCourse').value;const list=$('#courseList');list.replaceChildren();
+  const groups=new Map();
+  for(const item of getCourseFlow(course)){if(!groups.has(item.course))groups.set(item.course,[]);groups.get(item.course).push(item);}
+  let index=0,vidCount=0,matCount=0;
+  for(const [name,lessons] of groups){
+    list.append(make('div','lesson-course-label',name));
+    for(const item of lessons){
+      index++;
+      const isMat=item.item_type==='material';
+      if(isMat)matCount++;else vidCount++;
+      const btn=make('a','lesson-link'+(state.currentVideoId===item.id?' active':''));
+      btn.dataset.vid=item.id;btn.href=isMat?item.url:'#learning/'+encodeURIComponent(item.id);
+      if(state.currentVideoId===item.id)btn.setAttribute('aria-current','true');
+      const number=make('span','lesson-number',isMat?materialIcon(item.ext):String(index).padStart(2,'0'));
+      if(!isMat&&state.progress.get(item.id)?.completed){number.replaceChildren(icon('check'));number.setAttribute('aria-label','Completed');}
+      btn.append(number);
+      const t=make('span','lesson-text');
+      t.append(make('span','name',isMat?`${materialIcon(item.ext)} ${item.name}`:lessonTitle(item.title)));
+      if(isMat){
+        t.append(make('span','status',`${String(item.ext||'file').toUpperCase()} · ${item.size_kb} KB · ${item.cloud_ready?'☁️ Odysee doc':'Study resource'}`));
+      }else{
+        const p=state.progress.get(item.id);
+        const baseStatus=p?.completed?'Completed':p?.position>0?'In progress':item.cloud_ready?'🎬 Odysee video':'Coming soon';
+        t.append(make('span','status',[formatDuration(item.duration),baseStatus].filter(Boolean).join(' · ')));
+      }
+      btn.append(t);
+      btn.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();openFlowItem(item).catch(err=>toast(err.message,true));});
+      list.append(btn);
+    }
+  }
+  $('#lessonCount').textContent=`${index} items (${vidCount} lectures · ${matCount} files)`;
 }
 function renderJobs(){const active=state.jobs.filter(j=>j.status==='processing');const queued=state.jobs.filter(j=>j.status==='queued');const failed=state.jobs.filter(j=>j.status==='failed');$('#jobSummary').textContent=active.length?`Indexing: ${active[0].title}`:queued.length?`${queued.length} queued · ${failed.length} failed`:failed.length?`${failed.length} imports need attention`:'Your library is ready';}
-async function loadLibrary(){const [{videos},{jobs},{progress},catalog]=await Promise.all([request('/api/videos'),(window.CourseForgeAccount?.user?.role==='admin'?request('/api/jobs'):Promise.resolve({jobs:[]})),request('/api/progress'),services.courses().catch(()=>({courses:[]}))]);state.videos=videos;state.jobs=jobs;state.progress=new Map(progress.map(p=>[p.video_id,p]));state.courseMeta=new Map((catalog.courses||[]).map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}
+async function loadLibrary(){const [{videos},{jobs},{progress},catalog,matRes]=await Promise.all([request('/api/videos'),(window.CourseForgeAccount?.user?.role==='admin'?request('/api/jobs'):Promise.resolve({jobs:[]})),request('/api/progress'),services.courses().catch(()=>({courses:[]})),request('/api/materials').catch(()=>({materials:[]}))]);state.videos=videos;state.materials=matRes.materials||[];state.jobs=jobs;state.progress=new Map(progress.map(p=>[p.video_id,p]));state.courseMeta=new Map((catalog.courses||[]).map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}
 async function scanLibrary(){for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=true;try{const result=await request('/api/scan',{method:'POST'});await loadLibrary();toast(`Found ${result.found} videos · ${result.imported} new · ${result.changed} changed. Processing continues in the worker.`);}catch(err){toast(err.message,true)}finally{for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=false;}}
 for(const selector of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(selector).addEventListener('click',scanLibrary);
 $('#refreshBtn').addEventListener('click',()=>loadLibrary().catch(err=>toast(err.message,true)));
@@ -132,6 +171,27 @@ $('#globalSearch').addEventListener('keydown',event=>{if(event.key==='Enter'){ev
 $('#lessonCourse').addEventListener('change',renderLessons);
 let openingGeneration=0;
 window.CourseForgeCancelVideoOpen=()=>{openingGeneration++;};
+async function openMaterial(item){
+  const generation=++openingGeneration;
+  window.CourseForgeStudio?.cancelNext();window.CourseForgeNative?.stop();await window.CourseForgePlayerSession?.close();window.CourseForgeAcademy?.stopActivity();
+  if(generation!==openingGeneration)return;
+  state.selectedId=item.id;state.currentVideoId=item.id;state.currentCourse=item.course;
+  const player=$('#player');player.pause();player.hidden=true;$('#emptyPlayer').hidden=true;
+  let wrap=document.getElementById('lecturePlayerWrap');if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
+  wrap.replaceChildren();
+  const iframe=make('iframe');iframe.title=item.name;iframe.src=item.url;
+  iframe.style.cssText='width:100%;min-height:560px;border:0;background:#0f1420';
+  iframe.allowFullscreen=true;
+  const tools=make('div','embedded-actions');
+  const badge=make('span','muted',`${materialIcon(item.ext)} ${String(item.ext||'FILE').toUpperCase()} (${item.size_kb} KB) · ${item.cloud_ready?'☁️ Odysee Cloud Claim':'Study resource'}`);
+  const dl=make('a','btn btn-outline','⬇️ Download file');dl.href=item.url+'?download=1';dl.target='_blank';dl.rel='noopener';
+  const pop=make('a','btn btn-outline','↗ Open in tab');pop.href=item.url;pop.target='_blank';pop.rel='noopener';
+  const resources=make('button','btn btn-outline','All course files');resources.type='button';resources.onclick=()=>openMaterialsModal(item.course);
+  tools.append(badge,dl,pop,resources);wrap.replaceChildren(iframe,tools);
+  $('#playingDetails').hidden=false;$('#playingTitle').textContent=`${materialIcon(item.ext)} ${item.name}`;
+  $('#playingCourse').textContent=`Odysee Cloud Document (${String(item.ext||'').toUpperCase()}) · Chronological course flow`;
+  $('#lessonCourse').value=item.course;renderLessons();navigate('learning');
+}
 async function openVideo(id,at=null){
   const existingMedia=window.CourseForgeNative?.video();
   if(id===state.currentVideoId&&at!==null&&existingMedia&&!existingMedia.error&&existingMedia.readyState>=1&&Number.isFinite(existingMedia.duration)){
@@ -314,7 +374,13 @@ function selectLessonTab(name,sync=true){
   if(sync&&state.currentVideoId)syncLessonRoute(state.currentVideoId,null,true);
 }
 $$('[data-lesson-tab]').forEach(button=>{button.addEventListener('click',()=>selectLessonTab(button.dataset.lessonTab));button.addEventListener('keydown',event=>{const tabs=$$('[data-lesson-tab]'),index=tabs.indexOf(button);let next;if(event.key==='ArrowRight')next=tabs[(index+1)%tabs.length];else if(event.key==='ArrowLeft')next=tabs[(index+tabs.length-1)%tabs.length];else if(event.key==='Home')next=tabs[0];else if(event.key==='End')next=tabs.at(-1);if(next){event.preventDefault();next.focus();selectLessonTab(next.dataset.lessonTab);}});});
-$('#nextLessonBtn').addEventListener('click',()=>{const next=window.CourseForgeStudio.adjacent(1);if(next)openVideo(next.id).catch(error=>toast(error.message,true));});
+$('#nextLessonBtn').addEventListener('click',()=>{
+  const flow=getCourseFlow(state.currentCourse||$('#lessonCourse').value||'');
+  const idx=flow.findIndex(x=>x.id===state.currentVideoId);
+  const next=idx>=0?flow[idx+1]:window.CourseForgeStudio?.adjacent(1);
+  if(next)openFlowItem(next).catch(error=>toast(error.message,true));
+  else toast('You have reached the last item in this course.');
+});
 $('#generateSummaryBtn').addEventListener('click',async()=>{if(!state.currentVideoId)return toast('Choose a lesson first.',true);const btn=$('#generateSummaryBtn');btn.disabled=true;$('#lessonSummary').textContent='Creating your lesson summary…';try{const data=await request('/api/ask',services.json('POST',{question:'Summarize the learning objectives, key concepts, code or commands, and next steps from this lecture. Cite sources and timestamps.',mode:'notes',video_id:state.currentVideoId}));$('#lessonSummary').textContent=data.answer;}catch(err){$('#lessonSummary').textContent=err.message;}finally{btn.disabled=false}});
 $('#guidedTutorBtn').addEventListener('click',()=>{state.mode='explain';$$('.mode').forEach(m=>m.classList.toggle('active',m.dataset.mode==='explain'));$('#question').value='Teach me a core concept from the selected course step by step. Start with intuition, then a worked example, then one question to check understanding. Include source timestamps.';navigate('tutor');$('#question').focus()});
 $('#conceptCheckBtn').addEventListener('click',()=>{state.mode='quiz';$$('.mode').forEach(m=>m.classList.toggle('active',m.dataset.mode==='quiz'));$('#question').value='Give me one question to assess my understanding of the selected course, then explain the correct answer with a video citation. Do not claim to grade my knowledge without my response.';$('#question').focus()});
@@ -328,7 +394,7 @@ for(const selector of ['#goalMinutes','#settingsGoal'])$(selector).addEventListe
 
 window.CourseForgeBoot=async(initialData)=>{
   const initial=readLessonRoute();applyingRoute++;try{navigate(navNames[initial.view]?initial.view:'dashboard');}finally{applyingRoute--;}
-  if(initialData){state.videos=initialData.videos;state.jobs=[];state.progress=new Map(initialData.progress.map(p=>[p.video_id,p]));state.courseMeta=new Map(initialData.courses.map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}else await loadLibrary();
+  if(initialData){state.videos=initialData.videos;state.materials=initialData.materials||[];state.jobs=[];state.progress=new Map(initialData.progress.map(p=>[p.video_id,p]));state.courseMeta=new Map(initialData.courses.map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}else await loadLibrary();
   renderPlannedLabs();syncGoal();loadSettings();await window.CourseForgePlayerSession.loadPreferences(initialData?.preferences);
   document.documentElement.dataset.lessonInteractive='true';window.dispatchEvent(new Event('courseforge-interactive'));
   if(initial.view==='learning'&&initial.id){selectLessonTab(initial.tab,false);applyingRoute++;try{await openVideo(initial.id,initial.at);}finally{applyingRoute--;}}

@@ -131,6 +131,37 @@ def scan():
     return scan_courses()
 
 
+def compute_flow_order(course: str, name: str) -> float:
+    import re
+    m = re.match(r'^\[(\d+)([a-z]?)(?:\s*part\s*(\d+)|-(\d+))?\]', (name or '').strip(), re.I)
+    if not m:
+        return 0.1
+    num = int(m.group(1))
+    sub = (ord(m.group(2).lower()) - ord('a') + 1) * 0.1 if m.group(2) else (int(m.group(3)) * 0.1 if m.group(3) else 0.0)
+    if 'Agentic AI' in course and num >= 63:
+        agentic_map = {
+            63: 0.50, 64: 1.01, 65: 2.01, 66: 2.02,
+            67: 3.01, 68: 3.02, 69: 3.03, 70: 4.01, 71: 4.02, 72: 4.03,
+            73: 5.01, 74: 5.02, 75: 6.01, 76: 7.01, 77: 7.02,
+            78: 8.01, 79: 8.02, 80: 10.01, 81: 10.02, 82: 12.01,
+            83: 13.01, 84: 13.02, 85: 13.03, 86: 13.04, 87: 14.01,
+            88: 17.01, 89: 15.01, 90: 15.02, 91: 18.01, 92: 18.02,
+            93: 40.01, 94: 40.02, 95: 25.01, 96: 25.02,
+            97: 24.01, 98: 24.02, 99: 24.03, 100: 24.04,
+            101: 27.01, 102: 27.02, 103: 27.03, 104: 27.04, 105: 27.05,
+            106: 28.01, 107: 29.01, 108: 33.01,
+            109: 35.01, 110: 35.02, 111: 35.03, 112: 35.04, 113: 35.05,
+            114: 36.01, 115: 39.01, 116: 39.02,
+            **{n: 45.0 + (n - 116) * 0.01 for n in range(117, 129)},
+            **{n: 47.0 + (n - 128) * 0.01 for n in range(129, 137)},
+            **{n: 49.0 + (n - 136) * 0.01 for n in range(137, 146)},
+            146: 50.01, 147: 50.02, 148: 50.03, 149: 52.01,
+            150: 55.01, 151: 55.02, 152: 55.03, 153: 56.01, 154: 56.02, 155: 57.01,
+        }
+        return round(agentic_map.get(num, float(num)), 4)
+    return round(float(num) + sub, 4)
+
+
 @app.get('/api/videos')
 def videos():
     vids = fetch_videos()
@@ -138,7 +169,10 @@ def videos():
         mapped = {r['video_id'] for r in db.execute('SELECT video_id FROM lecture_providers')}
     for v in vids:
         v['cloud_ready'] = v['id'] in mapped
+        v['flow_order'] = compute_flow_order(v.get('course', ''), v.get('title', ''))
+        v['item_type'] = 'video'
         v.pop('path', None)
+    vids.sort(key=lambda x: (x.get('course', ''), x.get('flow_order', 9999.0), x.get('title', '')))
     return {'videos': vids}
 
 
@@ -153,6 +187,7 @@ def learner_bootstrap(request: Request):
     from .academy import my_learning
     from .player_sessions import get_preferences
     return {**auth.me(request), **videos(), **courses_catalog(),
+            'materials': list_course_materials().get('materials', []),
             'progress': study.get_progress(), 'learning': my_learning(request),
             'preferences': get_preferences(request), 'options': auth.account_options()}
 
@@ -241,15 +276,55 @@ def get_video(video_id: str):
     if not video:
         raise HTTPException(404, 'Video not found')
     video['cloud_ready'] = bool(find_odysee_info(video))
+    video['flow_order'] = compute_flow_order(video.get('course', ''), video.get('title', ''))
     video.pop('path', None)
     return {'video': video, 'chunks': transcript_for_video(video_id)}
+
+
+def _load_odysee_docs_manifest() -> dict:
+    import json
+    for p in (settings.data_dir / 'odysee_docs_manifest.json', settings.courses_dir / 'odysee_docs_manifest.json'):
+        if p.is_file():
+            try:
+                return json.loads(p.read_text())
+            except Exception:
+                pass
+    return {}
+
+
+def _fetch_odysee_doc_bytes(doc_entry: dict) -> bytes | None:
+    import os
+    import httpx
+    token = os.getenv('ODYSEE_AUTH_TOKEN', '3Nj7vMUEayo8PLWgYTLMfpbcbtSzVj9f')
+    cname = doc_entry.get('claim_name', '')
+    cid = doc_entry.get('claim_id', '')
+    if not token or not cname or not cid:
+        return None
+    try:
+        with httpx.Client(timeout=25, follow_redirects=True) as client:
+            r = client.post(
+                'https://api.na-backend.odysee.com/api/v1/proxy?m=get',
+                headers={'X-Lbry-Auth-Token': token},
+                json={'jsonrpc': '2.0', 'id': 1, 'method': 'get', 'params': {'uri': f'lbry://{cname}#{cid}'}},
+            )
+            stream_url = ((r.json().get('result') or {}).get('streaming_url') or '').strip()
+            if not stream_url:
+                return None
+            dl = client.get(stream_url, headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'https://odysee.com/'})
+            if dl.status_code == 200:
+                return dl.content
+    except Exception:
+        return None
+    return None
 
 
 @app.get('/api/materials')
 def list_course_materials(course: str | None = None):
     import os
+    import urllib.parse
     root = settings.courses_dir.resolve()
-    items = []
+    docs_manifest = _load_odysee_docs_manifest()
+    seen: dict[tuple[str, str], dict] = {}
     if root.exists():
         for c_name in sorted(os.listdir(root)):
             if c_name.startswith('.'):
@@ -268,51 +343,213 @@ def list_course_materials(course: str | None = None):
                 if not fpath.is_file() or not fpath.resolve().is_relative_to(c_path.resolve()):
                     continue
                 ext = fpath.suffix.lower().lstrip('.')
-                items.append({
+                m_key = f"{c_name}/{fname}"
+                doc_info = docs_manifest.get(m_key, {})
+                seen[(c_name, fname)] = {
+                    "id": f"mat:{c_name}/{fname}",
                     "course": c_name,
                     "name": fname,
+                    "title": Path(fname).stem,
                     "ext": ext,
                     "size_kb": round(fpath.stat().st_size / 1024, 1),
-                    "url": f"/api/materials/{c_name}/{fname}",
-                })
-    return {"materials": items, "total": len(items)}
+                    "cloud_ready": m_key in docs_manifest,
+                    "provider": "odysee" if m_key in docs_manifest else "local",
+                    "claim_id": doc_info.get("claim_id", ""),
+                    "flow_order": compute_flow_order(c_name, fname),
+                    "item_type": "material",
+                    "url": f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}",
+                }
+    for m_key, entry in sorted(docs_manifest.items()):
+        if not isinstance(entry, dict):
+            continue
+        c_name = entry.get("course") or m_key.split("/", 1)[0]
+        fname = entry.get("filename") or entry.get("name") or (m_key.split("/", 1)[1] if "/" in m_key else "")
+        if not c_name or not fname or not course_allowed(c_name):
+            continue
+        if course and c_name != course:
+            continue
+        if (c_name, fname) not in seen:
+            ext = (entry.get("ext") or Path(fname).suffix.lower()).lstrip('.')
+            size_kb = round((entry.get("size_bytes") or (entry.get("size_kb", 0) * 1024)) / 1024, 1)
+            seen[(c_name, fname)] = {
+                "id": f"mat:{c_name}/{fname}",
+                "course": c_name,
+                "name": fname,
+                "title": Path(fname).stem,
+                "ext": ext,
+                "size_kb": size_kb,
+                "cloud_ready": True,
+                "provider": "odysee",
+                "claim_id": entry.get("claim_id", ""),
+                "flow_order": compute_flow_order(c_name, fname),
+                "item_type": "material",
+                "url": f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}",
+            }
+    items = sorted(seen.values(), key=lambda x: (x["course"], x["flow_order"], x["name"]))
+    return {"materials": items, "total": len(items), "cloud_mapped": sum(1 for x in items if x.get("cloud_ready"))}
 
 
 @app.get('/api/materials/{course}/{filename}')
-def get_course_material(course: str, filename: str):
+def get_course_material(course: str, filename: str, download: int = 0):
     import json
     import html
-    from fastapi.responses import HTMLResponse
+    import io
+    import zipfile
+    import xml.etree.ElementTree as ET
+    import urllib.parse
+    from fastapi.responses import HTMLResponse, Response
+    if ".." in course or ".." in filename or "/" in course or "/" in filename:
+        raise HTTPException(status_code=404, detail="Study material not found")
     root = settings.courses_dir.resolve()
     course_root = (root / course).resolve()
     target = (course_root / filename).resolve()
-    if course_root.parent != root or not target.is_relative_to(course_root) or not target.is_file() or ".." in course or ".." in filename:
+    docs_manifest = _load_odysee_docs_manifest()
+    doc_entry = docs_manifest.get(f"{course}/{filename}")
+
+    raw_bytes: bytes | None = None
+    if doc_entry:
+        if target.is_relative_to(course_root) and target.is_file():
+            raw_bytes = target.read_bytes()
+        else:
+            raw_bytes = _fetch_odysee_doc_bytes(doc_entry)
+            if raw_bytes is not None and course_root.parent == root:
+                try:
+                    course_root.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw_bytes)
+                except Exception:
+                    pass
+    elif course_root.parent == root and target.is_relative_to(course_root) and target.is_file():
+        raw_bytes = target.read_bytes()
+
+    if raw_bytes is None:
         raise HTTPException(status_code=404, detail="Study material not found")
-    ext = target.suffix.lower()
+
+    ext = Path(filename).suffix.lower()
+    dl_url = f"/api/materials/{urllib.parse.quote(course)}/{urllib.parse.quote(filename)}?download=1"
+    if download:
+        return Response(
+            content=raw_bytes,
+            media_type='application/pdf' if ext == '.pdf' else 'application/octet-stream',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+        )
+
+    if ext == '.pdf':
+        return Response(
+            content=raw_bytes,
+            media_type='application/pdf',
+            headers={'Content-Disposition': f'inline; filename="{filename}"'},
+        )
+
+    badge = (
+        f"<span style='display:inline-block;padding:4px 10px;font-size:11px;border-radius:99px;"
+        f"background:#1e293b;color:#38bdf8;border:1px solid rgba(56,189,248,0.3)'>☁️ Odysee Cloud Claim ({doc_entry.get('claim_id','')[:10]}…)</span>"
+        if doc_entry else ""
+    )
+    dl_btn = (
+        f"<a href='{dl_url}' style='display:inline-block;padding:6px 14px;font-size:12px;font-weight:600;"
+        f"border-radius:8px;background:#4f46e5;color:#fff;text-decoration:none'>⬇️ Download {html.escape(ext.upper().lstrip('.'))} ({round(len(raw_bytes)/1024, 1)} KB)</a>"
+    )
+    header_bar = (
+        f"<div style='display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"
+        f"padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.12)'>"
+        f"<div><h2 style='margin:0 0 6px 0;font-size:18px;color:#f8fafc'>{html.escape(filename)}</h2>{badge}</div>"
+        f"<div>{dl_btn}</div></div>"
+    )
+    base_style = (
+        "body{background:#0f1420;color:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;padding:20px 24px;max-width:1020px;margin:0 auto;line-height:1.55}"
+        "pre{background:#0b0f19;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);overflow:auto;font-size:13px;line-height:1.5;color:#e2e8f0}"
+        ".card{background:#161f33;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 20px;margin-bottom:14px}"
+    )
+
     if ext == '.ipynb':
         try:
-            nb = json.loads(target.read_text(errors='ignore'))
+            nb = json.loads(raw_bytes.decode('utf-8', errors='ignore'))
             cells_html = []
             for idx, cell in enumerate(nb.get('cells', []), 1):
                 ctype = cell.get('cell_type', 'code')
                 src = ''.join(cell.get('source', []))
-                import html as _h
-                esc = _h.escape(src)
+                esc = html.escape(src)
                 if ctype == 'markdown':
-                    cells_html.append(f"<div style='padding:12px 16px;background:#161f33;border-radius:8px;margin-bottom:10px;white-space:pre-wrap;line-height:1.5'>{esc}</div>")
+                    cells_html.append(f"<div class='card' style='white-space:pre-wrap'>{esc}</div>")
                 else:
-                    cells_html.append(f"<div style='margin-bottom:10px'><div style='font-size:11px;color:#74c0fc;margin-bottom:4px'>In [{idx}]:</div><pre style='margin:0;padding:12px;background:#0b0f19;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:auto;color:#e9ecef;font-size:13px'>{esc}</pre></div>")
-            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}</style></head><body><h2> {html.escape(filename)}</h2>{''.join(cells_html)}</body></html>"
-            return HTMLResponse(page, headers={'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'"})
+                    out_parts = []
+                    for out in cell.get('outputs', [])[:5]:
+                        txt = ''.join(out.get('text', []) or out.get('data', {}).get('text/plain', []))
+                        if txt:
+                            out_parts.append(f"<pre style='margin-top:6px;background:#090d16;color:#94a3b8;font-size:12px'>{html.escape(txt[:4000])}</pre>")
+                    cells_html.append(
+                        f"<div style='margin-bottom:14px'><div style='font-size:11px;color:#38bdf8;margin-bottom:4px;font-family:monospace'>In [{idx}]:</div>"
+                        f"<pre style='margin:0'>{esc}</pre>{''.join(out_parts)}</div>"
+                    )
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}{''.join(cells_html)}</body></html>"
+            return HTMLResponse(page)
         except Exception:
             pass
-    if ext in ('.py', '.txt', '.sql', '.csv', '.md', '.json'):
-        import html as _h
-        raw = target.read_text(errors='ignore')[:200000]
-        page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}pre{{background:#0b0f19;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);overflow:auto;font-size:13px;line-height:1.5}}</style></head><body><h2> {html.escape(filename)}</h2><pre>{_h.escape(raw)}</pre></body></html>"
-        return HTMLResponse(page, headers={'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'"})
-    return FileResponse(target, filename=filename, content_disposition_type='inline' if ext=='.pdf' else 'attachment',
-                        headers={'Content-Security-Policy': "sandbox; default-src 'none'"})
+
+    if ext in ('.py', '.txt', '.sql', '.csv', '.md', '.json', '.yaml', '.yml'):
+        raw = raw_bytes.decode('utf-8', errors='ignore')[:250000]
+        page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}<pre>{html.escape(raw)}</pre></body></html>"
+        return HTMLResponse(page)
+
+    if ext == '.pptx':
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(raw_bytes))
+            slide_files = sorted(
+                [n for n in zf.namelist() if n.startswith('ppt/slides/slide') and n.endswith('.xml')],
+                key=lambda s: int(''.join(filter(str.isdigit, s)) or 0),
+            )
+            slides_html = []
+            for idx, sname in enumerate(slide_files, 1):
+                root_xml = ET.fromstring(zf.read(sname))
+                texts = [t.text.strip() for t in root_xml.iter() if t.tag.endswith('}t') and t.text and t.text.strip()]
+                body_txt = '\n'.join(texts) if texts else '(Visual diagram slide — download PPTX to view graphics)'
+                slides_html.append(
+                    f"<div class='card'><div style='font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:8px'>📊 Slide {idx} of {len(slide_files)}</div>"
+                    f"<div style='white-space:pre-wrap;font-size:14px'>{html.escape(body_txt)}</div></div>"
+                )
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}{''.join(slides_html)}</body></html>"
+            return HTMLResponse(page)
+        except Exception:
+            pass
+
+    if ext == '.docx':
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(raw_bytes))
+            root_xml = ET.fromstring(zf.read('word/document.xml'))
+            paras = []
+            for p in root_xml.iter():
+                if p.tag.endswith('}p'):
+                    line = ''.join(t.text for t in p.iter() if t.tag.endswith('}t') and t.text)
+                    if line.strip():
+                        paras.append(line.strip())
+            body_txt = '\n\n'.join(paras)
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}<div class='card' style='white-space:pre-wrap'>{html.escape(body_txt)}</div></body></html>"
+            return HTMLResponse(page)
+        except Exception:
+            pass
+
+    if ext == '.zip':
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(raw_bytes))
+            infos = [i for i in zf.infolist() if not i.is_dir() and '__MACOSX' not in i.filename]
+            listing = "\n".join(f"• {i.filename} ({round(i.file_size/1024, 1)} KB)" for i in infos)
+            previews = [f"<div class='card'><div style='font-weight:700;color:#38bdf8;margin-bottom:8px'>📦 Archive Contents ({len(infos)} files)</div><pre>{html.escape(listing)}</pre></div>"]
+            for i in infos[:12]:
+                sub_ext = Path(i.filename).suffix.lower()
+                if sub_ext in ('.py', '.txt', '.md', '.json', '.sql', '.yaml', '.yml') and i.file_size < 120000:
+                    sub_txt = zf.read(i.filename).decode('utf-8', errors='ignore')
+                    previews.append(f"<div class='card'><div style='font-size:12px;font-weight:700;color:#74c0fc;margin-bottom:6px'>📄 {html.escape(i.filename)}</div><pre>{html.escape(sub_txt[:20000])}</pre></div>")
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}{''.join(previews)}</body></html>"
+            return HTMLResponse(page)
+        except Exception:
+            pass
+
+    page = (
+        f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head>"
+        f"<body>{header_bar}<div class='card'><h3>📦 Binary Dataset / Study Resource</h3>"
+        f"<p>This course dataset or binary file (<code>{html.escape(filename)}</code>, {round(len(raw_bytes)/1024, 1)} KB) is stored in your Odysee Cloud Vault. Click the download button above to use it in your local environment or lab.</p></div></body></html>"
+    )
+    return HTMLResponse(page)
 
 
 from .media import provider_info as find_odysee_info

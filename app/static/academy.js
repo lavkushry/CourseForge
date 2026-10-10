@@ -242,7 +242,11 @@
   async function materials(course){
     const root=el('resourcesDialog');root.replaceChildren(node('h2','','Course resources'),button('Close',()=>root.close()));root.showModal();
     try{const data=await api('/api/materials'+(course?'?course='+encodeURIComponent(course):''));
-      root.append(table(['Course','Resource','Type','Size','Open'],data.materials.map(m=>{const link=node('a','text-link','View resource');link.href=m.url;link.target='_blank';link.rel='noopener';return [m.course,m.name,m.ext,`${m.size_kb} KB`,link];})));}
+      root.append(node('p','muted',`${data.total} study files · ${data.cloud_mapped||0} mapped to Odysee Cloud Vault`));
+      root.append(table(['#','Course','Resource','Type','Size','Storage','Open'],data.materials.map((m,i)=>{
+        const openInPlayer=button('Open in player',()=>{root.close();window.openFlowItem?.(m);});
+        return [String(i+1).padStart(2,'0'),m.course,m.name,m.ext,`${m.size_kb} KB`,m.cloud_ready?'☁️ Odysee':'Local',openInPlayer];
+      })));}
     catch(error){root.append(node('p','field-error',error.message));}
   }
   let activity=null;
@@ -285,7 +289,13 @@
   }
   el('bookmarkForm').onsubmit=async e=>{e.preventDefault();if(!state.currentVideoId)return;try{await api(`/api/videos/${state.currentVideoId}/bookmarks`,json('POST',{position:parseTimestamp(el('bookmarkPosition').value),label:el('bookmarkLabel').value}));await loadBookmarks(state.currentVideoId);el('bookmarkLabel').value='';}catch(error){toast(error.message,true);}};
   el('lessonSearch').oninput=e=>{const query=e.target.value.toLowerCase();document.querySelectorAll('.lesson-link').forEach(link=>link.hidden=!link.textContent.toLowerCase().includes(query));};
-  el('previousLessonBtn').onclick=()=>{const current=state.videos.find(v=>v.id===state.currentVideoId);if(!current)return;const lessons=state.videos.filter(v=>v.course===current.course),previous=lessons[lessons.findIndex(v=>v.id===current.id)-1];if(previous)openVideo(previous.id).catch(error=>toast(error.message,true));else toast('You are at the first lesson.');};
+  el('previousLessonBtn').onclick=()=>{
+    const flow=window.getCourseFlow?.(state.currentCourse||el('lessonCourse')?.value||'')||[];
+    const idx=flow.findIndex(x=>x.id===state.currentVideoId);
+    const previous=idx>0?flow[idx-1]:null;
+    if(previous)window.openFlowItem(previous).catch(error=>toast(error.message,true));
+    else toast('You are at the first item in this course.');
+  };
   window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp,workspace};
   window.addEventListener('courseforge-session-expired',()=>{account.user=null;account.csrf='';resetBrowser();});
   window.addEventListener('courseforge-task',()=>toast('Learning task queued. This view will update when it finishes.'));

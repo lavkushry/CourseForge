@@ -24,6 +24,7 @@ def learning_event(uid: str,kind: str,video_id=None,details=''):
 
 
 def catalog_record(course: str,details=False,user=None):
+    from .main import compute_flow_order, list_course_materials
     try: record=course_metadata.get_course(course)
     except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
     with connect() as db:
@@ -31,11 +32,23 @@ def catalog_record(course: str,details=False,user=None):
         if not publication or not publication['published']:raise HTTPException(404,'Course not found')
         record['description']=publication['description']
         record['enrolled']=bool(user and db.execute('SELECT 1 FROM enrollments WHERE user_id=? AND course=?',(user['id'],course)).fetchone())
-        record['available_lessons']=db.execute('SELECT COUNT(*) FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?',(course,)).fetchone()[0]
+        vid_avail=db.execute('SELECT COUNT(*) FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?',(course,)).fetchone()[0]
+        mats=list_course_materials(course).get('materials',[])
+        mat_avail=sum(1 for m in mats if m.get('cloud_ready'))
+        record['video_count']=record.get('lesson_count',0)
+        record['material_count']=len(mats)
+        record['lesson_count']=record['video_count']+len(mats)
+        record['available_lessons']=vid_avail+mat_avail
         if details:
-            record['lessons']=[dict(r) for r in db.execute('''SELECT v.id,v.title,v.duration,
+            vids=[dict(r)|{'item_type':'video','flow_order':compute_flow_order(course,r['title'])}
+                  for r in db.execute('''SELECT v.id,v.title,v.duration,
                 CASE WHEN p.video_id IS NULL THEN 0 ELSE 1 END available FROM videos v
-                LEFT JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=? ORDER BY v.title COLLATE NOCASE''',(course,))]
+                LEFT JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?''',(course,))]
+            mat_rows=[{'id':m['id'],'title':f"📄 {m['name']}",'duration':0,'available':1 if m.get('cloud_ready') else 0,
+                       'item_type':'material','ext':m.get('ext',''),'size_kb':m.get('size_kb',0),
+                       'flow_order':m.get('flow_order',compute_flow_order(course,m['name']))} for m in mats]
+            combined=sorted(vids+mat_rows,key=lambda x:(x.get('flow_order',9999.0),0 if x.get('item_type')=='video' else 1,x.get('title','')))
+            record['lessons']=combined
     return record
 
 
