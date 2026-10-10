@@ -1,4 +1,5 @@
 """Discover local videos without ever importing outside the configured folder."""
+import os
 from pathlib import Path
 from .chunking import video_id_for_path
 from .db import connect, utcnow
@@ -11,14 +12,21 @@ def scan_courses(courses_dir: Path | None = None, db_path: Path | None = None) -
     root = (courses_dir or settings.courses_dir).resolve()
     root.mkdir(parents=True, exist_ok=True)
     imported = changed = unchanged = 0
-    # Files are never copied or moved. Symlinks escaping the library are rejected.
-    files = sorted(p for p in root.rglob('*') if p.suffix.lower() in VIDEO_EXTENSIONS and p.is_file()
-                   and p.resolve().is_relative_to(root) and not any(part.startswith('.') for part in p.relative_to(root).parts))
+    found_paths: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=True):
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+        for fname in filenames:
+            if fname.startswith('.'):
+                continue
+            p = Path(dirpath) / fname
+            if p.suffix.lower() in VIDEO_EXTENSIONS and p.is_file():
+                found_paths.append(p)
+    files = sorted(found_paths)
     with connect(db_path) as conn:
         for entry in files:
             path = entry.resolve()
             stat = path.stat()
-            rel = path.relative_to(root)
+            rel = entry.relative_to(root)
             course = rel.parts[0] if len(rel.parts) > 1 else 'Unsorted'
             name = path.stem.replace('_', ' ').replace('-', ' ')
             key = video_id_for_path(str(path))
