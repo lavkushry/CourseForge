@@ -6,6 +6,7 @@ Run this on the computer hosting CourseForge, its original videos and services.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import re
 import shutil
@@ -305,10 +306,17 @@ def main(argv=None):
     for c in checks:
         print(f'{c.status:4} {c.name}'+(f' — {c.detail}' if c.detail else ''))
     summary={status:sum(c.status==status for c in checks) for status in ('PASS','FAIL','SKIP')}
-    print('Result:', 'PASS' if summary['FAIL']==0 and summary['PASS'] else 'FAIL',summary)
+    print('Diagnostic probes:', 'PASS' if summary['FAIL']==0 and summary['PASS'] else 'FAIL',summary)
+    print('This is not release approval: use scripts/release_gate.py with a full device report.')
     if args.json_output:
         args.json_output.parent.mkdir(parents=True,exist_ok=True)
-        args.json_output.write_text(json.dumps({'summary':summary,'checks':[asdict(c) for c in checks]},indent=2))
+        revision=subprocess.run(['git','-C',str(Path(__file__).resolve().parents[1]),'rev-parse','HEAD'],
+                 capture_output=True,text=True,timeout=10,check=False)
+        git_commit=revision.stdout.strip() if revision.returncode==0 and re.fullmatch(r'[0-9a-f]{40}',revision.stdout.strip()) else None
+        args.json_output.write_text(json.dumps({'schema_version':1,
+              'generated_at_utc':datetime.now(timezone.utc).isoformat(),
+              'git_commit':git_commit,'summary':summary,
+              'checks':[asdict(c) for c in checks]},indent=2))
     return 0 if summary['FAIL']==0 and summary['PASS'] else 1
 
 
