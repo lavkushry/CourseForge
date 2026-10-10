@@ -175,7 +175,7 @@
     heading(root,'Lesson completion','Students report completion themselves. This is separate from assessment and lab performance.');root.append(table(['Lecture','Course','Completion','Updated'],r.lessons.map(l=>[l.title,l.course,l.completed?'Reported complete':'Incomplete',date(l.updated_at)])));
     heading(root,'Last opened lessons');root.append(table(['Lecture','Course','Opened'],r.recent_lessons.map(l=>[l.title,l.course,date(l.updated_at)])));
     heading(root,'Lesson activity','Cumulative visible lesson activity remains available after detailed sessions expire.');root.append(table(['Lecture','Course','Activity','Last recorded'],r.lesson_activity.map(l=>[l.title,l.course,minutes(l.activity_seconds),date(l.updated_at)])));
-    heading(root,'Playback tracking','Browser-reported playback and content coverage are separate from lesson-page activity and lesson completion.');root.append(table(['Lecture','Playback','Resume','Coverage','Last saved'],r.playback.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%',date(l.updated_at)])));
+    heading(root,'Watch history','Browser-reported watch time and watched portion are separate from lesson-page activity and lesson completion.');root.append(table(['Lecture','Time watched','Resume','Watched','Last saved'],r.playback.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%',date(l.updated_at)])));
     heading(root,'Assessment results');root.append(table(['Topic','Score','Correct','Completed'],r.assessments.map(a=>[a.step_id,`${a.score}%`,`${a.correct_count}/${a.total_count}`,date(a.completed_at)])));
     heading(root,'Practice labs');root.append(table(['Lab','Status','Updated'],r.labs.map(l=>[l.slug,l.status,date(l.updated_at)])));
     heading(root,'Recall practice');root.append(table(['Self-rating (0–5)','Reviewed'],r.reviews.map(a=>[a.quality,date(a.reviewed_at)])));
@@ -185,17 +185,267 @@
     heading(root,'Learning history');root.append(table(['Activity','Lecture','Time'],r.activity.map(a=>[a.event_type.replaceAll('_',' '),a.title||a.details,date(a.created_at)])));
     heading(root,'Access history');root.append(table(['Event','IP','Device','Time'],r.access.map(a=>[a.event_type.replaceAll('_',' '),a.ip,a.device,date(a.created_at)])));
   }
+  function uploadMaterialRequest(courseId,formData,onProgress){
+    return new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',`/api/admin/courses/${encodeURIComponent(courseId)}/materials`);
+      if(account.csrf)xhr.setRequestHeader('X-CSRF-Token',account.csrf);
+      xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProgress)onProgress(Math.round((e.loaded/e.total)*100));};
+      xhr.onload=()=>{
+        let body={};try{body=JSON.parse(xhr.responseText||'{}');}catch{}
+        if(xhr.status>=200&&xhr.status<300)resolve(body);
+        else reject(new Error(typeof body.detail==='string'?body.detail:body.detail?.message||`Upload failed (${xhr.status})`));
+      };
+      xhr.onerror=()=>reject(new Error('Network error while uploading material.'));
+      xhr.send(formData);
+    });
+  }
+  async function openCourseInWorkspace(courseId){
+    await workspace();
+    const course=groupCourses().find(c=>c.name===courseId)||{name:courseId,videos:state.videos.filter(v=>v.course===courseId)};
+    openCourse(course);
+  }
   async function adminCourses(){
-    const root=adminPage('Course publishing','courses');const result=await api('/api/admin/courses');
-    for(const c of result.courses){const f=form(root,c.title,async data=>{await api(`/api/admin/courses/${encodeURIComponent(c.id)}/publication`,json('PUT',{published:data.get('published')==='on',description:data.get('description')}));message('Course publication updated.');});
-      f.append(node('p','muted',`${c.available_lessons}/${c.lesson_count} lectures mapped to Odysee`));
-      f.append(button('Edit course details and cover',()=>openCourseEditor({...c,name:c.id})));
-      const l=node('label','field');l.append(node('span','','Course description'));const d=node('textarea','form-input');d.name='description';d.maxLength=5000;d.rows=4;d.value=c.description;l.append(d);f.append(l);
-      const publish=node('label');const check=node('input');check.name='published';check.type='checkbox';check.checked=Boolean(c.published);publish.append(check,document.createTextNode(' Published in public catalog'));f.append(publish);submitButton(f,'Save publication');
-    }
-    const map=form(root,'Map an Odysee lecture',async data=>{await api(`/api/admin/videos/${encodeURIComponent(data.get('video_id'))}/provider`,json('PUT',{claim_name:data.get('claim_name'),claim_id:data.get('claim_id')}));message('Lecture mapping saved.');});
+    const root=adminPage('Course management','courses');
+    root.append(node('p','academy-lead','Manage all courses, publish or unpublish, edit course details, reorder lessons into sections, and attach or preview lesson materials.'));
+    const controls=node('div','admin-course-controls toolbar');
+    const searchInput=node('input','form-input');searchInput.type='search';searchInput.placeholder='Search courses by title, category, or instructor…';searchInput.setAttribute('aria-label','Search courses');
+    const sortSelect=node('select','form-input');sortSelect.setAttribute('aria-label','Sort courses');
+    for(const [label,val] of [['Sort: Recently updated','updated'],['Sort: Title A–Z','title'],['Sort: Most lessons','lessons'],['Sort: Most students','students'],['Sort: Most materials','materials'],['Sort: Publish status','status']])sortSelect.add(new Option(label,val));
+    controls.append(searchInput,sortSelect,button('Refresh',adminCourses));
+    root.append(controls);
+    const tableSlot=node('div','admin-courses-table-slot');root.append(tableSlot);
+    const result=await api('/api/admin/courses');
+    let courses=result.courses||[];
+    const renderTable=()=>{
+      const q=searchInput.value.trim().toLowerCase();
+      const sortBy=sortSelect.value;
+      const filtered=courses.filter(c=>[c.id,c.title||'',c.category||'',c.instructor||'',c.description||''].some(v=>String(v).toLowerCase().includes(q)));
+      filtered.sort((a,b)=>{
+        if(sortBy==='title')return (a.title||a.id).localeCompare(b.title||b.id);
+        if(sortBy==='lessons')return (b.lesson_count||0)-(a.lesson_count||0);
+        if(sortBy==='students')return (b.enrolled_students||0)-(a.enrolled_students||0);
+        if(sortBy==='materials')return (b.material_count||0)-(a.material_count||0);
+        if(sortBy==='status')return Number(Boolean(b.published))-Number(Boolean(a.published));
+        return String(b.updated_at||'').localeCompare(String(a.updated_at||''));
+      });
+      const rows=filtered.map(c=>{
+        const titleCell=node('div','admin-course-title-cell');
+        const drillBtn=node('button','text-link admin-course-drill',c.title||c.id);drillBtn.type='button';drillBtn.onclick=()=>adminCourseDetail(c.id);
+        titleCell.append(drillBtn);
+        if(c.instructor)titleCell.append(node('div','muted',`By ${c.instructor}`));
+        const playableText=`${c.available_lessons||0} playable · ${c.pending_lessons??Math.max(0,(c.lesson_count||0)-(c.available_lessons||0))} pending`;
+        const transcriptText=`${c.transcript_ready||0}/${c.lesson_count||0} (${c.transcript_percent??0}%)`;
+        const statusBadge=node('span','tag',c.published?'Published':'Draft');
+        const actions=node('div','admin-row-actions');
+        actions.append(
+          button('Manage lessons & files',()=>adminCourseDetail(c.id),true),
+          button('Edit details',()=>openCourseEditor({...c,name:c.id})),
+          button(c.published?'Unpublish':'Publish',async()=>{
+            await api(`/api/admin/courses/${encodeURIComponent(c.id)}/publication`,json('PUT',{published:!c.published,description:c.description||''}));
+            c.published=!c.published;message(`Course ${c.published?'published':'unpublished'}.`);renderTable();
+          }),
+          button('Open course',()=>openCourseInWorkspace(c.id))
+        );
+        return [
+          titleCell,
+          c.category||'General',
+          String(c.lesson_count||0),
+          playableText,
+          transcriptText,
+          `${c.material_count||0} files`,
+          String(c.enrolled_students||0),
+          statusBadge,
+          date(c.updated_at),
+          actions,
+        ];
+      });
+      tableSlot.replaceChildren(table(['Course','Category','Lessons','Playable vs pending','Transcripts','Materials','Students','Status','Last updated','Actions'],rows));
+    };
+    searchInput.oninput=renderTable;sortSelect.onchange=renderTable;renderTable();
+
+    const map=form(root,'Map an Odysee lecture',async data=>{await api(`/api/admin/videos/${encodeURIComponent(data.get('video_id'))}/provider`,json('PUT',{claim_name:data.get('claim_name'),claim_id:data.get('claim_id')}));message('Lecture mapping saved.');await adminCourses();});
     const videos=await api('/api/videos');const select=node('select','form-input');select.name='video_id';select.required=true;select.setAttribute('aria-label','Lecture to map');videos.videos.forEach(v=>select.add(new Option(`${v.course} / ${v.title}`,v.id)));map.append(select);
     field(map,'Odysee claim name','claim_name');const claim=field(map,'Odysee claim ID','claim_id');claim.pattern='[0-9a-fA-F]{40}';submitButton(map,'Save mapping');
+  }
+  async function adminCourseDetail(courseId){
+    const detail=await api(`/api/admin/courses/${encodeURIComponent(courseId)}/detail`);
+    const c=detail.course;
+    const root=adminPage(c.title||courseId,'courses/'+encodeURIComponent(courseId));
+    const topBar=node('div','toolbar');
+    topBar.append(
+      button('← Back to all courses',adminCourses),
+      button('Edit metadata & cover',()=>openCourseEditor({...c,name:c.id})),
+      button(c.published?'Unpublish course':'Publish course',async()=>{
+        await api(`/api/admin/courses/${encodeURIComponent(courseId)}/publication`,json('PUT',{published:!c.published,description:c.description||''}));
+        message(`Course ${!c.published?'published':'unpublished'}.`);await adminCourseDetail(courseId);
+      },!c.published),
+      button('Open in learner view',()=>openCourseInWorkspace(courseId))
+    );
+    root.append(topBar);
+    root.append(node('p','muted',`Course ID: ${c.id} · Category: ${c.category||'General'} · ${c.lesson_count} lessons · ${c.available_lessons} playable (${c.pending_lessons} pending) · ${c.transcript_ready}/${c.lesson_count} transcripts · ${c.material_count} materials · ${c.enrolled_students} enrolled students`));
+
+    const pubForm=form(root,'Publication & description',async data=>{
+      await api(`/api/admin/courses/${encodeURIComponent(courseId)}/publication`,json('PUT',{published:data.get('published')==='on',description:data.get('description')}));
+      message('Course publication updated.');await adminCourseDetail(courseId);
+    });
+    const descLabel=node('label','field');descLabel.append(node('span','','Course description'));
+    const descInput=node('textarea','form-input');descInput.name='description';descInput.maxLength=5000;descInput.rows=3;descInput.value=c.description||'';
+    descLabel.append(descInput);pubForm.append(descLabel);
+    const pubToggle=node('label');const pubCheck=node('input');pubCheck.name='published';pubCheck.type='checkbox';pubCheck.checked=Boolean(c.published);
+    pubToggle.append(pubCheck,document.createTextNode(' Published in public catalog'));pubForm.append(pubToggle);
+    submitButton(pubForm,'Save publication');
+
+    const previewBox=node('div','panel admin-material-preview');previewBox.hidden=true;root.append(previewBox);
+    const showPreview=mat=>{
+      previewBox.hidden=false;previewBox.replaceChildren();
+      const head=node('div','toolbar');
+      head.append(node('strong','',`Preview before publish: ${mat.friendly_name||mat.name} (${mat.material_type||'File'} · ${mat.size_kb} KB)`));
+      const dl=node('a','btn btn-outline','Download');dl.href=mat.download_url||(mat.url+'?download=1');dl.setAttribute('download','');
+      const close=button('Close preview',()=>{previewBox.hidden=true;previewBox.replaceChildren();});
+      head.append(dl,close);
+      const frame=node('iframe','admin-preview-iframe');frame.title=mat.friendly_name||mat.name;frame.src=mat.url;
+      frame.style.cssText='width:100%;min-height:460px;border:1px solid var(--line);border-radius:8px;margin-top:12px;background:#0f1420';
+      previewBox.append(head,frame);
+      previewBox.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+
+    let orderedLessons=[...(detail.lessons||[])];
+    const datalistId='sections-list-'+courseId.replace(/\W+/g,'_');
+    const datalist=node('datalist');datalist.id=datalistId;
+    (detail.sections||[]).forEach(s=>datalist.append(new Option(s,s)));
+    root.append(datalist);
+
+    heading(root,'Upload or replace course material','Attach notebooks, PDFs, slides, datasets, or code files to a specific lesson, or share an archive at the section level.');
+    const uploadPanel=node('form','academy-form panel');
+    const fileField=node('label','field');fileField.append(node('span','','Choose file'));
+    const fileInput=node('input','form-input');fileInput.type='file';fileInput.name='file';fileInput.required=true;fileField.append(fileInput);
+    const friendlyField=node('label','field');friendlyField.append(node('span','','Friendly display name (optional)'));
+    const friendlyInput=node('input','form-input');friendlyInput.name='friendly_name';friendlyInput.maxLength=200;friendlyInput.placeholder='e.g. Session 01 — Linux Fundamentals Notes';friendlyField.append(friendlyInput);
+    const typeField=node('label','field');typeField.append(node('span','','Material type'));
+    const typeSelect=node('select','form-input');typeSelect.name='material_type';
+    for(const [label,val] of [['Auto-detect from file extension',''],['Notebook','Notebook'],['PDF','PDF'],['Slides','Slides'],['Dataset','Dataset'],['Code','Code'],['Archive','Archive'],['Notes','Notes']])typeSelect.add(new Option(label,val));
+    typeField.append(typeSelect);
+    const scopeField=node('label','field');scopeField.append(node('span','','Placement scope'));
+    const scopeSelect=node('select','form-input');scopeSelect.name='scope';
+    scopeSelect.add(new Option('Lesson material (belongs to one lesson)','lesson'));
+    scopeSelect.add(new Option('Section shared file (shown at section level in sidebar)','section'));
+    scopeField.append(scopeSelect);
+    const lessonField=node('label','field');lessonField.append(node('span','','Target lesson'));
+    const lessonSelect=node('select','form-input');lessonSelect.name='lesson_id';
+    lessonSelect.add(new Option('Auto-match or select lesson…',''));
+    orderedLessons.forEach((l,i)=>lessonSelect.add(new Option(`${String(i+1).padStart(2,'0')}. ${l.title}`,l.id)));
+    lessonField.append(lessonSelect);
+    const secField=node('label','field');secField.append(node('span','','Target section (for section-level shared files)'));
+    const secInput=node('input','form-input');secInput.name='section_title';secInput.setAttribute('list',datalistId);secInput.placeholder=(detail.sections?.[0])||'Module 1 — Course Foundations';
+    secField.append(secInput);
+    const replaceInput=node('input');replaceInput.type='hidden';replaceInput.name='replace_filename';
+    const progressWrap=node('div','upload-progress-wrap');progressWrap.hidden=true;
+    const progressBar=node('progress','upload-progress-bar');progressBar.max=100;progressBar.value=0;
+    const progressText=node('span','muted','0%');
+    progressWrap.append(progressBar,progressText);
+    const uploadSubmit=node('button','btn btn-primary','Upload & attach file');uploadSubmit.type='submit';
+    uploadPanel.append(fileField,friendlyField,typeField,scopeField,lessonField,secField,replaceInput,progressWrap,uploadSubmit);
+    uploadPanel.onsubmit=async e=>{
+      e.preventDefault();
+      const f=fileInput.files[0];if(!f)return message('Select a file to upload.',true);
+      uploadSubmit.disabled=true;progressWrap.hidden=false;progressBar.value=0;progressText.textContent='Uploading 0%…';
+      try{
+        const fd=new FormData();
+        fd.append('file',f);
+        fd.append('friendly_name',friendlyInput.value.trim());
+        fd.append('material_type',typeSelect.value);
+        fd.append('scope',scopeSelect.value);
+        fd.append('lesson_id',lessonSelect.value);
+        fd.append('section_title',secInput.value.trim());
+        fd.append('replace_filename',replaceInput.value);
+        const res=await uploadMaterialRequest(courseId,fd,pct=>{progressBar.value=pct;progressText.textContent=`Uploading ${pct}%…`;});
+        progressBar.value=100;progressText.textContent='Upload complete (100%)';
+        message(`Material “${res.material?.friendly_name||f.name}” saved. Click Preview to inspect before publishing.`);
+        await loadLibrary().catch(()=>{});
+        await adminCourseDetail(courseId);
+      }catch(err){message(err.message,true);}
+      finally{uploadSubmit.disabled=false;}
+    };
+    root.append(uploadPanel);
+
+    heading(root,'Lessons & sections organization','Reorder lessons or organize them into named sections. Existing course and lecture IDs never change, and material-to-lesson assignments are preserved.');
+    const saveOrgBar=node('div','toolbar');
+    const saveOrgBtn=button('Save lesson order & sections',async()=>{
+      const payload={lessons:orderedLessons.map((l,idx)=>({video_id:l.id,section_title:l.section||'Module 1 — Course Foundations',position:idx+1}))};
+      await api(`/api/admin/courses/${encodeURIComponent(courseId)}/organization`,json('PUT',payload));
+      await loadLibrary().catch(()=>{});
+      message('Lesson order and sections saved. Lecture IDs and material assignments were preserved.');
+      await adminCourseDetail(courseId);
+    },true);
+    saveOrgBar.append(saveOrgBtn);root.append(saveOrgBar);
+
+    const lessonsContainer=node('div','admin-lessons-organizer');root.append(lessonsContainer);
+    const renderOrganizer=()=>{
+      lessonsContainer.replaceChildren();
+      const rows=orderedLessons.map((l,idx)=>{
+        const orderCell=node('div','admin-order-controls');
+        const upBtn=button('↑',()=>{if(idx===0)return;[orderedLessons[idx-1],orderedLessons[idx]]=[orderedLessons[idx],orderedLessons[idx-1]];renderOrganizer();});
+        upBtn.disabled=idx===0;upBtn.setAttribute('aria-label',`Move ${l.title} up`);
+        const downBtn=button('↓',()=>{if(idx>=orderedLessons.length-1)return;[orderedLessons[idx+1],orderedLessons[idx]]=[orderedLessons[idx],orderedLessons[idx+1]];renderOrganizer();});
+        downBtn.disabled=idx>=orderedLessons.length-1;downBtn.setAttribute('aria-label',`Move ${l.title} down`);
+        orderCell.append(node('strong','',String(idx+1).padStart(2,'0')),upBtn,downBtn);
+
+        const lessonInfo=node('div','admin-lesson-info');
+        lessonInfo.append(node('strong','',l.title),node('div','muted',`Lecture ID: ${l.id} · ${l.available?'Playable':'Pending mapping'} · ${l.transcript_ready?'Transcript ready':'No transcript'}`));
+
+        const secCell=node('div','admin-section-cell');
+        const secFieldInput=node('input','form-input');secFieldInput.value=l.section||'';secFieldInput.setAttribute('list',datalistId);
+        secFieldInput.setAttribute('aria-label',`Section for ${l.title}`);
+        secFieldInput.oninput=()=>{l.section=secFieldInput.value.trim();};
+        secCell.append(secFieldInput);
+
+        const matCell=node('div','admin-lesson-materials');
+        const mats=l.materials||[];
+        if(!mats.length)matCell.append(node('span','muted','No files attached'));
+        for(const m of mats){
+          const chip=node('div','admin-mat-chip');
+          chip.append(node('span','',`${m.friendly_name||m.name} (${m.material_type} · ${m.size_kb} KB)`));
+          const pBtn=button('Preview',()=>showPreview(m));
+          const repBtn=button('Replace',()=>{
+            replaceInput.value=m.name;friendlyInput.value=m.friendly_name||m.name;typeSelect.value=m.material_type||'';
+            scopeSelect.value='lesson';lessonSelect.value=l.id;fileInput.click();
+            uploadPanel.scrollIntoView({behavior:'smooth',block:'center'});
+          });
+          const delBtn=button('Remove',async()=>{
+            await api(`/api/admin/courses/${encodeURIComponent(courseId)}/materials/${encodeURIComponent(m.name)}`,{method:'DELETE'});
+            await loadLibrary().catch(()=>{});message(`Removed ${m.friendly_name||m.name}.`);await adminCourseDetail(courseId);
+          });
+          chip.append(pBtn,repBtn,delBtn);matCell.append(chip);
+        }
+        const attachBtn=button('+ Attach file',()=>{
+          replaceInput.value='';friendlyInput.value='';scopeSelect.value='lesson';lessonSelect.value=l.id;
+          fileInput.click();uploadPanel.scrollIntoView({behavior:'smooth',block:'center'});
+        });
+        matCell.append(attachBtn);
+        return [orderCell,lessonInfo,secCell,matCell];
+      });
+      lessonsContainer.append(table(['Order','Lesson & immutable ID','Section / Module','Attached lesson materials'],rows));
+    };
+    renderOrganizer();
+
+    const sectionFiles=(detail.materials||[]).filter(m=>m.scope==='section');
+    heading(root,'Section-level shared files','Archives and reference files shared across an entire section in the sidebar.');
+    root.append(table(['Friendly name','Type','Section','Size','Actions'],sectionFiles.map(m=>[
+      m.friendly_name||m.name,
+      m.material_type||'Archive',
+      m.section||'Course section',
+      `${m.size_kb} KB`,
+      (()=>{
+        const act=node('div','toolbar');
+        act.append(
+          button('Preview',()=>showPreview(m)),
+          button('Replace',()=>{replaceInput.value=m.name;friendlyInput.value=m.friendly_name||m.name;scopeSelect.value='section';secInput.value=m.section||'';fileInput.click();uploadPanel.scrollIntoView({behavior:'smooth'});}),
+          button('Remove',async()=>{await api(`/api/admin/courses/${encodeURIComponent(courseId)}/materials/${encodeURIComponent(m.name)}`,{method:'DELETE'});await loadLibrary().catch(()=>{});message('Removed section file.');await adminCourseDetail(courseId);})
+        );
+        return act;
+      })()
+    ])));
   }
   function selectField(f,label,name,choices,value){
     const l=node('label','field');l.append(node('span','',label));const s=node('select','form-input');s.name=name;for(const [text,id] of choices)s.add(new Option(text,id));s.value=value;l.append(s);f.append(l);return s;
@@ -232,7 +482,7 @@
     root.append(node('p','',`Public registration: ${r.registration.registration_enabled?(r.registration.registration_mode==='open'?'Immediate student access':'Email verification required'):'Administrator invitations'}.`));
     if(!r.email.configured)root.append(node('p','muted','Set SMTP_FROM, SMTP_USER, and SMTP_PASSWORD in the server environment, then restart CourseForge. Student activation and recovery links can be issued in Students.'));
     heading(root,'Course readiness');root.append(table(['Course','Publication','Lectures','Cloud mappings','Measured durations'],r.courses.map(c=>[c.course,c.published?'Published':'Draft',c.lessons,c.mapped,c.measured_durations])));
-    heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Automatic resume: ${r.player.automatic_resume?'Supported':'Unavailable'}.`),node('p','muted','The CourseForge player supports seeking, speed, volume, fullscreen, timestamp capture, automatic resume, and browser-reported playback tracking. Original video quality is delivered by Odysee. The embedded fallback supports manual resume points and visible lesson activity. Authenticated streaming and the viewer watermark provide access control and deterrence; they are not encrypted DRM.'));
+    heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Automatic resume: ${r.player.automatic_resume?'Supported':'Unavailable'}.`),node('p','muted','The CourseForge player supports seeking, speed, volume, fullscreen, timestamp capture, automatic resume, and automatic watch history. Original video quality is delivered by Odysee. The embedded fallback supports manual resume points and visible lesson activity. Authenticated streaming and the viewer watermark provide access control and deterrence; they are not encrypted DRM.'));
     root.append(button('Refresh Odysee mappings',async()=>{const result=await api('/api/admin/provider-sync',json('POST',{}));await adminSystem();message(result.in_progress?'A mapping refresh is already running.':result.error||`${result.mapped}/${result.lectures} lectures mapped. ${result.durations_added} durations added.`,Boolean(result.error));}));
     heading(root,'Service reports');root.append(table(['Service','Last report','Last successful report','Status'],Object.entries(r.service_checks).map(([name,s])=>[name.replaceAll('_',' '),date(s.last_attempt),date(s.last_success),s.last_error||s.summary.state||(s.summary.mapped!==undefined?`${s.summary.mapped}/${s.summary.lectures} mapped`:'Reported')])));
     heading(root,'Learning task queue');root.append(table(['Status','Tasks'],Object.entries(r.tasks)));
@@ -240,12 +490,15 @@
     root.append(button('Refresh status',adminSystem));
   }
   async function materials(course){
-    const root=el('resourcesDialog');root.replaceChildren(node('h2','','Course resources'),button('Close',()=>root.close()));root.showModal();
+    const root=el('resourcesDialog');root.replaceChildren(node('h2','','Course materials'),button('Close',()=>root.close()));root.showModal();
     try{const data=await api('/api/materials'+(course?'?course='+encodeURIComponent(course):''));
-      root.append(node('p','muted',`${data.total} study files · ${data.cloud_mapped||0} mapped to Odysee Cloud Vault`));
-      root.append(table(['#','Course','Resource','Type','Size','Storage','Open'],data.materials.map((m,i)=>{
-        const openInPlayer=button('Open in player',()=>{root.close();window.openFlowItem?.(m);});
-        return [String(i+1).padStart(2,'0'),m.course,m.name,m.ext,`${m.size_kb} KB`,m.cloud_ready?'☁️ Odysee':'Local',openInPlayer];
+      root.append(node('p','muted',`${data.total} study files ready to open or download`));
+      root.append(table(['#','Course','Material','Type','Size','Actions'],data.materials.map((m,i)=>{
+        const act=node('div','toolbar');
+        const openInPlayer=button('Open in browser',()=>{root.close();window.openFlowItem?.(m);});
+        const dl=node('a','btn btn-outline','Download');dl.href=m.download_url||(m.url+'?download=1');dl.setAttribute('download','');
+        act.append(openInPlayer,dl);
+        return [String(i+1).padStart(2,'0'),m.course,m.friendly_name||m.name,m.material_type||m.ext,`${m.size_kb} KB`,act];
       })));}
     catch(error){root.append(node('p','field-error',error.message));}
   }
@@ -288,15 +541,21 @@
     if(!data.bookmarks.length)list.append(node('p','muted','No bookmarks for this lecture yet.'));
   }
   el('bookmarkForm').onsubmit=async e=>{e.preventDefault();if(!state.currentVideoId)return;try{await api(`/api/videos/${state.currentVideoId}/bookmarks`,json('POST',{position:parseTimestamp(el('bookmarkPosition').value),label:el('bookmarkLabel').value}));await loadBookmarks(state.currentVideoId);el('bookmarkLabel').value='';}catch(error){toast(error.message,true);}};
-  el('lessonSearch').oninput=e=>{const query=e.target.value.toLowerCase();document.querySelectorAll('.lesson-link').forEach(link=>link.hidden=!link.textContent.toLowerCase().includes(query));};
-  el('previousLessonBtn').onclick=()=>{
-    const flow=window.getCourseFlow?.(state.currentCourse||el('lessonCourse')?.value||'')||[];
-    const idx=flow.findIndex(x=>x.id===state.currentVideoId);
-    const previous=idx>0?flow[idx-1]:null;
-    if(previous)window.openFlowItem(previous).catch(error=>toast(error.message,true));
-    else toast('You are at the first item in this course.');
+  el('lessonSearch').oninput=e=>{
+    const query=e.target.value.toLowerCase();
+    document.querySelectorAll('.lesson-link').forEach(link=>{link.hidden=!link.textContent.toLowerCase().includes(query);});
+    document.querySelectorAll('.lesson-section').forEach(sec=>{
+      const anyVisible=[...sec.querySelectorAll('.lesson-link')].some(l=>!l.hidden);
+      sec.hidden=Boolean(query)&&!anyVisible;
+      if(query&&anyVisible)sec.open=true;
+    });
   };
-  window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp,workspace};
+  el('previousLessonBtn').onclick=()=>{
+    const previous=window.CourseForgeStudio?.adjacent(-1);
+    if(previous)openVideo(previous.id).catch(error=>toast(error.message,true));
+    else toast('You are at the first lesson in this course.');
+  };
+  window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp,workspace,adminCourses,adminCourseDetail};
   window.addEventListener('courseforge-session-expired',()=>{account.user=null;account.csrf='';resetBrowser();});
   window.addEventListener('courseforge-task',()=>toast('Learning task queued. This view will update when it finishes.'));
   el('catalogNav').onclick=()=>catalog().catch(e=>message(e.message,true));el('learningNav').onclick=()=>workspace().catch(e=>message(e.message,true));
@@ -327,7 +586,8 @@
     else if(adminRoute&&!account.user)signIn();
     else if(adminRoute&&account.user?.role==='admin'){
       const route=adminRoute[1]||'';
-      if(route.startsWith('students/'))await adminStudent(route.slice(9));
+      if(route.startsWith('students/'))await adminStudent(decodeURIComponent(route.slice(9)));
+      else if(route.startsWith('courses/'))await adminCourseDetail(decodeURIComponent(route.slice(8)));
       else await ({students:adminUsers,courses:adminCourses,player:adminPlayer,system:adminSystem}[route]||adminHome)();
     }
     else if(account.user?.verified)await workspace();else await catalog();

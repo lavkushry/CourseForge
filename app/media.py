@@ -95,9 +95,21 @@ def _sync_provider_mappings():
                 match=re.match(r'\[(\d{3})\]',title)
                 # Course-specific prefixes are only an import fallback; the
                 # resulting mapping is persisted against an immutable video ID.
-                prefix='agentic-genai-' if name.startswith('agentic-genai-') else 'mission-ade-2026-' if name.startswith('mission-ade-2026-') else None
-                if match and prefix:
-                    course='Advanced Agentic AI And Gen AI By Prudhvi Sir Nareshit 2026' if prefix=='agentic-genai-' else 'Deepak Data Engg'
+                prefix_map={
+                    'agentic-genai-':'Advanced Agentic AI And Gen AI By Prudhvi Sir Nareshit 2026',
+                    'mission-ade-2026-':'Deepak Data Engg',
+                    'trendytech-bigdata-':'TrendyTech Ultimate Big Data Masters Program',
+                    'scaler-ds-2026-':'Scaler Data Science',
+                    'scaler-dsa-sd-2026-':'Scaler DSA and System Design',
+                    'gauravsen-ai-2026-':'Gaurav Sen AI Engineering 2026',
+                    'gauravsen-lld-2026-':'Gaurav Sen Low Level Design (LLD) 2026',
+                    'gauravsen-hld-2026-':'Gaurav Sen System Design Simplified (HLD)',
+                    'namaste-ai-2026-':'Namaste AI',
+                    'keerti-agentic-sd-2026-':'Keerti Purswani Agentic AI System Design Course 2026',
+                    'arpit-bhayani-sd-2026-':'Arpit Bhaiyani - System Design Course',
+                }
+                course=next((c for p,c in prefix_map.items() if name.startswith(p)),None)
+                if match and course:
                     candidates=[v for v in videos if v['course']==course and v['title'].startswith(f'[{match[1]}]')]
             if len(candidates)==1:
                 vid=candidates[0]['id']

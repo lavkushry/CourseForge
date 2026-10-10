@@ -5,6 +5,7 @@ import json
 import logging
 import secrets
 import time
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel,Field
@@ -34,21 +35,24 @@ def catalog_record(course: str,details=False,user=None):
         record['enrolled']=bool(user and db.execute('SELECT 1 FROM enrollments WHERE user_id=? AND course=?',(user['id'],course)).fetchone())
         vid_avail=db.execute('SELECT COUNT(*) FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?',(course,)).fetchone()[0]
         mats=list_course_materials(course).get('materials',[])
-        mat_avail=sum(1 for m in mats if m.get('cloud_ready'))
-        record['video_count']=record.get('lesson_count',0)
         record['material_count']=len(mats)
-        record['lesson_count']=record['video_count']+len(mats)
-        record['available_lessons']=vid_avail+mat_avail
+        record['available_lessons']=vid_avail
         if details:
-            vids=[dict(r)|{'item_type':'video','flow_order':compute_flow_order(course,r['title'])}
-                  for r in db.execute('''SELECT v.id,v.title,v.duration,
+            org_rows={(r['course'],r['video_id']):dict(r) for r in db.execute('SELECT * FROM course_lesson_organization WHERE course=?',(course,))}
+            vids=[]
+            for r in db.execute('''SELECT v.id,v.title,v.duration,
                 CASE WHEN p.video_id IS NULL THEN 0 ELSE 1 END available FROM videos v
-                LEFT JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?''',(course,))]
-            mat_rows=[{'id':m['id'],'title':f"📄 {m['name']}",'duration':0,'available':1 if m.get('cloud_ready') else 0,
-                       'item_type':'material','ext':m.get('ext',''),'size_kb':m.get('size_kb',0),
-                       'flow_order':m.get('flow_order',compute_flow_order(course,m['name']))} for m in mats]
-            combined=sorted(vids+mat_rows,key=lambda x:(x.get('flow_order',9999.0),0 if x.get('item_type')=='video' else 1,x.get('title','')))
-            record['lessons']=combined
+                LEFT JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?''',(course,)):
+                d=dict(r)
+                base_order=compute_flow_order(course,d['title'])
+                org=org_rows.get((course,d['id']))
+                d['flow_order']=float(org['position']) if org and org.get('position') is not None else base_order
+                d['section']=org['section_title'] if org and org.get('section_title') else course_metadata.infer_section_title(course,d['title'],base_order)
+                d['materials']=[m for m in mats if m.get('scope')=='lesson' and m.get('lesson_id')==d['id']]
+                vids.append(d)
+            vids.sort(key=lambda x:(x.get('flow_order',9999.0),x.get('title','')))
+            record['lessons']=vids
+            record['materials']=mats
     return record
 
 
@@ -359,14 +363,226 @@ def manage_enrollment(uid: str,body: EnrollmentBody,request: Request):
 
 @router.get('/api/admin/courses')
 def admin_courses(request: Request):
+    from .main import list_course_materials
     auth.require_admin(request)
     records=course_metadata.list_courses()
+    all_mats=list_course_materials().get('materials',[])
+    mats_by_course={}
+    for m in all_mats:
+        mats_by_course.setdefault(m['course'],[]).append(m)
     with connect() as db:
         for record in records:
-            publication=db.execute('SELECT * FROM course_publication WHERE course=?',(record['id'],)).fetchone()
-            record.update(dict(publication) if publication else {'published':0,'description':''})
-            record['available_lessons']=db.execute('SELECT COUNT(*) FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?',(record['id'],)).fetchone()[0]
+            cid=record['id']
+            record['course']=cid
+            publication=db.execute('SELECT * FROM course_publication WHERE course=?',(cid,)).fetchone()
+            pub_dict=dict(publication) if publication else {'published':0,'description':'','updated_at':None}
+            meta_updated=record.get('updated_at')
+            record['published']=bool(pub_dict['published'])
+            record['description']=pub_dict['description']
+            avail=db.execute('SELECT COUNT(*) FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?',(cid,)).fetchone()[0]
+            enrolled=db.execute('SELECT COUNT(DISTINCT user_id) FROM enrollments WHERE course=?',(cid,)).fetchone()[0]
+            latest_vid=db.execute('SELECT MAX(created_at) FROM videos WHERE course=?',(cid,)).fetchone()[0]
+            latest_org=db.execute('SELECT MAX(updated_at) FROM course_lesson_organization WHERE course=?',(cid,)).fetchone()[0]
+            latest_mat=db.execute('SELECT MAX(updated_at) FROM course_materials_meta WHERE course=?',(cid,)).fetchone()[0]
+            timestamps=[t for t in (meta_updated,pub_dict.get('updated_at'),latest_org,latest_mat,latest_vid) if t]
+            record['available_lessons']=avail
+            record['pending_lessons']=max(0,record.get('lesson_count',0)-avail)
+            record['material_count']=len(mats_by_course.get(cid,[]))
+            record['enrolled_students']=enrolled
+            record['transcript_ready']=record.get('indexed_count',0)
+            record['updated_at']=max(timestamps) if timestamps else utcnow()
+            if not record.get('category'):
+                c_low=cid.lower()
+                record['category']='Artificial Intelligence' if ('agentic' in c_low or 'ai' in c_low) else ('Data Engineering' if ('data' in c_low or 'sql' in c_low or 'spark' in c_low) else 'Technology')
     return {'courses':records}
+
+
+@router.get('/api/admin/courses/{course_id}/detail')
+def admin_course_detail(course_id: str,request: Request):
+    from .main import compute_flow_order, list_course_materials
+    auth.require_admin(request)
+    try:record=course_metadata.get_course(course_id)
+    except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
+    mats=list_course_materials(course_id).get('materials',[])
+    with connect() as db:
+        publication=db.execute('SELECT * FROM course_publication WHERE course=?',(course_id,)).fetchone()
+        record['published']=publication['published'] if publication else 0
+        record['description']=publication['description'] if publication else ''
+        record['enrolled_students']=db.execute('SELECT COUNT(DISTINCT user_id) FROM enrollments WHERE course=?',(course_id,)).fetchone()[0]
+        org_rows={(r['course'],r['video_id']):dict(r) for r in db.execute('SELECT * FROM course_lesson_organization WHERE course=?',(course_id,))}
+        vids=[]
+        for r in db.execute('''SELECT v.id,v.title,v.duration,v.status,
+            CASE WHEN p.video_id IS NULL THEN 0 ELSE 1 END available,
+            p.claim_name,p.claim_id FROM videos v
+            LEFT JOIN lecture_providers p ON p.video_id=v.id WHERE v.course=?''',(course_id,)):
+            d=dict(r)
+            base_order=compute_flow_order(course_id,d['title'])
+            org=org_rows.get((course_id,d['id']))
+            d['base_flow_order']=base_order
+            d['flow_order']=float(org['position']) if org and org.get('position') is not None else base_order
+            d['section']=org['section_title'] if org and org.get('section_title') else course_metadata.infer_section_title(course_id,d['title'],base_order)
+            d['materials']=[m for m in mats if m.get('scope')=='lesson' and m.get('lesson_id')==d['id']]
+            vids.append(d)
+        vids.sort(key=lambda x:(x.get('flow_order',9999.0),x.get('title','')))
+    sections=[]
+    for v in vids:
+        if v['section'] not in sections:sections.append(v['section'])
+    for m in mats:
+        if m.get('section') and m['section'] not in sections:sections.append(m['section'])
+    return {'course':record,'lessons':vids,'materials':mats,'sections':sections}
+
+
+class LessonOrderItem(BaseModel):
+    video_id: str=Field(min_length=1,max_length=120)
+    section_title: str=Field(default='',max_length=160)
+    position: float | None=Field(default=None,ge=0,le=100000)
+    display_order: float | None=Field(default=None,ge=0,le=100000)
+
+
+class CourseOrganizationBody(BaseModel):
+    lessons: list[LessonOrderItem]=Field(min_length=1,max_length=1000)
+
+
+@router.put('/api/admin/courses/{course_id}/organization')
+def update_course_organization(course_id: str,body: CourseOrganizationBody,request: Request):
+    from .main import list_course_materials
+    auth.require_admin(request)
+    try:course_metadata.get_course(course_id)
+    except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
+    # Snapshot existing material-to-lesson assignments before reordering so they never shift.
+    current_mats=list_course_materials(course_id).get('materials',[])
+    now=utcnow()
+    with connect() as db:
+        valid_ids={r['id'] for r in db.execute('SELECT id FROM videos WHERE course=?',(course_id,))}
+        for item in body.lessons:
+            if item.video_id not in valid_ids:
+                raise HTTPException(404,f'Lecture {item.video_id} does not belong to this course')
+        db.execute('BEGIN IMMEDIATE')
+        for m in current_mats:
+            db.execute('''INSERT INTO course_materials_meta(id,course,filename,friendly_name,material_type,lesson_id,section_title,scope,position,removed,updated_at)
+                VALUES(?,?,?,?,?,?,?,?,0,0,?)
+                ON CONFLICT(course,filename) DO UPDATE SET
+                lesson_id=COALESCE(course_materials_meta.lesson_id,excluded.lesson_id),
+                scope=COALESCE(course_materials_meta.scope,excluded.scope)''',
+                (m['id'],course_id,m['name'],m.get('friendly_name'),m.get('material_type'),m.get('lesson_id'),m.get('section'),m.get('scope','lesson'),now))
+        for idx,item in enumerate(body.lessons,1):
+            sec=item.section_title.strip() or 'Week 1 — Core Fundamentals'
+            pos=item.position if item.position is not None else (item.display_order if item.display_order is not None else float(idx))
+            db.execute('''INSERT INTO course_lesson_organization(course,video_id,section_title,position,updated_at)
+                VALUES(?,?,?,?,?) ON CONFLICT(course,video_id) DO UPDATE SET
+                section_title=excluded.section_title,position=excluded.position,updated_at=excluded.updated_at''',
+                (course_id,item.video_id,sec,float(pos),now))
+    return admin_course_detail(course_id,request)
+
+
+class MaterialAttachBody(BaseModel):
+    filename: str=Field(min_length=1,max_length=200)
+    friendly_name: str | None=Field(default=None,max_length=160)
+    material_type: str | None=Field(default=None,max_length=40)
+    scope: Literal['lesson','section']='lesson'
+    lesson_id: str | None=Field(default=None,max_length=120)
+    section_title: str | None=Field(default=None,max_length=160)
+    content_base64: str | None=Field(default=None)
+    content_text: str | None=Field(default=None)
+
+
+@router.post('/api/admin/courses/{course_id}/materials',status_code=201)
+def attach_or_replace_material(course_id: str,body: MaterialAttachBody,request: Request):
+    import base64
+    from pathlib import Path
+    from .db import settings
+    auth.require_admin(request)
+    try:course_metadata.get_course(course_id)
+    except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
+    safe_name=Path(body.filename).name.strip()
+    if not safe_name or safe_name.startswith('.') or '..' in safe_name or '/' in safe_name or '\\' in safe_name or safe_name.lower().endswith('.mp4'):
+        raise HTTPException(422,'Enter a valid study file name')
+    course_dir=(settings.courses_dir.resolve()/course_id).resolve()
+    if course_dir.parent!=settings.courses_dir.resolve():
+        raise HTTPException(404,'Course not found')
+    course_dir.mkdir(parents=True,exist_ok=True)
+    target=(course_dir/safe_name).resolve()
+    if not target.is_relative_to(course_dir):
+        raise HTTPException(422,'Invalid file path')
+    if body.content_base64 is not None:
+        try:raw=base64.b64decode(body.content_base64)
+        except Exception:raise HTTPException(422,'Invalid file encoding')
+        if len(raw)>25*1024*1024:raise HTTPException(413,'Material file must be 25 MiB or smaller')
+        target.write_bytes(raw)
+    elif body.content_text is not None:
+        target.write_text(body.content_text,encoding='utf-8')
+    elif not target.is_file():
+        raise HTTPException(422,'Provide file content to upload')
+    friendly=(body.friendly_name or '').strip() or course_metadata.friendly_material_name(safe_name)
+    mtype=(body.material_type or '').strip() or course_metadata.classify_material_type(safe_name)
+    scope=body.scope
+    lid=body.lesson_id if scope=='lesson' else None
+    sec=(body.section_title or '').strip() or None
+    now=utcnow()
+    mid=f'mat:{course_id}/{safe_name}'
+    with connect() as db:
+        if lid:
+            v=db.execute('SELECT id FROM videos WHERE id=? AND course=?',(lid,course_id)).fetchone()
+            if not v:raise HTTPException(404,'Target lesson not found in this course')
+        db.execute('''INSERT INTO course_materials_meta(id,course,filename,friendly_name,material_type,lesson_id,section_title,scope,position,removed,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,0,0,?)
+            ON CONFLICT(course,filename) DO UPDATE SET
+            friendly_name=excluded.friendly_name,material_type=excluded.material_type,
+            lesson_id=excluded.lesson_id,section_title=excluded.section_title,
+            scope=excluded.scope,removed=0,updated_at=excluded.updated_at''',
+            (mid,course_id,safe_name,friendly,mtype,lid,sec,scope,now))
+    return admin_course_detail(course_id,request)
+
+
+class MaterialUpdateBody(BaseModel):
+    friendly_name: str | None=Field(default=None,max_length=160)
+    material_type: str | None=Field(default=None,max_length=40)
+    scope: Literal['lesson','section'] | None=None
+    lesson_id: str | None=Field(default=None,max_length=120)
+    section_title: str | None=Field(default=None,max_length=160)
+
+
+@router.patch('/api/admin/courses/{course_id}/materials/{filename}')
+def update_material_assignment(course_id: str,filename: str,body: MaterialUpdateBody,request: Request):
+    auth.require_admin(request)
+    try:course_metadata.get_course(course_id)
+    except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
+    now=utcnow()
+    mid=f'mat:{course_id}/{filename}'
+    with connect() as db:
+        existing=db.execute('SELECT * FROM course_materials_meta WHERE course=? AND filename=?',(course_id,filename)).fetchone()
+        old=dict(existing) if existing else {}
+        friendly=(body.friendly_name.strip() if body.friendly_name else old.get('friendly_name')) or course_metadata.friendly_material_name(filename)
+        mtype=(body.material_type.strip() if body.material_type else old.get('material_type')) or course_metadata.classify_material_type(filename)
+        scope=body.scope or old.get('scope') or 'lesson'
+        lid=body.lesson_id if scope=='lesson' else None
+        sec=(body.section_title.strip() if body.section_title else old.get('section_title')) or None
+        if lid:
+            if not db.execute('SELECT 1 FROM videos WHERE id=? AND course=?',(lid,course_id)).fetchone():
+                raise HTTPException(404,'Target lesson not found in this course')
+        db.execute('''INSERT INTO course_materials_meta(id,course,filename,friendly_name,material_type,lesson_id,section_title,scope,position,removed,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,0,0,?)
+            ON CONFLICT(course,filename) DO UPDATE SET
+            friendly_name=excluded.friendly_name,material_type=excluded.material_type,
+            lesson_id=excluded.lesson_id,section_title=excluded.section_title,
+            scope=excluded.scope,removed=0,updated_at=excluded.updated_at''',
+            (mid,course_id,filename,friendly,mtype,lid,sec,scope,now))
+    return admin_course_detail(course_id,request)
+
+
+@router.delete('/api/admin/courses/{course_id}/materials/{filename}')
+def delete_material_assignment(course_id: str,filename: str,request: Request):
+    auth.require_admin(request)
+    try:course_metadata.get_course(course_id)
+    except course_metadata.UnknownCourse:raise HTTPException(404,'Course not found')
+    now=utcnow()
+    mid=f'mat:{course_id}/{filename}'
+    with connect() as db:
+        db.execute('''INSERT INTO course_materials_meta(id,course,filename,friendly_name,material_type,lesson_id,section_title,scope,position,removed,updated_at)
+            VALUES(?,?,?,?,?,NULL,NULL,'lesson',0,1,?)
+            ON CONFLICT(course,filename) DO UPDATE SET removed=1,updated_at=excluded.updated_at''',
+            (mid,course_id,filename,course_metadata.friendly_material_name(filename),course_metadata.classify_material_type(filename),now))
+    return {'ok':True}
 
 
 class PublicationBody(BaseModel):

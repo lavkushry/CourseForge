@@ -42,7 +42,7 @@
     a.delivery=window.CourseForgePlaybackDelivery({
       request:(sample,signal)=>api(`/api/player-sessions/${a.id}/heartbeat`,{...json('POST',sample),signal}),
       onSaved:r=>{if(owner!==a)return;if(!r.active&&!r.released){a.claimed=false;onLost('Your lesson is paused. Select Resume here to continue.');}},
-      onError:error=>{if(owner!==a)return;if([401,403,404].includes(error.status)){a.claimed=false;onLost('Please reopen the lesson to keep watching.');}else window.CourseForgeNative?.trackingNotice('Connection interrupted. Playback tracking will resume after reconnection.');}
+      onError:error=>{if(owner!==a)return;if([401,403,404].includes(error.status)){a.claimed=false;onLost('Please reopen the lesson to keep watching.');}else window.CourseForgeNative?.trackingNotice('Connection interrupted. Progress saving will resume after reconnection.');}
     });
     a.timer=setInterval(()=>heartbeat(),10000);return a.id;
   }

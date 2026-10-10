@@ -133,11 +133,17 @@ def scan():
 
 def compute_flow_order(course: str, name: str) -> float:
     import re
-    m = re.match(r'^\[(\d+)([a-z]?)(?:\s*part\s*(\d+)|-(\d+))?\]', (name or '').strip(), re.I)
-    if not m:
-        return 0.1
-    num = int(m.group(1))
-    sub = (ord(m.group(2).lower()) - ord('a') + 1) * 0.1 if m.group(2) else (int(m.group(3)) * 0.1 if m.group(3) else 0.0)
+    cleaned = (name or '').strip()
+    m = re.match(r'^\[(\d+)([a-z]?)(?:\s*part\s*(\d+)|-(\d+))?\]', cleaned, re.I)
+    if m:
+        num = int(m.group(1))
+        sub = (ord(m.group(2).lower()) - ord('a') + 1) * 0.1 if m.group(2) else (int(m.group(3) or m.group(4)) * 0.1 if (m.group(3) or m.group(4)) else 0.0)
+    else:
+        m2 = re.match(r'^(\d+)([a-z]?)(?:[\.\-\s_]+)', cleaned, re.I)
+        if not m2:
+            return 0.1
+        num = int(m2.group(1))
+        sub = (ord(m2.group(2).lower()) - ord('a') + 1) * 0.1 if m2.group(2) else 0.0
     if 'Agentic AI' in course and num >= 63:
         agentic_map = {
             63: 0.50, 64: 1.01, 65: 2.01, 66: 2.02,
@@ -167,9 +173,22 @@ def videos():
     vids = fetch_videos()
     with connect() as db:
         mapped = {r['video_id'] for r in db.execute('SELECT video_id FROM lecture_providers')}
+        org_rows = {
+            (r['course'], r['video_id']): dict(r)
+            for r in db.execute('SELECT * FROM course_lesson_organization')
+        }
     for v in vids:
+        c_name = v.get('course', '')
+        base_order = compute_flow_order(c_name, v.get('title', ''))
+        org = org_rows.get((c_name, v['id']))
         v['cloud_ready'] = v['id'] in mapped
-        v['flow_order'] = compute_flow_order(v.get('course', ''), v.get('title', ''))
+        v['base_flow_order'] = base_order
+        v['flow_order'] = float(org['position']) if org and org.get('position') is not None else base_order
+        v['section'] = (
+            org['section_title']
+            if org and org.get('section_title')
+            else course_metadata.infer_section_title(c_name, v.get('title', ''), base_order)
+        )
         v['item_type'] = 'video'
         v.pop('path', None)
     vids.sort(key=lambda x: (x.get('course', ''), x.get('flow_order', 9999.0), x.get('title', '')))
@@ -275,8 +294,21 @@ def get_video(video_id: str):
     video = fetch_video(video_id)
     if not video:
         raise HTTPException(404, 'Video not found')
+    c_name = video.get('course', '')
+    base_order = compute_flow_order(c_name, video.get('title', ''))
+    with connect() as db:
+        org = db.execute(
+            'SELECT * FROM course_lesson_organization WHERE course=? AND video_id=?',
+            (c_name, video_id),
+        ).fetchone()
     video['cloud_ready'] = bool(find_odysee_info(video))
-    video['flow_order'] = compute_flow_order(video.get('course', ''), video.get('title', ''))
+    video['base_flow_order'] = base_order
+    video['flow_order'] = float(org['position']) if org and org['position'] is not None else base_order
+    video['section'] = (
+        org['section_title']
+        if org and org['section_title']
+        else course_metadata.infer_section_title(c_name, video.get('title', ''), base_order)
+    )
     video.pop('path', None)
     return {'video': video, 'chunks': transcript_for_video(video_id)}
 
@@ -318,12 +350,48 @@ def _fetch_odysee_doc_bytes(doc_entry: dict) -> bytes | None:
     return None
 
 
+def _match_material_to_lesson(c_name: str, fname: str, ext: str, mat_flow: float, course_vids: list[dict], meta: dict | None) -> tuple[str, str | None, str]:
+    """Return (scope, lesson_id, section_title) for a course material."""
+    vid_by_id = {v['id']: v for v in course_vids}
+    if meta:
+        scope = meta.get('scope') or ('section' if not meta.get('lesson_id') and meta.get('section_title') else 'lesson')
+        lid = meta.get('lesson_id')
+        sec = meta.get('section_title') or ''
+        if scope == 'section':
+            return 'section', None, sec or course_metadata.infer_section_title(c_name, fname, mat_flow)
+        if lid and lid in vid_by_id:
+            return 'lesson', lid, sec or vid_by_id[lid].get('section') or course_metadata.infer_section_title(c_name, fname, mat_flow)
+    # Default rule: .zip archives or course-wide reference packs are section-level shared files
+    if ext in {'zip', 'tar', 'gz', 'tgz'} or ('deepak' in c_name.lower() and mat_flow >= 90):
+        return 'section', None, course_metadata.infer_section_title(c_name, fname, mat_flow)
+    if not course_vids:
+        return 'section', None, course_metadata.infer_section_title(c_name, fname, mat_flow)
+    # Match to the lesson whose base_flow_order is closest <= mat_flow (or the first lesson)
+    ordered_by_base = sorted(course_vids, key=lambda v: (v.get('base_flow_order', 9999.0), v.get('title', '')))
+    chosen = ordered_by_base[0]
+    for v in ordered_by_base:
+        if v.get('base_flow_order', 9999.0) <= mat_flow + 0.001:
+            chosen = v
+        else:
+            break
+    return 'lesson', chosen['id'], chosen.get('section') or course_metadata.infer_section_title(c_name, chosen.get('title', ''), chosen.get('base_flow_order', 1.0))
+
+
 @app.get('/api/materials')
 def list_course_materials(course: str | None = None):
     import os
     import urllib.parse
     root = settings.courses_dir.resolve()
     docs_manifest = _load_odysee_docs_manifest()
+    all_vids = videos()['videos']
+    vids_by_course: dict[str, list[dict]] = {}
+    for v in all_vids:
+        vids_by_course.setdefault(v['course'], []).append(v)
+    with connect() as db:
+        meta_rows = {
+            (r['course'], r['filename']): dict(r)
+            for r in db.execute('SELECT * FROM course_materials_meta')
+        }
     seen: dict[tuple[str, str], dict] = {}
     if root.exists():
         for c_name in sorted(os.listdir(root)):
@@ -342,22 +410,37 @@ def list_course_materials(course: str | None = None):
                 fpath = c_path / fname
                 if not fpath.is_file() or not fpath.resolve().is_relative_to(c_path.resolve()):
                     continue
+                meta = meta_rows.get((c_name, fname))
+                if meta and meta.get('removed'):
+                    continue
                 ext = fpath.suffix.lower().lstrip('.')
                 m_key = f"{c_name}/{fname}"
                 doc_info = docs_manifest.get(m_key, {})
+                mat_flow = compute_flow_order(c_name, fname)
+                course_vids = vids_by_course.get(c_name, [])
+                scope, lid, sec = _match_material_to_lesson(c_name, fname, ext, mat_flow, course_vids, meta)
+                if scope == 'lesson' and lid:
+                    matched_vid = next((v for v in course_vids if v['id'] == lid), None)
+                    if matched_vid is not None:
+                        mat_flow = round(float(matched_vid.get('flow_order', mat_flow)) + 0.001, 4)
+                url = f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}"
                 seen[(c_name, fname)] = {
                     "id": f"mat:{c_name}/{fname}",
                     "course": c_name,
                     "name": fname,
-                    "title": Path(fname).stem,
+                    "title": (meta.get('friendly_name') if meta else None) or course_metadata.friendly_material_name(fname),
+                    "friendly_name": (meta.get('friendly_name') if meta else None) or course_metadata.friendly_material_name(fname),
+                    "material_type": (meta.get('material_type') if meta else None) or course_metadata.classify_material_type(fname),
                     "ext": ext,
                     "size_kb": round(fpath.stat().st_size / 1024, 1),
-                    "cloud_ready": m_key in docs_manifest,
-                    "provider": "odysee" if m_key in docs_manifest else "local",
-                    "claim_id": doc_info.get("claim_id", ""),
-                    "flow_order": compute_flow_order(c_name, fname),
+                    "cloud_ready": True,
+                    "flow_order": mat_flow,
+                    "scope": scope,
+                    "lesson_id": lid,
+                    "section": sec,
                     "item_type": "material",
-                    "url": f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}",
+                    "url": url,
+                    "download_url": url + "?download=1",
                 }
     for m_key, entry in sorted(docs_manifest.items()):
         if not isinstance(entry, dict):
@@ -369,21 +452,36 @@ def list_course_materials(course: str | None = None):
         if course and c_name != course:
             continue
         if (c_name, fname) not in seen:
+            meta = meta_rows.get((c_name, fname))
+            if meta and meta.get('removed'):
+                continue
             ext = (entry.get("ext") or Path(fname).suffix.lower()).lstrip('.')
             size_kb = round((entry.get("size_bytes") or (entry.get("size_kb", 0) * 1024)) / 1024, 1)
+            mat_flow = compute_flow_order(c_name, fname)
+            course_vids = vids_by_course.get(c_name, [])
+            scope, lid, sec = _match_material_to_lesson(c_name, fname, ext, mat_flow, course_vids, meta)
+            if scope == 'lesson' and lid:
+                matched_vid = next((v for v in course_vids if v['id'] == lid), None)
+                if matched_vid is not None:
+                    mat_flow = round(float(matched_vid.get('flow_order', mat_flow)) + 0.001, 4)
+            url = f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}"
             seen[(c_name, fname)] = {
                 "id": f"mat:{c_name}/{fname}",
                 "course": c_name,
                 "name": fname,
-                "title": Path(fname).stem,
+                "title": (meta.get('friendly_name') if meta else None) or course_metadata.friendly_material_name(fname),
+                "friendly_name": (meta.get('friendly_name') if meta else None) or course_metadata.friendly_material_name(fname),
+                "material_type": (meta.get('material_type') if meta else None) or course_metadata.classify_material_type(fname),
                 "ext": ext,
                 "size_kb": size_kb,
                 "cloud_ready": True,
-                "provider": "odysee",
-                "claim_id": entry.get("claim_id", ""),
-                "flow_order": compute_flow_order(c_name, fname),
+                "flow_order": mat_flow,
+                "scope": scope,
+                "lesson_id": lid,
+                "section": sec,
                 "item_type": "material",
-                "url": f"/api/materials/{urllib.parse.quote(c_name)}/{urllib.parse.quote(fname)}",
+                "url": url,
+                "download_url": url + "?download=1",
             }
     items = sorted(seen.values(), key=lambda x: (x["course"], x["flow_order"], x["name"]))
     return {"materials": items, "total": len(items), "cloud_mapped": sum(1 for x in items if x.get("cloud_ready"))}
@@ -426,7 +524,7 @@ def get_course_material(course: str, filename: str, download: int = 0):
 
     ext = Path(filename).suffix.lower()
     dl_url = f"/api/materials/{urllib.parse.quote(course)}/{urllib.parse.quote(filename)}?download=1"
-    if download:
+    if download or ext in ('.html', '.htm', '.svg', '.xml', '.xhtml'):
         return Response(
             content=raw_bytes,
             media_type='application/pdf' if ext == '.pdf' else 'application/octet-stream',
@@ -440,19 +538,20 @@ def get_course_material(course: str, filename: str, download: int = 0):
             headers={'Content-Disposition': f'inline; filename="{filename}"'},
         )
 
+    friendly = course_metadata.friendly_material_name(filename)
+    mtype = course_metadata.classify_material_type(filename)
     badge = (
         f"<span style='display:inline-block;padding:4px 10px;font-size:11px;border-radius:99px;"
-        f"background:#1e293b;color:#38bdf8;border:1px solid rgba(56,189,248,0.3)'>☁️ Odysee Cloud Claim ({doc_entry.get('claim_id','')[:10]}…)</span>"
-        if doc_entry else ""
+        f"background:#1e293b;color:#38bdf8;border:1px solid rgba(56,189,248,0.3)'>{html.escape(mtype)} · {round(len(raw_bytes)/1024, 1)} KB</span>"
     )
     dl_btn = (
-        f"<a href='{dl_url}' style='display:inline-block;padding:6px 14px;font-size:12px;font-weight:600;"
-        f"border-radius:8px;background:#4f46e5;color:#fff;text-decoration:none'>⬇️ Download {html.escape(ext.upper().lstrip('.'))} ({round(len(raw_bytes)/1024, 1)} KB)</a>"
+        f"<a href='{dl_url}' download='{html.escape(filename)}' style='display:inline-block;padding:8px 16px;font-size:13px;font-weight:600;min-height:44px;line-height:28px;"
+        f"border-radius:8px;background:#4f46e5;color:#fff;text-decoration:none'>Download {html.escape(mtype)} ({round(len(raw_bytes)/1024, 1)} KB)</a>"
     )
     header_bar = (
         f"<div style='display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"
         f"padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.12)'>"
-        f"<div><h2 style='margin:0 0 6px 0;font-size:18px;color:#f8fafc'>{html.escape(filename)}</h2>{badge}</div>"
+        f"<div><h2 style='margin:0 0 6px 0;font-size:18px;color:#f8fafc'>{html.escape(friendly)}</h2>{badge}</div>"
         f"<div>{dl_btn}</div></div>"
     )
     base_style = (
@@ -545,11 +644,48 @@ def get_course_material(course: str, filename: str, download: int = 0):
             pass
 
     page = (
-        f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head>"
-        f"<body>{header_bar}<div class='card'><h3>📦 Binary Dataset / Study Resource</h3>"
-        f"<p>This course dataset or binary file (<code>{html.escape(filename)}</code>, {round(len(raw_bytes)/1024, 1)} KB) is stored in your Odysee Cloud Vault. Click the download button above to use it in your local environment or lab.</p></div></body></html>"
+        f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(dir_friendly if 'dir_friendly' in locals() else filename)}</title><style>{base_style}</style></head>"
+        f"<body>{header_bar}<div class='card'><h3>📦 Dataset / Study File</h3>"
+        f"<p>This study file (<code>{html.escape(filename)}</code>, {round(len(raw_bytes)/1024, 1)} KB) is ready to download. Click the download button above to open it on your device.</p></div></body></html>"
     )
     return HTMLResponse(page)
+
+
+@app.get('/api/search')
+def universal_search(q: str = ''):
+    needle = q.strip().lower()
+    if not needle:
+        return {'query': '', 'courses': [], 'lessons': [], 'materials': []}
+    all_courses = courses_catalog()['courses']
+    all_lessons = videos()['videos']
+    all_materials = list_course_materials()['materials']
+    matched_courses = [
+        {**c, 'course': c.get('id')} for c in all_courses
+        if any(
+            needle in str(val or '').lower()
+            for val in (c.get('id'), c.get('title'), c.get('category'), c.get('instructor'), ' '.join(c.get('tags') or []))
+        )
+    ]
+    matched_lessons = [
+        v for v in all_lessons
+        if any(
+            needle in str(val or '').lower()
+            for val in (v.get('title'), v.get('section'), v.get('course'))
+        )
+    ]
+    matched_materials = [
+        m for m in all_materials
+        if any(
+            needle in str(val or '').lower()
+            for val in (m.get('friendly_name'), m.get('name'), m.get('material_type'), m.get('section'), m.get('course'))
+        )
+    ]
+    return {
+        'query': q.strip(),
+        'courses': matched_courses[:20],
+        'lessons': matched_lessons[:30],
+        'materials': matched_materials[:30],
+    }
 
 
 from .media import provider_info as find_odysee_info

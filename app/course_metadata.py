@@ -40,6 +40,110 @@ def ensure_schema(path: Path | None = None) -> None:
             cover_kind TEXT,
             updated_at TEXT NOT NULL
         )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS course_lesson_organization (
+            course TEXT NOT NULL,
+            video_id TEXT NOT NULL,
+            section_title TEXT NOT NULL DEFAULT '',
+            position REAL NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(course, video_id)
+        )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS course_materials_meta (
+            id TEXT PRIMARY KEY,
+            course TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            friendly_name TEXT,
+            material_type TEXT,
+            lesson_id TEXT,
+            section_title TEXT,
+            scope TEXT NOT NULL DEFAULT 'lesson',
+            position INTEGER NOT NULL DEFAULT 0,
+            removed INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,
+            UNIQUE(course, filename)
+        )''')
+
+
+def friendly_material_name(filename: str) -> str:
+    import re
+    stem = Path(filename or '').stem
+    cleaned = re.sub(r'^\[(\d+[a-z]?(?:\s*part\s*\d+|-\d+)?)\]\s*', '', stem, flags=re.I)
+    cleaned = re.sub(r'^(?:session|module|week|lecture|part|day)[_\-\s]*\d+[_\-\s:]*', '', cleaned, flags=re.I)
+    cleaned = re.sub(r'^\d+[\.\-_]\s*', '', cleaned)
+    cleaned = cleaned.replace('_', ' ').replace('--', ' — ')
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip(' -_')
+    return cleaned or stem or filename
+
+
+def classify_material_type(filename: str) -> str:
+    ext = Path(filename or '').suffix.lower()
+    if ext == '.ipynb':
+        return 'Notebook'
+    if ext == '.pdf':
+        return 'PDF'
+    if ext in {'.pptx', '.ppt'}:
+        return 'Slides'
+    if ext in {'.csv', '.parquet', '.json', '.xlsx', '.tsv', '.avro'}:
+        return 'Dataset'
+    if ext in {'.py', '.sql', '.sh', '.js', '.ts', '.yaml', '.yml', '.scala', '.java'}:
+        return 'Code'
+    if ext in {'.zip', '.tar', '.gz', '.tgz'}:
+        return 'Archive'
+    if ext in {'.txt', '.md', '.docx', '.doc', '.rtf'}:
+        return 'Notes'
+    return 'Resource'
+
+
+def infer_section_title(course: str, title: str, flow_order: float) -> str:
+    import re
+    c_low = (course or '').lower()
+    t_str = (title or '').strip()
+    if 'deepak' in c_low or 'azure data' in c_low:
+        sec_map = {
+            1: 'Week 1 — Cloud & Azure Fundamentals',
+            2: 'Week 2 — Azure Storage & ADLS Gen2',
+            3: 'Week 3 — Azure Data Factory Pipelines',
+            4: 'Week 4 — ADF Triggers & Orchestration',
+            5: 'Week 5 — Azure Synapse Analytics',
+            6: 'Week 6 — Apache Spark & Databricks',
+            7: 'Week 7 — PySpark Transformations & Actions',
+            8: 'Week 8 — Spark SQL, Joins & Optimization',
+            9: 'Week 9 — Delta Lake & Medallion Architecture',
+            10: 'Week 10 — Unity Catalog & Capstone Project',
+        }
+        idx = int(flow_order or 1)
+        if idx in sec_map:
+            return sec_map[idx]
+        if idx >= 90 or idx <= 0:
+            return 'Course Reference & Study Guides'
+        return f'Week {idx} — Data Engineering Module'
+    if 'agentic ai' in c_low:
+        num = int(flow_order or 0)
+        if num <= 4:
+            return 'Module 1 — Python & GenAI Foundations'
+        if num <= 12:
+            return 'Module 2 — Deep Learning, PyTorch & Transformers'
+        if num <= 23:
+            return 'Module 3 — RAG, Vector Databases & Embeddings'
+        if num <= 33:
+            return 'Module 4 — LangChain, LangGraph & Workflows'
+        if num <= 43:
+            return 'Module 5 — Multi-Agent Systems (CrewAI, AutoGen, Agno)'
+        if num <= 52:
+            return 'Module 6 — MCP, Finetuning & Guardrails'
+        return 'Module 7 — Cloud Deployment, MLOps & Capstones'
+    m_week = re.search(r'\b(?:week|w)\s*0*(\d+)\b', t_str, re.I)
+    if m_week:
+        w = int(m_week.group(1))
+        return f'Week {w} — Core Curriculum'
+    m_mod = re.search(r'\b(?:module|section|session)\s*0*(\d+)\b', t_str, re.I)
+    if m_mod:
+        s = int(m_mod.group(1))
+        return f'Module {s} — Core Concepts'
+    if flow_order and flow_order < 900:
+        bucket = max(1, (int(flow_order) - 1) // 8 + 1)
+        return f'Week {bucket} — Core Fundamentals' if bucket == 1 else f'Week {bucket} — Deep Dive & Practice'
+    return 'Week 1 — Core Fundamentals'
 
 
 def _catalog_row(course: str, path: Path | None = None) -> dict:

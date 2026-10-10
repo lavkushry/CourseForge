@@ -7,7 +7,7 @@
     async function deliver(packet){
       for(let attempt=0;attempt<2;attempt++){
         if(stopped)return;
-        if(navigator.onLine===false)throw new Error('You are offline. Tracking resumes when the connection returns.');
+        if(navigator.onLine===false)throw new Error('You are offline. Progress saving resumes when the connection returns.');
         controller=new AbortController();
         const timeout=setTimeout(()=>controller.abort(),4000);
         try{return await request(packet,controller.signal);}
@@ -38,7 +38,7 @@
       // Keep transitions in order, replacing only queued heartbeat samples.
       if(packet.event==='heartbeat')queue=queue.filter(e=>e.event!=='heartbeat');
       if(queue.length>=128){
-        stop();const error=new Error('Tracking could not keep up. Reopen this lesson to continue.');
+        stop();const error=new Error('Progress saving could not keep up. Reopen this lesson to continue.');
         error.code='queue_full';onError(error);return;
       }
       queue.push(packet);void pump();
