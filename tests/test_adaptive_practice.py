@@ -171,6 +171,7 @@ def test_frontend_practice_contract_and_isolation():
     for element in ('practicePathSelect', 'practiceRecommendations','practiceHistory','practiceRefreshBtn'):
         assert f'id="{element}"' in html
         assert f"$('#{element}')" in code
-    assert 'practice.js' in html and 'practice.css' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('practice')
     assert 'startRecommendedPractice' in services
     assert '--network=none' in (root/'app/labs.py').read_text()

@@ -8,15 +8,8 @@
   <meta name="description" content="CourseForge — organized courses, personal progress, and study tools." />
   <title>CourseForge — Your learning, accelerated</title>
   <script>try{const t=JSON.parse(localStorage.getItem('courseforge-theme-v3')||'{}');document.documentElement.dataset.theme=['dark','light','system'].includes(t.mode)?t.mode:'system';document.documentElement.dataset.resolvedTheme=t.mode==='dark'?'dark':t.mode==='light'?'light':(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.accent=['indigo','teal','rose'].includes(t.accent)?t.accent:'indigo'}catch{}</script>
-  <link rel="stylesheet" href="/static/style.css?v=9" /><link rel="stylesheet" href="/static/academy.css?v=9" />
-  <link rel="stylesheet" href="/static/learning-paths.css" />
-  <link rel="stylesheet" href="/static/assessments.css" />
-  <link rel="stylesheet" href="/static/practice.css">
-  <link rel="stylesheet" href="/static/planner.css">
-  <link rel="stylesheet" href="/static/weekly.css">
-  <link rel="stylesheet" href="/static/focus.css">
-  <link rel="stylesheet" href="/static/player.css?v=13">
-  <script type="module" src="/static/vendor/media-chrome-4.19.3.js"></script>
+  <link rel="stylesheet" href="/static/core.css?v=14" />
+  <link rel="preload" href="/static/core.js?v=14" as="script" />
 </head>
 <body>
   <a class="skip-link" href="#pageContent">Skip to content</a>
@@ -212,16 +205,6 @@
   </dialog>
   <div id="notice" class="toast" role="status" aria-live="polite" hidden></div>
   <div id="mobileScrim" class="mobile-scrim" hidden></div>
-  <script src="/static/services.js?v=11" defer></script>
-  <script src="/static/app.js?v=13" defer></script>
-  <script src="/static/learning-paths.js" defer></script>
-  <script src="/static/assessments.js?v=13" defer></script>
-  <script src="/static/practice.js" defer></script>
-  <script src="/static/planner.js?v=13" defer></script>
-  <script src="/static/weekly.js" defer></script>
-  <script src="/static/focus.js" defer></script>
-<script src="/static/player-tracking.js?v=11" defer></script>
-<script src="/static/player-session.js?v=13" defer></script><script src="/static/player-recovery.js?v=13" defer></script><script src="/static/native-player.js?v=13" defer></script><script src="/static/player-studio.js?v=13" defer></script>
-<script src="/static/academy.js?v=13" defer></script>
+  <script src="/static/core.js?v=14" defer></script>
 </body>
 </html>

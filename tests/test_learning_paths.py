@@ -116,8 +116,8 @@ def test_frontend_path_contract():
     html=(root/'index.html').read_text()
     js=(root/'learning-paths.js').read_text()
     service=(root/'services.js').read_text()
-    assert '/static/learning-paths.js' in html
-    assert '/static/learning-paths.css' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('learning-paths')
     for element in ('crossPathForm','pathCourseChoices','pathGoal','pathUseAI','createPathBtn',
                     'savedPathList','crossPathDetail','crossPathSteps','reloadPathsBtn'):
         assert f'id="{element}"' in html

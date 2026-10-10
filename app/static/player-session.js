@@ -64,8 +64,8 @@
   window.addEventListener('pagehide',close);
   window.addEventListener('offline',()=>{window.CourseForgeNative?.trackingNotice('You are offline. Watched time will not be estimated during the interruption.');});
   window.addEventListener('online',()=>{if(owner){owner.claimed=false;owner.onLost('You’re back online. Resume your lesson.');}});
-  async function loadPreferences(){
-    preferences=await api('/api/me/player-preferences');return preferences;
+  async function loadPreferences(initial){
+    preferences=initial||await api('/api/me/player-preferences');return preferences;
   }
   function setPreferences(change){
     Object.assign(preferences,change);clearTimeout(savePending);

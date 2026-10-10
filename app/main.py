@@ -45,6 +45,8 @@ allowed_hosts = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,
 if public_host and public_host not in allowed_hosts:
     allowed_hosts.append(public_host)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+from .web_delivery import PageCompression
+app.add_middleware(PageCompression)
 
 @app.middleware('http')
 async def guard_local_actions(request: Request, call_next):
@@ -143,6 +145,16 @@ def videos():
 @app.get('/api/courses')
 def courses_catalog():
     return {'courses': [c for c in course_metadata.list_courses() if course_allowed(c['id'])]}
+
+
+@app.get('/api/me/bootstrap')
+def learner_bootstrap(request: Request):
+    """One authenticated round trip for the lesson shell, with tenant filtering."""
+    from .academy import my_learning
+    from .player_sessions import get_preferences
+    return {**auth.me(request), **videos(), **courses_catalog(),
+            'progress': study.get_progress(), 'learning': my_learning(request),
+            'preferences': get_preferences(request), 'options': auth.account_options()}
 
 
 class CourseMetadataBody(BaseModel):

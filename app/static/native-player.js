@@ -23,6 +23,7 @@
   }
   async function open(wrap,lesson,session,onFailure){
     stop();
+    window.CourseForgeLoadPlayer?.();
     const stage=element('div','native-player-stage'),controller=element('media-controller'),v=element('video');
     stage.tabIndex=0;stage.setAttribute('aria-label','Lesson player. Space plays or pauses, arrows seek, M mutes, F opens fullscreen, L locks controls.');
     controller.setAttribute('autohide','3');controller.setAttribute('nohotkeys','');controller.setAttribute('gesturesdisabled','');
@@ -158,13 +159,19 @@
       stage.addEventListener('pointerdown',event=>{if(!menu.hidden&&!event.composedPath().includes(menu)&&!event.composedPath().includes(speed))toggleMenu(false);});
       menu.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();toggleMenu(false);speed.focus();}});
       menu.addEventListener('focusout',event=>{if(event.relatedTarget&&!menu.contains(event.relatedTarget)&&event.relatedTarget!==speed)toggleMenu(false);});
-      const full=button('Fullscreen','<path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/>',async()=>{try{document.fullscreenElement?await document.exitFullscreen():await wrap.requestFullscreen();}catch{toast('Fullscreen is unavailable.',true);}});
+      const full=button('Fullscreen','<path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/>',async()=>{
+        try{if(document.fullscreenElement)await document.exitFullscreen();else{await wrap.requestFullscreen();if(matchMedia('(pointer:coarse)').matches)await screen.orientation?.lock?.('landscape').catch(()=>{});}}
+        catch{toast('Fullscreen is unavailable.',true);}
+      });
+      const fullscreen=()=>{if(!document.fullscreenElement)screen.orientation?.unlock?.();};
+      document.addEventListener('fullscreenchange',fullscreen);
+      a.cleanup=()=>{document.removeEventListener('fullscreenchange',fullscreen);screen.orientation?.unlock?.();};
       row.append(spacer,speed,full);chrome.append(timeline,row);controller.append(chrome);
-      const center=element('div','player-center-controls');center.slot='centered-chrome';
+      const center=element('div','player-center-controls');
       const back=button('Back 10 seconds','<path d="M3 9a9 9 0 1 1 1 9M3 4v5h5"/><text x="12" y="15" text-anchor="middle" stroke="none" fill="currentColor" font-size="8" font-weight="600">10</text>',()=>seek(-10));
       const play=button('Play lesson','<path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/>',()=>v.paused?v.play().catch(()=>{}):v.pause());
       const forward=button('Forward 10 seconds','<path d="M21 9a9 9 0 1 0-1 9M21 4v5h-5"/><text x="12" y="15" text-anchor="middle" stroke="none" fill="currentColor" font-size="8" font-weight="600">10</text>',()=>seek(10));
-      play.classList.add('player-center-play');center.append(back,play,forward);controller.append(center);
+      play.classList.add('player-center-play');center.append(back,play,forward);stage.append(center);
       const updatePlay=()=>{
         stage.classList.toggle('is-playing',!v.paused);
         play.setAttribute('aria-label',v.paused?'Play lesson':'Pause lesson');play.title=v.paused?'Play lesson':'Pause lesson';

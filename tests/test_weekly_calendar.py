@@ -112,7 +112,6 @@ def test_weekly_frontend_controls_exist():
     html=(root/'index.html').read_text()
     for name in ['weekForm','weekStart','weekDaysInput','weekBuild','weekCards','weekMessage','weekTotals']:
         assert f'id="{name}"' in html
-    for path in ['planner.js','weekly.js']:
-        assert path in html
-    assert 'weekly.css' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('weekly')
     assert 'savePlannerActual' in (root/'services.js').read_text()

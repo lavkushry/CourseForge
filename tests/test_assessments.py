@@ -149,6 +149,7 @@ def test_frontend_assessment_contract():
                   'assessmentForm','assessmentQuestions','assessmentSubmit','assessmentResult'):
         assert f'id="{ident}"' in html
         assert f"$('#{ident}')" in js
-    assert 'assessments.js' in html and 'assessments.css' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('assessments')
     assert 'dataset.assessStep' in (root/'learning-paths.js').read_text()
     assert 'startAssessment' in (root/'services.js').read_text()

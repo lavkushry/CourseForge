@@ -68,7 +68,16 @@ def test_workspace_controls_fit_their_containers(browser, width):
             const r=e.getBoundingClientRect();return r.left>=container.left-1&&r.right<=container.right+1;
           });
         }''')
+        # Audit the other learner screens, including the full planner and
+        # question form rather than only an empty lesson panel.
+        page.add_style_tag(content=(STATIC / 'tools.css').read_text())
+        for view in ['dashboard', 'planner', 'syllabus', 'reviews', 'settings']:
+            show(view)
+            if view == 'syllabus':
+                page.evaluate("document.querySelector('#assessmentPanel').hidden=false")
+            check(f'{view} overflows the phone', 'document.documentElement.scrollWidth <= innerWidth+1')
         show('learning')
+        page.evaluate("document.querySelector('#noteText').value='A longer note about this lesson and the next steps to practice.'")
         check('learning view overflows the page', 'document.documentElement.scrollWidth <= innerWidth+1')
         check('empty-player actions are clipped', '''() => {
           const shell=document.querySelector('.player-shell').getBoundingClientRect();
@@ -113,6 +122,10 @@ def test_workspace_controls_fit_their_containers(browser, width):
           const stage=document.querySelector('.native-player-stage').getBoundingClientRect();
           return Math.abs(stage.width/stage.height-16/9)<.02;
         }''')
+        if width <= 768:
+            # A visible central Play button must receive a real touch; the
+            # timeline must not cover it on the shortest portrait stages.
+            page.locator('.player-center-play').click()
         if width==390:
             # Moving focus between speed choices must not dismiss the menu
             # before the pointer click reaches the selected button.

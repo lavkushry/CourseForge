@@ -143,5 +143,6 @@ def test_planner_frontend_contract():
     assert 'data-view="planner"' in html and 'data-nav="planner"' in html
     for control in ['plannerPrefs','plannerBudget','plannerPath','plannerDate','plannerCreate','plannerItems','plannerTrack']:
         assert f'id="{control}"' in html
-    assert 'planner.js' in html and 'planner.css' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('planner')
     assert 'textContent' in scripts and 'setPlannerItem' in scripts

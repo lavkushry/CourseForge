@@ -125,7 +125,8 @@ def test_frontend_is_wired_and_use_original_theme_tokens():
     for element_id in ['focusClock','focusStart','focusPause','focusResume','focusFinish','focusCancel',
                        'focusVideo','focusLab','focusWeekLabel','focusBars','focusHistory','focusReported','focusMeasured']:
         assert f'id="{element_id}"' in html
-    assert 'focus.css' in html and 'focus.js' in html
+    from tests.web_assets import assert_tool_shipped
+    assert_tool_shipped('focus')
     assert 'beginFocus' in (root/'services.js').read_text()
     assert 'CourseForgeFocus' in (root/'planner.js').read_text()
     assert 'prefers-reduced-motion' in (root/'focus.css').read_text()

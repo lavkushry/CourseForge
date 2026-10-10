@@ -19,7 +19,7 @@
     const wrap=node('div','academy-table-wrap'),t=node('table','academy-table'),head=node('thead'),hrow=node('tr');
     headers.forEach(h=>hrow.append(node('th','',h)));head.append(hrow);t.append(head);
     const body=node('tbody');
-    rows.forEach(values=>{const tr=node('tr');values.forEach(value=>{const td=node('td');if(value instanceof Node)td.append(value);else td.textContent=String(value??'—');tr.append(td);});body.append(tr);});
+    rows.forEach(values=>{const tr=node('tr');values.forEach((value,i)=>{const td=node('td');td.dataset.label=headers[i];if(value instanceof Node)td.append(value);else td.textContent=String(value??'—');tr.append(td);});body.append(tr);});
     if(!rows.length){const tr=node('tr'),td=node('td','muted','No records yet.');td.colSpan=headers.length;tr.append(td);body.append(tr);}
     t.append(body);wrap.append(t);return wrap;
   }
@@ -105,8 +105,10 @@
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
     el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();
-    const learning=await api('/api/me/learning');account.lastLessons=Object.fromEntries(learning.courses.map(c=>[c.course,c.last_video_id]));
-    await window.CourseForgeBoot();window.dispatchEvent(new Event('courseforge-ready'));
+    const initial=account.bootstrap;account.bootstrap=null;
+    const learning=initial?.learning||await api('/api/me/learning');account.lastLessons=Object.fromEntries(learning.courses.map(c=>[c.course,c.last_video_id]));
+    await window.CourseForgeBoot(initial);window.CourseForgeReady=true;window.dispatchEvent(new Event('courseforge-ready'));
+    window.CourseForgeLoadTools?.();
   }
   async function myAccount(){
     if(!account.user)return signIn();
@@ -283,18 +285,18 @@
   el('bookmarkForm').onsubmit=async e=>{e.preventDefault();if(!state.currentVideoId)return;try{await api(`/api/videos/${state.currentVideoId}/bookmarks`,json('POST',{position:parseTimestamp(el('bookmarkPosition').value),label:el('bookmarkLabel').value}));await loadBookmarks(state.currentVideoId);el('bookmarkLabel').value='';}catch(error){toast(error.message,true);}};
   el('lessonSearch').oninput=e=>{const query=e.target.value.toLowerCase();document.querySelectorAll('.lesson-link').forEach(link=>link.hidden=!link.textContent.toLowerCase().includes(query));};
   el('previousLessonBtn').onclick=()=>{const current=state.videos.find(v=>v.id===state.currentVideoId);if(!current)return;const lessons=state.videos.filter(v=>v.course===current.course),previous=lessons[lessons.findIndex(v=>v.id===current.id)-1];if(previous)openVideo(previous.id).catch(error=>toast(error.message,true));else toast('You are at the first lesson.');};
-  window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp};
+  window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp,workspace};
   window.addEventListener('courseforge-session-expired',()=>{account.user=null;account.csrf='';resetBrowser();});
   window.addEventListener('courseforge-task',()=>toast('Learning task queued. This view will update when it finishes.'));
   el('catalogNav').onclick=()=>catalog().catch(e=>message(e.message,true));el('learningNav').onclick=()=>workspace().catch(e=>message(e.message,true));
   el('accountNav').onclick=()=>myAccount().catch(e=>message(e.message,true));el('adminNav').onclick=()=>adminHome().catch(e=>message(e.message,true));
   el('signinNav').onclick=()=>signIn();el('registerNav').onclick=()=>signIn('register');el('logoutNav').onclick=async()=>{try{await api('/api/auth/logout',json('POST',{}));resetBrowser();}catch(error){message(error.message,true);}};
   async function boot(){
-    try{const r=await api('/api/me');account.user=r.user;account.csrf=r.csrf_token;}
-    catch(error){if(error.status!==401)message(error.message,true);}
+    try{const r=await api('/api/me/bootstrap');account.user=r.user;account.csrf=r.csrf_token;account.bootstrap=r;}
+    catch(error){if(error.status===403){const r=await api('/api/me');account.user=r.user;account.csrf=r.csrf_token;}else if(error.status!==401)message(error.message,true);}
     for(const id of ['learningNav','accountNav','logoutNav'])el(id).hidden=!account.user;
     el('jobSummary').hidden=account.user?.role!=='admin';el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
-    const options=await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
+    const options=account.bootstrap?.options||await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
     el('accountName').textContent=account.user?.name||'';
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');
     const fragment=location.hash.slice(1).split('?'),params=new URLSearchParams(location.search);

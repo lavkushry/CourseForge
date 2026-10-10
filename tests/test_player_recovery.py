@@ -16,7 +16,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const script = fs.readFileSync(process.argv[1], 'utf8');
 const boundary = script.slice(script.indexOf('let openingGeneration=0;'),script.indexOf("$('#markCompleteBtn').addEventListener"));
-global.state = {currentVideoId:'lesson'};
+global.state = {currentVideoId:'lesson',videos:[]};
 const calls = [], seeks = [];
 let media = {error:{code:4},readyState:0,duration:NaN};
 const reached = new Error('Reached fresh lesson request');

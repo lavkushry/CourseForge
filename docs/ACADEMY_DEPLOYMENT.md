@@ -1,5 +1,9 @@
 # CourseForge academy
 
+Mobile releases and their browser checks are documented in
+[Mobile learning releases](MOBILE_LEARNING_RELEASES.md). Rebuild the page
+bundles with `python3 scripts/build_web_assets.py` before deploying static changes.
+
 The existing library now has authenticated accounts, enrollment, private learning records and administrator reports. The first administrator owns the learning records created before accounts existed. Existing course and lecture IDs remain unchanged.
 
 ## Linux setup

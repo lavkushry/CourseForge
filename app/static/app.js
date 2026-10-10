@@ -10,7 +10,7 @@ const make = (tag,cls='',text='') => {const el=document.createElement(tag);if(cl
 async function request(path,opts={}){return services.request(path,opts);}
 function toast(message,error=false){const node=$('#notice');node.textContent=message;node.classList.toggle('error',error);node.hidden=false;clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>node.hidden=true,error?7500:4500);}
 const navNames={planner:'Today',dashboard:'Dashboard',library:'Library',learning:'Learning',tutor:'AI Tutor',syllabus:'Study paths',reviews:'Review',labs:'Labs',settings:'Settings'};
-function navigate(view, focusHeading=false){if(!navNames[view])view='dashboard';state.view=view;$$('[data-view]').forEach(el=>el.hidden=el.dataset.view!==view);$$('.nav-item').forEach(el=>{const selected=el.dataset.nav===view;el.classList.toggle('active',selected);if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('#topbarLocation').textContent=navNames[view];closeMobileMenu(false);document.body.classList.toggle('in-learning',view==='learning');if(!applyingRoute){const hash=view==='learning'&&state.currentVideoId?lessonHash(state.currentVideoId):'#'+view;if(location.hash!==hash)history.pushState(null,'',hash);}window.scrollTo({top:0,behavior:'instant'});if(focusHeading){const heading=$(`[data-view="${view}"] h1`);if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true})}}if(view!=='learning')window.CourseForgeAcademy?.leaveLesson();else if(state.currentVideoId&&!document.querySelector('#lecturePlayerWrap iframe, #lecturePlayerWrap video, #lecturePlayerWrap .player-loading, #lecturePlayerWrap .player-unavailable'))openVideo(state.currentVideoId).catch(err=>toast(err.message,true));if(view==='syllabus')loadSyllabus().catch(err=>toast(err.message,true));if(view==='reviews')loadDue().catch(err=>toast(err.message,true));if(view==='labs')loadLabs().catch(err=>toast(err.message,true));}
+function navigate(view, focusHeading=false){if(!navNames[view])view='dashboard';state.view=view;$$('[data-view]').forEach(el=>el.hidden=el.dataset.view!==view);$$('.nav-item').forEach(el=>{const selected=el.dataset.nav===view;el.classList.toggle('active',selected);if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('#topbarLocation').textContent=navNames[view];window.dispatchEvent(new Event('courseforge-navigate'));closeMobileMenu(false);document.body.classList.toggle('in-learning',view==='learning');if(!applyingRoute){const hash=view==='learning'&&state.currentVideoId?lessonHash(state.currentVideoId):'#'+view;if(location.hash!==hash)history.pushState(null,'',hash);}window.scrollTo({top:0,behavior:'instant'});if(focusHeading){const heading=$(`[data-view="${view}"] h1`);if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true})}}if(view!=='learning')window.CourseForgeAcademy?.leaveLesson();else if(state.currentVideoId&&!document.querySelector('#lecturePlayerWrap iframe, #lecturePlayerWrap video, #lecturePlayerWrap .player-loading, #lecturePlayerWrap .player-unavailable'))openVideo(state.currentVideoId).catch(err=>toast(err.message,true));if(view==='syllabus')loadSyllabus().catch(err=>toast(err.message,true));if(view==='reviews')loadDue().catch(err=>toast(err.message,true));if(view==='labs')loadLabs().catch(err=>toast(err.message,true));}
 $$('[data-nav]').forEach(el=>el.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();navigate(el.dataset.nav,true);}));
 let applyingRoute=0;
 function readLessonRoute(){const [path,query='']=location.hash.slice(1).split('?');const [view,id]=path.split('/');const params=new URLSearchParams(query);let decoded=null;try{decoded=id?decodeURIComponent(id):null;}catch{}return {view,id:decoded,at:params.has('t')?Math.max(0,Number(params.get('t'))||0):null,tab:params.get('tab')||'lessons'};}
@@ -140,7 +140,8 @@ async function openVideo(id,at=null){
   }
   const generation=++openingGeneration,current=()=>generation===openingGeneration;
   window.CourseForgeStudio?.cancelNext();window.CourseForgeNative?.stop();await window.CourseForgePlayerSession?.close();window.CourseForgeAcademy?.stopActivity();
-  const {video,chunks}=await request(`/api/videos/${encodeURIComponent(id)}`);if(!current())return;
+  const cached=state.videos.find(v=>v.id===id);
+  const {video,chunks}=cached?{video:cached,chunks:[]}:await request(`/api/videos/${encodeURIComponent(id)}`);if(!current())return;
   state.selectedId=id;state.currentVideoId=id;window.CourseForgeAccount.lastLessons[video.course]=id;
   const player=$('#player');player.pause();player.hidden=true;$('#emptyPlayer').hidden=true;
   let wrap=document.getElementById('lecturePlayerWrap');if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
@@ -178,6 +179,12 @@ async function openVideo(id,at=null){
   const timeline=$('#timeline');timeline.replaceChildren();if(!chunks.length)timeline.append(make('p','muted','A transcript is not available for this lecture yet.'));
   for(const chunk of chunks){const item=make('button','timeline-btn');item.type='button';item.append(make('span','',prettyTime(chunk.start)),make('div','',chunk.text||''));item.onclick=()=>openVideo(id,chunk.start).catch(error=>toast(error.message,true));timeline.append(item);}
   $('#lessonCourse').value=video.course;renderLessons();$('#lessonSummary').textContent='Create a summary to revisit the key ideas.';$('#noteText').value='';$('#notePosition').value=prettyTime(start);
+  window.CourseForgeLoadPlayer?.();
+  if(cached)request(`/api/videos/${encodeURIComponent(id)}`).then(result=>{
+    if(!current())return;const timeline=$('#timeline');timeline.replaceChildren();
+    if(!result.chunks.length)timeline.append(make('p','muted','A transcript is not available for this lesson yet.'));
+    for(const chunk of result.chunks){const item=make('button','timeline-btn');item.type='button';item.append(make('span','',prettyTime(chunk.start)),make('div','',chunk.text||''));item.onclick=()=>openVideo(id,chunk.start).catch(error=>toast(error.message,true));timeline.append(item);}
+  }).catch(()=>{});
   try{
     if(!video.cloud_ready){renderFailure('This lesson isn’t ready yet. Choose another lesson to keep learning.');return;}
     const psid=await window.CourseForgePlayerSession.open(video,current,window.CourseForgeStudio.ownershipLost);
@@ -319,10 +326,12 @@ async function loadSettings(){$('#settingsPaths').textContent='Your saved lesson
 function syncGoal(){let value='30';try{value=localStorage.getItem('courseforge-daily-goal:'+window.CourseForgeAccount.user.id)||'30';}catch{}if(!['15','30','45','60'].includes(value))value='30';$('#goalMinutes').value=value;$('#settingsGoal').value=value;}
 for(const selector of ['#goalMinutes','#settingsGoal'])$(selector).addEventListener('change',event=>{const value=event.target.value;try{localStorage.setItem('courseforge-daily-goal:'+window.CourseForgeAccount.user.id,value)}catch{}syncGoal();toast(`Daily target set to ${value} minutes on this device.`)});
 
-window.CourseForgeBoot=async()=>{
+window.CourseForgeBoot=async(initialData)=>{
   const initial=readLessonRoute();applyingRoute++;try{navigate(navNames[initial.view]?initial.view:'dashboard');}finally{applyingRoute--;}
-  await loadLibrary();await Promise.allSettled([loadSyllabus(),loadDue(),loadInsights(),loadLabs()]);
-  renderPlannedLabs();syncGoal();await loadSettings();await window.CourseForgePlayerSession.loadPreferences();
+  if(initialData){state.videos=initialData.videos;state.jobs=[];state.progress=new Map(initialData.progress.map(p=>[p.video_id,p]));state.courseMeta=new Map(initialData.courses.map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}else await loadLibrary();
+  renderPlannedLabs();syncGoal();loadSettings();await window.CourseForgePlayerSession.loadPreferences(initialData?.preferences);
+  document.documentElement.dataset.lessonInteractive='true';window.dispatchEvent(new Event('courseforge-interactive'));
   if(initial.view==='learning'&&initial.id){selectLessonTab(initial.tab,false);applyingRoute++;try{await openVideo(initial.id,initial.at);}finally{applyingRoute--;}}
+  setTimeout(()=>Promise.allSettled([loadSyllabus(),loadDue(),loadInsights(),loadLabs()]),0);
 };
 setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&&!$('#appShell').hidden)loadLibrary().catch(()=>{})},30000);
