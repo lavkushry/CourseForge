@@ -1,4 +1,4 @@
-# CourseForge Local — v3 Learning Studio (v2 AI backend)
+# CourseForge Local v2
 
 **Turn downloaded video courses into a private AI tutor, a de-duplicated study plan, scheduled recall cards, and verifiable hands-on labs.** All video content stays on your computer when you keep the supplied loopback-only configuration. No account or cloud API is needed. Internet access is necessary for initial dependency/model downloads.
 
@@ -15,11 +15,20 @@ This is an **advanced single-user local prototype**. Unit and media-extraction i
 | De-duplicated syllabus | Local model extracts topics from sampled lecture excerpts; merges lexical and embedding-similar topics; preserves sources |
 | Watch history | Saves current playback position, percentage and completion locally in SQLite |
 | Spaced repetition | Source-linked flashcards, answer reveal and learner quality 0–5; SM-2 interval scheduling |
-| Verifiable practice | Three **curated** labs: Python, shell and Kubernetes manifest; submit code for automatic tests in a locked-down Docker runner |
+| Verifiable practice | Eight **curated** labs: Python, shell, Kubernetes, SQL, PySpark, Docker, Ansible and backend API; submit code for automatic tests in a locked-down Docker runner |
 | Optional kind check | Kubernetes server-side dry-run in dedicated project-created `courseforge-lab` cluster only; never uses normal kubeconfig |
 | Verification | `pytest`, FFmpeg integration, API tests, grader checks, and an optional real-model E2E CLI |
 
 **Deliberate safety limit:** AI can propose other practice exercises in the tutor, but it cannot run arbitrary generated commands. Only pre-reviewed lab templates have executable graders. The Kubernetes lab performs static checks by default; cluster API dry-run is opt-in and does not deploy actual workloads.
+
+
+## P1: Cross-course, prerequisite-aware learning roadmaps
+
+CourseForge can combine existing source-linked course syllabi into a single goal-oriented path, merge repeated topics across different courses, and suggest prerequisites without fabricating lectures. From **Learning → Study paths**, build each course syllabus first; then select up to eight courses, enter a concrete goal, and build a combined roadmap.
+
+Saved roadmaps preserve exact lecture timestamps and your explicit step completions. Inferred prerequisite edges are validated against known topic IDs and cycles are rejected. Watching a source video does **not** automatically claim you mastered its concept. The planner defaults to local Ollama suggestions and labels conservative local-rule fallback when Ollama is unavailable.
+
+Read [`docs/P1_PREREQUISITE_PATHS.md`](docs/P1_PREREQUISITE_PATHS.md) for API details, source-fidelity constraints, testing and limitations.
 
 ## Requirements
 
@@ -80,6 +89,8 @@ Start Qdrant and **build the dedicated lab grader image**:
 ```bash
 docker compose up -d
 docker build -f docker/lab.Dockerfile -t courseforge-lab:local .
+# Required only when running the PySpark exercise (larger download):
+docker build -f docker/lab-spark.Dockerfile -t courseforge-lab-spark:local .
 python scripts/doctor.py
 ```
 
@@ -228,3 +239,33 @@ There is **no frontend build step**. Run the same local FastAPI and worker comma
 To review UI architecture, breakpoints and design tokens, see [`docs/UI_V3.md`](docs/UI_V3.md).
 
 This is an original local-course interface informed by common patterns from Coursera and Udemy. It is not an integration with either service and cannot fetch protected courses from those platforms. All course videos must already be present on disk with appropriate access rights.
+
+## P0 end-to-end acceptance gate
+
+For a real-device confidence check before deploying this release, use the [P0 validation runbook](docs/P0_VALIDATION.md). Run `python scripts/validate_local.py --video-id "VIDEO_ID" --lab-smoke --real-inference` after indexing a short lecture. It verifies local service readiness, HTTP Range playback, source timestamps and notes, a restricted Docker grader, and genuine Whisper/Ollama/Qdrant processing. Live AI/model checks **cannot run in GitHub-hosted CI** and must be completed with your own video files and local models. Do not merge solely on the basis of the mocked-model CI suite.
+
+## P1: Edit local course details and covers
+
+Open **Library → Edit details** on a course card to edit its title, instructor, category, tags, or cover image. Course covers are generated from video frames when possible and cached under `DATA_DIR/covers`. Custom images are stored locally after validation and re-encoding; there are no external thumbnail downloads or invented metadata. Library filters/search respect saved categories and tags. Original folder names remain the stable internal course IDs, so saved lesson progress and source references are preserved.
+
+API and testing details: [`docs/P1_COURSE_CATALOG.md`](docs/P1_COURSE_CATALOG.md).
+
+## P1 Step 4: Topic-level assessments
+
+Under **Learning → Study paths**, select a saved multi-course roadmap and click **Assess this topic**. CourseForge generates a short, source-linked multiple-choice knowledge check from indexed lecture excerpts via your local Ollama model. Complete the questions to see deterministic grading, feedback, suggested video timestamps and your latest per-topic practice signal. Results and attempt history persist in SQLite. Quiz scores do **not** automatically complete roadmap steps, and AI-authored explanations may require verification against the original recording. No questions are invented when course excerpts or the local model are unavailable.
+
+Read [P1_MASTERY_ASSESSMENTS.md](docs/P1_MASTERY_ASSESSMENTS.md) for endpoints, data model, test coverage, and live-device acceptance steps.
+
+## P1 Step 5: Expanded practical lab tracks
+
+There are eight pre-reviewed exercises. SQL runs fixture-based SELECT queries in a disposable in-memory SQLite database inside restricted Docker. PySpark runs local DataFrame fixtures inside an optional Java + PySpark grading image. Python API request handling and the existing Python and shell exercises use hidden functional fixtures. Dockerfiles and Ansible playbooks are examined with deterministic **static checks only**—their image is not built and their playbook is not executed.
+
+Build the standard image and separate PySpark image as shown above. Configure `LAB_IMAGE` and `LAB_SPARK_IMAGE` if necessary. PySpark grading has 2 GiB/2 CPU limits and 120-second timeout, and all labs prohibit networking, extra capabilities, privilege escalation and writable workspace bind mounts. The UI shows type/level and filters by subject.
+
+**Safety limit:** The grader containers share the local host kernel. They are not hardened isolation for untrusted remote users. Do not expose this single-user FastAPI instance to the public internet. No generated command runs outside the reviewed lab templates. See [`docs/P1_LAB_TRACKS.md`](docs/P1_LAB_TRACKS.md) for grading contracts, fixtures, and real-device smoke tests.
+
+## Adaptive practice — P1 Step 6
+
+The **Study Paths** view now recommends curated labs for topics where your latest concept-check result indicates a gap. Recommendations use deterministic topic matching and separately track graded lab attempts, without claiming that a passed exercise proves concept mastery. The **Labs** view includes a saved-path selector, prioritized exercises, and append-only history of verified grader results. A failed attempt raises retry priority; a pass leads to a recommendation to reassess the concept. Unsupported topics do not receive fabricated labs.
+
+See [`docs/P1_ADAPTIVE_PRACTICE.md`](docs/P1_ADAPTIVE_PRACTICE.md) for API, safety, rubric, and test details. Live Docker/PySpark checks remain an explicit local acceptance requirement.

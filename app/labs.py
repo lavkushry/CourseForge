@@ -32,6 +32,9 @@ LABS = {
   },
 }
 
+from .lab_tracks import TRACKS
+LABS.update(TRACKS)
+
 
 def ensure_schema(path: Path | None = None):
     with connect(path) as db:
@@ -64,7 +67,7 @@ def start_lab(slug: str) -> dict:
                    (session_id, slug, 'started', utcnow(), utcnow()))
     return {'session_id':session_id, 'slug':slug, 'filename':lab['filename'],
             'content':lab['starter'], 'title':lab['title'], 'objective':lab['objective'],
-            'tip':lab['tip'], 'type':lab['type']}
+            'tip':lab['tip'], 'type':lab['type'], 'category':lab.get('category','General'), 'level':lab.get('level','Guided')}
 
 
 def get_lab(session_id: str) -> dict:
@@ -97,13 +100,15 @@ def update_file(session_id: str, content: str) -> dict:
 
 def docker_command(root: Path, slug: str) -> list[str]:
     grader = (Path(__file__).parent/'lab_graders').resolve()
+    spark = slug == 'pyspark-order-analytics'
+    image = settings.lab_spark_image if spark else settings.lab_image
     return ['docker','run','--rm','--pull=never', '--network=none','--read-only',
-            '--cap-drop=ALL','--security-opt=no-new-privileges', '--pids-limit=64',
-            '--memory=256m','--cpus=1','--user=65534:65534',
-            '--tmpfs=/tmp:rw,nosuid,noexec,size=16m',
+            '--cap-drop=ALL','--security-opt=no-new-privileges', '--pids-limit='+('128' if spark else '64'),
+            '--memory='+('2g' if spark else '256m'),'--cpus='+('2' if spark else '1'),'--user=65534:65534',
+            '--tmpfs=/tmp:rw,nosuid'+(',size=512m' if spark else ',noexec,size=16m'),
             '--mount',f'type=bind,src={root},dst=/workspace,readonly',
             '--mount',f'type=bind,src={grader},dst=/grader,readonly',
-            settings.lab_image,'python','/grader/grade.py',slug]
+            image,'python','/grader/grade.py',slug]
 
 
 def _offline_grading(session_id: str, slug: str) -> dict:
@@ -111,9 +116,9 @@ def _offline_grading(session_id: str, slug: str) -> dict:
         raise RuntimeError('Docker CLI not installed; install Docker Desktop and build the lab image')
     command = docker_command(_workspace(session_id).resolve(), slug)
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=40, check=False)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=120 if slug == 'pyspark-order-analytics' else 40, check=False)
     except subprocess.TimeoutExpired as exc:
-        raise RuntimeError('Lab exceeded the 40-second grading timeout') from exc
+        raise RuntimeError('Lab grading exceeded its execution timeout') from exc
     if result.returncode != 0:
         raise RuntimeError('Restricted Docker grader failed: ' + result.stderr[-700:])
     try:

@@ -15,6 +15,8 @@ from app.chunking import transcript_chunks
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--video-id', required=True, help='Video ID shown in GET /api/videos')
+    parser.add_argument('--fresh-transcript', action='store_true',
+                        help='Discard only this video transcription cache so Whisper really runs')
     args=parser.parse_args()
     db.init_db()
     video=db.fetch_video(args.video_id)
@@ -23,7 +25,12 @@ def main():
     path=Path(video['path']).resolve()
     if not path.is_file() or not path.is_relative_to(settings.courses_dir):
         parser.error('Video is outside configured library or file missing')
-    print('1/6 Transcribing REAL video:',path.name,flush=True)
+    cache_path = settings.data_dir / 'transcripts' / f'{args.video_id}.json'
+    if args.fresh_transcript:
+        cache_path.unlink(missing_ok=True)
+    elif cache_path.exists():
+        print('NOTE: cached Whisper transcript may be reused. To exercise the model, add --fresh-transcript.', flush=True)
+    print('1/6 Transcribing lecture:',path.name,flush=True)
     segs,language=extractor.transcribe(path,args.video_id)
     assert segs, 'No speech detected; choose a lecture containing speech'
     print('2/6 Extracting REAL frames + vision',flush=True)
@@ -46,7 +53,8 @@ def main():
     print('6/6 Generating real active-recall flashcards',flush=True)
     cards=reviews.generate_cards(video['course'],'core concepts',3)
     assert cards['created']>0 and db.fetch_videos(), 'No cards generated'
-    print('PASS: Real Whisper, OCR/vision, embedding/Qdrant, tutoring, syllabus, and quiz workflow.')
+    print('PASS: Full lecture pipeline, embedding/Qdrant, tutoring, syllabus, and quiz workflow.'
+          + (' Whisper ran without a transcript cache.' if args.fresh_transcript else ' Whisper may have used its cache.'))
     print(f"Created {cards['created']} review cards, {len(plan['topics'])} syllabus topics; language {language}")
 
 

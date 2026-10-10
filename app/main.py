@@ -7,14 +7,14 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .config import settings
 from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -62,6 +62,76 @@ def scan():
 @app.get('/api/videos')
 def videos():
     return {'videos': fetch_videos()}
+
+
+@app.get('/api/courses')
+def courses_catalog():
+    return {'courses': course_metadata.list_courses()}
+
+
+class CourseMetadataBody(BaseModel):
+    title: str | None = Field(default=None, max_length=160)
+    instructor: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, max_length=80)
+    tags: list[str] = Field(default_factory=list, max_length=12)
+
+    @field_validator('tags')
+    @classmethod
+    def validate_tags(cls, tags: list[str]) -> list[str]:
+        cleaned = [tag.strip() for tag in tags]
+        if any(not tag or len(tag) > 32 for tag in cleaned):
+            raise ValueError('Tags must contain 1–32 characters')
+        if len({tag.casefold() for tag in cleaned}) != len(cleaned):
+            raise ValueError('Tags must be unique')
+        return cleaned
+
+
+@app.patch('/api/courses/{course_id}')
+def edit_course(course_id: str, body: CourseMetadataBody):
+    try:
+        return course_metadata.save_course(course_id, body.model_dump(exclude_unset=True))
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+
+
+@app.get('/api/courses/{course_id}/cover')
+def course_cover(course_id: str):
+    try:
+        cover = course_metadata.get_or_generate_cover(course_id)
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    if not cover:
+        raise HTTPException(404, 'No video frame available for thumbnail')
+    return FileResponse(cover, media_type='image/jpeg', headers={'Cache-Control': 'private, no-store'})
+
+
+@app.put('/api/courses/{course_id}/cover')
+async def upload_course_cover(course_id: str, request: Request):
+    if request.headers.get('content-type', '').split(';')[0] not in course_metadata.ALLOWED_MIME:
+        raise HTTPException(415, 'Use a JPEG, PNG or WebP image')
+    # Abort oversized requests while streaming; never buffer unbounded uploads.
+    parts, size = [], 0
+    async for part in request.stream():
+        size += len(part)
+        if size > course_metadata.MAX_IMAGE_BYTES:
+            raise HTTPException(413, 'Cover must be smaller than 4 MiB')
+        parts.append(part)
+    try:
+        course_metadata.set_cover(course_id, b''.join(parts), request.headers['content-type'].split(';')[0])
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return course_metadata.get_course(course_id)
+
+
+@app.delete('/api/courses/{course_id}/cover')
+def remove_course_cover(course_id: str):
+    try:
+        course_metadata.reset_cover(course_id)
+    except course_metadata.UnknownCourse:
+        raise HTTPException(404, 'Course not found')
+    return {'cover_kind': None}
 
 
 @app.get('/api/jobs')
@@ -175,6 +245,99 @@ def build_syllabus(body: CourseBody):
         raise HTTPException(503, 'Syllabus AI unavailable; check Ollama models') from exc
 
 
+class LearningPathBody(BaseModel):
+    courses: list[str] = Field(min_length=1, max_length=8)
+    goal: str = Field(min_length=3, max_length=180)
+    use_ai: bool = True
+
+
+class PathStepBody(BaseModel):
+    completed: bool
+
+
+@app.get('/api/learning-paths')
+def list_learning_paths():
+    return {'paths': learning_paths.list_paths()}
+
+
+@app.post('/api/learning-paths', status_code=201)
+def create_learning_path(body: LearningPathBody):
+    try:
+        return learning_paths.generate(body.courses, body.goal, use_ai=body.use_ai)
+    except learning_paths.PathInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/learning-paths/{path_id}')
+def get_learning_path(path_id: str):
+    try:
+        return learning_paths.get_path(path_id)
+    except learning_paths.PathNotFound as exc:
+        raise HTTPException(404, 'Learning path not found') from exc
+
+
+@app.put('/api/learning-paths/{path_id}/steps/{step_id}')
+def update_learning_path_step(path_id: str, step_id: str, body: PathStepBody):
+    try:
+        return learning_paths.mark_step(path_id, step_id, body.completed)
+    except learning_paths.PathNotFound as exc:
+        raise HTTPException(404, 'Learning path or step not found') from exc
+    except learning_paths.PathInputError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+class AssessmentCreateBody(BaseModel):
+    count: int = Field(default=3, ge=3, le=5)
+
+
+class AssessmentAnswersBody(BaseModel):
+    answers: dict[str, int] = Field(min_length=3, max_length=5)
+
+
+@app.post('/api/learning-paths/{path_id}/steps/{step_id}/assessments', status_code=201)
+def create_topic_assessment(path_id: str, step_id: str, body: AssessmentCreateBody):
+    try:
+        return assessments.create(path_id, step_id, count=body.count)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except assessments.AssessmentInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(503, 'Assessment AI unavailable. Check Ollama and indexed lecture content.') from exc
+
+
+@app.get('/api/assessments/{assessment_id}')
+def get_topic_assessment(assessment_id: str):
+    try:
+        return assessments.get(assessment_id)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.post('/api/assessments/{assessment_id}/attempts', status_code=201)
+def submit_topic_assessment(assessment_id: str, body: AssessmentAnswersBody):
+    try:
+        return assessments.submit(assessment_id, body.answers)
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except assessments.AssessmentInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/learning-paths/{path_id}/assessment-history')
+def topic_assessment_history(path_id: str, step_id: str | None = None):
+    try:
+        return {'attempts': assessments.history(path_id, step_id)}
+    except assessments.AssessmentNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except assessments.AssessmentConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 class CardCreateBody(CourseBody):
     topic: str = Field(min_length=3, max_length=400)
     count: int = Field(default=5, ge=1, le=10)
@@ -205,6 +368,32 @@ def grade_review(card_id: str, body: GradeBody):
         return study.grade_card(card_id,body.quality)
     except KeyError:
         raise HTTPException(404, 'Review card not found')
+
+
+@app.get('/api/learning-paths/{path_id}/practice-recommendations')
+def practice_recommendations(path_id: str):
+    try:
+        return practice.recommend(path_id)
+    except practice.PracticeNotFound:
+        raise HTTPException(404, 'Learning path not found')
+
+
+@app.get('/api/learning-paths/{path_id}/practice-history')
+def practice_history(path_id: str, step_id: str | None = None):
+    try:
+        return {'attempts': practice.history(path_id, step_id)}
+    except (practice.PracticeNotFound, learning_paths.PathNotFound):
+        raise HTTPException(404, 'Learning path or topic not found')
+
+
+@app.post('/api/learning-paths/{path_id}/steps/{step_id}/practice/{slug}/start', status_code=201)
+def start_recommended_practice(path_id: str, step_id: str, slug: str):
+    try:
+        return practice.start_recommended(path_id, step_id, slug)
+    except (practice.PracticeNotFound, learning_paths.PathNotFound):
+        raise HTTPException(404, 'Learning path, topic, or lab not found')
+    except practice.PracticeInputError as exc:
+        raise HTTPException(409, str(exc)) from exc
 
 
 @app.get('/api/labs')
@@ -249,8 +438,47 @@ class LabSubmitBody(BaseModel):
 @app.post('/api/lab-sessions/{session_id}/submit')
 def submit_lab(session_id: str, body: LabSubmitBody):
     try:
-        return labs.submit_lab(session_id, kind=body.validate_in_kind)
+        result = labs.submit_lab(session_id, kind=body.validate_in_kind)
+        linked = practice.record_verified_grade(session_id, result)
+        if linked:
+            result['practice_attempt'] = linked
+        return result
     except KeyError:
         raise HTTPException(404,'Lab not found')
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(503,str(exc)) from exc
+
+
+@app.get('/api/studio/insights')
+def studio_insights():
+    return studio.insights()
+
+
+class VideoNoteBody(BaseModel):
+    content: str = Field(min_length=1, max_length=3000)
+    position: float = Field(ge=0, lt=1e9)
+
+
+@app.get('/api/videos/{video_id}/notes')
+def video_notes(video_id: str):
+    if not fetch_video(video_id):
+        raise HTTPException(404, 'Video not found')
+    return {'notes': study.list_notes(video_id)}
+
+
+@app.post('/api/videos/{video_id}/notes', status_code=201)
+def create_video_note(video_id: str, body: VideoNoteBody):
+    try:
+        return study.add_note(video_id, body.position, body.content)
+    except KeyError:
+        raise HTTPException(404, 'Video not found')
+    except ValueError:
+        raise HTTPException(422, 'Invalid note')
+
+
+@app.delete('/api/notes/{note_id}', status_code=204)
+def remove_video_note(note_id: str):
+    try:
+        study.delete_note(note_id)
+    except KeyError:
+        raise HTTPException(404, 'Note not found')

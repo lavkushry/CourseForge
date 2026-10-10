@@ -32,6 +32,7 @@ class Settings:
     vision_model: str = os.getenv('VISION_MODEL', 'gemma3:4b')
     max_vision_frames: int = max(0, int(os.getenv('MAX_VISION_FRAMES_PER_VIDEO', '30')))
     lab_image: str = os.getenv('LAB_IMAGE', 'courseforge-lab:local')
+    lab_spark_image: str = os.getenv('LAB_SPARK_IMAGE', 'courseforge-lab-spark:local')
     enable_kind: bool = os.getenv('ENABLE_KIND_LABS', '0') == '1'
 
     @property
