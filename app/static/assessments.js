@@ -35,7 +35,7 @@
     panel.hidden = false;
     panel.scrollIntoView({behavior:'smooth',block:'start'});
     heading.textContent = `Check your understanding: ${step.title}`;
-    status.textContent = 'Creating questions from your indexed lectures…';
+    status.textContent = 'Creating questions from your lessons…';
     questions.replaceChildren();
     resultPanel.hidden = true;
     $('#assessmentSubmit').disabled = true;
@@ -56,7 +56,7 @@
         }
         questions.append(fieldset);
       }
-      status.textContent=`${assessment.question_count} source-grounded questions. Choose one answer per question.`;
+      status.textContent=`${assessment.question_count} questions from your lessons. Choose one answer per question.`;
       $('#assessmentForm').hidden=false;
       $('#assessmentSubmit').disabled=false;
       questions.querySelector('input')?.focus({preventScroll:true});

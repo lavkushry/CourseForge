@@ -48,7 +48,7 @@
     items.setAttribute('aria-busy', 'false');
     el('plannerDayTitle').textContent = `Study plan · ${plan.study_date}`;
     el('plannerTimeBadge').textContent = `${plan.planned_minutes} / ${plan.budget_minutes} min`;
-    el('plannerSummary').textContent = `${plan.completed_count} of ${plan.items.length} checklist items · ${plan.actual_minutes} minutes recorded as studied (self-reported)`;
+    el('plannerSummary').textContent = `${plan.completed_count} of ${plan.items.length} checklist items · ${plan.actual_minutes} minutes you recorded as studied`;
     const pct = plan.planned_minutes ? Math.round(100 * plan.reported_done_minutes / plan.planned_minutes) : 0;
     el('plannerTrack').setAttribute('aria-valuenow', String(pct));
     el('plannerTrackBar').style.width = `${pct}%`;
@@ -87,7 +87,7 @@
         actions.append(button);
       }
       const actual = make('div', 'planner-actual');
-      const field = make('label', 'planner-actual-label', 'Actual minutes (self-reported)');
+      const field = make('label', 'planner-actual-label', 'Minutes you studied');
       const input = document.createElement('input');
       input.type = 'number'; input.min = '0'; input.max = '600'; input.step = '1';
       input.value = String(task.actual_minutes ?? 0);

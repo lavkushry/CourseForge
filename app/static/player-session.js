@@ -41,8 +41,8 @@
     if(!current()){close();return null;}
     a.delivery=window.CourseForgePlaybackDelivery({
       request:(sample,signal)=>api(`/api/player-sessions/${a.id}/heartbeat`,{...json('POST',sample),signal}),
-      onSaved:r=>{if(owner!==a)return;if(!r.active&&!r.released){a.claimed=false;onLost('Playback moved or the session expired. Select Resume here to continue.');}},
-      onError:error=>{if(owner!==a)return;if([401,403,404].includes(error.status)){a.claimed=false;onLost('Your player session has ended. Reopen the lesson.');}else window.CourseForgeNative?.trackingNotice('Connection interrupted. Playback tracking will resume after reconnection.');}
+      onSaved:r=>{if(owner!==a)return;if(!r.active&&!r.released){a.claimed=false;onLost('Your lesson is paused. Select Resume here to continue.');}},
+      onError:error=>{if(owner!==a)return;if([401,403,404].includes(error.status)){a.claimed=false;onLost('Please reopen the lesson to keep watching.');}else window.CourseForgeNative?.trackingNotice('Connection interrupted. Playback tracking will resume after reconnection.');}
     });
     a.timer=setInterval(()=>heartbeat(),10000);return a.id;
   }
@@ -58,12 +58,12 @@
   }
   document.addEventListener('visibilitychange',()=>{
     if(!owner)return;
-    if(document.hidden){window.CourseForgeNative?.suspend();owner.onLost('Playback paused while this page was hidden. Select Resume here to continue.');heartbeat(false);}
+    if(document.hidden){window.CourseForgeNative?.suspend();owner.onLost('Your lesson is paused. Resume when you’re ready.');heartbeat(false);}
     // Visible players reclaim only after a deliberate user action.
   });
   window.addEventListener('pagehide',close);
   window.addEventListener('offline',()=>{window.CourseForgeNative?.trackingNotice('You are offline. Watched time will not be estimated during the interruption.');});
-  window.addEventListener('online',()=>{if(owner){owner.claimed=false;owner.onLost('Connection restored. Select Resume here to continue.');}});
+  window.addEventListener('online',()=>{if(owner){owner.claimed=false;owner.onLost('You’re back online. Resume your lesson.');}});
   async function loadPreferences(){
     preferences=await api('/api/me/player-preferences');return preferences;
   }
@@ -71,5 +71,5 @@
     Object.assign(preferences,change);clearTimeout(savePending);
     savePending=setTimeout(()=>api('/api/me/player-preferences',json('PUT',preferences)).catch(error=>toast('Player preference could not save: '+error.message,true)),300);
   }
-  window.CourseForgePlayerSession={open,close,reclaim,heartbeat,loadPreferences,setPreferences,preferences:()=>({...preferences}),current:()=>owner?.id};
+  window.CourseForgePlayerSession={open,close,reclaim,heartbeat,loadPreferences,setPreferences,preferences:()=>({...preferences}),current:()=>owner?.id,isOwner:()=>Boolean(owner?.claimed)};
 })();

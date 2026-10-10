@@ -70,7 +70,7 @@
       await api(`/api/courses/${encodeURIComponent(id)}/enroll`,json('POST',{}));
       await workspace();const course=state.courseMeta.get(id);if(course)openCourse({...course,name:id});
     },true));
-    heading(root,'Course syllabus');root.append(table(['Lesson','Duration','Availability'],c.lessons.map(l=>[l.title,l.duration?minutes(l.duration):'Not measured',l.available?'Available':'Upload pending'])));
+    heading(root,'Course syllabus');root.append(table(['Lesson','Duration','Availability'],c.lessons.map(l=>[l.title,l.duration?minutes(l.duration):'—',l.available?'Ready to watch':'Coming soon'])));
   }
   function signIn(mode='login'){
     if(mode==='register')history.replaceState(null,'','/#register');
@@ -119,8 +119,8 @@
     const password=field(f,'New password (optional)','password','password',false);password.minLength=12;password.autocomplete='new-password';submitButton(f,'Save account');
     heading(root,'Signed-in devices');const sessions=await api('/api/auth/sessions');
     root.append(table(['Device','Last active','Session'],sessions.sessions.map(s=>[s.device||'Browser',date(s.last_seen),s.current?'This device':button('Revoke',async()=>{await api(`/api/auth/sessions/${s.id}`,{method:'DELETE'});await myAccount();})])));
-    heading(root,'Learning and access data','We record browser-reported playback, resume positions, lesson activity, self-reported completion, assessment results, and access events. Playback records cannot establish attention. The embedded fallback only records visible lesson activity. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until account deletion. Administrators can review learning and access records.');
-    const playback=await api('/api/me/playback');root.append(table(['Lecture','Playback time','Resume position','Content coverage'],playback.lessons.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%'])));
+    heading(root,'Your learning history','Your saved places, completed lessons, study activity, and results are stored in your account. Administrators can review learning records and account access. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until you delete your account.');
+    const playback=await api('/api/me/playback');root.append(table(['Lesson','Time watched','Saved place'],playback.lessons.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position)])));
     if(account.user.role!=='admin'){
       const deletion=form(root,'Delete your account and learning records',async data=>{await api('/api/me',json('DELETE',{password:data.get('password')}));resetBrowser();});
       field(deletion,'Confirm password','password','password');submitButton(deletion,'Delete my account');
@@ -130,7 +130,7 @@
     const root=adminPage('Administration');root.append(button('Refresh',adminHome));
     const report=await api('/api/admin/overview');
     const metrics=node('div','academy-metrics');
-    for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Reported completions',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
+    for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Completed lessons',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
       const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));metrics.append(card);
     }root.append(metrics);
     heading(root,'Recent student activity',report.activity_basis+'. '+report.completion_basis+'.');
@@ -172,7 +172,7 @@
     heading(root,'Lesson completion','Students report completion themselves. This is separate from assessment and lab performance.');root.append(table(['Lecture','Course','Completion','Updated'],r.lessons.map(l=>[l.title,l.course,l.completed?'Reported complete':'Incomplete',date(l.updated_at)])));
     heading(root,'Last opened lessons');root.append(table(['Lecture','Course','Opened'],r.recent_lessons.map(l=>[l.title,l.course,date(l.updated_at)])));
     heading(root,'Lesson activity','Cumulative visible lesson activity remains available after detailed sessions expire.');root.append(table(['Lecture','Course','Activity','Last recorded'],r.lesson_activity.map(l=>[l.title,l.course,minutes(l.activity_seconds),date(l.updated_at)])));
-    heading(root,'Playback tracking','Browser-reported playback and content coverage are separate from lesson-page activity and explicit completion.');root.append(table(['Lecture','Playback','Resume','Coverage','Last saved'],r.playback.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%',date(l.updated_at)])));
+    heading(root,'Playback tracking','Browser-reported playback and content coverage are separate from lesson-page activity and lesson completion.');root.append(table(['Lecture','Playback','Resume','Coverage','Last saved'],r.playback.map(l=>[l.title,minutes(l.playing_seconds),prettyTime(l.position),l.coverage_percent+'%',date(l.updated_at)])));
     heading(root,'Assessment results');root.append(table(['Topic','Score','Correct','Completed'],r.assessments.map(a=>[a.step_id,`${a.score}%`,`${a.correct_count}/${a.total_count}`,date(a.completed_at)])));
     heading(root,'Practice labs');root.append(table(['Lab','Status','Updated'],r.labs.map(l=>[l.slug,l.status,date(l.updated_at)])));
     heading(root,'Recall practice');root.append(table(['Self-rating (0–5)','Reviewed'],r.reviews.map(a=>[a.quality,date(a.reviewed_at)])));
@@ -293,7 +293,7 @@
     try{const r=await api('/api/me');account.user=r.user;account.csrf=r.csrf_token;}
     catch(error){if(error.status!==401)message(error.message,true);}
     for(const id of ['learningNav','accountNav','logoutNav'])el(id).hidden=!account.user;
-    el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
+    el('jobSummary').hidden=account.user?.role!=='admin';el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
     const options=await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
     el('accountName').textContent=account.user?.name||'';
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');

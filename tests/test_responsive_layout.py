@@ -88,11 +88,13 @@ def test_workspace_controls_fit_their_containers(browser, width):
           window.state={progress:new Map()};window.prettyTime=()=> '00:00:00';window.toast=()=>{};
           window.CourseForgeServices={request:async()=>({accepted:false}),json:()=>({})};
           window.CourseForgeAccount={csrf:''};
+          window.CourseForgePlayerSession={isOwner:()=>false,preferences:()=>({speed:1})};
           document.querySelector('#emptyPlayer').hidden=true;
           const wrap=document.createElement('div');wrap.id='lecturePlayerWrap';wrap.className='lecture-player-wrap';
           document.querySelector('.player-shell').append(wrap);
         }''')
         page.add_script_tag(content=(STATIC / 'player-tracking.js').read_text())
+        page.add_script_tag(content=(STATIC / 'player-recovery.js').read_text())
         page.add_script_tag(type='module',content=(STATIC / 'vendor/media-chrome-4.19.3.js').read_text())
         page.wait_for_function("!!customElements.get('media-controller')")
         page.add_script_tag(content=(STATIC / 'native-player.js').read_text())
@@ -112,6 +114,12 @@ def test_workspace_controls_fit_their_containers(browser, width):
           return Math.abs(stage.width/stage.height-16/9)<.02;
         }''')
         if width==390:
+            # Moving focus between speed choices must not dismiss the menu
+            # before the pointer click reaches the selected button.
+            page.get_by_role('button',name='Playback speed',exact=True).click()
+            page.locator('.player-speed-options button[data-rate="1.5"]').click()
+            assert page.evaluate('CourseForgeNative.video().playbackRate')==1.5
+            assert page.locator('.player-speed-menu').evaluate('(e)=>e.hidden')
             # The real controls must lock for touch and remain unlockable from
             # a keyboard. A brief accidental touch cannot unlock playback.
             page.locator('[aria-label="Lock player controls"]').click()

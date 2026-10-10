@@ -28,7 +28,8 @@ _SOURCES = {}
 _SOURCE_LOCKS = tuple(threading.Lock() for _ in range(64))
 CDN_HOSTS = frozenset({'secure.odycdn.com', 'player.odycdn.com'})
 CAPABILITIES = dict(media.CAPABILITIES, mode='native', automatic_resume=True,
-    programmatic_seek=True, playback_events=True, time_basis='browser_reported_playback')
+    programmatic_seek=True, playback_events=True, time_basis='browser_reported_playback',
+    completion_basis='learner_or_playback')
 
 
 def validate_source(url):
@@ -109,7 +110,7 @@ def create_native(video_id: str, body: media.PlaybackBody, request: Request):
     from .academy import learning_event
     learning_event(user['id'],'native_player_opened',video_id)
     return {'id':sid,'player_session_id':psid,'media_url':f'/api/videos/{video_id}/media/{sid}?t={token}',
-            'start_pos':body.start_pos,'watermark':f"{user['name']} · {user['id'][-6:]}",
+            'start_pos':body.start_pos,'watermark':user['name'],
             'capabilities':CAPABILITIES}
 
 
@@ -244,6 +245,9 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
         total=db.execute('SELECT * FROM native_totals WHERE user_id=? AND video_id=?',
             (user['id'],row['video_id'])).fetchone()
         ranges=json.loads(total['ranges_json']) if total else []
+        progress=db.execute('SELECT completed FROM video_progress WHERE user_id=? AND video_id=?',
+            (user['id'],row['video_id'])).fetchone()
+        completed=bool(progress and progress['completed'])
         lease=db.execute('SELECT * FROM native_leases WHERE user_id=?',(user['id'],)).fetchone()
         if not player_sessions.is_owner(db,row['player_session_id']):
             return {'accepted':False,'reason':'ownership_lost','tracking_active':False,'resume_saved':False}
@@ -258,6 +262,7 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
                     sum(b-a for a,b in ranges)/row['duration']*100)) if row['duration'] else 0,
                 'tracking_active':reason=='duplicate' and eligible and row['state']=='playing',
                 'resume_saved':reason=='duplicate' and eligible and row['state']!='standby',
+                'completed':completed,
                 'basis':'browser_reported_playback'}
         duration=row['measured_duration'] or body.duration or row['duration']
         position=min(body.position,duration) if duration else body.position
@@ -290,18 +295,25 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
                 DO UPDATE SET playing_seconds=playing_seconds+excluded.playing_seconds,position=excluded.position,
                 duration=excluded.duration,ranges_json=excluded.ranges_json,updated_at=excluded.updated_at''',
                 (user['id'],row['video_id'],seconds,position,duration,json.dumps(ranges),utcnow()))
-            # Completion remains an explicit learner action; coverage and
-            # playback position update independently of completed status.
             coverage=min(100,math.floor(sum(b-a for a,b in ranges)/duration*100)) if duration else 0
+            # Reaching the end after watching most of the content completes a
+            # lesson. Seeking to the end alone never counts as completion.
+            auto_complete=body.event=='ended' and duration>0 and position>=duration-2 and coverage>=90
+            if auto_complete and not completed:
+                completed=True
+                db.execute('INSERT INTO learning_events(user_id,video_id,event_type,details,created_at) VALUES(?,?,?,?,?)',
+                    (user['id'],row['video_id'],'lesson_completed','playback: ended with at least 90% watched coverage',utcnow()))
             db.execute('''INSERT INTO video_progress(user_id,video_id,percent,position,completed,updated_at)
-                VALUES(?,?,?,?,0,?) ON CONFLICT(user_id,video_id) DO UPDATE SET position=excluded.position,
-                percent=CASE WHEN completed=1 THEN 100 ELSE excluded.percent END,updated_at=excluded.updated_at''',
-                (user['id'],row['video_id'],coverage,position,utcnow()))
+                VALUES(?,?,?,?,?,?) ON CONFLICT(user_id,video_id) DO UPDATE SET position=excluded.position,
+                percent=CASE WHEN excluded.completed=1 THEN 100 ELSE excluded.percent END,
+                completed=excluded.completed,updated_at=excluded.updated_at''',
+                (user['id'],row['video_id'],100 if completed else coverage,position,int(completed),utcnow()))
         if body.event not in ('heartbeat','ready'):
             db.execute('INSERT INTO learning_events(user_id,video_id,event_type,details,created_at) VALUES(?,?,?,?,?)',
                 (user['id'],row['video_id'],'player_'+body.event,f'{position:.1f}s',utcnow()))
     return {'accepted':True,'playing_seconds':row['playing_seconds']+seconds,'position':position,
             'tracking_active':eligible and state=='playing','resume_saved':eligible,
+            'completed':completed,
             'coverage_percent':min(100,math.floor(sum(b-a for a,b in ranges)/duration*100)) if duration else 0,
             'basis':'browser_reported_playback'}
 

@@ -78,7 +78,7 @@ def my_learning(request: Request):
             WHERE e.user_id=? GROUP BY e.course ORDER BY l.updated_at DESC,e.created_at DESC''',(user['id'],)).fetchall()
         seconds=db.execute('SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals WHERE user_id=?',(user['id'],)).fetchone()[0]
     return {'courses':[dict(r)|{'metadata':course_metadata.get_course(r['course'])} for r in rows],
-            'activity_seconds':seconds,'time_basis':'visible_lesson_activity','completion_basis':'self_reported'}
+            'activity_seconds':seconds,'time_basis':'visible_lesson_activity','completion_basis':'learner_or_playback'}
 
 
 class ActivityOpen(BaseModel):
@@ -226,7 +226,7 @@ def overview(request: Request):
             ON l.user_id=e.user_id AND l.course=e.course GROUP BY e.course''')]
     return {'summary':totals,'recent_activity':events,'access_events':access,'funnels':funnels,
             'activity_basis':'Visible lesson activity; not verified video watch time',
-            'completion_basis':'Self-reported lesson completion'}
+            'completion_basis':'Lessons completed by students or after reaching the end with at least 90% watched coverage'}
 
 
 @router.get('/api/admin/users')

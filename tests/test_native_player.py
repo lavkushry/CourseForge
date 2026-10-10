@@ -94,6 +94,31 @@ def test_tracking_separates_pauses_seeks_duplicates_and_tabs(academy_env,monkeyp
     with db.connect() as conn:assert conn.execute('SELECT COUNT(*) FROM native_totals WHERE user_id=?',(user['id'],)).fetchone()[0]==0
 
 
+def test_completion_requires_watched_content_at_the_end_and_can_be_undone(academy_env,monkeypatch):
+    _,_,_,student,_=academy_env;c,user=student();authorize(monkeypatch)
+    clock=[1000.];monkeypatch.setattr(native.time,'time',lambda:clock[0])
+    sid=c.post('/api/videos/lecture/native-session',json={}).json()['id'];sequence=0
+    def send(event,position,elapsed=0):
+        nonlocal sequence
+        sequence+=1;clock[0]+=elapsed
+        response=c.post('/api/player/'+sid+'/events',json={'sequence':sequence,'event':event,
+            'position':position,'duration':120,'elapsed_seconds':elapsed})
+        assert response.status_code==200,response.text
+        return response.json()
+    send('playing',0);send('seeking',120);send('seeked',120)
+    assert send('ended',120)['completed'] is False
+    send('seeking',0);send('seeked',0);send('playing',0)
+    for position in range(10,121,10):send('heartbeat',position,10)
+    result=send('ended',120)
+    assert result['completed'] is True and result['coverage_percent']==100
+    assert c.get('/api/progress').json()['progress'][0]['completed']==1
+    send('ended',120)
+    with db.connect() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM learning_events WHERE user_id=? AND event_type='lesson_completed'",(user['id'],)).fetchone()[0]==1
+    assert c.put('/api/videos/lecture/progress',json={'percent':0,'position':120}).status_code==200
+    assert send('heartbeat',120)['completed'] is False
+
+
 def test_role_changes_require_admin_password_and_revoke_access(academy_env):
     from fastapi.testclient import TestClient
     _,_,admin,student,_=academy_env;c,user=student()
