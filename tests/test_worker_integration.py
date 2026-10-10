@@ -14,9 +14,14 @@ from app.library import scan_courses
 def test_real_video_processing_pipeline_with_fake_models(tmp_path, monkeypatch):
     courses=tmp_path/'courses';(courses/'Kubernetes').mkdir(parents=True)
     clip=courses/'Kubernetes'/'intro.mp4'
-    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','color=c=black:s=640x360:r=5',
-                    '-t','11','-vf','drawtext=text=Kubernetes Pods:fontsize=38:fontcolor=white:x=40:y=40',
-                    '-c:v','mpeg4','-y',str(clip)],check=True,timeout=30)
+    from PIL import Image, ImageDraw
+    frame_img = tmp_path / 'frame.png'
+    img = Image.new('RGB', (640, 360), color='black')
+    draw = ImageDraw.Draw(img)
+    draw.text((40, 40), 'Kubernetes Pods', fill='white')
+    img.save(frame_img)
+    subprocess.run(['ffmpeg', '-v', 'error', '-loop', '1', '-i', str(frame_img),
+                    '-t', '11', '-r', '5', '-c:v', 'mpeg4', '-y', str(clip)], check=True, timeout=30)
     data=tmp_path/'data'
     test_settings = replace(settings, courses_dir=courses, data_dir=data,
                             frame_interval=10, max_frames=10, disable_frames=False, enable_vision=False)
