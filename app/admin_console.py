@@ -124,7 +124,7 @@ def issue_account_link(uid: str, request: Request):
 
 @router.get('/api/public/account-options')
 def account_options():
-    return {'email_registration':auth.mail_configured(), 'admin_invitations':True}
+    return auth.account_options()
 
 
 @router.post('/api/auth/activate')
@@ -227,7 +227,8 @@ def system_status(request: Request):
         invites = db.execute("SELECT COUNT(*) FROM account_tokens WHERE kind='invite' AND expires_at>?",(utcnow(),)).fetchone()[0]
         audit_rows = [dict(r) for r in db.execute('''SELECT a.action,a.resource,a.created_at,u.name actor
             FROM admin_audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 50''')]
-    return {'email':{'provider':os.getenv('SMTP_PROVIDER','brevo'), 'configured':auth.mail_configured(),
+    return {'registration':auth.account_options(),
+            'email':{'provider':os.getenv('SMTP_PROVIDER','brevo'), 'configured':auth.mail_configured(),
                      'required_settings':['PUBLIC_BASE_URL','SMTP_HOST','SMTP_FROM','SMTP_USER','SMTP_PASSWORD']},
             'provider_configured':bool(os.getenv('ODYSEE_AUTH_TOKEN') and os.getenv('ODYSEE_CHANNEL_ID')),
             'player':CAPABILITIES,'service_checks':checks,'tasks':counts,'courses':courses,

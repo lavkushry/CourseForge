@@ -1,5 +1,11 @@
 # Academy validation — 10 October 2026
 
+## Public registration
+
+- Full regression suite: 143 passed. Registration coverage includes immediate student sign-in without SMTP, secure cookies and hashed credentials, duplicate account preservation, validation, request throttling, CSRF and origin checks, course and administrator boundaries, session rotation, isolated personal records, and administrator-issued recovery.
+- Chromium against an isolated database copy checked signup, automatic sign-in to the published catalog, course enrollment, sign-out, and subsequent password sign-in. Registration layouts at 320, 390, and 1366 px had no horizontal overflow or JavaScript errors. Browser testing caught and corrected a fragment-only redirect that left the signup form visible.
+- `REGISTRATION_MODE=open` enables immediate registration at the owner's request. No test accounts were created in production. Email verification and emailed recovery still need Brevo credentials; administrator-issued recovery links work without SMTP.
+
 ## Learning studio release
 
 - Full regression suite: 137 passed. The final access-boundary and route checks also passed after the last adjustments. Browser script syntax, Python compilation, Git whitespace, and the tracked-source audit passed.
@@ -19,4 +25,4 @@
 - JavaScript syntax and Git whitespace checks passed. No emoji characters remain in the application UI source. No demo courses or student accounts were added to the runtime database.
 - After activation, HTTPS administrator sign-in, the live admin overview and account detail API returned 200. Chromium verified the admin screen and confirmed that sign-out clears the private interface. SQLite integrity and foreign-key checks passed; both existing courses and all 210 lecture IDs remain present.
 
-Brevo SMTP was selected; credentials and a verified sender still require owner setup. Email registration/recovery remain unavailable until that setup is completed. Administrator invitations, student activation and administrator-issued recovery links work without SMTP. The private local email helper is `data/configure-email.sh`; it captures credentials with hidden input and writes only to the ignored server environment. Database and environment backups remain private under `data/`.
+Brevo SMTP was selected; credentials and a verified sender still require owner setup. Email verification and emailed recovery remain unavailable until that setup is completed. Immediate registration is enabled separately through `REGISTRATION_MODE=open`. Administrator invitations, student activation and administrator-issued recovery links work without SMTP. The private local email helper is `data/configure-email.sh`; it captures credentials with hidden input and writes only to the ignored server environment. Database and environment backups remain private under `data/`.

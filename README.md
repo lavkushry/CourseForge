@@ -1,6 +1,6 @@
 # CourseForge Academy
 
-**Organize your course library, learn with source-linked AI tools, and manage student access and progress.** Verified accounts protect private notes, study plans, assessments and labs. Published courses support free enrollment. Administrators can inspect learning and access reports, suspend accounts and manage course publication.
+**Organize your course library, learn with source-linked AI tools, and manage student access and progress.** Authenticated accounts protect private notes, study plans, assessments and labs. Published courses support free enrollment. Administrators can inspect learning and access reports, suspend accounts and manage course publication.
 
 For hosting, administrator setup, email configuration and database recovery, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md). Administration includes student invitations, course publishing, player session filters and CSV export, service reports, and an audit log. Invitations let students choose their password without an email service. The CourseForge player streams authorized Odysee uploads through an account-bound media gateway, saves resume positions automatically, and records browser-reported playback and content coverage. The embedded fallback keeps manual resume points. Lesson-page activity and self-reported completion remain separate from playback or assessment performance. The AI and Docker tools require their configured local services.
 

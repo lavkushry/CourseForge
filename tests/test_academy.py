@@ -18,6 +18,7 @@ def academy_env(tmp_path,monkeypatch):
     for mod in (main,db,media,labs,academy_worker):monkeypatch.setattr(mod,'settings',config)
     monkeypatch.setenv('PUBLIC_BASE_URL','https://testserver')
     monkeypatch.setenv('COOKIE_SECURE','1')
+    monkeypatch.setenv('REGISTRATION_MODE','email')
     monkeypatch.setenv('SMTP_HOST','localhost')
     monkeypatch.setenv('SMTP_FROM','accounts@courseforge.test')
     sent=[]

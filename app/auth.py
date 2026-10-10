@@ -96,6 +96,20 @@ def mail_configured() -> bool:
     return ready
 
 
+def registration_mode() -> str:
+    """Email verification is the default; immediate access is an explicit choice."""
+    mode = os.getenv('REGISTRATION_MODE', 'email').strip().casefold()
+    return mode if mode in ('email', 'open', 'invite') else 'invite'
+
+
+def account_options() -> dict:
+    mode = registration_mode()
+    email_ready = mail_configured()
+    return {'registration_enabled':mode == 'open' or (mode == 'email' and email_ready),
+            'registration_mode':mode, 'email_registration':mode == 'email' and email_ready,
+            'email_delivery':email_ready, 'admin_invitations':True}
+
+
 def require_mail_configuration():
     if not mail_configured():
         raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
@@ -292,23 +306,50 @@ class ResetBody(TokenBody):
 
 
 @router.post('/api/auth/register',status_code=201)
-def register(body: Registration, request: Request):
+def register(body: Registration, request: Request, response: Response):
     rate_limit('register:'+client_ip(request),5,3600)
     email = normalize_email(body.email)
     validate_password(body.password)
-    require_mail_configuration()
+    mode = registration_mode()
+    if mode == 'invite':
+        raise HTTPException(403, 'Registration is by administrator invitation. Ask for an activation link.')
+    if mode == 'email':
+        require_mail_configuration()
     name = body.name.strip()
     if not name: raise HTTPException(422,'Enter your name')
     password_hash = hasher.hash(body.password)
     with connect() as db:
         db.execute('BEGIN IMMEDIATE')
         if db.execute('SELECT 1 FROM users WHERE email=?',(email,)).fetchone():
-            return {'message':'Check your email or sign in if you already have an account.'}
+            return {'message':'If you already have an account, sign in or request account recovery.'}
         uid = 'usr_'+secrets.token_hex(16)
-        db.execute('INSERT INTO users VALUES(?,?,?,?,?,0,0,?)',(uid,email,name,password_hash,'student',utcnow()))
-        token = account_token(db,uid,'verify')
+        # The legacy verified flag means activated access (invitations also set
+        # it). Open registration does not establish ownership of the email.
+        db.execute('INSERT INTO users VALUES(?,?,?,?,?,?,0,?)',
+                   (uid,email,name,password_hash,'student',int(mode == 'open'),utcnow()))
+        if mode == 'email':
+            token = account_token(db,uid,'verify')
+        user = db.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
+    access_event(request, 'registered', uid)
+    if mode == 'open':
+        return start_session(user, request, response) | {'message':'Account created. Choose a course to start learning.'}
     send_account_email(email,token,'verify')
     return {'message':'Check your email to verify your account, then sign in.'}
+
+
+def start_session(user, request: Request, response: Response) -> dict:
+    token = secrets.token_urlsafe(32)
+    csrf = secrets.token_urlsafe(32)
+    sid = 'ses_'+secrets.token_hex(16)
+    with connect() as db:
+        # Rotate the browser's old session on sign-in or immediate registration.
+        if request.cookies.get(COOKIE):
+            db.execute('DELETE FROM auth_sessions WHERE token_hash=?',(digest(request.cookies[COOKIE]),))
+        db.execute('INSERT INTO auth_sessions VALUES(?,?,?,?,?,?,?,?,?)',
+                   (sid,user['id'],digest(token),csrf,utcnow(),expiry(168),utcnow(),request.headers.get('user-agent','')[:220],client_ip(request)))
+    response.set_cookie(COOKIE,token,max_age=604800,httponly=True,secure=os.getenv('COOKIE_SECURE','1')=='1',samesite='lax',path='/')
+    access_event(request,'login',user['id'])
+    return {'user':public_user(user),'csrf_token':csrf,'session_id':sid}
 
 
 @router.post('/api/auth/login')
@@ -322,18 +363,7 @@ def login(body: Credentials, request: Request, response: Response):
     if not user or not valid or user['suspended']:
         access_event(request,'login_failed')
         raise HTTPException(401,'Email or password is incorrect')
-    token = secrets.token_urlsafe(32)
-    csrf = secrets.token_urlsafe(32)
-    sid = 'ses_'+secrets.token_hex(16)
-    with connect() as db:
-        # Rotate the browser's old session on login.
-        if request.cookies.get(COOKIE):
-            db.execute('DELETE FROM auth_sessions WHERE token_hash=?',(digest(request.cookies[COOKIE]),))
-        db.execute('INSERT INTO auth_sessions VALUES(?,?,?,?,?,?,?,?,?)',
-                   (sid,user['id'],digest(token),csrf,utcnow(),expiry(168),utcnow(),request.headers.get('user-agent','')[:220],client_ip(request)))
-    response.set_cookie(COOKIE,token,max_age=604800,httponly=True,secure=os.getenv('COOKIE_SECURE','1')=='1',samesite='lax',path='/')
-    access_event(request,'login',user['id'])
-    return {'user':public_user(user),'csrf_token':csrf,'session_id':sid}
+    return start_session(user, request, response)
 
 
 @router.get('/api/me')

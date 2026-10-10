@@ -73,25 +73,34 @@
     heading(root,'Course syllabus');root.append(table(['Lesson','Duration','Availability'],c.lessons.map(l=>[l.title,l.duration?minutes(l.duration):'Not measured',l.available?'Available':'Upload pending'])));
   }
   function signIn(mode='login'){
+    if(mode==='register')history.replaceState(null,'','/#register');
+    else if(location.hash==='#register')history.replaceState(null,'','/');
     const root=page(mode==='register'?'Create your account':mode==='forgot'?'Reset your password':mode==='resend'?'Resend verification':'Welcome back');
     const f=form(root,'',async data=>{
       const payload=Object.fromEntries(data);const result=await api('/api/auth/'+mode,json('POST',payload));
       if(mode==='login'){location.reload();return;}
+      if(mode==='register'&&result.user){history.replaceState(null,'','/#courses');location.reload();return;}
       message(result.message);f.reset();
     });
     if(mode==='register'){const n=field(f,'Name','name');n.maxLength=120;n.autocomplete='name';}
     const email=field(f,'Email address','email','email');email.autocomplete='email';email.maxLength=254;
     if(mode==='login'||mode==='register'){const password=field(f,'Password','password','password');password.autocomplete=mode==='login'?'current-password':'new-password';if(mode==='register'){password.minLength=12;f.append(node('p','muted','Use at least 12 characters.'));}}
-    submitButton(f,mode==='login'?'Sign in':mode==='register'?'Create account':'Send email');
-    root.append(button(mode==='register'?'Already registered? Sign in':'Create an account',()=>signIn(mode==='register'?'login':'register')),
-      button('Forgot password',()=>signIn('forgot')),button('Resend verification',()=>signIn('resend')));
+    if(mode==='register')f.append(node('p','muted','Your account keeps your progress, notes, playback activity, and sign-in history. Administrators can review learning and access records.'));
+    const submit=submitButton(f,mode==='login'?'Sign in':mode==='register'?'Create account':'Send email');
+    if(mode!=='login')submit.disabled=true;
+    const accountLink=button(mode==='register'?'Already registered? Sign in':'Create an account',()=>signIn(mode==='register'?'login':'register'));
+    const forgot=button('Forgot password',()=>signIn('forgot')),resend=button('Resend verification',()=>signIn('resend'));
+    root.append(accountLink,forgot,resend);
     api('/api/public/account-options').then(options=>{
-      if(!f.isConnected||options.email_registration)return;
-      if(mode!=='login')submitButtonDisabled(f);
-      root.append(node('p','muted','Accounts are available by administrator invitation while email delivery is being configured. Ask your administrator for an activation or recovery link.'));
-    }).catch(()=>{});
+      if(!f.isConnected)return;
+      submit.disabled=mode==='register'?!options.registration_enabled:mode!=='login'&&!options.email_delivery;
+      if(mode!=='register')accountLink.hidden=!options.registration_enabled;
+      resend.hidden=!options.email_delivery;
+      if(mode==='register'&&options.registration_enabled)root.append(node('p','muted',options.registration_mode==='open'?'Create your account and enroll in a published course to start learning immediately.':'Verify your email after creating your account to start learning.'));
+      if(mode==='register'&&!options.registration_enabled)root.append(node('p','muted','Registration is currently available through administrator invitations. Ask your administrator for an activation link.'));
+      if(!options.email_delivery)root.append(node('p','muted','For password recovery, ask your administrator for a private recovery link.'));
+    }).catch(error=>{if(f.isConnected)message(error.message,true);});
   }
-  function submitButtonDisabled(f){const b=f.querySelector('[type=submit]');if(b)b.disabled=true;}
   async function workspace(){
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
@@ -217,6 +226,7 @@
     const root=adminPage('System and administrator audit','system'),r=await api('/api/admin/system');
     heading(root,'Account delivery');
     root.append(node('p','',`${r.email.provider} email: ${r.email.configured?'Configured':'Awaiting server credentials'}. ${r.pending_invitations} pending invitations.`));
+    root.append(node('p','',`Public registration: ${r.registration.registration_enabled?(r.registration.registration_mode==='open'?'Immediate student access':'Email verification required'):'Administrator invitations'}.`));
     if(!r.email.configured)root.append(node('p','muted','Set SMTP_FROM, SMTP_USER, and SMTP_PASSWORD in the server environment, then restart CourseForge. Student activation and recovery links can be issued in Students.'));
     heading(root,'Course readiness');root.append(table(['Course','Publication','Lectures','Cloud mappings','Measured durations'],r.courses.map(c=>[c.course,c.published?'Published':'Draft',c.lessons,c.mapped,c.measured_durations])));
     heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Automatic resume: ${r.player.automatic_resume?'Supported':'Unavailable'}.`),node('p','muted','The CourseForge player supports seeking, speed, volume, fullscreen, timestamp capture, automatic resume, and browser-reported playback tracking. Original video quality is delivered by Odysee. The embedded fallback supports manual resume points and visible lesson activity. Authenticated streaming and the viewer watermark provide access control and deterrence; they are not encrypted DRM.'));
@@ -278,12 +288,13 @@
   window.addEventListener('courseforge-task',()=>toast('Learning task queued. This view will update when it finishes.'));
   el('catalogNav').onclick=()=>catalog().catch(e=>message(e.message,true));el('learningNav').onclick=()=>workspace().catch(e=>message(e.message,true));
   el('accountNav').onclick=()=>myAccount().catch(e=>message(e.message,true));el('adminNav').onclick=()=>adminHome().catch(e=>message(e.message,true));
-  el('signinNav').onclick=()=>signIn();el('logoutNav').onclick=async()=>{try{await api('/api/auth/logout',json('POST',{}));resetBrowser();}catch(error){message(error.message,true);}};
+  el('signinNav').onclick=()=>signIn();el('registerNav').onclick=()=>signIn('register');el('logoutNav').onclick=async()=>{try{await api('/api/auth/logout',json('POST',{}));resetBrowser();}catch(error){message(error.message,true);}};
   async function boot(){
     try{const r=await api('/api/me');account.user=r.user;account.csrf=r.csrf_token;}
     catch(error){if(error.status!==401)message(error.message,true);}
     for(const id of ['learningNav','accountNav','logoutNav'])el(id).hidden=!account.user;
     el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
+    const options=await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
     el('accountName').textContent=account.user?.name||'';
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');
     const fragment=location.hash.slice(1).split('?'),params=new URLSearchParams(location.search);
@@ -298,7 +309,9 @@
       const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=12;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
     }
     const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
-    if(adminRoute&&!account.user)signIn();
+    if(location.hash==='#register'&&!account.user)signIn('register');
+    else if(location.hash==='#courses')await catalog();
+    else if(adminRoute&&!account.user)signIn();
     else if(adminRoute&&account.user?.role==='admin'){
       const route=adminRoute[1]||'';
       if(route.startsWith('students/'))await adminStudent(route.slice(9));
