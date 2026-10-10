@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -447,6 +447,67 @@ def submit_lab(session_id: str, body: LabSubmitBody):
         raise HTTPException(404,'Lab not found')
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(503,str(exc)) from exc
+
+
+class DailyPlanPreferencesBody(BaseModel):
+    daily_minutes: int = Field(ge=15, le=180)
+    path_id: str | None = Field(default=None, max_length=150)
+
+
+class DailyPlanGenerateBody(BaseModel):
+    study_date: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
+    tz_offset_minutes: int = Field(default=0, ge=-840, le=840)
+    refresh: bool = False
+
+
+class DailyPlanItemBody(BaseModel):
+    status: Literal['pending', 'done', 'skipped']
+
+
+@app.get('/api/planner/preferences')
+def planner_preferences():
+    return planner.preferences()
+
+
+@app.put('/api/planner/preferences')
+def update_planner_preferences(body: DailyPlanPreferencesBody):
+    try:
+        return planner.save_preferences(body.daily_minutes, body.path_id)
+    except planner.PlannerNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/planner/days/{study_date}')
+def planner_day(study_date: str):
+    try:
+        result = planner.get_day(study_date)
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if result is None:
+        raise HTTPException(404, 'No plan for this day yet')
+    return result
+
+
+@app.post('/api/planner/days', status_code=201)
+def generate_planner_day(body: DailyPlanGenerateBody):
+    try:
+        return planner.generate(body.study_date, body.tz_offset_minutes, refresh=body.refresh)
+    except planner.PlannerNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.put('/api/planner/items/{item_id}')
+def update_planner_item(item_id: str, body: DailyPlanItemBody):
+    try:
+        return planner.set_item_status(item_id, body.status)
+    except planner.PlannerNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @app.get('/api/studio/insights')

@@ -41,5 +41,11 @@
   const practiceRecommendations = (id) => request(`/api/learning-paths/${encodeURIComponent(id)}/practice-recommendations`);
   const practiceHistory = (id,step=null) => request(`/api/learning-paths/${encodeURIComponent(id)}/practice-history${step?'?step_id='+encodeURIComponent(step):''}`);
   const startRecommendedPractice = (id,step,slug) => request(`/api/learning-paths/${encodeURIComponent(id)}/steps/${encodeURIComponent(step)}/practice/${encodeURIComponent(slug)}/start`,{method:'POST'});
-  window.CourseForgeServices = Object.freeze({practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  /** @typedef {{study_date:string,budget_minutes:number,planned_minutes:number,completed_count:number,items:Array<{id:string,kind:string,title:string,description:string,minutes:number,status:string,action:object}>}} DailyPlan */
+  const plannerPreferences = () => request('/api/planner/preferences');
+  const savePlannerPreferences = (daily_minutes,path_id) => request('/api/planner/preferences', json('PUT',{daily_minutes,path_id}));
+  const plannerDay = (day) => request(`/api/planner/days/${encodeURIComponent(day)}`);
+  const generatePlannerDay = (study_date,tz_offset_minutes,refresh=false) => request('/api/planner/days',json('POST',{study_date,tz_offset_minutes,refresh}));
+  const setPlannerItem = (id,status) => request(`/api/planner/items/${encodeURIComponent(id)}`,json('PUT',{status}));
+  window.CourseForgeServices = Object.freeze({plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();

@@ -22,6 +22,12 @@ This is an **advanced single-user local prototype**. Unit and media-extraction i
 **Deliberate safety limit:** AI can propose other practice exercises in the tutor, but it cannot run arbitrary generated commands. Only pre-reviewed lab templates have executable graders. The Kubernetes lab performs static checks by default; cluster API dry-run is opt-in and does not deploy actual workloads.
 
 
+## P1.7: Personalized daily learning planner
+
+Open **Today's plan** from the sidebar or dashboard. Select a realistic daily time budget (15–180 minutes) and optionally a cross-course learning roadmap. Click **Build / refresh plan** to combine due flashcards, source-linked lessons, unlocked topics, assessments and curated labs into one prioritized schedule. Source lecture actions seek to the original timestamp; lab actions open only reviewed lab templates. Plans and your own checklist statuses persist in SQLite. You can select another calendar date; the browser passes its local timezone offset to avoid UTC day-boundary surprises.
+
+**Checklist ≠ mastery.** Checking off an action never awards quiz points, never grades reviews or labs, and never claims video progress. Scheduled durations are planning estimates, not watched-time measurements. A 15-minute day stays within the 15-minute budget. See [`docs/P1_DAILY_PLANNER.md`](docs/P1_DAILY_PLANNER.md) for endpoints, data rules, and caveats.
+
 ## P1: Cross-course, prerequisite-aware learning roadmaps
 
 CourseForge can combine existing source-linked course syllabi into a single goal-oriented path, merge repeated topics across different courses, and suggest prerequisites without fabricating lectures. From **Learning → Study paths**, build each course syllabus first; then select up to eight courses, enter a concrete goal, and build a combined roadmap.

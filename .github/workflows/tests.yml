@@ -15,5 +15,5 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m compileall -q app scripts
       - name: Validate browser script syntax
-        run: node --check app/static/app.js && node --check app/static/services.js && node --check app/static/learning-paths.js && node --check app/static/assessments.js && node --check app/static/practice.js
+        run: node --check app/static/app.js && node --check app/static/services.js && node --check app/static/learning-paths.js && node --check app/static/assessments.js && node --check app/static/practice.js && node --check app/static/planner.js
       - run: pytest -q
