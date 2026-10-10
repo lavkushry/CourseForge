@@ -4,6 +4,10 @@
 
 This is an **advanced single-user local prototype**. Unit and media-extraction integration tests are included. Full real-model and Docker/kind checks require running the supplied smoke test on your own machine; they are not guaranteed to pass without installing the stated prerequisites.
 
+## Step 10 — Real-device acceptance gate
+
+To validate a real local lecture, source timestamps, note cleanup, focus timer lifecycle, and opt-in live Chromium / Whisper–Ollama–Qdrant / Docker grading, run `python scripts/acceptance_live.py --video-id YOUR_VIDEO_ID --focus --docker-lab --real-ai --browser`. The full gate **must run on your own machine**; CI cannot see your downloaded courses or local services. See [the real-device acceptance runbook](docs/P0_REAL_DEVICE_ACCEPTANCE.md).
+
 ## Step 9 — Focus Timer and Analytics
 
 The **Today’s plan** screen includes a Pomodoro-style focus/break timer (1–120 minutes), pause/resume/finish/discard, persistent interval history, daily task/lesson/lab linking, and a weekly planned vs manually reported vs server-measured time chart. The three metrics remain separate and do not imply mastery. The timer attempts to pause when the browser tab becomes hidden, and server-side sessions never exceed their configured duration. See [`docs/P1_FOCUS_TIMER.md`](docs/P1_FOCUS_TIMER.md).
