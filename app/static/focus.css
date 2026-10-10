@@ -2,7 +2,7 @@
 .focus-studio{margin-bottom:22px}
 .focus-layout{display:grid;grid-template-columns:minmax(250px,0.9fr) minmax(300px,1.1fr);gap:22px;margin-top:18px}
 .focus-clock-card{padding:24px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm)}
-.focus-clock{font-size:clamp(3rem,8vw,5.2rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.045em;text-align:center;padding:14px 0;color:var(--text)}
+.focus-clock{font-size:clamp(3rem,8vw,5.2rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.045em;text-align:center;padding:14px 0;color:var(--ink)}
 .focus-progress{height:9px;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:99px;margin-bottom:20px}
 .focus-progress>span{display:block;width:0;height:100%;background:var(--accent);border-radius:99px;transition:width .3s linear}
 .focus-start-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
