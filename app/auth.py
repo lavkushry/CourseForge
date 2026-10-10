@@ -89,8 +89,15 @@ def check_password(encoded: str, value: str) -> bool:
         return False
 
 
+def mail_configured() -> bool:
+    ready=bool(os.getenv('PUBLIC_BASE_URL') and os.getenv('SMTP_HOST') and os.getenv('SMTP_FROM'))
+    if os.getenv('SMTP_HOST','').casefold()=='smtp-relay.brevo.com':
+        ready=ready and bool(os.getenv('SMTP_USER') and os.getenv('SMTP_PASSWORD'))
+    return ready
+
+
 def require_mail_configuration():
-    if not os.getenv('PUBLIC_BASE_URL') or not os.getenv('SMTP_HOST') or not os.getenv('SMTP_FROM'):
+    if not mail_configured():
         raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
 
 
@@ -100,7 +107,7 @@ def send_account_email(email: str, token: str, kind: str):
     host = os.getenv('SMTP_HOST', '')
     if not base or not host or not os.getenv('SMTP_FROM'):
         raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
-    link = f'{base}/?action={kind}&token={token}'
+    link = f'{base}/#{kind}?token={token}'
     msg = EmailMessage()
     msg['Subject'] = 'Verify your CourseForge email' if kind == 'verify' else 'Reset your CourseForge password'
     msg['From'] = os.environ['SMTP_FROM']
@@ -119,7 +126,7 @@ def send_account_email(email: str, token: str, kind: str):
 def account_token(db, uid: str, kind: str) -> str:
     token = secrets.token_urlsafe(32)
     db.execute('DELETE FROM account_tokens WHERE user_id=? AND kind=?', (uid, kind))
-    db.execute('INSERT INTO account_tokens VALUES(?,?,?,?)', (digest(token), uid, kind, expiry(24 if kind=='verify' else 1)))
+    db.execute('INSERT INTO account_tokens VALUES(?,?,?,?)', (digest(token), uid, kind, expiry(24 if kind in ('verify','invite') else 1)))
     return token
 
 
@@ -203,14 +210,15 @@ async def authorize(request: Request) -> dict | None:
         check_origin(request)
         # Logged-in auth actions also require the session CSRF token. Account
         # verification/reset tokens intentionally work without an existing login.
-        if user and path not in ('/api/auth/verify','/api/auth/reset'):
+        if user and path not in ('/api/auth/verify','/api/auth/reset','/api/auth/activate'):
             supplied = request.headers.get('x-csrf-token','')
             if not secrets.compare_digest(supplied, user['csrf_token']):
                 raise HTTPException(403, 'Invalid CSRF token')
     if not path.startswith('/api/'):
         return user
     public = path in ('/api/health','/api/public/courses','/api/auth/register','/api/auth/login',
-                      '/api/auth/verify','/api/auth/forgot','/api/auth/reset','/api/auth/resend')
+                      '/api/auth/verify','/api/auth/forgot','/api/auth/reset','/api/auth/resend',
+                      '/api/auth/activate','/api/public/account-options')
     public = public or (request.method in ('GET','HEAD') and path.startswith('/api/public/courses/'))
     public = public or (request.method in ('GET','HEAD') and re.fullmatch(r'/api/courses/[^/]+/cover',path) is not None)
     if public:

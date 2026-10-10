@@ -6,13 +6,13 @@
   const account=window.CourseForgeAccount={user:null,csrf:'',lastLessons:{}};
   const node=(tag,cls='',text='')=>{const n=document.createElement(tag);n.className=cls;n.textContent=text;return n;};
   const button=(text,action,primary=false)=>{const b=node('button',primary?'btn btn-primary':'btn btn-outline',text);b.type='button';b.onclick=()=>Promise.resolve().then(action).catch(error=>message(error.message,true));return b;};
-  const minutes=seconds=>`${Math.floor((seconds||0)/60)}m`;
+  const minutes=seconds=>{const n=Math.floor(seconds||0);return n>=3600?`${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m`:n>=60?`${Math.floor(n/60)}m ${n%60}s`:`${n}s`;};
   const date=value=>value?new Date(value).toLocaleString():'—';
   const message=(text,error=false)=>{el('academyMessage').textContent=text;el('academyMessage').classList.toggle('error',error);el('academyMessage').hidden=false;};
   const clearMessage=()=>{el('academyMessage').hidden=true;};
   const resetBrowser=()=>{history.replaceState(null,'','/');location.reload();};
   function page(title){
-    stopActivity();el('appShell').hidden=true;el('academyContent').hidden=false;
+    leaveLesson();el('appShell').hidden=true;el('academyContent').hidden=false;
     const root=el('academyContent');root.replaceChildren(node('h1','',title));clearMessage();return root;
   }
   function table(headers,rows){
@@ -34,6 +34,18 @@
     root.append(f);return f;
   }
   function submitButton(f,text){const b=node('button','btn btn-primary',text);b.type='submit';f.append(b);return b;}
+  function adminPage(title,section=''){
+    history.replaceState(null,'',`/#admin${section?'/'+section:''}`);
+    const root=page(title),nav=node('nav','admin-navigation');nav.setAttribute('aria-label','Administration');
+    for(const [label,route,action] of [['Overview','',adminHome],['Students','students',adminUsers],['Courses','courses',adminCourses],['Player activity','player',adminPlayer],['System and audit','system',adminSystem]]){
+      const b=button(label,()=>action());if(section.split('/')[0]===route){b.classList.add('active');b.setAttribute('aria-current','page');}nav.append(b);
+    }root.append(nav);return root;
+  }
+  function privateLink(root,url,expires,messageText){
+    const box=node('div','panel private-account-link');box.append(node('h2','','Private account link'),node('p','',messageText),node('p','muted','Expires '+date(expires)+'. The link is displayed once and is not stored in reports.'));
+    const label=node('label','field');label.append(node('span','','Copy and share directly with the student'));const input=node('input','form-input');input.type='text';input.readOnly=true;input.value=url;input.autocomplete='off';label.append(input);box.append(label);
+    box.append(button('Copy link',async()=>{await navigator.clipboard.writeText(url);message('Private account link copied.');}),button('Dismiss',()=>box.remove()));root.prepend(box);input.focus();input.select();
+  }
 
   async function catalog(){
     const root=page('Build skills from your course library');
@@ -73,7 +85,13 @@
     submitButton(f,mode==='login'?'Sign in':mode==='register'?'Create account':'Send email');
     root.append(button(mode==='register'?'Already registered? Sign in':'Create an account',()=>signIn(mode==='register'?'login':'register')),
       button('Forgot password',()=>signIn('forgot')),button('Resend verification',()=>signIn('resend')));
+    api('/api/public/account-options').then(options=>{
+      if(!f.isConnected||options.email_registration)return;
+      if(mode!=='login')submitButtonDisabled(f);
+      root.append(node('p','muted','Accounts are available by administrator invitation while email delivery is being configured. Ask your administrator for an activation or recovery link.'));
+    }).catch(()=>{});
   }
+  function submitButtonDisabled(f){const b=f.querySelector('[type=submit]');if(b)b.disabled=true;}
   async function workspace(){
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
@@ -99,8 +117,7 @@
     }
   }
   async function adminHome(){
-    location.hash='admin';const root=page('Administration');
-    root.append(button('Students',adminUsers),button('Courses',adminCourses),button('Refresh',adminHome));
+    const root=adminPage('Administration');root.append(button('Refresh',adminHome));
     const report=await api('/api/admin/overview');
     const metrics=node('div','academy-metrics');
     for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Reported completions',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
@@ -112,20 +129,25 @@
     heading(root,'Recent access events');root.append(table(['Event','IP address','Device','Time'],report.access_events.map(e=>[e.event_type.replaceAll('_',' '),e.ip,e.device,date(e.created_at)])));
   }
   async function adminUsers(query='',offset=0){
-    const root=page('Student management');root.append(button('Administration',adminHome));
+    const root=adminPage('Student management','students');
     const searchForm=form(root,'Find a student',data=>adminUsers(data.get('q')));field(searchForm,'Name or email','q','search',false).value=query;submitButton(searchForm,'Search');
     const result=await api(`/api/admin/users?q=${encodeURIComponent(query)}&offset=${offset}`);
     root.append(node('p','muted',`${result.total} accounts`));
-    root.append(table(['Student','Email','Status','Courses','Completion','Lesson activity','Details'],result.users.map(u=>[u.name,u.email,u.suspended?'Suspended':u.verified?'Verified':'Unverified',u.enrollments,u.completed_lessons,minutes(u.activity_seconds),button('Inspect',()=>adminStudent(u.id))])));
+    root.append(table(['Student','Email','Status','Courses','Completion','Lesson activity','Details'],result.users.map(u=>[u.name,u.email,u.suspended?'Suspended':u.verified?'Active':'Pending activation',u.enrollments,u.completed_lessons,minutes(u.activity_seconds),button('Inspect',()=>adminStudent(u.id))])));
     const pager=node('div','toolbar');if(offset)pager.append(button('Previous',()=>adminUsers(query,Math.max(0,offset-25))));if(offset+25<result.total)pager.append(button('Next',()=>adminUsers(query,offset+25)));root.append(pager);
-    const create=form(root,'Create a student account',async data=>{const r=await api('/api/admin/users',json('POST',Object.fromEntries(data)));message(r.message);create.reset();});
-    field(create,'Name','name');field(create,'Email','email','email');field(create,'Initial password','password','password').minLength=12;submitButton(create,'Create and send verification');
+    const create=form(root,'Invite a student',async data=>{const payload=Object.fromEntries(data);if(!payload.course)delete payload.course;const r=await api('/api/admin/invitations',json('POST',payload));create.reset();privateLink(root,r.activation_url,r.expires_at,r.message);});
+    create.append(node('p','muted','The student chooses their own password using a one-time activation link. No email service is required.'));
+    field(create,'Name','name');field(create,'Email','email','email');
+    const courses=await api('/api/admin/courses'),label=node('label','field');label.append(node('span','','Grant a course (optional)'));const select=node('select','form-input');select.name='course';select.add(new Option('No course selected',''));courses.courses.forEach(c=>select.add(new Option(c.title+(c.published?'':' (draft)'),c.id)));label.append(select);create.append(label);submitButton(create,'Create invitation');
   }
   async function adminStudent(uid){
-    const r=await api(`/api/admin/users/${uid}`),root=page(r.user.name);
-    root.append(button('Back to students',adminUsers),node('p','muted',`${r.user.email} · ${r.user.role} · ${r.user.suspended?'Suspended':r.user.verified?'Verified':'Unverified'}`));
+    const r=await api(`/api/admin/users/${uid}`),root=adminPage(r.user.name,'students/'+uid);
+    root.append(button('Back to students',()=>adminUsers()),node('p','muted',`${r.user.email} · ${r.user.role} · ${r.user.suspended?'Suspended':r.user.verified?'Active':'Pending activation'}`));
     const actions=node('div','toolbar');
-    if(r.user.role!=='admin')actions.append(button(r.user.suspended?'Restore account':'Suspend account',async()=>{await api(`/api/admin/users/${uid}`,json('PATCH',{suspended:!r.user.suspended}));await adminStudent(uid);}));
+    if(r.user.role!=='admin'){
+      actions.append(button(r.user.suspended?'Restore account':'Suspend account',async()=>{await api(`/api/admin/users/${uid}`,json('PATCH',{suspended:!r.user.suspended}));await adminStudent(uid);}));
+      if(!r.user.suspended)actions.append(button(r.user.verified?'Issue recovery link':'Reissue invitation',async()=>{const link=await api(`/api/admin/users/${uid}/account-link`,json('POST',{}));privateLink(root,link.account_url,link.expires_at,link.message);}));
+    }
     actions.append(button('Revoke all sessions',async()=>{await api(`/api/admin/users/${uid}/sessions`,{method:'DELETE'});await adminStudent(uid);}));root.append(actions);
     root.append(node('p','academy-lead',`${minutes(r.activity_seconds)} of recorded lesson activity · ${r.note_count} saved notes`));
     heading(root,'Course access');root.append(table(['Course','Enrolled','Access'],r.enrollments.map(e=>[e.course,date(e.created_at),button('Revoke course access',async()=>{await api(`/api/admin/users/${uid}/enrollments`,json('PUT',{course:e.course,enrolled:false}));await adminStudent(uid);})])));
@@ -133,6 +155,7 @@
     const select=node('select','form-input');select.name='course';select.required=true;select.setAttribute('aria-label','Course to grant');courses.courses.forEach(c=>select.add(new Option(c.title,c.id)));grant.append(select);submitButton(grant,'Grant course access');
     heading(root,'Lesson completion','Students report completion themselves. This is separate from assessment and lab performance.');root.append(table(['Lecture','Course','Completion','Updated'],r.lessons.map(l=>[l.title,l.course,l.completed?'Reported complete':'Incomplete',date(l.updated_at)])));
     heading(root,'Last opened lessons');root.append(table(['Lecture','Course','Opened'],r.recent_lessons.map(l=>[l.title,l.course,date(l.updated_at)])));
+    heading(root,'Lesson activity','Cumulative visible lesson activity remains available after detailed sessions expire.');root.append(table(['Lecture','Course','Activity','Last recorded'],r.lesson_activity.map(l=>[l.title,l.course,minutes(l.activity_seconds),date(l.updated_at)])));
     heading(root,'Assessment results');root.append(table(['Topic','Score','Correct','Completed'],r.assessments.map(a=>[a.step_id,`${a.score}%`,`${a.correct_count}/${a.total_count}`,date(a.completed_at)])));
     heading(root,'Practice labs');root.append(table(['Lab','Status','Updated'],r.labs.map(l=>[l.slug,l.status,date(l.updated_at)])));
     heading(root,'Recall practice');root.append(table(['Self-rating (0–5)','Reviewed'],r.reviews.map(a=>[a.quality,date(a.reviewed_at)])));
@@ -143,15 +166,52 @@
     heading(root,'Access history');root.append(table(['Event','IP','Device','Time'],r.access.map(a=>[a.event_type.replaceAll('_',' '),a.ip,a.device,date(a.created_at)])));
   }
   async function adminCourses(){
-    const root=page('Course publishing');root.append(button('Administration',adminHome));const result=await api('/api/admin/courses');
+    const root=adminPage('Course publishing','courses');const result=await api('/api/admin/courses');
     for(const c of result.courses){const f=form(root,c.title,async data=>{await api(`/api/admin/courses/${encodeURIComponent(c.id)}/publication`,json('PUT',{published:data.get('published')==='on',description:data.get('description')}));message('Course publication updated.');});
       f.append(node('p','muted',`${c.available_lessons}/${c.lesson_count} lectures mapped to Odysee`));
+      f.append(button('Edit course details and cover',()=>openCourseEditor({...c,name:c.id})));
       const l=node('label','field');l.append(node('span','','Course description'));const d=node('textarea','form-input');d.name='description';d.maxLength=5000;d.rows=4;d.value=c.description;l.append(d);f.append(l);
       const publish=node('label');const check=node('input');check.name='published';check.type='checkbox';check.checked=Boolean(c.published);publish.append(check,document.createTextNode(' Published in public catalog'));f.append(publish);submitButton(f,'Save publication');
     }
     const map=form(root,'Map an Odysee lecture',async data=>{await api(`/api/admin/videos/${encodeURIComponent(data.get('video_id'))}/provider`,json('PUT',{claim_name:data.get('claim_name'),claim_id:data.get('claim_id')}));message('Lecture mapping saved.');});
     const videos=await api('/api/videos');const select=node('select','form-input');select.name='video_id';select.required=true;select.setAttribute('aria-label','Lecture to map');videos.videos.forEach(v=>select.add(new Option(`${v.course} / ${v.title}`,v.id)));map.append(select);
     field(map,'Odysee claim name','claim_name');const claim=field(map,'Odysee claim ID','claim_id');claim.pattern='[0-9a-fA-F]{40}';submitButton(map,'Save mapping');
+  }
+  function selectField(f,label,name,choices,value){
+    const l=node('label','field');l.append(node('span','',label));const s=node('select','form-input');s.name=name;for(const [text,id] of choices)s.add(new Option(text,id));s.value=value;l.append(s);f.append(l);return s;
+  }
+  async function adminPlayer(filters={},offset=0){
+    const root=adminPage('Player activity','player');
+    root.append(node('p','academy-lead','Inspect lesson sessions, visible activity, devices, and access. Live means a lesson page is sending heartbeats; it does not establish that the video is playing.'));
+    const criteria={days:'30',q:'',course:'',status:'all',...filters};
+    const f=form(root,'Filter sessions',data=>adminPlayer(Object.fromEntries(data)));
+    field(f,'Student name, email, or lecture','q','search',false).value=criteria.q;
+    selectField(f,'Period','days',[['Last 7 days','7'],['Last 30 days','30'],['Last 90 days','90']],criteria.days);
+    const courses=await api('/api/admin/courses');
+    selectField(f,'Course','course',[['All courses',''],...courses.courses.map(c=>[c.title,c.id])],criteria.course);
+    selectField(f,'Session status','status',[['All sessions','all'],['Live lesson pages','live']],criteria.status);submitButton(f,'Apply filters');
+    const query=new URLSearchParams(criteria),report=await api('/api/admin/player-activity?'+query+'&offset='+offset);
+    const bar=node('div','toolbar');bar.append(button('Refresh',()=>adminPlayer(criteria,offset)));
+    const download=node('a','btn btn-outline','Export CSV');download.href='/api/admin/player-activity/export?'+query;download.download='courseforge-lesson-activity.csv';bar.append(download);root.append(bar);
+    root.append(node('p','muted',`${report.total} sessions · ${report.summary.learners} learners · ${minutes(report.summary.activity_seconds)} activity · ${report.period}. Updated ${new Date().toLocaleTimeString()}.`));
+    root.append(table(['Student','Lecture','Status','Activity','Opened','Last heartbeat','Device and IP'],report.sessions.map(s=>{
+      const student=button(s.name,()=>adminStudent(s.user_id));student.title=s.email;
+      return [student,s.title,s.live?'Live lesson page':'Inactive',minutes(s.activity_seconds),date(s.created_at),date(s.last_active),[s.device||'Not recorded',s.ip||'Not recorded'].join(' · ')];
+    })));
+    const pager=node('div','toolbar');if(offset)pager.append(button('Previous',()=>adminPlayer(criteria,Math.max(0,offset-25))));if(offset+25<report.total)pager.append(button('Next',()=>adminPlayer(criteria,offset+25)));root.append(pager);
+  }
+  async function adminSystem(){
+    const root=adminPage('System and administrator audit','system'),r=await api('/api/admin/system');
+    heading(root,'Account delivery');
+    root.append(node('p','',`${r.email.provider} email: ${r.email.configured?'Configured':'Awaiting server credentials'}. ${r.pending_invitations} pending invitations.`));
+    if(!r.email.configured)root.append(node('p','muted','Set SMTP_FROM, SMTP_USER, and SMTP_PASSWORD in the server environment, then restart CourseForge. Student activation and recovery links can be issued in Students.'));
+    heading(root,'Course readiness');root.append(table(['Course','Publication','Lectures','Cloud mappings','Measured durations'],r.courses.map(c=>[c.course,c.published?'Published':'Draft',c.lessons,c.mapped,c.measured_durations])));
+    heading(root,'Player capabilities');root.append(node('p','',`Odysee authorization: ${r.provider_configured?'Configured':'Missing credentials'}. Timestamp links: ${r.player.timestamp_launch?'Supported':'Unavailable'}.`),node('p','muted','The embedded provider manages playback speed, quality, seeking, and captions when supplied. CourseForge records player authorization and frame openings separately from visible lesson activity. Automatic playback-position capture is unavailable for this provider.'));
+    root.append(button('Refresh Odysee mappings',async()=>{const result=await api('/api/admin/provider-sync',json('POST',{}));await adminSystem();message(result.in_progress?'A mapping refresh is already running.':result.error||`${result.mapped}/${result.lectures} lectures mapped. ${result.durations_added} durations added.`,Boolean(result.error));}));
+    heading(root,'Service reports');root.append(table(['Service','Last report','Last successful report','Status'],Object.entries(r.service_checks).map(([name,s])=>[name.replaceAll('_',' '),date(s.last_attempt),date(s.last_success),s.last_error||s.summary.state||(s.summary.mapped!==undefined?`${s.summary.mapped}/${s.summary.lectures} mapped`:'Reported')])));
+    heading(root,'Learning task queue');root.append(table(['Status','Tasks'],Object.entries(r.tasks)));
+    heading(root,'Administrator audit','Records account invitations, access changes, course publishing, provider mapping, and report exports. Logs retain 90 days; private activation links and passwords are excluded.');root.append(table(['Administrator','Action','Resource','Time'],r.audit.map(a=>[a.actor||'Deleted administrator',a.action,a.resource,date(a.created_at)])));
+    root.append(button('Refresh status',adminSystem));
   }
   async function materials(course){
     const root=el('resourcesDialog');root.replaceChildren(node('h2','','Course resources'),button('Close',()=>root.close()));root.showModal();
@@ -160,10 +220,19 @@
     catch(error){root.append(node('p','field-error',error.message));}
   }
   let activity=null;
-  function stopActivity(){activity=null;}
+  function stopActivity(){
+    const a=activity;activity=null;if(!a)return;
+    const visible=a.visible&&document.visibilityState==='visible';
+    const elapsed=visible?Math.min(20,(performance.now()-a.last)/1000):0;
+    fetch(`/api/activity/${a.id}/heartbeat`,{method:'POST',keepalive:true,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':account.csrf},body:JSON.stringify({sequence:++a.sequence,visible,elapsed_seconds:elapsed,ended:true})}).catch(()=>{});
+  }
+  function leaveLesson(){
+    stopActivity();window.CourseForgeCancelVideoOpen?.();el('lecturePlayerWrap')?.replaceChildren();
+  }
   async function startActivity(id,current=true){
-    if(!current)return;const r=await api(`/api/videos/${id}/activity-session`,json('POST',{}));
-    if(state.currentVideoId!==id||el('appShell').hidden)return;
+    const eligible=()=>typeof current==='function'?current():current;
+    if(!eligible())return;const r=await api(`/api/videos/${id}/activity-session`,json('POST',{}));
+    if(!eligible()||state.currentVideoId!==id||el('appShell').hidden||state.view!=='learning')return;
     activity={id:r.id,sequence:0,last:performance.now(),visible:document.visibilityState==='visible',pending:false};
   }
   async function heartbeat(){
@@ -172,10 +241,11 @@
     const elapsed=a.visible&&visible?Math.min(20,(now-a.last)/1000):0;a.last=now;a.visible=visible;a.pending=true;
     try{const r=await api(`/api/activity/${a.id}/heartbeat`,json('POST',{sequence:++a.sequence,visible,elapsed_seconds:elapsed}));
       if(activity===a&&el('lessonActivityTimer'))el('lessonActivityTimer').textContent='Lesson activity: '+minutes(r.activity_seconds);}
-    catch(error){if(error.status===401||error.status===403||error.status===404)stopActivity();}
+    catch(error){if(error.status===401||error.status===403||error.status===404)leaveLesson();}
     finally{a.pending=false;}
   }
   setInterval(heartbeat,15000);document.addEventListener('visibilitychange',heartbeat);
+  window.addEventListener('pagehide',leaveLesson);
   function parseTimestamp(value){
     if(!/^\d+(?::[0-5]\d){0,2}$/.test(value.trim()))throw new Error('Use seconds, MM:SS, or HH:MM:SS for the timestamp.');
     const seconds=value.trim().split(':').reduce((sum,part)=>sum*60+Number(part),0);if(seconds>=1e9)throw new Error('Timestamp is too large.');return seconds;
@@ -183,13 +253,13 @@
   async function loadBookmarks(id){
     const data=await api(`/api/videos/${id}/bookmarks`);if(id!==state.currentVideoId)return;
     const list=el('bookmarksList');list.replaceChildren();
-    for(const b of data.bookmarks){const row=node('div','saved-note');row.append(node('strong','',`${prettyTime(b.position)} · ${b.label}`),button('Delete',async()=>{await api(`/api/bookmarks/${b.id}`,{method:'DELETE'});await loadBookmarks(id);}));list.append(row);}
+    for(const b of data.bookmarks){const row=node('div','saved-note');row.append(button(`${prettyTime(b.position)} · ${b.label}`,()=>openVideo(id,b.position)),button('Delete',async()=>{await api(`/api/bookmarks/${b.id}`,{method:'DELETE'});await loadBookmarks(id);}));list.append(row);}
     if(!data.bookmarks.length)list.append(node('p','muted','No bookmarks for this lecture yet.'));
   }
   el('bookmarkForm').onsubmit=async e=>{e.preventDefault();if(!state.currentVideoId)return;try{await api(`/api/videos/${state.currentVideoId}/bookmarks`,json('POST',{position:parseTimestamp(el('bookmarkPosition').value),label:el('bookmarkLabel').value}));await loadBookmarks(state.currentVideoId);el('bookmarkLabel').value='';}catch(error){toast(error.message,true);}};
   el('lessonSearch').oninput=e=>{const query=e.target.value.toLowerCase();document.querySelectorAll('.lesson-link').forEach(link=>link.hidden=!link.textContent.toLowerCase().includes(query));};
   el('previousLessonBtn').onclick=()=>{const current=state.videos.find(v=>v.id===state.currentVideoId);if(!current)return;const lessons=state.videos.filter(v=>v.course===current.course),previous=lessons[lessons.findIndex(v=>v.id===current.id)-1];if(previous)openVideo(previous.id).catch(error=>toast(error.message,true));else toast('You are at the first lesson.');};
-  window.CourseForgeAcademy={materials,stopActivity,startActivity,loadBookmarks,parseTimestamp};
+  window.CourseForgeAcademy={materials,stopActivity,leaveLesson,startActivity,loadBookmarks,parseTimestamp};
   window.addEventListener('courseforge-session-expired',()=>{account.user=null;account.csrf='';resetBrowser();});
   window.addEventListener('courseforge-task',()=>toast('Learning task queued. This view will update when it finishes.'));
   el('catalogNav').onclick=()=>catalog().catch(e=>message(e.message,true));el('learningNav').onclick=()=>workspace().catch(e=>message(e.message,true));
@@ -202,15 +272,24 @@
     el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
     el('accountName').textContent=account.user?.name||'';
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');
-    const params=new URLSearchParams(location.search),action=params.get('action'),token=params.get('token');
+    const fragment=location.hash.slice(1).split('?'),params=new URLSearchParams(location.search);
+    const fragmentParams=new URLSearchParams(fragment[1]||''),action=fragmentParams.has('token')?fragment[0]:params.get('action'),token=fragmentParams.get('token')||params.get('token');
+    if(token)history.replaceState(null,'','/');
     if(token&&action==='verify'){
       const r=await api('/api/auth/verify',json('POST',{token}));history.replaceState(null,'','/');signIn();message(r.message);return;
     }
-    if(token&&action==='reset'){
-      const root=page('Choose a new password');const f=form(root,'',async data=>{const r=await api('/api/auth/reset',json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=12;submitButton(f,'Reset password');return;
+    if(token&&(action==='reset'||action==='activate')){
+      const root=page(action==='activate'?'Activate your account':'Choose a new password');
+      if(action==='activate')root.append(node('p','muted','Your administrator invited you to CourseForge. Choose a password with at least 12 characters.'));
+      const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=12;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
     }
-    if(location.hash==='#admin'&&!account.user)signIn();
-    else if(location.hash==='#admin'&&account.user?.role==='admin')await adminHome();
+    const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
+    if(adminRoute&&!account.user)signIn();
+    else if(adminRoute&&account.user?.role==='admin'){
+      const route=adminRoute[1]||'';
+      if(route.startsWith('students/'))await adminStudent(route.slice(9));
+      else await ({students:adminUsers,courses:adminCourses,player:adminPlayer,system:adminSystem}[route]||adminHome)();
+    }
     else if(account.user?.verified)await workspace();else await catalog();
   }
   boot().catch(error=>{page('CourseForge');message(error.message,true);});

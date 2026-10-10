@@ -277,8 +277,162 @@ def test_upgrade_preserves_pre_account_data(tmp_path,monkeypatch):
     migrations.migrate(p);migrations.migrate(p)
     user=auth.bootstrap_admin('owner@courseforge.test','Owner',PASSWORD,p)
     with db.connect(p) as conn:
-        assert conn.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0]==1
+        assert [r[0] for r in conn.execute('SELECT version FROM schema_migrations ORDER BY version')]==[1,2]
         assert conn.execute('SELECT user_id FROM video_notes').fetchone()[0]==user['id']
         assert conn.execute('SELECT percent,position FROM video_progress').fetchone()[:]==(100,50)
         assert conn.execute('SELECT user_id FROM daily_plan_items').fetchone()[0]==user['id']
         assert conn.execute('PRAGMA foreign_key_check').fetchall()==[]
+
+
+def link_token(url):
+    from urllib.parse import urlsplit,parse_qs
+    return parse_qs(urlsplit(url).fragment.split('?',1)[1])['token'][0]
+
+
+def test_admin_invitation_works_without_email_and_is_single_use(academy_env,monkeypatch):
+    _,_,admin,_,_=academy_env
+    monkeypatch.delenv('SMTP_HOST')
+    guest=TestClient(main.app,base_url='https://testserver')
+    assert guest.get('/api/public/account-options').json()['email_registration'] is False
+    assert guest.post('/api/admin/invitations',json={'name':'Invited','email':'invited@courseforge.test'}).status_code==401
+    r=admin.post('/api/admin/invitations',json={'name':'Invited learner','email':'invited@courseforge.test','course':'SQL'})
+    assert r.status_code==201,r.text
+    token=link_token(r.json()['activation_url']);uid=r.json()['user_id']
+    with db.connect() as conn:
+        row=conn.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+        assert not row['verified'] and row['role']=='student'
+        assert conn.execute('SELECT token_hash FROM account_tokens WHERE user_id=?',(uid,)).fetchone()[0]==auth.digest(token)
+    assert guest.post('/api/auth/activate',json={'token':token,'password':PASSWORD}).status_code==200
+    assert guest.post('/api/auth/activate',json={'token':token,'password':PASSWORD}).status_code==400
+    assert guest.post('/api/auth/login',json={'email':'invited@courseforge.test','password':PASSWORD}).status_code==200
+    assert [v['id'] for v in guest.get('/api/videos').json()['videos']]==['lecture']
+    audit=admin.get('/api/admin/system').json()['audit']
+    assert any(e['action']=='Student invited' for e in audit)
+    assert token not in json.dumps(audit) and PASSWORD not in json.dumps(audit)
+
+
+def test_reissued_invitation_and_admin_recovery_revoke_old_links_and_sessions(academy_env,monkeypatch):
+    _,_,admin,_,_=academy_env
+    monkeypatch.delenv('SMTP_HOST')
+    guest=TestClient(main.app,base_url='https://testserver')
+    first=admin.post('/api/admin/invitations',json={'name':'Learner','email':'invite@courseforge.test'}).json()
+    uid=first['user_id'];old=link_token(first['activation_url'])
+    second=admin.post(f'/api/admin/users/{uid}/account-link',json={}).json()
+    token=link_token(second['account_url'])
+    assert guest.post('/api/auth/activate',json={'token':old,'password':PASSWORD}).status_code==400
+    assert guest.post('/api/auth/activate',json={'token':token,'password':PASSWORD}).status_code==200
+    guest.post('/api/auth/login',json={'email':'invite@courseforge.test','password':PASSWORD})
+    recovery=admin.post(f'/api/admin/users/{uid}/account-link',json={}).json()
+    other=TestClient(main.app,base_url='https://testserver')
+    token=link_token(recovery['account_url'])
+    assert other.post('/api/auth/reset',json={'token':token,'password':PASSWORD+' changed'}).status_code==200
+    assert guest.get('/api/me').status_code==401
+    assert other.post('/api/auth/reset',json={'token':token,'password':PASSWORD}).status_code==400
+    pending=admin.post('/api/admin/invitations',json={'name':'Pending','email':'pending@courseforge.test'}).json()
+    admin.patch('/api/admin/users/'+pending['user_id'],json={'suspended':True})
+    assert other.post('/api/auth/activate',json={'token':link_token(pending['activation_url']),'password':PASSWORD}).status_code==400
+    assert admin.post('/api/admin/users/'+pending['user_id']+'/account-link',json={}).status_code==409
+
+
+def test_invitation_expiry_and_bad_configuration_do_not_activate(academy_env,monkeypatch):
+    _,_,admin,_,_=academy_env
+    first=admin.post('/api/admin/invitations',json={'name':'Learner','email':'invite@courseforge.test'}).json()
+    with db.connect() as conn:conn.execute("UPDATE account_tokens SET expires_at='2000-01-01'")
+    guest=TestClient(main.app,base_url='https://testserver')
+    assert guest.post('/api/auth/activate',json={'token':link_token(first['activation_url']),'password':PASSWORD}).status_code==400
+    monkeypatch.delenv('PUBLIC_BASE_URL')
+    assert admin.post('/api/admin/invitations',json={'name':'No URL','email':'no-url@courseforge.test'}).status_code==503
+    with db.connect() as conn:assert not conn.execute("SELECT 1 FROM users WHERE email='no-url@courseforge.test'").fetchone()
+
+
+def test_manual_resume_preserves_completion_and_is_private(academy_env,monkeypatch):
+    _,_,admin,student,_=academy_env
+    a,_=student('alice@courseforge.test');b,_=student('bob@courseforge.test')
+    a.put('/api/videos/lecture/progress',json={'percent':100,'position':10})
+    assert a.put('/api/videos/lecture/resume-point',json={'position':35}).status_code==200
+    progress=a.get('/api/progress').json()['progress'][0]
+    assert progress['position']==35 and progress['completed']==1
+    assert b.get('/api/progress').json()['progress'][0]['position']==0
+    assert b.put('/api/videos/private/resume-point',json={'position':35}).status_code==403
+    assert a.put('/api/videos/lecture/resume-point',json={'position':121}).status_code==422
+    monkeypatch.setattr(media,'signed_embed',lambda _: 'https://odysee.com/$/embed/lecture/'+'a'*40+'?signature=authorized')
+    player=a.post('/api/videos/lecture/playback-session',json={'start_pos':35}).json()
+    assert player['capabilities']['timestamp_launch'] is True
+    frame=a.get(player['vault_url'])
+    assert '&amp;t=35.0' in frame.text
+    assert 'start=' in player['vault_url']
+
+
+def test_player_reports_close_sessions_safely_and_preserve_lifetime_totals(academy_env,monkeypatch):
+    _,_,admin,student,_=academy_env
+    c,user=student();clock=[time.time()];monkeypatch.setattr(academy.time,'time',lambda:clock[0])
+    sid=c.post('/api/videos/lecture/activity-session',json={},headers={'user-agent':'Actual browser'}).json()['id']
+    clock[0]+=15
+    c.post('/api/activity/'+sid+'/heartbeat',json={'sequence':1,'visible':True,'elapsed_seconds':15})
+    live=admin.get('/api/admin/player-activity?status=live').json()
+    assert live['total']==1 and live['sessions'][0]['device']=='Actual browser'
+    assert c.get('/api/admin/player-activity').status_code==403
+    assert admin.get('/api/admin/player-activity?q=%25').json()['total']==0
+    clock[0]+=8
+    ended={'sequence':2,'visible':True,'elapsed_seconds':8,'ended':True}
+    assert c.post('/api/activity/'+sid+'/heartbeat',json=ended).json()['activity_seconds']==23
+    clock[0]+=15
+    assert c.post('/api/activity/'+sid+'/heartbeat',json={'sequence':3,'visible':True,'elapsed_seconds':15}).json()['accepted'] is False
+    assert admin.get('/api/admin/player-activity?status=live').json()['total']==0
+    report=admin.get('/api/admin/player-activity?course=SQL').json()
+    assert report['summary']['activity_seconds']==23
+    assert c.get('/api/progress').json()['progress'][0]['completed']==0
+    c.patch('/api/me',json={'name':'=dangerous spreadsheet formula'})
+    exported=admin.get('/api/admin/player-activity/export')
+    assert exported.status_code==200 and 'attachment' in exported.headers['content-disposition']
+    assert "'=dangerous spreadsheet formula" in exported.text
+    assert c.get('/api/admin/player-activity/export').status_code==403
+    with db.connect() as conn:conn.execute("UPDATE activity_sessions SET created_at='2000-01-01'")
+    academy.cleanup_records()
+    assert admin.get('/api/admin/player-activity').json()['total']==0
+    assert admin.get('/api/admin/users/'+user['id']).json()['activity_seconds']==23
+    assert c.get('/api/me/learning').json()['activity_seconds']==23
+    assert c.request('DELETE','/api/me',json={'password':PASSWORD}).status_code==200
+    with db.connect() as conn:assert conn.execute('SELECT COUNT(*) FROM lesson_activity_totals').fetchone()[0]==0
+
+
+def test_console_upgrade_preserves_existing_session_totals_and_device(tmp_path,monkeypatch):
+    path=tmp_path/'v1.sqlite3'
+    with monkeypatch.context() as m:
+        m.setattr(migrations,'migrate_console',lambda *_:None)
+        db.init_db(path)
+    user=auth.bootstrap_admin('owner@courseforge.test','Owner',PASSWORD,path)
+    with db.connect(path) as conn:
+        conn.execute("INSERT INTO videos(id,path,course,title,bytes,mtime_ns,created_at) VALUES('v','/v.mp4','SQL','SQL',1,1,?)",(db.utcnow(),))
+        conn.execute('INSERT INTO auth_sessions VALUES(?,?,?,?,?,?,?,?,?)',('s',user['id'],'hash','csrf',db.utcnow(),auth.expiry(1),db.utcnow(),'Browser','127.0.0.1'))
+        conn.execute('INSERT INTO activity_sessions VALUES(?,?,?,?,?,?,?,?)',('a',user['id'],'s','v',1,time.time(),17,db.utcnow()))
+    migrations.migrate(path);migrations.migrate(path)
+    with db.connect(path) as conn:
+        assert conn.execute('SELECT activity_seconds FROM lesson_activity_totals').fetchone()[0]==17
+        assert conn.execute('SELECT device FROM activity_sessions').fetchone()[0]=='Browser'
+        conn.execute('DELETE FROM auth_sessions')
+        assert conn.execute('SELECT activity_seconds FROM lesson_activity_totals').fetchone()[0]==17
+        assert conn.execute('PRAGMA foreign_key_check').fetchone() is None
+
+
+def test_provider_sync_imports_real_duration_and_reports_failures(academy_env,monkeypatch):
+    _,_,admin,_,_=academy_env
+    from types import SimpleNamespace
+    monkeypatch.setenv('ODYSEE_AUTH_TOKEN','test-only-provider-token')
+    payload={'result':{'items':[{'claim_id':'b'*40,'name':'updated-lecture','value':{'title':'SQL joins','video':{'duration':155}}}]}}
+    class Client:
+        def __init__(self,**_):pass
+        def __enter__(self):return self
+        def __exit__(self,*_):pass
+        def post(self,*_,**__):return SimpleNamespace(raise_for_status=lambda:None,json=lambda:payload)
+    monkeypatch.setattr(media.httpx,'Client',Client)
+    with db.connect() as conn:conn.execute('UPDATE videos SET duration=NULL WHERE id=?',('lecture',))
+    result=media.sync_provider_mappings()
+    assert result['durations_added']==1
+    assert admin.get('/api/videos/lecture').json()['video']['duration']==155
+    payload.clear();payload['error']={'message':'Provider rejected refresh'}
+    result=media.sync_provider_mappings()
+    assert result['mapped']==1 and result['error']
+    system=admin.get('/api/admin/system').json()
+    assert system['service_checks']['odysee_sync']['last_error']
+    assert 'test-only-provider-token' not in json.dumps(system)

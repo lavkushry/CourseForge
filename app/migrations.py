@@ -96,6 +96,7 @@ def migrate(path: Path | None = None) -> None:
     with connect(path) as db:
         db.execute('CREATE TABLE IF NOT EXISTS schema_migrations(version INTEGER PRIMARY KEY,applied_at TEXT NOT NULL)')
         if db.execute('SELECT 1 FROM schema_migrations WHERE version=1').fetchone():
+            migrate_console(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -128,3 +129,34 @@ def migrate(path: Path | None = None) -> None:
             raise
         finally:
             db.execute('PRAGMA foreign_keys=ON')
+        migrate_console(db)
+
+
+def migrate_console(db):
+    """Keep durable learning totals while retaining detailed sessions for 90 days."""
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=2').fetchone():
+        return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute("ALTER TABLE activity_sessions ADD COLUMN device TEXT NOT NULL DEFAULT ''")
+        db.execute("ALTER TABLE activity_sessions ADD COLUMN ip TEXT NOT NULL DEFAULT ''")
+        db.execute('ALTER TABLE activity_sessions ADD COLUMN closed INTEGER NOT NULL DEFAULT 0')
+        db.execute('''UPDATE activity_sessions SET device=COALESCE((SELECT device FROM auth_sessions s
+            WHERE s.id=activity_sessions.auth_session_id),''),ip=COALESCE((SELECT ip FROM auth_sessions s
+            WHERE s.id=activity_sessions.auth_session_id),'')''')
+        db.execute('''CREATE TABLE lesson_activity_totals(user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,activity_seconds REAL NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL,PRIMARY KEY(user_id,video_id))''')
+        db.execute('''INSERT INTO lesson_activity_totals SELECT user_id,video_id,SUM(activity_seconds),MAX(created_at)
+            FROM activity_sessions GROUP BY user_id,video_id''')
+        db.execute('''CREATE TABLE admin_audit(id INTEGER PRIMARY KEY,actor_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+            action TEXT NOT NULL,resource TEXT NOT NULL,created_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX admin_audit_date ON admin_audit(created_at)')
+        db.execute('''CREATE TABLE service_checks(name TEXT PRIMARY KEY,last_attempt TEXT NOT NULL,
+            last_success TEXT,summary_json TEXT NOT NULL DEFAULT '{}',last_error TEXT NOT NULL DEFAULT '')''')
+        db.execute('CREATE INDEX activity_date ON activity_sessions(created_at)')
+        db.execute("INSERT INTO schema_migrations VALUES(2,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise

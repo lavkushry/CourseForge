@@ -76,7 +76,7 @@ def my_learning(request: Request):
             LEFT JOIN video_progress p ON p.video_id=v.id AND p.user_id=e.user_id
             LEFT JOIN lesson_visits l ON l.course=e.course AND l.user_id=e.user_id
             WHERE e.user_id=? GROUP BY e.course ORDER BY l.updated_at DESC,e.created_at DESC''',(user['id'],)).fetchall()
-        seconds=db.execute('SELECT COALESCE(SUM(activity_seconds),0) FROM activity_sessions WHERE user_id=?',(user['id'],)).fetchone()[0]
+        seconds=db.execute('SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals WHERE user_id=?',(user['id'],)).fetchone()[0]
     return {'courses':[dict(r)|{'metadata':course_metadata.get_course(r['course'])} for r in rows],
             'activity_seconds':seconds,'time_basis':'visible_lesson_activity','completion_basis':'self_reported'}
 
@@ -88,7 +88,9 @@ def open_activity(video_id: str,request: Request):
     auth.rate_limit('activity-open:'+user['id'],90,60)
     sid='act_'+secrets.token_hex(16);now=time.time()
     with connect() as db:
-        db.execute('INSERT INTO activity_sessions VALUES(?,?,?,?,0,?,0,?)',(sid,user['id'],user['session_id'],video_id,now,utcnow()))
+        db.execute('''INSERT INTO activity_sessions(id,user_id,auth_session_id,video_id,last_heartbeat,created_at,device,ip)
+            VALUES(?,?,?,?,?,?,?,?)''',(sid,user['id'],user['session_id'],video_id,now,utcnow(),
+            request.headers.get('user-agent','')[:220],auth.client_ip(request)))
         db.execute('''INSERT INTO lesson_visits VALUES(?,?,?,?) ON CONFLICT(user_id,course)
             DO UPDATE SET video_id=excluded.video_id,updated_at=excluded.updated_at''',(user['id'],video['course'],video_id,utcnow()))
         db.execute('INSERT OR IGNORE INTO activity_leases VALUES(?,?,?)',(user['id'],sid,now+20))
@@ -100,6 +102,7 @@ class HeartbeatBody(BaseModel):
     sequence: int=Field(ge=1,le=10**9)
     visible: bool
     elapsed_seconds: float=Field(ge=0,le=20,allow_inf_nan=False)
+    ended: bool=False
 
 
 @router.post('/api/activity/{sid}/heartbeat')
@@ -112,7 +115,7 @@ def heartbeat(sid: str,body: HeartbeatBody,request: Request):
         if not row:raise HTTPException(404,'Activity session not found')
         video=db.execute('SELECT course FROM videos WHERE id=?',(row['video_id'],)).fetchone()
         auth.require_course(user,video['course'])
-        if body.sequence<=row['last_sequence']:
+        if row['closed'] or body.sequence<=row['last_sequence']:
             return {'activity_seconds':row['activity_seconds'],'accepted':False,'basis':'visible_lesson_activity'}
         lease=db.execute('SELECT * FROM activity_leases WHERE user_id=?',(user['id'],)).fetchone()
         eligible=not lease or lease['expires_at']<=now or lease['activity_id']==sid
@@ -120,19 +123,42 @@ def heartbeat(sid: str,body: HeartbeatBody,request: Request):
         # stayed visible while the browser was sleeping or disconnected.
         gap=now-row['last_heartbeat']
         credited=min(body.elapsed_seconds,max(0,gap),20) if body.visible and eligible and gap<=30 else 0
-        if body.visible and eligible:
+        if body.visible and eligible and not body.ended:
             db.execute('''INSERT INTO activity_leases VALUES(?,?,?) ON CONFLICT(user_id)
                 DO UPDATE SET activity_id=excluded.activity_id,expires_at=excluded.expires_at''',(user['id'],sid,now+20))
-        elif not body.visible:
+        elif not body.visible or body.ended:
             db.execute('DELETE FROM activity_leases WHERE user_id=? AND activity_id=?',(user['id'],sid))
-        db.execute('UPDATE activity_sessions SET last_sequence=?,last_heartbeat=?,activity_seconds=activity_seconds+? WHERE id=?',
-                   (body.sequence,now,credited,sid))
+        db.execute('UPDATE activity_sessions SET last_sequence=?,last_heartbeat=?,activity_seconds=activity_seconds+?,closed=? WHERE id=?',
+                   (body.sequence,now,credited,int(body.ended),sid))
+        if credited:
+            db.execute('''INSERT INTO lesson_activity_totals VALUES(?,?,?,?) ON CONFLICT(user_id,video_id)
+                DO UPDATE SET activity_seconds=activity_seconds+excluded.activity_seconds,updated_at=excluded.updated_at''',
+                (user['id'],row['video_id'],credited,utcnow()))
     return {'activity_seconds':row['activity_seconds']+credited,'accepted':True,'basis':'visible_lesson_activity'}
 
 
 class BookmarkBody(BaseModel):
     position: float=Field(ge=0,lt=1e9,allow_inf_nan=False)
     label: str=Field(min_length=1,max_length=160)
+
+
+class ResumePointBody(BaseModel):
+    position: float=Field(ge=0,lt=1e9,allow_inf_nan=False)
+
+
+@router.put('/api/videos/{video_id}/resume-point')
+def resume_point(video_id: str,body: ResumePointBody,request: Request):
+    user=auth.require_user(request)
+    video=fetch_video(video_id)
+    if not video:raise HTTPException(404,'Video not found')
+    if video.get('duration') and body.position>video['duration']:
+        raise HTTPException(422,'Resume point exceeds the lecture duration')
+    with connect() as db:
+        db.execute('''INSERT INTO video_progress(user_id,video_id,position,updated_at) VALUES(?,?,?,?)
+            ON CONFLICT(user_id,video_id) DO UPDATE SET position=excluded.position,updated_at=excluded.updated_at''',
+            (user['id'],video_id,body.position,utcnow()))
+    learning_event(user['id'],'resume_point_saved',video_id,f'{body.position}s')
+    return {'position':body.position,'basis':'manually_saved_resume_point'}
 
 
 @router.get('/api/videos/{video_id}/bookmarks')
@@ -172,7 +198,7 @@ def overview(request: Request):
                 'suspended_students':scalar("SELECT COUNT(*) FROM users WHERE role='student' AND suspended=1"),
                 'enrollments':scalar('SELECT COUNT(*) FROM enrollments'),
                 'completed_lessons':scalar('SELECT COUNT(*) FROM video_progress WHERE completed=1'),
-                'activity_seconds':scalar('SELECT COALESCE(SUM(activity_seconds),0) FROM activity_sessions'),
+                'activity_seconds':scalar('SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals'),
                 'courses':scalar('SELECT COUNT(DISTINCT course) FROM videos'),
                 'available_lectures':scalar('SELECT COUNT(*) FROM lecture_providers'),
                 'lectures':scalar('SELECT COUNT(*) FROM videos'),
@@ -199,7 +225,7 @@ def users(request: Request,q: str=Query(default='',max_length=120),offset: int=Q
         rows=db.execute('''SELECT u.id,u.email,u.name,u.role,u.verified,u.suspended,u.created_at,
             (SELECT COUNT(*) FROM enrollments e WHERE e.user_id=u.id) enrollments,
             (SELECT COUNT(*) FROM video_progress p WHERE p.user_id=u.id AND p.completed=1) completed_lessons,
-            (SELECT COALESCE(SUM(activity_seconds),0) FROM activity_sessions a WHERE a.user_id=u.id) activity_seconds,
+            (SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals a WHERE a.user_id=u.id) activity_seconds,
             (SELECT MAX(last_seen) FROM auth_sessions s WHERE s.user_id=u.id) last_seen
             FROM users u '''+where+' ORDER BY u.created_at DESC LIMIT ? OFFSET ?',(needle,needle,limit,offset)).fetchall()
     return {'users':[dict(r) for r in rows],'total':total,'offset':offset,'limit':limit}
@@ -231,7 +257,9 @@ def user_detail(uid: str,request: Request):
             'plans':('SELECT study_date,budget_minutes,updated_at FROM daily_plans WHERE user_id=? ORDER BY study_date DESC LIMIT 30',),
         }
         for key,(sql,) in queries.items():result[key]=[dict(r) for r in db.execute(sql,(uid,))]
-        result['activity_seconds']=db.execute('SELECT COALESCE(SUM(activity_seconds),0) FROM activity_sessions WHERE user_id=?',(uid,)).fetchone()[0]
+        result['activity_seconds']=db.execute('SELECT COALESCE(SUM(activity_seconds),0) FROM lesson_activity_totals WHERE user_id=?',(uid,)).fetchone()[0]
+        result['lesson_activity']=[dict(r) for r in db.execute('''SELECT v.title,v.course,t.activity_seconds,t.updated_at
+            FROM lesson_activity_totals t JOIN videos v ON v.id=t.video_id WHERE t.user_id=? ORDER BY t.updated_at DESC''',(uid,))]
         result['note_count']=db.execute('SELECT COUNT(*) FROM video_notes WHERE user_id=?',(uid,)).fetchone()[0]
     return result
 
@@ -351,6 +379,7 @@ def cleanup_records():
         db.execute('DELETE FROM access_events WHERE created_at<?',((now-timedelta(days=30)).isoformat(),))
         cutoff=(now-timedelta(days=90)).isoformat()
         db.execute('DELETE FROM learning_events WHERE created_at<?',(cutoff,))
+        db.execute('DELETE FROM admin_audit WHERE created_at<?',(cutoff,))
         db.execute('DELETE FROM activity_sessions WHERE created_at<?',(cutoff,))
         db.execute('DELETE FROM activity_leases WHERE expires_at<?',(time.time(),))
         db.execute('DELETE FROM auth_sessions WHERE expires_at<?',(utcnow(),))

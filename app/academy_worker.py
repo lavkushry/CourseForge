@@ -67,7 +67,12 @@ def main():
         try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         except BlockingIOError:raise SystemExit('An academy worker is already running')
         with connect() as db:db.execute("UPDATE task_queue SET status='failed',error='Worker interrupted. Please retry.',updated_at=? WHERE status='running'",(utcnow(),))
+        last_heartbeat=0
         while True:
+            if time.monotonic()-last_heartbeat>=10:
+                from .admin_console import service_check
+                service_check('academy_worker',{'state':'running'})
+                last_heartbeat=time.monotonic()
             worked=process_one()
             if args.once:return
             if not worked:time.sleep(1)

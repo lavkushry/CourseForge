@@ -2,10 +2,12 @@
 import html
 import json
 import logging
+import math
 import os
 import re
 import secrets
 import time
+import threading
 from pathlib import Path
 from urllib.parse import quote, urlencode
 
@@ -21,8 +23,10 @@ from .db import connect, fetch_video, utcnow
 router = APIRouter()
 log = logging.getLogger(__name__)
 _SIGNATURES: dict[tuple[str,str],tuple[float,str]] = {}
+_SYNC_LOCK=threading.Lock()
 CAPABILITIES = {'provider':'odysee','verified_playback_events':False,'automatic_resume':False,
-                'programmatic_seek':False,'completion_basis':'self_reported','time_basis':'visible_lesson_activity'}
+                'programmatic_seek':False,'timestamp_launch':True,
+                'completion_basis':'self_reported','time_basis':'visible_lesson_activity'}
 
 
 def provider_info(video: dict) -> dict | None:
@@ -32,8 +36,21 @@ def provider_info(video: dict) -> dict | None:
 
 
 def sync_provider_mappings():
+    if not _SYNC_LOCK.acquire(blocking=False):
+        return {'in_progress':True}
+    try:
+        report=_sync_provider_mappings()
+        from .admin_console import service_check
+        service_check('odysee_sync',report,report.get('error',''))
+        return report
+    finally:
+        _SYNC_LOCK.release()
+
+
+def _sync_provider_mappings():
     """Run in maintenance only. Preserve mappings on provider failure."""
     entries = []
+    error='';changed=0;durations=0
     for path in (settings.data_dir/'odysee_manifest.json',settings.courses_dir/'odysee_manifest.json'):
         if path.is_file():
             try:
@@ -57,15 +74,18 @@ def sync_provider_mappings():
                     for item in items:
                         value=item.get('value') or {}
                         entries.append({'claim_id':item.get('claim_id'),'claim_name':item.get('name'),
-                                        'title':value.get('title','')})
+                                        'title':value.get('title',''),'duration':(value.get('video') or value.get('audio') or {}).get('duration')})
                     if len(items)<250:break
         except (httpx.HTTPError,ValueError,TypeError):
             log.warning('Odysee refresh unavailable; keeping existing mappings')
+            error='Odysee could not refresh uploads. Existing mappings have been preserved.'
+    else:
+        error='Odysee account credentials are not configured.'
     with connect() as db:
         videos=[dict(r) for r in db.execute('SELECT id,course,title,path FROM videos')]
         for entry in entries:
             name,cid=entry.get('claim_name',''),entry.get('claim_id','')
-            if not re.fullmatch(r'[A-Za-z0-9_-]+',name or '') or not re.fullmatch(r'[0-9a-fA-F]{40}',cid or ''):continue
+            if not isinstance(name,str) or not isinstance(cid,str) or not re.fullmatch(r'[A-Za-z0-9_-]+',name) or not re.fullmatch(r'[0-9a-fA-F]{40}',cid):continue
             source=entry.get('source','')
             title=entry.get('title') or Path(source).stem
             candidates=[v for v in videos if entry.get('video_id')==v['id'] or
@@ -80,9 +100,19 @@ def sync_provider_mappings():
                     course='Advanced Agentic AI And Gen AI By Prudhvi Sir Nareshit 2026' if prefix=='agentic-genai-' else 'Deepak Data Engg'
                     candidates=[v for v in videos if v['course']==course and v['title'].startswith(f'[{match[1]}]')]
             if len(candidates)==1:
-                db.execute('''INSERT INTO lecture_providers VALUES(?,?,?,?) ON CONFLICT(video_id)
-                    DO UPDATE SET claim_name=excluded.claim_name,claim_id=excluded.claim_id,updated_at=excluded.updated_at''',
-                    (candidates[0]['id'],name,cid,utcnow()))
+                vid=candidates[0]['id']
+                previous=db.execute('SELECT claim_name,claim_id FROM lecture_providers WHERE video_id=?',(vid,)).fetchone()
+                if not previous or previous['claim_name']!=name or previous['claim_id']!=cid:
+                    db.execute('''INSERT INTO lecture_providers VALUES(?,?,?,?) ON CONFLICT(video_id)
+                        DO UPDATE SET claim_name=excluded.claim_name,claim_id=excluded.claim_id,updated_at=excluded.updated_at''',
+                        (vid,name,cid,utcnow()));changed+=1
+                try:duration=float(entry.get('duration'))
+                except (TypeError,ValueError):duration=0
+                if math.isfinite(duration) and 0<duration<1e7:
+                    durations+=db.execute('UPDATE videos SET duration=? WHERE id=? AND (duration IS NULL OR duration<=0)',(duration,vid)).rowcount
+        total=db.execute('SELECT COUNT(*) FROM videos').fetchone()[0]
+        mapped=db.execute('SELECT COUNT(*) FROM lecture_providers').fetchone()[0]
+    return {'mapped':mapped,'lectures':total,'mappings_updated':changed,'durations_added':durations,'error':error}
 
 
 def signed_embed(info: dict) -> str:
@@ -123,27 +153,35 @@ def create_playback(video_id: str, body: PlaybackBody, request: Request):
     video=fetch_video(video_id)
     if not video:raise HTTPException(404,'Video not found')
     info=provider_info(video)
-    if not info:raise HTTPException(409,'This lecture has not been mapped to an Odysee upload yet')
+    from .academy import learning_event
+    if not info:
+        learning_event(user['id'],'playback_unavailable',video_id,'Upload pending')
+        raise HTTPException(409,'This lecture has not been mapped to an Odysee upload yet')
     auth.rate_limit('playback:'+user['id'],60,60)
     # Report provider errors in the lesson UI, where learners can retry them.
-    signed_embed(info)
+    try:signed_embed(info)
+    except HTTPException:
+        learning_event(user['id'],'playback_authorization_failed',video_id,'Provider authorization unavailable')
+        raise
     token=secrets.token_urlsafe(32)
     with connect() as db:
         db.execute('INSERT INTO playback_sessions VALUES(?,?,?,?,?,?,0)',
             ('pb_'+secrets.token_hex(16),user['id'],user['session_id'],video_id,auth.digest(token),auth.expiry(1)))
         # Actual frame issuance has a short TTL, independent of the login TTL.
         db.execute("UPDATE playback_sessions SET expires_at=strftime('%Y-%m-%dT%H:%M:%S+00:00','now','+2 minutes') WHERE token_hash=?",(auth.digest(token),))
+    learning_event(user['id'],'player_authorized',video_id)
     watermark=f"{user['name']} · {user['id'][-6:]}"
-    return {'vault_url':f'/api/videos/{video_id}/vault-frame?t={token}',
+    return {'vault_url':f'/api/videos/{video_id}/vault-frame?t={token}&start={round(body.start_pos,3)}',
             'watermark':watermark,'capabilities':CAPABILITIES}
 
 
 @router.get('/api/videos/{video_id}/vault-frame')
-def playback_frame(video_id: str,t: str,request: Request):
+def playback_frame(video_id: str,t: str,request: Request,start: float=0):
     user=auth.require_user(request)
     video=fetch_video(video_id)
     if not video:raise HTTPException(404,'Video not found')
     if len(t)>100:raise HTTPException(403,'Invalid playback session')
+    if not math.isfinite(start) or not 0<=start<1e9:raise HTTPException(422,'Invalid lesson timestamp')
     with connect() as db:
         db.execute('BEGIN IMMEDIATE')
         row=db.execute('''SELECT id FROM playback_sessions WHERE token_hash=? AND user_id=?
@@ -153,7 +191,9 @@ def playback_frame(video_id: str,t: str,request: Request):
         db.execute('UPDATE playback_sessions SET consumed=1 WHERE id=?',(row['id'],))
     info=provider_info(video)
     if not info:raise HTTPException(409,'Lecture upload unavailable')
-    url=html.escape(signed_embed(info),quote=True)
+    url=html.escape(signed_embed(info)+'&'+urlencode({'t':round(start,3)}),quote=True)
+    from .academy import learning_event
+    learning_event(user['id'],'player_frame_opened',video_id,f'Start requested: {round(start,3)}s')
     watermark=html.escape(f"{user['name']} · {user['id'][-6:]}")
     page=f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>CourseForge lesson player</title><style>html,body{{margin:0;width:100%;height:100%;background:#090e19}}iframe{{width:100%;height:100%;border:0}}.mark{{position:absolute;top:12%;right:5%;pointer-events:none;background:#1119;color:#fffc;padding:5px 9px;border-radius:5px;font:11px system-ui;animation:float 24s ease-in-out infinite alternate}}@keyframes float{{to{{top:68%;right:24%}}}}@media(prefers-reduced-motion:reduce){{.mark{{animation:none}}}}</style></head>

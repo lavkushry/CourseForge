@@ -10,7 +10,7 @@ const make = (tag,cls='',text='') => {const el=document.createElement(tag);if(cl
 async function request(path,opts={}){return services.request(path,opts);}
 function toast(message,error=false){const node=$('#notice');node.textContent=message;node.classList.toggle('error',error);node.hidden=false;clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>node.hidden=true,error?7500:4500);}
 const navNames={planner:'Today',dashboard:'Dashboard',library:'Library',learning:'Learning',tutor:'AI Tutor',syllabus:'Study paths',reviews:'Review',labs:'Labs',settings:'Settings'};
-function navigate(view, focusHeading=false){if(!navNames[view])view='dashboard';state.view=view;$$('[data-view]').forEach(el=>el.hidden=el.dataset.view!==view);$$('.nav-item').forEach(el=>{const selected=el.dataset.nav===view;el.classList.toggle('active',selected);if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('#topbarLocation').textContent=navNames[view];closeMobileMenu(false);window.location.hash=view;window.scrollTo({top:0,behavior:'instant'});if(focusHeading){const heading=$(`[data-view="${view}"] h1`);if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true})}}if(view!=='learning')window.CourseForgeAcademy?.stopActivity();if(view==='syllabus')loadSyllabus().catch(err=>toast(err.message,true));if(view==='reviews')loadDue().catch(err=>toast(err.message,true));if(view==='labs')loadLabs().catch(err=>toast(err.message,true));}
+function navigate(view, focusHeading=false){if(!navNames[view])view='dashboard';state.view=view;$$('[data-view]').forEach(el=>el.hidden=el.dataset.view!==view);$$('.nav-item').forEach(el=>{const selected=el.dataset.nav===view;el.classList.toggle('active',selected);if(selected)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('#topbarLocation').textContent=navNames[view];closeMobileMenu(false);window.location.hash=view;window.scrollTo({top:0,behavior:'instant'});if(focusHeading){const heading=$(`[data-view="${view}"] h1`);if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true})}}if(view!=='learning')window.CourseForgeAcademy?.leaveLesson();else if(state.currentVideoId&&!document.querySelector('#lecturePlayerWrap iframe, #lecturePlayerWrap .player-loading, #lecturePlayerWrap .player-unavailable'))openVideo(state.currentVideoId).catch(err=>toast(err.message,true));if(view==='syllabus')loadSyllabus().catch(err=>toast(err.message,true));if(view==='reviews')loadDue().catch(err=>toast(err.message,true));if(view==='labs')loadLabs().catch(err=>toast(err.message,true));}
 $$('[data-nav]').forEach(el=>el.addEventListener('click',event=>{event.preventDefault();navigate(el.dataset.nav,true);}));
 function closeMobileMenu(restoreFocus=false){$('#sidebar').classList.remove('open');$('#mobileScrim').hidden=true;$('#mobileMenu').setAttribute('aria-expanded','false');if(restoreFocus)$('#mobileMenu').focus();}
 $('#mobileMenu').addEventListener('click',()=>{const open=!$('#sidebar').classList.contains('open');$('#sidebar').classList.toggle('open',open);$('#mobileScrim').hidden=!open;$('#mobileMenu').setAttribute('aria-expanded',String(open));if(open)$('#sidebar .nav-item').focus();});
@@ -106,7 +106,7 @@ function renderSelects(){const courses=groupCourses();for(const id of ['#scope',
 }
 function getViewerName(){return window.CourseForgeAccount?.user?.name || '';}
 function openMaterialsModal(course=null){return window.CourseForgeAcademy?.materials(course);}
-function renderLessons(){const course=$('#lessonCourse').value;const list=$('#courseList');list.replaceChildren();const groups=new Map();for(const video of state.videos.filter(v=>!course||v.course===course)){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}let index=0;for(const [name,lessons] of groups){list.append(make('div','lesson-course-label',name));for(const v of lessons){index++;const btn=make('button','lesson-link'+(state.currentVideoId===v.id?' active':''));btn.dataset.vid=v.id;btn.append(make('span','lesson-number',state.progress.get(v.id)?.completed?'':String(index).padStart(2,'0')));const t=make('span','lesson-text');t.append(make('span','name',v.title));const p=state.progress.get(v.id);const baseStatus=p?.completed?'Completed':p?.percent?`${p.percent}% complete`:v.cloud_ready?'Odysee embed':v.status==='done'?'Ready to learn':v.status;t.append(make('span','status',`${formatDuration(v.duration)} · ${baseStatus}`));btn.append(t);btn.addEventListener('click',()=>openVideo(v.id).catch(err=>toast(err.message,true)));list.append(btn);}}
+function renderLessons(){const course=$('#lessonCourse').value;const list=$('#courseList');list.replaceChildren();const groups=new Map();for(const video of state.videos.filter(v=>!course||v.course===course)){if(!groups.has(video.course))groups.set(video.course,[]);groups.get(video.course).push(video);}let index=0;for(const [name,lessons] of groups){list.append(make('div','lesson-course-label',name));for(const v of lessons){index++;const btn=make('button','lesson-link'+(state.currentVideoId===v.id?' active':''));btn.dataset.vid=v.id;btn.append(make('span','lesson-number',state.progress.get(v.id)?.completed?'':String(index).padStart(2,'0')));const t=make('span','lesson-text');t.append(make('span','name',v.title));const p=state.progress.get(v.id);const baseStatus=p?.completed?'Completed':p?.percent?`${p.percent}% complete`:v.cloud_ready?'Available':'Upload pending';t.append(make('span','status',`${formatDuration(v.duration)} · ${baseStatus}`));btn.append(t);btn.addEventListener('click',()=>openVideo(v.id).catch(err=>toast(err.message,true)));list.append(btn);}}
   $('#lessonCount').textContent=`${index} lessons`;
 }
 function renderJobs(){const active=state.jobs.filter(j=>j.status==='processing');const queued=state.jobs.filter(j=>j.status==='queued');const failed=state.jobs.filter(j=>j.status==='failed');$('#jobSummary').textContent=active.length?`Indexing: ${active[0].title}`:queued.length?`${queued.length} queued · ${failed.length} failed`:failed.length?`${failed.length} imports need attention`:'Your library is ready';}
@@ -123,26 +123,30 @@ $('#globalSearch').addEventListener('input',event=>{state.search=event.target.va
 $('#globalSearch').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();navigate('library')}});
 $('#lessonCourse').addEventListener('change',renderLessons);
 let openingGeneration=0;
+window.CourseForgeCancelVideoOpen=()=>{openingGeneration++;};
 async function openVideo(id,at=null){
   const generation=++openingGeneration;
   window.CourseForgeAcademy?.stopActivity();
   const {video,chunks}=await request(`/api/videos/${encodeURIComponent(id)}`);
   if(generation!==openingGeneration)return;
   state.selectedId=id;state.currentVideoId=id;
+  window.CourseForgeAccount.lastLessons[video.course]=id;
   const player=$('#player');player.pause();player.hidden=true;
   $('#emptyPlayer').hidden=true;
   let wrap=document.getElementById('lecturePlayerWrap');
   if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
-  wrap.replaceChildren();
+  wrap.replaceChildren(make('p','player-loading','Loading the lesson player…'));
+  const start=at===null?(state.progress.get(id)?.position||0):at;
   try{
-    const session=await request(`/api/videos/${encodeURIComponent(id)}/playback-session`,services.json('POST',{}));
+    const session=await request(`/api/videos/${encodeURIComponent(id)}/playback-session`,services.json('POST',{start_pos:start}));
     if(generation!==openingGeneration)return;
+    wrap.replaceChildren();
     const iframe=make('iframe');iframe.title=video.title;iframe.src=session.vault_url;
     iframe.allow='autoplay; fullscreen; encrypted-media';iframe.allowFullscreen=true;wrap.append(iframe);
   }catch(error){
     if(generation!==openingGeneration)return;
-    const failure=make('div','player-unavailable');failure.append(make('h3','', 'Lecture unavailable'),make('p','',error.message));
-    const retry=make('button','btn btn-outline','Retry');retry.onclick=()=>openVideo(id).catch(e=>toast(e.message,true));failure.append(retry);wrap.append(failure);
+    wrap.replaceChildren();const failure=make('div','player-unavailable');failure.append(make('h3','', 'Lecture unavailable'),make('p','',error.message));
+    const retry=make('button','btn btn-outline','Retry');retry.onclick=()=>openVideo(id,start).catch(e=>toast(e.message,true));failure.append(retry);wrap.append(failure);
   }
   const toolbar=make('div','lecture-player-toolbar');
   const activity=make('span','muted','Lesson activity: 0m');activity.id='lessonActivityTimer';toolbar.append(activity);
@@ -150,6 +154,10 @@ async function openVideo(id,at=null){
   const full=make('button','btn btn-outline','Fullscreen');full.onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await wrap.requestFullscreen();}catch{toast('Fullscreen is unavailable in this browser.',true);}};
   const resources=make('button','btn btn-outline','Course resources');resources.onclick=()=>openMaterialsModal(video.course);
   toolbar.append(theater,full,resources);wrap.append(toolbar);
+  const resume=make('div','lecture-resume-point');const resumeLabel=make('label','','Resume point');
+  const resumeInput=make('input','form-input');resumeInput.type='text';resumeInput.value=prettyTime(start);resumeInput.setAttribute('aria-label','Manually saved resume timestamp');resumeLabel.append(resumeInput);
+  const saveResume=make('button','btn btn-outline','Save resume point');saveResume.onclick=async()=>{try{const position=window.CourseForgeAcademy.parseTimestamp(resumeInput.value);await request(`/api/videos/${id}/resume-point`,services.json('PUT',{position}));await loadLibrary();toast('Resume point saved. This lecture will reopen at your selected timestamp.');}catch(error){toast(error.message,true);}};
+  resume.append(resumeLabel,saveResume,make('small','muted','Enter the timestamp shown in the player.'));wrap.append(resume);
   $('#playingDetails').hidden=false;$('#playingTitle').textContent=video.title;
   $('#learningHeader').textContent=video.course;$('#learningSubhead').textContent=video.title;
   $('#playingCourse').textContent='Odysee embedded lecture · Completion is self-reported';
@@ -158,20 +166,20 @@ async function openVideo(id,at=null){
   const timeline=$('#timeline');timeline.replaceChildren();
   if(!chunks.length)timeline.append(make('p','muted','A transcript is not available for this lecture yet.'));
   for(const chunk of chunks){
-    const item=make('div','timeline-btn');item.append(make('span','',prettyTime(chunk.start)),make('div','',chunk.text||''));timeline.append(item);
+    const item=make('button','timeline-btn');item.type='button';item.append(make('span','',prettyTime(chunk.start)),make('div','',chunk.text||''));item.onclick=()=>openVideo(id,chunk.start).catch(error=>toast(error.message,true));timeline.append(item);
   }
   $('#lessonCourse').value=video.course;renderLessons();
   $('#lessonSummary').textContent='Generate a summary from indexed lecture evidence.';$('#noteText').value='';
   $('#notePosition').value=at===null?'00:00':prettyTime(at);
-  if(at!==null)toast(`Source is at ${prettyTime(at)}. Use the embedded timeline to seek to this moment.`);
-  await loadNotes(id);navigate('learning');
-  await window.CourseForgeAcademy?.startActivity(id,generation===openingGeneration);
+  if(start>0)toast(`Opening the lecture at ${prettyTime(start)}.`);
+  await loadNotes(id);if(generation!==openingGeneration)return;navigate('learning');
+  await window.CourseForgeAcademy?.startActivity(id,()=>generation===openingGeneration);
   await window.CourseForgeAcademy?.loadBookmarks(id);
 }
 $('#markCompleteBtn').addEventListener('click',async()=>{
   if(!state.currentVideoId)return;
   const id=state.currentVideoId,completed=Boolean(state.progress.get(id)?.completed);
-  try{await request(`/api/videos/${id}/progress`,services.json('PUT',{percent:completed?0:100,position:0}));
+  try{await request(`/api/videos/${id}/progress`,services.json('PUT',{percent:completed?0:100,position:state.progress.get(id)?.position||0}));
     await loadLibrary();$('#playerProgressBar').style.width=completed?'0%':'100%';$('#markCompleteBtn').textContent=completed?'Mark complete':'Mark incomplete';
     toast(completed?'Lesson marked incomplete.':'Lesson completion recorded as self-reported.');
   }catch(error){toast(error.message,true);}
@@ -275,7 +283,7 @@ async function loadNotes(id){
   const {notes}=await services.notes(id);if(state.currentVideoId!==id)return;
   const target=$('#notesList');target.replaceChildren();
   if(!notes.length){target.append(make('p','muted','No notes for this lecture yet. Add your first note above.'));return;}
-  for(const note of notes){const item=make('div','saved-note');const jump=make('button','text-link',prettyTime(note.position));jump.addEventListener('click',()=>toast(`Note is at ${prettyTime(note.position)}. Seek using the embedded player controls.`));item.append(jump);item.append(make('p','',note.content));const del=make('button','small-delete','Delete');del.setAttribute('aria-label',`Delete note at ${prettyTime(note.position)}`);del.addEventListener('click',async()=>{try{await services.deleteNote(note.id);await loadNotes(id)}catch(err){toast(err.message,true)}});item.append(del);target.append(item);}
+  for(const note of notes){const item=make('div','saved-note');const jump=make('button','text-link',prettyTime(note.position));jump.addEventListener('click',()=>openVideo(id,note.position).catch(error=>toast(error.message,true)));item.append(jump);item.append(make('p','',note.content));const del=make('button','small-delete','Delete');del.setAttribute('aria-label',`Delete note at ${prettyTime(note.position)}`);del.addEventListener('click',async()=>{try{await services.deleteNote(note.id);await loadNotes(id)}catch(err){toast(err.message,true)}});item.append(del);target.append(item);}
 }
 $('#noteForm').addEventListener('submit',async(event)=>{event.preventDefault();if(!state.currentVideoId)return toast('Choose a lesson first.',true);const text=$('#noteText').value.trim();if(!text)return;const btn=$('#saveNoteBtn');btn.disabled=true;try{await services.saveNote(state.currentVideoId,window.CourseForgeAcademy.parseTimestamp($('#notePosition').value),text);$('#noteText').value='';await loadNotes(state.currentVideoId);toast('Note saved at your selected timestamp.')}catch(err){toast(err.message,true)}finally{btn.disabled=false}});
 $$('[data-lesson-tab]').forEach(button=>button.addEventListener('click',()=>{

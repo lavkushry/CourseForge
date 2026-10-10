@@ -61,9 +61,21 @@ async def guard_local_actions(request: Request, call_next):
     uid_token = learner_id.set(user['id'] if user else 'legacy')
     course_token = learner_courses.set(allowed)
     try:
+        path=request.url.path
+        admin_change=bool(user and user['role']=='admin' and request.method not in ('GET','HEAD','OPTIONS') and
+            (path.startswith('/api/admin/') or (path.startswith('/api/courses/') and not path.endswith('/enroll')) or
+             path=='/api/scan' or path.endswith('/reindex')))
+        audit_payload={}
+        if admin_change and request.headers.get('content-type','').split(';')[0]=='application/json':
+            try:body=await request.json()
+            except (ValueError,UnicodeDecodeError):body={}
+            if isinstance(body,dict):audit_payload={k:body[k] for k in ('suspended','enrolled','published') if k in body}
         response = await call_next(request)
         if user and request.method not in ('GET','HEAD','OPTIONS') and 200 <= response.status_code < 300:
             path=request.url.path
+            if admin_change:
+                from .admin_console import audit_change
+                await run_in_threadpool(audit_change,user['id'],request.method,path,audit_payload)
             kind=None
             if path.endswith('/progress'):kind='completion_reported'
             elif path.endswith('/notes'):kind='note_saved'
@@ -92,6 +104,8 @@ from .academy import router as academy_router, learning_event
 from .tasks import router as task_router, enqueue
 app.include_router(academy_router)
 app.include_router(task_router)
+from .admin_console import router as admin_console_router
+app.include_router(admin_console_router)
 
 static_path = Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=static_path), name='static')
