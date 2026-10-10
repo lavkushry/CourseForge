@@ -395,7 +395,7 @@ async function openVideo(id,at=null){
   window.CourseForgeStudio?.cancelNext();window.CourseForgeNative?.stop();await window.CourseForgePlayerSession?.close();window.CourseForgeAcademy?.stopActivity();
   const cached=state.videos.find(v=>v.id===id);
   const {video,chunks}=cached?{video:cached,chunks:[]}:await request(`/api/videos/${encodeURIComponent(id)}`);if(!current())return;
-  state.selectedId=id;state.currentVideoId=id;state.currentCourse=video.course;window.CourseForgeAccount.lastLessons[video.course]=id;
+  state.selectedId=id;state.currentVideoId=id;state.currentCourse=video.course;if(window.CourseForgeAccount){if(!window.CourseForgeAccount.lastLessons)window.CourseForgeAccount.lastLessons={};window.CourseForgeAccount.lastLessons[video.course]=id;}
   updateBreadcrumbs(video.course,lessonTitle(video.title));
   renderLessonMaterials(video);
   const player=$('#player');player.pause();player.hidden=true;$('#emptyPlayer').hidden=true;

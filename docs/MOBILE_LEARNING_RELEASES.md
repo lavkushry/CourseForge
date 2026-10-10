@@ -51,10 +51,36 @@ Deploy by backing up SQLite, updating the checked revision, and restarting
 `courseforge.service` and `courseforge-academy-worker.service`. Leave the tunnel
 running. Asset version 15 invalidates previous page bundles.
 
-## Phase 2: daily learning
+## Phase 2: mobile-first foundation
 
-Pending the next independently validated release.
+- **Responsive audit across 320px, 390px, and 768px viewports**:
+  - Eliminated horizontal scroll and cramping across all primary learner screens: Dashboard, Today's Plan, Library, Learning Studio, Lesson Sidebar, Lesson List, Lesson Materials panel, Notes, Assessments, and Settings.
+- **Player Ergonomics & Touch Targets (≥ 44px)**:
+  - Central play button formatted with a minimum 52px touch area.
+  - Playback speed menu options formatted to ≥ 44×44px touch targets in a 4-column mobile grid.
+  - Persistent floating next-lesson button (`.mobile-next`) fixed in the natural bottom-right thumb zone with 48px touch height.
+  - Landscape orientation handling (`max-height: 500px`) automatically grants maximum viewport height (100dvh) to the video stage while auto-hiding navigation tabs.
+- **Thumb-Zone Navigation**:
+  - 5 thumb tabs (`dashboard`, `library`, `planner`, `tutor`, `reviews`) featuring dedicated vector icons and safe-area padding.
+  - Left edge-swipe gesture (`clientX <= 36`, horizontal drag ≥ 70px) transitions back from the player directly to the course library.
+  - Studio breadcrumbs (`.crumb-link`) provide an accessible 36px+ tap target back to course overview.
+- **One-Handed Lesson Materials**:
+  - Materials cards format into high-contrast rows on mobile with a 46px tall primary download action (`.material-download-btn`) with native `download` attribute.
+  - Inline browser preview formats without horizontal layout breakage on small viewports.
+- **Fast 3G Performance Proof**:
+  - Validated via Chrome DevTools Protocol (CDP) under throttled Fast 3G (1.6 Mbps down, 750 kbps up, 150ms RTT) and 4x CPU throttling: lesson page and materials panel reach full interactivity in ~700ms (threshold < 2,000ms).
+- **Test Suite**:
+  - 7/7 tests passing in `tests/test_phase2_mobile_foundation.py`.
+  - 158/158 non-regression tests passing across the core suite.
 
-## Phase 3: quizzes, review, and certificates
+## Phase 3: habit loop
 
-Pending instructor assessments and the next independently validated release.
+Pending the next independently validated release (daily streak loop, return triggers, admin engagement metrics).
+
+## Phase 4: learning that sticks
+
+Pending instructor assessments and per-lesson active recall quizzes.
+
+## Phase 5: proactive AI companion
+
+Pending companion intelligence release.

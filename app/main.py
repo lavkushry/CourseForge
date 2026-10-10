@@ -41,7 +41,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title='CourseForge Academy', version='0.4.0', docs_url='/api/docs',openapi_url='/api/openapi.json',
               redoc_url=None, lifespan=lifespan)
 public_host = urlsplit(os.getenv('PUBLIC_BASE_URL', '')).hostname
-allowed_hosts = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if host.strip()]
+allowed_hosts = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver,*.trycloudflare.com').split(',') if host.strip()]
 if public_host and public_host not in allowed_hosts:
     allowed_hosts.append(public_host)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)

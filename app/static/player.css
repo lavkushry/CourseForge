@@ -83,8 +83,8 @@ body.in-learning #mobileScrim{z-index:79}
 
 .in-learning .lesson-number .icon{width:15px;height:15px}.in-learning .app-footer{background:var(--studio-bg);border-color:var(--studio-line);color:var(--studio-muted)}
 .studio-breadcrumb{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--studio-muted);margin-bottom:3px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.studio-breadcrumb .crumb-link{color:var(--studio-muted);font-size:11px;min-height:0!important;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
-.studio-breadcrumb .crumb-link:hover{color:var(--studio-accent)}
+.studio-breadcrumb .crumb-link{color:var(--studio-muted);font-size:11px;min-height:36px;padding:4px 6px;display:inline-flex;align-items:center;border-radius:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.studio-breadcrumb .crumb-link:hover{color:var(--studio-accent);background:#ffffff0a}
 .in-learning .lesson-section{border-color:var(--studio-line);background:#101727}
 .in-learning .lesson-section-summary{color:var(--studio-ink)}
 .in-learning .lesson-section-body{border-top-color:var(--studio-line);background:transparent}

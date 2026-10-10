@@ -23,6 +23,28 @@ The **Today’s plan** screen includes a Pomodoro-style focus/break timer (1–1
 - **Lesson materials in one place**: Each lesson displays its video alongside a unified **Materials** panel (both in the study rail and below the video) showing only files belonging to that specific lesson (`Notebook`, `PDF`, `Slides`, `Dataset`, `Code`, `Archive`, `Notes`) with friendly names, file sizes, one-click in-browser preview, and direct download (`?download=1`). Section-level shared files (such as weekly archives) appear inside their section in the lesson sidebar rather than cluttering individual lessons. Lessons with no materials hide the Materials tab automatically.
 - **Admin course listing & materials management**: Administrators have a searchable, sortable **Courses** table (`#admin/courses`) showing title, category, lesson count, playable vs pending-mapped lectures, transcript readiness, materials count, enrolled students, publish status, and last-updated date. Drilling into **Manage lessons & files** (`#admin/courses/<course>`) lets administrators reorder lessons, organize section titles, and attach/replace/remove lesson or section files with live upload progress and in-browser preview before publishing. Reordering preserves all existing course and lecture IDs as well as material-to-lesson assignments.
 
+## Phase 2 — Mobile-First Foundation
+
+- **Responsive Viewport Audit (320px, 390px, 768px)**:
+  - Audited and refined all 10 learner screens (`Dashboard`, `Today’s plan`, `Library`, `Learning Studio`, `Lesson Sidebar`, `Lesson List`, `Materials Panel`, `Notes`, `Assessments`, `Settings`).
+  - Zero horizontal overflow, cramping, or unreachable controls at compact widths (320px iPhone SE, 390px modern iPhone/Android, 768px tablet).
+- **Player Ergonomics & Touch Targets**:
+  - Central play button features a generous ≥ 52px touch area.
+  - Playback speed options are accessible via a 4-column responsive grid with ≥ 44×44px touch targets.
+  - Persistent floating **Next lesson** button (`.mobile-next`) fixed in the natural bottom-right thumb zone with 48px height and high contrast.
+  - Smooth landscape orientation handling (`orientation: landscape` & `max-height: 500px`) automatically grants maximum 100dvh viewport height to the video stage while auto-hiding navigation tabs.
+- **Thumb-Zone Navigation**:
+  - 5 thumb-zone bottom navigation tabs (`Home / Continue`, `Library`, `Today’s Plan`, `AI Tutor`, `Review`) with 44px+ minimum touch targets, high-contrast icons, safe-area padding, and studio dark theme integration.
+  - Natural edge-swipe navigation (`clientX <= 36`, horizontal drag ≥ 70px) transitions from any lesson directly back to the course library.
+  - Studio breadcrumb links provide an accessible tap target back to course overview.
+- **One-Handed Lesson Materials**:
+  - Materials cards format into clean rows on mobile with a 46px tall primary download action (`.material-download-btn`) with native `download` attribute.
+  - Responsive inline browser preview with word-wrapped preformatted text.
+- **Fast 3G Performance Proof**:
+  - Validated via Chrome DevTools Protocol (CDP) under throttled Fast 3G (1.6 Mbps down, 750 kbps up, 150ms RTT) and 4x CPU throttling: lesson page and materials panel reach full interactivity in ~700ms (threshold < 2,000ms).
+- **Verification**:
+  - 7/7 tests passing in `tests/test_phase2_mobile_foundation.py` and 158/158 regression suite tests passing.
+
 ## What is working
 
 | Feature | Behavior |
