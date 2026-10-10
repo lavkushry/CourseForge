@@ -83,6 +83,8 @@ def init_db(path: Path | None = None) -> None:
     ensure_assessment_schema(path)
     from .practice import ensure_schema as ensure_practice_schema
     ensure_practice_schema(path)
+    from .planner import ensure_schema as ensure_planner_schema
+    ensure_planner_schema(path)
 
 
 def fetch_videos(path: Path | None = None) -> list[dict]:

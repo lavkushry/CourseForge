@@ -24,8 +24,8 @@ def test_all_js_id_lookups_resolve():
 
 def test_real_navigation_and_views():
     dom=DOM();dom.feed((STATIC/'index.html').read_text())
-    assert set(dom.views)=={'dashboard','library','learning','tutor','syllabus','reviews','labs','settings'}
-    assert {'dashboard','library','learning','tutor','reviews','labs','settings'}<=set(dom.nav)
+    assert set(dom.views)=={'dashboard','planner','library','learning','tutor','syllabus','reviews','labs','settings'}
+    assert {'dashboard','planner','library','learning','tutor','reviews','labs','settings'}<=set(dom.nav)
     assert set(dom.nav)<=set(dom.views)
 
 def test_theme_accessibility_and_loading_states():
