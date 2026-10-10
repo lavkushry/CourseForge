@@ -968,6 +968,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     root.append(button(c.enrolled?'Continue learning':'Enroll for free',async()=>{
       if(!account.user)return signIn();
       await api(`/api/courses/${encodeURIComponent(id)}/enroll`,json('POST',{}));
+      account.bootstrap=await api('/api/me/bootstrap');
       await workspace();const course=state.courseMeta.get(id);if(course)openCourse({...course,name:id});
     },true));
     heading(root,'Course syllabus');root.append(table(['Lesson','Duration','Availability'],c.lessons.map(l=>[l.title,l.duration?minutes(l.duration):'—',l.available?'Ready to watch':'Coming soon'])));

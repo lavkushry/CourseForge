@@ -40,13 +40,16 @@ not mean the first video frame has arrived: Odysee preparation and buffering
 are measured separately. Three fresh browser contexts prevent an older video
 download from competing with the next page-load measurement.
 
-Validation on 2026-10-10: 148 tests passed; cold interactive times were
-1301.9ms, 1314.5ms, and 1296.0ms. Real playback, fullscreen rotation, and
-watermark visibility passed with no browser script errors.
+Validation on 2026-10-10: 148 tests passed; cold interactive times after the
+signup-to-completion walkthrough were 1330.0ms, 1361.1ms, and 1332.1ms.
+Registration, enrollment, real playback, completion, fullscreen rotation,
+and watermark visibility passed with no browser script errors. Production
+also passed real playback and the three phone widths. Enrollment refreshes
+the bootstrap response immediately, including for a previously empty library.
 
 Deploy by backing up SQLite, updating the checked revision, and restarting
 `courseforge.service` and `courseforge-academy-worker.service`. Leave the tunnel
-running. Asset version 14 invalidates previous page bundles.
+running. Asset version 15 invalidates previous page bundles.
 
 ## Phase 2: daily learning
 

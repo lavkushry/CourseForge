@@ -130,6 +130,7 @@ def test_workspace_controls_fit_their_containers(browser, width):
             # Moving focus between speed choices must not dismiss the menu
             # before the pointer click reaches the selected button.
             page.get_by_role('button',name='Playback speed',exact=True).click()
+            assert page.locator('.player-speed-options button').evaluate_all('(buttons)=>buttons.every(b=>b.getBoundingClientRect().width>=44&&b.getBoundingClientRect().height>=44)')
             page.locator('.player-speed-options button[data-rate="1.5"]').click()
             assert page.evaluate('CourseForgeNative.video().playbackRate')==1.5
             assert page.locator('.player-speed-menu').evaluate('(e)=>e.hidden')

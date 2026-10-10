@@ -26,6 +26,7 @@
   .native-controls :is(media-play-button,media-mute-button,media-time-range,.player-button){min-width:44px;min-height:44px}
   .player-timeline{height:44px;--media-control-padding:10px 0}
   .player-button,.player-center-controls button{min-width:44px;min-height:44px}
+  .player-speed-menu{width:224px}.player-speed-options button{min-width:44px;min-height:44px}
   .player-top-controls{padding-inline:env(safe-area-inset-left,0px)}
 }
 @media(max-width:390px){.week-days-input{grid-template-columns:repeat(3,minmax(0,1fr))}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

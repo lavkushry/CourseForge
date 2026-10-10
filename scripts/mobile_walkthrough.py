@@ -14,12 +14,12 @@ import sys
 import tempfile
 import time
 import urllib.request
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from playwright.sync_api import sync_playwright
 from app.config import settings
-from app.auth import hasher
 
 
 def main():
@@ -27,15 +27,14 @@ def main():
         target = Path(folder) / 'courseforge.sqlite3'
         with sqlite3.connect(settings.db_path) as source, sqlite3.connect(target) as copy:
             source.backup(copy)
-            uid, password = secrets.token_hex(16), secrets.token_urlsafe(24)
-            copy.execute('INSERT INTO users(id,email,name,password_hash,role,verified,suspended,created_at) VALUES(?,?,?,?,?,1,0,datetime("now"))',
-                         (uid, 'phone-validation@courseforge.test', 'Mobile validation', hasher.hash(password), 'student'))
-            copy.execute('INSERT INTO enrollments SELECT ?,course,datetime("now") FROM course_publication WHERE published=1', (uid,))
+            password = secrets.token_urlsafe(24)
+            email = 'phone-' + secrets.token_hex(8) + '@courseforge.test'
+            courses = [row[0] for row in copy.execute('SELECT course FROM course_publication WHERE published=1')]
             lesson = copy.execute('SELECT v.id FROM videos v JOIN lecture_providers p ON p.video_id=v.id WHERE v.title LIKE "[005]%"').fetchone()[0]
         with socket.socket() as s:
             s.bind(('127.0.0.1', 0)); port = s.getsockname()[1]
         url = f'http://127.0.0.1:{port}'
-        env = {**os.environ, 'DATA_DIR': folder, 'PUBLIC_BASE_URL': url, 'COOKIE_SECURE': '0'}
+        env = {**os.environ, 'DATA_DIR': folder, 'PUBLIC_BASE_URL': url, 'COOKIE_SECURE': '0', 'REGISTRATION_MODE':'open'}
         server = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', str(port)],
                                   cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
@@ -47,8 +46,21 @@ def main():
             with sync_playwright() as pw:
                 browser = pw.chromium.launch()
                 context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
-                login = context.request.post(url + '/api/auth/login', data={'email': 'phone-validation@courseforge.test', 'password': password})
-                assert login.ok, 'Isolated sign-in failed'
+                signup=context.new_page();signup.goto(url+'/#register')
+                signup.locator('[name=name]').fill('Mobile validation');signup.locator('[name=email]').fill(email);signup.locator('[name=password]').fill(password)
+                signup.locator('.academy-form').get_by_role('button',name='Create account',exact=True).click()
+                signup.wait_for_selector('#logoutNav:not([hidden])')
+                signup.locator('#catalogNav').click()
+                signup.locator('article.academy-course').filter(has_text='Azure Data Engineer').get_by_role('button',name='View syllabus').click()
+                signup.get_by_role('button',name='Enroll for free',exact=True).click()
+                signup.wait_for_selector('.player-center-play',timeout=60000);signup.locator('.player-center-play').click()
+                signup.wait_for_function('CourseForgeNative.video().currentTime>1',timeout=60000)
+                signup.locator('#markCompleteBtn').click()
+                signup.wait_for_function("document.querySelector('#markCompleteBtn').getAttribute('aria-pressed')==='true'")
+                me=context.request.get(url+'/api/me').json()
+                for course in courses:
+                    response=context.request.post(url+'/api/courses/'+quote(course,safe='')+'/enroll',data={},headers={'X-CSRF-Token':me['csrf_token']});assert response.ok
+                signup.evaluate('CourseForgeNative.stop();CourseForgePlayerSession.close()')
                 cookies=context.cookies();context.close()
                 timings = []
                 errors = []
@@ -99,7 +111,7 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                 assert not errors, errors
                 result = {'profile': 'Fast 3G: 1.6Mbps down / 750Kbps up / 150ms RTT, CPU 4x, cold cache',
-                          'interactive_ms': timings, 'phone_checks': checked, 'playback_and_fullscreen':True, 'page_errors': errors}
+                          'interactive_ms': timings, 'phone_checks': checked, 'signup_enroll_watch_complete':True,'playback_and_fullscreen':True, 'page_errors': errors}
                 (settings.data_dir / 'phase1-mobile-results.json').write_text(json.dumps(result, indent=2))
                 print(json.dumps(result, indent=2))
                 assert max(timings) < 2000, 'Lesson shell exceeded the 2 second target'
