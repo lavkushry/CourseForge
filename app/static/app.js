@@ -170,6 +170,7 @@ function paintLabCatalog(){
 }
 function activateLabSession(session,selectedButton=null){
   state.currentLab=session;
+  const focusLab=document.getElementById('focusLab');if(focusLab){focusLab.dataset.sessionId=session.session_id;focusLab.dataset.labTitle=session.title;}
   navigate('labs',true);
   $('#labEditor').hidden=false;
   $('#labTitle').textContent=session.title;

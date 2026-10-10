@@ -68,6 +68,11 @@
         try {await navigateTo(task.action);} catch (e) {error(e.message);} finally {open.disabled = false;}
       });
       actions.append(open);
+      const focus = make('button', 'btn btn-outline', 'Start focus');
+      focus.type = 'button';focus.setAttribute('aria-label',`Start focus for ${task.title}`);
+      focus.addEventListener('click',()=>window.CourseForgeFocus?.startForItem(task.id,task.title));
+      actions.append(focus);
+
       const statuses = [['done','Mark done'],['skipped','Skip'],['pending','Reset']];
       for (const [value, label] of statuses) {
         if (value === task.status) continue;
