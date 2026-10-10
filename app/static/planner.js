@@ -48,7 +48,7 @@
     items.setAttribute('aria-busy', 'false');
     el('plannerDayTitle').textContent = `Study plan · ${plan.study_date}`;
     el('plannerTimeBadge').textContent = `${plan.planned_minutes} / ${plan.budget_minutes} min`;
-    el('plannerSummary').textContent = `${plan.completed_count} of ${plan.items.length} sessions self-reported complete · ${plan.reported_done_minutes} planned minutes checked off`;
+    el('plannerSummary').textContent = `${plan.completed_count} of ${plan.items.length} checklist items · ${plan.actual_minutes} minutes recorded as studied (self-reported)`;
     const pct = plan.planned_minutes ? Math.round(100 * plan.reported_done_minutes / plan.planned_minutes) : 0;
     el('plannerTrack').setAttribute('aria-valuenow', String(pct));
     el('plannerTrackBar').style.width = `${pct}%`;
@@ -68,6 +68,11 @@
         try {await navigateTo(task.action);} catch (e) {error(e.message);} finally {open.disabled = false;}
       });
       actions.append(open);
+      const focus = make('button', 'btn btn-outline', 'Start focus');
+      focus.type = 'button';focus.setAttribute('aria-label',`Start focus for ${task.title}`);
+      focus.addEventListener('click',()=>window.CourseForgeFocus?.startForItem(task.id,task.title));
+      actions.append(focus);
+
       const statuses = [['done','Mark done'],['skipped','Skip'],['pending','Reset']];
       for (const [value, label] of statuses) {
         if (value === task.status) continue;
@@ -76,12 +81,32 @@
         button.setAttribute('aria-label', `${label}: ${task.title}`);
         button.addEventListener('click', async () => {
           button.disabled = true;
-          try { render(await api.setPlannerItem(task.id, value)); error(''); }
+          try { render(await api.setPlannerItem(task.id, value)); window.CourseForgeWeekly?.refresh().catch(() => {}); error(''); }
           catch (e) { error(e.message); button.disabled = false; }
         });
         actions.append(button);
       }
-      card.append(top, actions); items.append(card);
+      const actual = make('div', 'planner-actual');
+      const field = make('label', 'planner-actual-label', 'Actual minutes (self-reported)');
+      const input = document.createElement('input');
+      input.type = 'number'; input.min = '0'; input.max = '600'; input.step = '1';
+      input.value = String(task.actual_minutes ?? 0);
+      input.className = 'form-input planner-actual-input';
+      input.setAttribute('aria-label', `Actual minutes for ${task.title}`);
+      field.append(input);
+      const save = make('button', 'btn btn-outline', 'Save time'); save.type = 'button';
+      save.addEventListener('click', async () => {
+        save.disabled = true;
+        try {
+          const minutes = Number(input.value);
+          if (!Number.isInteger(minutes) || minutes < 0 || minutes > 600) throw new Error('Use 0–600 whole minutes');
+          render(await api.savePlannerActual(task.id, minutes));
+          window.CourseForgeWeekly?.refresh().catch(() => {});
+          error('');
+        } catch (e) { error(e.message); } finally {save.disabled = false;}
+      });
+      actual.append(field, save);
+      card.append(top, actions, actual); items.append(card);
     }
     if (plan.warnings?.length) error(plan.warnings.join(' '));
   }
@@ -130,6 +155,7 @@
       await api.savePlannerPreferences(Number(el('plannerBudget').value), el('plannerPath').value || null);
       const day = el('plannerDate').value;
       render(await api.generatePlannerDay(day, new Date(`${day}T12:00:00`).getTimezoneOffset(), true));
+      window.CourseForgeWeekly?.refresh().catch(() => {});
     } catch (e) {error(e.message);} finally {
       button.disabled = false;
       el('plannerItems').setAttribute('aria-busy', 'false');

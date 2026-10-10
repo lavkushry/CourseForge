@@ -194,7 +194,9 @@ def _select(candidates: list[dict], budget: int) -> list[dict]:
 
 
 def generate(study_date: str, tz_offset_minutes: int = 0, *, refresh: bool = False,
-             db_path: Path | None = None) -> dict:
+             db_path: Path | None = None, budget_override: int | None = None,
+             candidate_override: list[dict] | None = None,
+             retain_recorded: bool = False) -> dict:
     local_date = _study_date(study_date)
     if isinstance(tz_offset_minutes, bool) or not -840 <= tz_offset_minutes <= 840:
         raise PlannerInputError('Timezone offset must be between -840 and 840 minutes')
@@ -204,25 +206,43 @@ def generate(study_date: str, tz_offset_minutes: int = 0, *, refresh: bool = Fal
             return existing
     pref = preferences(db_path)
     candidates, warnings = _candidates(local_date, tz_offset_minutes, pref['path_id'], db_path)
-    selected = _select(candidates, pref['daily_minutes'])
+    budget = pref['daily_minutes'] if budget_override is None else budget_override
+    if type(budget) is not int or not 15 <= budget <= 180:
+        raise PlannerInputError('Daily budget must be between 15 and 180 minutes')
+    if candidate_override is not None:
+        candidates = list(candidate_override)
+    selected = _select(candidates, budget)
     now = utcnow()
     with connect(db_path) as db:
         existing = {r['item_key']: dict(r) for r in db.execute(
             'SELECT * FROM daily_plan_items WHERE study_date=?', (study_date,))}
+        if retain_recorded:
+            pinned = [r for r in existing.values() if r['status'] != 'pending' or r['actual_minutes'] > 0]
+            selected = [dict(item_key=r['item_key'], kind=r['kind'], title=r['title'],
+                             description=r['description'], minutes=r['minutes'],
+                             action=json.loads(r['action_json'])) for r in pinned] + [
+                                 c for c in selected if c['item_key'] not in {r['item_key'] for r in pinned}]
+            # Preserve recorded work while reducing newly proposed tasks to the remaining budget.
+            pinned_keys = {r['item_key'] for r in pinned}
+            total_pinned = sum(r['minutes'] for r in pinned)
+            available = max(0, budget - total_pinned)
+            new_tasks = [c for c in selected if c['item_key'] not in pinned_keys]
+            selected = selected[:len(pinned)] + _select(new_tasks, available) if available >= 15 else selected[:len(pinned)]
         db.execute('''INSERT INTO daily_plans(study_date,path_id,budget_minutes,tz_offset_minutes,created_at,updated_at)
                       VALUES(?,?,?,?,?,?) ON CONFLICT(study_date) DO UPDATE SET
                       path_id=excluded.path_id,budget_minutes=excluded.budget_minutes,
                       tz_offset_minutes=excluded.tz_offset_minutes,updated_at=excluded.updated_at''',
-                   (study_date, pref['path_id'], pref['daily_minutes'], tz_offset_minutes, now, now))
+                   (study_date, pref['path_id'], budget, tz_offset_minutes, now, now))
         db.execute('DELETE FROM daily_plan_items WHERE study_date=?', (study_date,))
         for item in selected:
             prior = existing.get(item['item_key'])
             db.execute('''INSERT INTO daily_plan_items
-                          (id,study_date,item_key,kind,title,description,minutes,action_json,status,updated_at)
-                          VALUES(?,?,?,?,?,?,?,?,?,?)''',
+                          (id,study_date,item_key,kind,title,description,minutes,action_json,status,actual_minutes,updated_at)
+                          VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
                        (prior['id'] if prior else uuid.uuid4().hex, study_date, item['item_key'], item['kind'],
                         item['title'], item['description'], item['minutes'], json.dumps(item['action']),
-                        prior['status'] if prior and json.loads(prior['action_json']) == item['action'] else 'pending', now))
+                        prior['status'] if prior and json.loads(prior['action_json']) == item['action'] else 'pending',
+                        prior['actual_minutes'] if prior and json.loads(prior['action_json']) == item['action'] else 0, now))
     result = get_day(study_date, db_path)
     result['warnings'] = warnings
     return result
@@ -249,6 +269,7 @@ def get_day(study_date: str, db_path: Path | None = None) -> dict | None:
     return {'warnings': warnings, 'study_date': row['study_date'], 'path_id': row['path_id'], 'budget_minutes': row['budget_minutes'],
             'tz_offset_minutes': row['tz_offset_minutes'], 'planned_minutes': sum(x['minutes'] for x in items_out),
             'reported_done_minutes': sum(x['minutes'] for x in items_out if x['status']=='done'),
+            'actual_minutes': sum(x['actual_minutes'] for x in items_out),
             'completed_count': sum(x['status']=='done' for x in items_out), 'items': items_out,
             'disclaimer': 'Daily checklist completion is self-reported. It never changes mastery, flashcard or lab results.'}
 
@@ -261,4 +282,17 @@ def set_item_status(item_id: str, status: str, db_path: Path | None = None) -> d
         if not row:
             raise PlannerNotFound('Daily plan item not found')
         db.execute('UPDATE daily_plan_items SET status=?,updated_at=? WHERE id=?', (status,utcnow(),item_id))
+    return get_day(row['study_date'], db_path)
+
+
+def set_item_actual_minutes(item_id: str, minutes: int, db_path: Path | None = None) -> dict:
+    """Explicit learner report; does not imply elapsed time was measured."""
+    if type(minutes) is not int or not 0 <= minutes <= 600:
+        raise PlannerInputError('Actual time must be 0–600 minutes')
+    with connect(db_path) as db:
+        row = db.execute('SELECT study_date FROM daily_plan_items WHERE id=?', (item_id,)).fetchone()
+        if not row:
+            raise PlannerNotFound('Daily plan item not found')
+        db.execute('UPDATE daily_plan_items SET actual_minutes=?,updated_at=? WHERE id=?',
+                   (minutes,utcnow(),item_id))
     return get_day(row['study_date'], db_path)

@@ -47,5 +47,17 @@
   const plannerDay = (day) => request(`/api/planner/days/${encodeURIComponent(day)}`);
   const generatePlannerDay = (study_date,tz_offset_minutes,refresh=false) => request('/api/planner/days',json('POST',{study_date,tz_offset_minutes,refresh}));
   const setPlannerItem = (id,status) => request(`/api/planner/items/${encodeURIComponent(id)}`,json('PUT',{status}));
-  window.CourseForgeServices = Object.freeze({plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  /** @typedef {{week_start:string,days:Array<{date:string,weekday:number,budget_minutes:number,planned_minutes:number,actual_minutes:number,forecast_reviews:number,rest_day:boolean}>}} WeeklyCalendar */
+  const weekPreferences = () => request('/api/planner/week-preferences');
+  const saveWeekPreferences = (weekday_minutes) => request('/api/planner/week-preferences',json('PUT',{weekday_minutes}));
+  const weeklyCalendar = (week) => request(`/api/planner/weeks/${encodeURIComponent(week)}`);
+  const generateWeeklyCalendar = (week_start,tz_offset_minutes,refresh=false) => request('/api/planner/weeks',json('POST',{week_start,tz_offset_minutes,refresh}));
+  const savePlannerActual = (id,actual_minutes) => request(`/api/planner/items/${encodeURIComponent(id)}/actual`,json('PUT',{actual_minutes}));
+  /** @typedef {{id:string,mode:'focus'|'break',status:'running'|'paused'|'finished'|'cancelled',duration_seconds:number,elapsed_seconds:number,remaining_seconds:number}} FocusSession */
+  const beginFocus = (body) => request('/api/focus/sessions',json('POST',body));
+  const focusAction = (id,action) => request(`/api/focus/sessions/${encodeURIComponent(id)}/actions`,json('POST',{action}));
+  const activeFocus = () => request('/api/focus/active');
+  const focusHistory = () => request('/api/focus/history');
+  const focusAnalytics = (week,offset) => request(`/api/focus/analytics/${encodeURIComponent(week)}?tz_offset_minutes=${encodeURIComponent(offset)}`);
+  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
 })();

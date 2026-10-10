@@ -14,7 +14,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -507,6 +507,119 @@ def update_planner_item(item_id: str, body: DailyPlanItemBody):
     except planner.PlannerNotFound as exc:
         raise HTTPException(404, str(exc)) from exc
     except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+class ActualMinutesBody(BaseModel):
+    actual_minutes: int = Field(ge=0, le=600)
+
+
+@app.put('/api/planner/items/{item_id}/actual')
+def record_planner_time(item_id: str, body: ActualMinutesBody):
+    try:
+        return planner.set_item_actual_minutes(item_id, body.actual_minutes)
+    except planner.PlannerNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+class WeekPreferencesBody(BaseModel):
+    weekday_minutes: list[int] = Field(min_length=7, max_length=7)
+
+
+class WeeklyGenerateBody(BaseModel):
+    week_start: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
+    tz_offset_minutes: int = Field(default=0, ge=-840, le=840)
+    refresh: bool = False
+
+
+@app.get('/api/planner/week-preferences')
+def weekly_preferences():
+    return weekly.preferences()
+
+
+@app.put('/api/planner/week-preferences')
+def save_weekly_preferences(body: WeekPreferencesBody):
+    try:
+        return weekly.save_preferences(body.weekday_minutes)
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/planner/weeks/{week_start}')
+def weekly_plan(week_start: str):
+    try:
+        result = weekly.get_week(week_start)
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if result is None:
+        raise HTTPException(404, 'No calendar for this week yet')
+    return result
+
+
+@app.post('/api/planner/weeks', status_code=201)
+def build_weekly_plan(body: WeeklyGenerateBody):
+    try:
+        return weekly.build(body.week_start, body.tz_offset_minutes, refresh=body.refresh)
+    except planner.PlannerNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except planner.PlannerInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+class FocusStartBody(BaseModel):
+    mode: Literal['focus','break'] = 'focus'
+    duration_minutes: int = Field(default=25, ge=1, le=120)
+    planner_item_id: str | None = None
+    video_id: str | None = None
+    lab_session_id: str | None = None
+    title: str = Field(default='', max_length=160)
+
+
+class FocusActionBody(BaseModel):
+    action: Literal['pause','resume','finish','cancel']
+
+
+@app.post('/api/focus/sessions', status_code=201)
+def focus_start(body: FocusStartBody):
+    try:
+        return focus.start(**body.model_dump())
+    except focus.FocusNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except focus.FocusConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except focus.FocusInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.post('/api/focus/sessions/{session_id}/actions')
+def focus_action(session_id: str, body: FocusActionBody):
+    try:
+        return focus.transition(session_id, body.action)
+    except focus.FocusNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except focus.FocusConflict as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except focus.FocusInputError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@app.get('/api/focus/active')
+def focus_active():
+    return focus.active()
+
+
+@app.get('/api/focus/history')
+def focus_history(limit: int = Query(default=30, ge=1, le=200)):
+    return focus.history(limit=limit)
+
+
+@app.get('/api/focus/analytics/{week_start}')
+def focus_analytics(week_start: str, tz_offset_minutes: int = Query(default=0, ge=-840, le=840)):
+    try:
+        return focus.analytics(week_start, tz_offset_minutes)
+    except (focus.FocusInputError, planner.PlannerInputError) as exc:
         raise HTTPException(422, str(exc)) from exc
 
 
