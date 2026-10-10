@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/static/assessments.css" />
   <link rel="stylesheet" href="/static/practice.css">
   <link rel="stylesheet" href="/static/planner.css">
+  <link rel="stylesheet" href="/static/weekly.css">
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">
@@ -87,6 +88,16 @@
             </form>
             <p id="plannerError" role="status" aria-live="polite" class="muted"></p>
           </section>
+          <section class="panel weekly-calendar" aria-labelledby="weekHeading">
+            <div class="panel-top"><div><span class="eyebrow">PLAN AHEAD</span><h2 id="weekHeading">Your next 7 days</h2><p class="muted">Customize each weekday. Reviews are forecast from scheduled due dates. Actual time is entered separately.</p></div><span class="tag" id="weekTotals">Not planned</span></div>
+            <form id="weekForm" class="week-form">
+              <fieldset class="week-fieldset"><legend>Minutes per study day · 0 is a rest day</legend><div id="weekDaysInput" class="week-days-input"></div></fieldset>
+              <div class="week-actions"><button type="button" class="btn btn-outline" id="weekPrevious" aria-label="Previous week">← Previous</button><label for="weekStart">Week of</label><input type="date" class="form-input" id="weekStart" required/><button type="button" class="btn btn-outline" id="weekNext" aria-label="Next week">Next →</button><button id="weekBuild" type="submit" class="btn btn-primary">Build / refresh week</button></div>
+            </form>
+            <div id="weekMessage" role="status" aria-live="polite" class="muted"></div>
+            <div id="weekCards" class="week-grid" aria-busy="false"><p class="muted">Plan a week to see your schedule.</p></div>
+            <p class="small-note">Review forecasts can change after grading flashcards. A checked-off task is not proof of mastery or elapsed playback time.</p>
+          </section>
           <section class="panel planner-day" aria-labelledby="plannerDayTitle">
             <div class="panel-top"><div><span class="eyebrow">YOUR FOCUSED ACTIONS</span><h2 id="plannerDayTitle">Today’s study plan</h2><p class="muted" id="plannerSummary">Pick a time budget and build your plan.</p></div><span class="tag" id="plannerTimeBadge">0 min</span></div>
             <div class="planner-track" role="progressbar" aria-label="Self-reported daily checklist completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="plannerTrack"><div id="plannerTrackBar"></div></div>
@@ -143,5 +154,6 @@
   <script src="/static/assessments.js" defer></script>
   <script src="/static/practice.js" defer></script>
   <script src="/static/planner.js" defer></script>
+  <script src="/static/weekly.js" defer></script>
 </body>
 </html>

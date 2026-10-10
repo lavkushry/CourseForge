@@ -275,3 +275,7 @@ Build the standard image and separate PySpark image as shown above. Configure `L
 The **Study Paths** view now recommends curated labs for topics where your latest concept-check result indicates a gap. Recommendations use deterministic topic matching and separately track graded lab attempts, without claiming that a passed exercise proves concept mastery. The **Labs** view includes a saved-path selector, prioritized exercises, and append-only history of verified grader results. A failed attempt raises retry priority; a pass leads to a recommendation to reassess the concept. Unsupported topics do not receive fabricated labs.
 
 See [`docs/P1_ADAPTIVE_PRACTICE.md`](docs/P1_ADAPTIVE_PRACTICE.md) for API, safety, rubric, and test details. Live Docker/PySpark checks remain an explicit local acceptance requirement.
+
+## Seven-day adaptive calendar (v3 P1 Step 8)
+
+Open **Today's plan → Your next 7 days**. Configure per-weekday study minutes (0 for rest), select your existing roadmap and click **Build / refresh week**. Each day links to its saved study checklist; enter actual minutes after a session to compare what you planned with self-reported study time. Spaced-repetition reviews are forecast based on card due dates and your local time offset, then deferred to the next selected study day. The calendar never marks a topic mastered on the strength of a checklist. See [weekly calendar design and limitations](docs/P1_WEEKLY_CALENDAR.md).
