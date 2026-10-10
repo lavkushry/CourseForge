@@ -172,8 +172,8 @@ def create(path_id: str, step_id: str, *, count: int = 3,
     record = {'id': 'ta_' + uuid.uuid4().hex, 'path_id': path_id, 'step_id': step_id,
               'created_at': utcnow(), 'questions': questions}
     with connect(db_path) as db:
-        db.execute('''INSERT INTO topic_assessments(id,path_id,step_id,source_fingerprint,content_json,created_at)
-                      VALUES (?,?,?,?,?,?)''',
+        db.execute('''INSERT INTO topic_assessments(user_id,id,path_id,step_id,source_fingerprint,content_json,created_at)
+                      VALUES(cf_user_id(),?,?,?,?,?,?)''',
                    (record['id'], path_id, step_id, _fingerprint(path, step, evidence),
                     json.dumps(record), record['created_at']))
     return _public_assessment(record)
@@ -181,7 +181,7 @@ def create(path_id: str, step_id: str, *, count: int = 3,
 
 def _stored(assessment_id: str, db_path: Path | None = None) -> tuple[dict, str]:
     with connect(db_path) as db:
-        row = db.execute('SELECT * FROM topic_assessments WHERE id=?', (assessment_id,)).fetchone()
+        row = db.execute('SELECT * FROM topic_assessments WHERE topic_assessments.user_id=cf_user_id() AND id=?', (assessment_id,)).fetchone()
     if row is None:
         raise AssessmentNotFound('Assessment not found')
     return json.loads(row['content_json']), row['source_fingerprint']
@@ -215,8 +215,8 @@ def submit(assessment_id: str, answers: dict[str, int], db_path: Path | None = N
     result['review_sources'] = [x['source'] for x in result['feedback'] if not x['correct']]
     with connect(db_path) as db:
         db.execute('''INSERT INTO topic_assessment_attempts
-                      (id,assessment_id,score,correct_count,total_count,answers_json,completed_at)
-                      VALUES(?,?,?,?,?,?,?)''',
+                      (user_id,id,assessment_id,score,correct_count,total_count,answers_json,completed_at)
+                      VALUES(cf_user_id(),?,?,?,?,?,?,?)''',
                    (result['id'], assessment_id, score, correct, len(record['questions']),
                     json.dumps(answers), result['completed_at']))
     return result
@@ -231,7 +231,7 @@ def mastery_for_path(path_id: str, db_path: Path | None = None) -> dict[str, dic
     with connect(db_path) as db:
         rows = db.execute('''SELECT a.step_id,t.score,t.correct_count,t.total_count,t.completed_at,t.id
             FROM topic_assessment_attempts t JOIN topic_assessments a ON a.id=t.assessment_id
-            WHERE a.path_id=? ORDER BY t.completed_at DESC,t.rowid DESC''', (path_id,)).fetchall()
+            WHERE t.user_id=cf_user_id() AND a.user_id=cf_user_id() AND a.path_id=? ORDER BY t.completed_at DESC,t.rowid DESC''', (path_id,)).fetchall()
     result: dict[str, dict] = {}
     for row in rows:
         item = result.get(row['step_id'])
@@ -253,7 +253,7 @@ def history(path_id: str, step_id: str | None = None, db_path: Path | None = Non
         raise AssessmentNotFound('Learning path not found') from exc
     sql = '''SELECT t.id,t.assessment_id,a.step_id,t.score,t.correct_count,t.total_count,t.completed_at
              FROM topic_assessment_attempts t JOIN topic_assessments a ON a.id=t.assessment_id
-             WHERE a.path_id=?'''
+             WHERE t.user_id=cf_user_id() AND a.user_id=cf_user_id() AND a.path_id=?'''
     args: list = [path_id]
     if step_id:
         sql += ' AND a.step_id=?'

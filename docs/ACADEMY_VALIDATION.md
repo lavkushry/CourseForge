@@ -1,0 +1,10 @@
+# Academy validation — 10 October 2026
+
+- Full regression and account suite: 108 passed. Includes original media extraction integration, migration preservation, account isolation, CSRF, verification/reset replay, enrollment revocation, suspension, activity retention after logout, private material containment and task/frame ownership.
+- Chromium: sign-in, admin overview, account inspection, existing learner workspace and mobile overview rendered without JavaScript errors. The 390 px admin viewport had no horizontal page overflow. QA used an isolated copy of the existing 210 lectures.
+- Capacity: 150 concurrent authenticated API sessions, 1,800 requests, zero failures. Total 19.09 seconds; 94.27 requests/second; p95 request latency 4.051 seconds. Workload included library/progress reads, enrollment summaries, activity heartbeats, private note writes/reads and denied student access to admin reports. It excludes login bursts, SMTP, video CDN delivery and AI/grading throughput.
+- Live Odysee authorization returned a signed embed and its player rendered inside CourseForge with the account watermark. Precise playback events remain disabled. A Chromium probe created the provider video element but had not buffered media by the measurement deadline; this does not establish successful end-to-end CDN playback.
+- JavaScript syntax and Git whitespace checks passed. No emoji characters remain in the application UI source. No demo courses or student accounts were added to the runtime database.
+- After activation, HTTPS administrator sign-in, the live admin overview and account detail API returned 200. Chromium verified the admin screen and confirmed that sign-out clears the private interface. SQLite integrity and foreign-key checks passed; both existing courses and all 210 lecture IDs remain present.
+
+SMTP remains unconfigured on this server. Public registration and account recovery email report that condition honestly; the verified bootstrap administrator can sign in without SMTP. Database and environment backups are private files under `data/`.

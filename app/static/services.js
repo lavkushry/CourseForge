@@ -6,10 +6,27 @@
  * @typedef {{due_count:number,total_cards:number,reviews_today:number,streak_days:number,mastery_signal_percent:number|null,weak_areas:Array<{course:string,question:string,quality:number,date:string}>,history:Array<{course:string,question:string,quality:number,date:string}>,weekly_reviews:Array<{date:string,count:number}>}} Insights
  */
 (() => {
-  async function request(path, options = {}) {
-    const response = await fetch(path, options);
+  async function request(path, options = {}, resolveTask = true) {
+    const headers = new Headers(options.headers || {});
+    if (window.CourseForgeAccount?.csrf) headers.set('X-CSRF-Token', window.CourseForgeAccount.csrf);
+    const response = await fetch(path, {...options, headers});
     const body = response.status === 204 ? {} : await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(typeof body.detail === 'string' ? body.detail : `Request failed (${response.status})`);
+    if (!response.ok) {
+      const error = new Error(typeof body.detail === 'string' ? body.detail : `Request failed (${response.status})`);
+      error.status = response.status;
+      if(response.status===401 && window.CourseForgeAccount?.user) window.dispatchEvent(new Event('courseforge-session-expired'));
+      throw error;
+    }
+    if (body.task_id && resolveTask) {
+      window.dispatchEvent(new CustomEvent('courseforge-task', {detail: body}));
+      for(let i=0;i<360;i++) {
+        await new Promise(resolve=>setTimeout(resolve,1000));
+        const task=await request(`/api/tasks/${encodeURIComponent(body.task_id)}`,{},false);
+        if(task.status==='done')return task.result;
+        if(task.status==='failed')throw new Error(task.error || 'The task could not finish. Please retry.');
+      }
+      throw new Error('This task is still queued. Refresh later or ask the administrator to check the learning worker.');
+    }
     return body;
   }
   const json = (method, data) => ({method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});

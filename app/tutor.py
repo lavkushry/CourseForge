@@ -2,7 +2,7 @@
 from typing import Literal
 import httpx
 from .config import settings
-from .db import keyword_search
+from .db import keyword_search, course_allowed
 from .vectorstore import semantic_search
 
 Mode = Literal['explain', 'notes', 'quiz', 'lab']
@@ -18,6 +18,8 @@ def retrieve(query: str, course: str | None = None, video_id: str | None = None,
     seen: set[str] = set()
     combined: list[dict] = []
     for hit in semantic + keywords:
+        if not course_allowed(hit['course']):
+            continue
         cid = hit.get('chunk_id') or hit.get('id')
         if cid in seen:
             continue

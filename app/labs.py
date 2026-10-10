@@ -63,7 +63,7 @@ def start_lab(slug: str) -> dict:
     lab = LABS[slug]
     (root/lab['filename']).write_text(lab['starter'], encoding='utf-8')
     with connect() as db:
-        db.execute('INSERT INTO lab_sessions(id,slug,status,created_at,updated_at) VALUES(?,?,?,?,?)',
+        db.execute('INSERT INTO lab_sessions(user_id,id,slug,status,created_at,updated_at) VALUES(cf_user_id(),?,?,?,?,?)',
                    (session_id, slug, 'started', utcnow(), utcnow()))
     return {'session_id':session_id, 'slug':slug, 'filename':lab['filename'],
             'content':lab['starter'], 'title':lab['title'], 'objective':lab['objective'],
@@ -72,7 +72,7 @@ def start_lab(slug: str) -> dict:
 
 def get_lab(session_id: str) -> dict:
     with connect() as db:
-        record = db.execute('SELECT * FROM lab_sessions WHERE id=?', (session_id,)).fetchone()
+        record = db.execute('SELECT * FROM lab_sessions WHERE lab_sessions.user_id=cf_user_id() AND id=?', (session_id,)).fetchone()
     if not record:
         raise KeyError(session_id)
     lab = LABS[record['slug']]
@@ -94,7 +94,7 @@ def update_file(session_id: str, content: str) -> dict:
     os.chmod(tmp, 0o644)
     os.replace(tmp, target)
     with connect() as db:
-        db.execute('UPDATE lab_sessions SET status=?,result_json=NULL,updated_at=? WHERE id=?', ('started', utcnow(), session_id))
+        db.execute('UPDATE lab_sessions SET status=?,result_json=NULL,updated_at=? WHERE lab_sessions.user_id=cf_user_id() AND id=?', ('started', utcnow(), session_id))
     return {'saved':True, 'bytes':len(content.encode('utf-8'))}
 
 
@@ -168,6 +168,6 @@ def submit_lab(session_id: str, *, kind: bool = False) -> dict:
         if not result['kind'].get('skipped'):
             result['passed'] = result['passed'] and result['kind']['passed']
     with connect() as db:
-        db.execute('UPDATE lab_sessions SET status=?,result_json=?,updated_at=? WHERE id=?',
+        db.execute('UPDATE lab_sessions SET status=?,result_json=?,updated_at=? WHERE lab_sessions.user_id=cf_user_id() AND id=?',
                    ('passed' if result['passed'] else 'failed', json.dumps(result), utcnow(), session_id))
     return result

@@ -1,7 +1,7 @@
 """Weekly P1 tests: no fabricated time, due dates, repeated lessons or lost history."""
 from dataclasses import replace
 from datetime import datetime, timezone
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 import pytest
 from app import db, weekly, planner, study, main
 from test_daily_planner import seed

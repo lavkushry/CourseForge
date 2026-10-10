@@ -1,36 +1,97 @@
-"""Local-only FastAPI app. Never bind this API to a public interface without auth."""
+"""CourseForge academy: account-protected learning APIs and public catalog."""
 from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import Literal
+import os
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field, field_validator
+from starlette.concurrency import run_in_threadpool
 
 from .config import settings
 from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
-                 transcript_for_video, frame_for_chunk)
+                 transcript_for_video, frame_for_chunk, keyword_search)
 from .library import scan_courses
 from .tutor import ask, retrieve
 from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus
+from . import auth
+from .db import learner_id, learner_courses, connect, course_allowed
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     settings.courses_dir.mkdir(parents=True, exist_ok=True)
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     init_db()
+    from .academy import maintenance_loop
+    import asyncio
+    maintenance = asyncio.create_task(maintenance_loop())
     yield
+    maintenance.cancel()
+    try:
+        await maintenance
+    except asyncio.CancelledError:
+        pass
 
 
-app = FastAPI(title='CourseForge Local', version='0.3.0', docs_url='/api/docs',
+app = FastAPI(title='CourseForge Academy', version='0.4.0', docs_url='/api/docs',openapi_url='/api/openapi.json',
               redoc_url=None, lifespan=lifespan)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=['*'])
+public_host = urlsplit(os.getenv('PUBLIC_BASE_URL', '')).hostname
+allowed_hosts = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if host.strip()]
+if public_host and public_host not in allowed_hosts:
+    allowed_hosts.append(public_host)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
 @app.middleware('http')
 async def guard_local_actions(request: Request, call_next):
-    return await call_next(request)
+    try:
+        user = await auth.authorize(request)
+    except HTTPException as exc:
+        if exc.status_code in (401,403) and request.url.path.startswith('/api/'):
+            await run_in_threadpool(auth.access_event, request, 'access_denied', getattr(request.state,'user',None)['id'] if getattr(request.state,'user',None) else None)
+        return JSONResponse({'detail':exc.detail},status_code=exc.status_code,headers=exc.headers)
+    allowed = None
+    if user and user['role'] != 'admin':
+        with connect() as db:
+            allowed=frozenset(r['course'] for r in db.execute('''SELECT e.course FROM enrollments e
+                JOIN course_publication p ON p.course=e.course WHERE e.user_id=? AND p.published=1''',(user['id'],)))
+    uid_token = learner_id.set(user['id'] if user else 'legacy')
+    course_token = learner_courses.set(allowed)
+    try:
+        response = await call_next(request)
+        if user and request.method not in ('GET','HEAD','OPTIONS') and 200 <= response.status_code < 300:
+            path=request.url.path
+            kind=None
+            if path.endswith('/progress'):kind='completion_reported'
+            elif path.endswith('/notes'):kind='note_saved'
+            elif path.startswith('/api/notes/'):kind='note_deleted'
+            elif path.endswith('/attempts'):kind='assessment_submitted'
+            elif path.endswith('/grade'):kind='recall_reviewed'
+            elif path.startswith('/api/planner/'):kind='study_plan_updated'
+            elif path.startswith('/api/focus/'):kind='focus_session_updated'
+            elif path.endswith('/bookmarks'):kind='bookmark_saved'
+            if kind:
+                parts=path.split('/')
+                video_id=parts[3] if len(parts)>3 and parts[2]=='videos' else None
+                await run_in_threadpool(learning_event,user['id'],kind,video_id)
+        response.headers['X-Content-Type-Options']='nosniff'
+        response.headers['Referrer-Policy']='same-origin'
+        response.headers['X-Frame-Options']='SAMEORIGIN'
+        if request.url.path.startswith('/api/'):
+            response.headers['Cache-Control']='no-store'
+        return response
+    finally:
+        learner_id.reset(uid_token)
+        learner_courses.reset(course_token)
+
+app.include_router(auth.router)
+from .academy import router as academy_router, learning_event
+from .tasks import router as task_router, enqueue
+app.include_router(academy_router)
+app.include_router(task_router)
 
 static_path = Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=static_path), name='static')
@@ -43,9 +104,7 @@ def index():
 
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'courses_dir': str(settings.courses_dir), 'data_dir': str(settings.data_dir),
-            'chat_model': settings.chat_model, 'embed_model': settings.embed_model,
-            'vision_model': settings.vision_model, 'vision_enabled': settings.enable_vision}
+    return {'status': 'ok', 'version':'0.4.0'}
 
 
 @app.post('/api/scan')
@@ -56,16 +115,17 @@ def scan():
 @app.get('/api/videos')
 def videos():
     vids = fetch_videos()
+    with connect() as db:
+        mapped = {r['video_id'] for r in db.execute('SELECT video_id FROM lecture_providers')}
     for v in vids:
-        info = find_odysee_info(v)
-        v['cloud_ready'] = bool(info)
+        v['cloud_ready'] = v['id'] in mapped
         v.pop('path', None)
     return {'videos': vids}
 
 
 @app.get('/api/courses')
 def courses_catalog():
-    return {'courses': course_metadata.list_courses()}
+    return {'courses': [c for c in course_metadata.list_courses() if course_allowed(c['id'])]}
 
 
 class CourseMetadataBody(BaseModel):
@@ -146,354 +206,14 @@ def reindex(video_id: str):
     return {'queued': added, 'message': 'Already queued or in progress' if not added else 'Reindex queued'}
 
 
-def _ensure_tracking_tables() -> None:
-    from .db import connect
-    with connect() as conn:
-        conn.executescript('''
-        CREATE TABLE IF NOT EXISTS viewer_sessions (
-            viewer_id TEXT PRIMARY KEY,
-            viewer_name TEXT NOT NULL,
-            ip TEXT NOT NULL,
-            country TEXT NOT NULL,
-            user_agent TEXT NOT NULL,
-            screen TEXT NOT NULL,
-            timezone TEXT NOT NULL,
-            last_video_id TEXT,
-            last_video_title TEXT,
-            total_watch_seconds INTEGER NOT NULL DEFAULT 0,
-            security_alerts INTEGER NOT NULL DEFAULT 0,
-            first_seen TEXT NOT NULL,
-            last_seen TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS viewer_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            viewer_id TEXT NOT NULL,
-            viewer_name TEXT NOT NULL,
-            ip TEXT NOT NULL,
-            country TEXT NOT NULL,
-            video_id TEXT,
-            video_title TEXT,
-            event_type TEXT NOT NULL,
-            position REAL DEFAULT 0,
-            details TEXT,
-            created_at TEXT NOT NULL
-        );
-        ''')
-
-
-def _client_ip_and_country(request: Request) -> tuple[str, str]:
-    ip = (
-        request.headers.get("cf-connecting-ip")
-        or (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-        or (request.client.host if request.client else "127.0.0.1")
-    )
-    country = request.headers.get("cf-ipcountry") or "IN"
-    return ip, country
-
-
-_VAULT_TOKENS: dict[str, dict] = {}
-
-
-class VaultSessionBody(BaseModel):
-    viewer_id: str = Field(default="anon", max_length=80)
-    viewer_name: str = Field(default="Student", max_length=120)
-    screen: str = Field(default="", max_length=40)
-    timezone: str = Field(default="", max_length=80)
-    start_pos: float = Field(default=0.0, ge=0)
-
-
-class ViewerEventBody(BaseModel):
-    viewer_id: str = Field(default="anon", max_length=80)
-    viewer_name: str = Field(default="Student", max_length=120)
-    video_id: str | None = Field(default=None, max_length=60)
-    event_type: str = Field(max_length=60)
-    position: float = Field(default=0.0, ge=0)
-    watch_delta: int = Field(default=0, ge=0, le=60)
-    details: str = Field(default="", max_length=300)
-
-
 @app.get('/api/videos/{video_id}')
 def get_video(video_id: str):
     video = fetch_video(video_id)
     if not video:
-        raise HTTPException(status_code=404, detail='Video not found')
-    info = find_odysee_info(video)
-    video['cloud_ready'] = bool(info)
-    # Never expose raw Odysee URLs, claim IDs, or local file paths in API responses
+        raise HTTPException(404, 'Video not found')
+    video['cloud_ready'] = bool(find_odysee_info(video))
     video.pop('path', None)
     return {'video': video, 'chunks': transcript_for_video(video_id)}
-
-
-@app.post('/api/videos/{video_id}/vault-session')
-def create_vault_session(video_id: str, body: VaultSessionBody, request: Request):
-    import secrets, time
-    from .db import connect, utcnow
-
-    video = fetch_video(video_id)
-    if not video:
-        raise HTTPException(status_code=404, detail='Video not found')
-
-    _ensure_tracking_tables()
-    ip, country = _client_ip_and_country(request)
-    ua = (request.headers.get("user-agent") or "Unknown")[:220]
-    now_iso = utcnow()
-
-    with connect() as conn:
-        prev = conn.execute("SELECT * FROM viewer_sessions WHERE viewer_id=?", (body.viewer_id,)).fetchone()
-        if prev:
-            conn.execute(
-                '''UPDATE viewer_sessions
-                   SET viewer_name=?, ip=?, country=?, user_agent=?, screen=?, timezone=?,
-                       last_video_id=?, last_video_title=?, last_seen=?
-                   WHERE viewer_id=?''',
-                (body.viewer_name, ip, country, ua, body.screen, body.timezone,
-                 video_id, video['title'], now_iso, body.viewer_id),
-            )
-        else:
-            conn.execute(
-                '''INSERT INTO viewer_sessions(
-                       viewer_id, viewer_name, ip, country, user_agent, screen, timezone,
-                       last_video_id, last_video_title, total_watch_seconds, security_alerts,
-                       first_seen, last_seen
-                   ) VALUES (?,?,?,?,?,?,?,?,?,0,0,?,?)''',
-                (body.viewer_id, body.viewer_name, ip, country, ua, body.screen, body.timezone,
-                 video_id, video['title'], now_iso, now_iso),
-            )
-        conn.execute(
-            '''INSERT INTO viewer_events(viewer_id, viewer_name, ip, country, video_id, video_title, event_type, position, details, created_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?)''',
-            (body.viewer_id, body.viewer_name, ip, country, video_id, video['title'], 'play_start', body.start_pos, f"Device: {body.screen} ({body.timezone})", now_iso),
-        )
-
-    # Prune expired tokens
-    now_ts = time.time()
-    for tk in [k for k, v in _VAULT_TOKENS.items() if now_ts - v["ts"] > 45]:
-        _VAULT_TOKENS.pop(tk, None)
-
-    token = secrets.token_urlsafe(24)
-    watermark = f"🔒 {body.viewer_name} · {ip} ({country}) · ID:{body.viewer_id[:8]}"
-    _VAULT_TOKENS[token] = {
-        "video_id": video_id,
-        "ip": ip,
-        "watermark": watermark,
-        "start_pos": int(body.start_pos),
-        "ts": now_ts,
-    }
-    return {
-        "vault_url": f"/api/videos/{video_id}/vault-frame?t={token}",
-        "watermark": watermark,
-        "viewer_ip": ip,
-        "viewer_country": country,
-    }
-
-
-@app.get('/api/videos/{video_id}/vault-frame')
-def serve_vault_frame(video_id: str, t: str, request: Request):
-    import base64, time
-    from fastapi.responses import HTMLResponse
-
-    # Block direct browser navigation or curl harvesting; must be loaded inside CourseForge iframe
-    fetch_dest = request.headers.get("sec-fetch-dest", "")
-    if fetch_dest and fetch_dest not in ("iframe", "frame"):
-        raise HTTPException(status_code=403, detail="Direct access to protected video stream is prohibited.")
-
-    entry = _VAULT_TOKENS.pop(t, None)
-    if not entry or entry.get("video_id") != video_id or (time.time() - entry["ts"]) > 45:
-        raise HTTPException(status_code=403, detail="Expired or already consumed single-use DRM token.")
-
-    video = fetch_video(video_id)
-    if not video:
-        raise HTTPException(status_code=404, detail="Video not found")
-
-    info = find_odysee_info(video)
-    start_pos = entry.get("start_pos", 0)
-    watermark = entry.get("watermark", "Protected Stream")
-
-    if info and info.get("claim_name") and info.get("claim_id"):
-        embed_url = get_signed_embed_url(info["claim_name"], info["claim_id"])
-        if start_pos > 0:
-            sep = "&" if "?" in embed_url else "?"
-            embed_url = f"{embed_url}{sep}t={start_pos}"
-        b64_src = base64.b64encode(embed_url.encode()).decode()
-        mode = "embed"
-    else:
-        b64_src = base64.b64encode(f"/api/videos/{video_id}/stream".encode()).decode()
-        mode = "native"
-
-    html = f"""<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="referrer" content="no-referrer">
-<style>
-  * {{ box-sizing: border-box; user-select: none; -webkit-user-select: none; }}
-  html, body {{ margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: system-ui, sans-serif; }}
-  #stage {{ position: relative; width: 100%; height: 100%; background: #000; overflow: hidden; }}
-  /* Crop out top title/share bar of embedded player so no external links can be seen or clicked */
-  iframe {{
-    position: absolute;
-    top: -54px;
-    left: 0;
-    width: 100%;
-    height: calc(100% + 54px);
-    border: 0;
-    background: #000;
-  }}
-  video {{ width: 100%; height: 100%; background: #000; object-fit: contain; }}
-  /* Anti-click shields over top area and bottom-right corner logo */
-  .shield-top {{
-    position: absolute; top: 0; left: 0; right: 0; height: 58px;
-    z-index: 20; background: transparent; cursor: default;
-  }}
-  .shield-logo {{
-    position: absolute; bottom: 0; right: 42px; width: 110px; height: 48px;
-    z-index: 20; background: transparent; cursor: default;
-  }}
-  /* Floating dynamic DRM watermark */
-  #wm {{
-    position: absolute; z-index: 30; pointer-events: none;
-    padding: 4px 10px; border-radius: 6px;
-    background: rgba(10, 14, 24, 0.52); color: rgba(255, 255, 255, 0.72);
-    font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    text-shadow: 0 1px 2px #000;
-    transition: top 2.5s ease-in-out, left 2.5s ease-in-out;
-    top: 14%; left: 8%;
-  }}
-  #blurOverlay {{
-    position: absolute; inset: 0; z-index: 40;
-    background: rgba(5, 8, 15, 0.96); color: #fff;
-    display: none; align-items: center; justify-content: center;
-    text-align: center; font-size: 15px; font-weight: 600;
-    backdrop-filter: blur(18px);
-  }}
-</style>
-</head>
-<body oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
-<div id="stage">
-  <div class="shield-top" title="Protected CourseForge Stream"></div>
-  <div class="shield-logo" title="Protected CourseForge Stream"></div>
-  <div id="wm">{watermark}</div>
-  <div id="blurOverlay">🔒 Protected Playback Paused — Return to CourseForge Window</div>
-</div>
-<script>
-(function() {{
-  try {{ history.replaceState(null, '', '/vault/protected'); }} catch(e) {{}}
-  const mode = "{mode}";
-  const raw = atob("{b64_src}");
-  const stage = document.getElementById('stage');
-  if (mode === 'embed') {{
-    const f = document.createElement('iframe');
-    f.allow = 'autoplay; fullscreen; encrypted-media';
-    f.src = raw;
-    stage.insertBefore(f, stage.firstChild);
-  }} else {{
-    const v = document.createElement('video');
-    v.controls = true;
-    v.autoplay = true;
-    v.setAttribute('controlsList', 'nodownload noplaybackrate');
-    v.disablePictureInPicture = true;
-    v.src = raw;
-    stage.insertBefore(v, stage.firstChild);
-  }}
-  const wm = document.getElementById('wm');
-  const baseText = {watermark!r};
-  function moveWm() {{
-    const t = 10 + Math.floor(Math.random() * 68);
-    const l = 6 + Math.floor(Math.random() * 58);
-    wm.style.top = t + '%';
-    wm.style.left = l + '%';
-    const d = new Date().toLocaleTimeString();
-    wm.textContent = baseText + ' · ' + d;
-  }}
-  setInterval(moveWm, 6000);
-  moveWm();
-
-  window.addEventListener('contextmenu', e => {{ e.preventDefault(); parent.postMessage({{type:'drm_alert', reason:'right_click_blocked'}}, '*'); }});
-  window.addEventListener('keydown', e => {{
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) || (e.ctrlKey && ['U','S','P'].includes(e.key.toUpperCase())) || (e.metaKey && e.altKey && ['I','J','U','C'].includes(e.key.toUpperCase()))) {{
-      e.preventDefault();
-      parent.postMessage({{type:'drm_alert', reason:'shortcut_blocked:' + e.key}}, '*');
-    }}
-  }});
-}})();
-</script>
-</body>
-</html>"""
-    return HTMLResponse(
-        html,
-        headers={
-            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "X-Frame-Options": "SAMEORIGIN",
-        },
-    )
-
-
-@app.post('/api/analytics/event')
-def record_viewer_event(body: ViewerEventBody, request: Request):
-    from .db import connect, utcnow
-    _ensure_tracking_tables()
-    ip, country = _client_ip_and_country(request)
-    ua = (request.headers.get("user-agent") or "Unknown")[:220]
-    now_iso = utcnow()
-    video = fetch_video(body.video_id) if body.video_id else None
-    vtitle = video['title'] if video else ''
-    is_alert = 1 if body.event_type.startswith(('drm_', 'blocked_', 'devtools', 'security')) else 0
-
-    with connect() as conn:
-        prev = conn.execute("SELECT * FROM viewer_sessions WHERE viewer_id=?", (body.viewer_id,)).fetchone()
-        if prev:
-            conn.execute(
-                '''UPDATE viewer_sessions
-                   SET viewer_name=?, ip=?, country=?, user_agent=?,
-                       last_video_id=COALESCE(?, last_video_id),
-                       last_video_title=CASE WHEN ? != '' THEN ? ELSE last_video_title END,
-                       total_watch_seconds=total_watch_seconds + ?,
-                       security_alerts=security_alerts + ?,
-                       last_seen=?
-                   WHERE viewer_id=?''',
-                (body.viewer_name, ip, country, ua, body.video_id, vtitle, vtitle,
-                 body.watch_delta, is_alert, now_iso, body.viewer_id),
-            )
-        else:
-            conn.execute(
-                '''INSERT INTO viewer_sessions(
-                       viewer_id, viewer_name, ip, country, user_agent, screen, timezone,
-                       last_video_id, last_video_title, total_watch_seconds, security_alerts,
-                       first_seen, last_seen
-                   ) VALUES (?,?,?,?,?,'','',?,?,?,?,?,?)''',
-                (body.viewer_id, body.viewer_name, ip, country, ua, body.video_id, vtitle,
-                 body.watch_delta, is_alert, now_iso, now_iso),
-            )
-        if body.event_type != 'heartbeat' or body.watch_delta >= 30:
-            conn.execute(
-                '''INSERT INTO viewer_events(viewer_id, viewer_name, ip, country, video_id, video_title, event_type, position, details, created_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)''',
-                (body.viewer_id, body.viewer_name, ip, country, body.video_id, vtitle, body.event_type, body.position, body.details, now_iso),
-            )
-    return {"ok": True}
-
-
-@app.get('/api/analytics/viewers')
-def list_viewer_analytics():
-    from .db import connect
-    _ensure_tracking_tables()
-    with connect() as conn:
-        sessions = [dict(r) for r in conn.execute("SELECT * FROM viewer_sessions ORDER BY last_seen DESC LIMIT 100").fetchall()]
-        events = [dict(r) for r in conn.execute("SELECT * FROM viewer_events ORDER BY id DESC LIMIT 120").fetchall()]
-    total_watch = sum(s.get("total_watch_seconds", 0) for s in sessions)
-    total_alerts = sum(s.get("security_alerts", 0) for s in sessions)
-    return {
-        "summary": {
-            "unique_viewers": len(sessions),
-            "unique_ips": len({s["ip"] for s in sessions}),
-            "total_watch_seconds": total_watch,
-            "total_security_alerts": total_alerts,
-        },
-        "sessions": sessions,
-        "events": events,
-    }
 
 
 @app.get('/api/materials')
@@ -505,16 +225,18 @@ def list_course_materials(course: str | None = None):
         for c_name in sorted(os.listdir(root)):
             if c_name.startswith('.'):
                 continue
+            if not course_allowed(c_name):
+                continue
             if course and c_name != course:
                 continue
             c_path = root / c_name
-            if not c_path.is_dir():
+            if not c_path.is_dir() or c_path.resolve().parent != root:
                 continue
             for fname in sorted(os.listdir(c_path)):
                 if fname.startswith('.') or fname.lower().endswith('.mp4'):
                     continue
                 fpath = c_path / fname
-                if not fpath.is_file():
+                if not fpath.is_file() or not fpath.resolve().is_relative_to(c_path.resolve()):
                     continue
                 ext = fpath.suffix.lower().lstrip('.')
                 items.append({
@@ -530,10 +252,12 @@ def list_course_materials(course: str | None = None):
 @app.get('/api/materials/{course}/{filename}')
 def get_course_material(course: str, filename: str):
     import json
+    import html
     from fastapi.responses import HTMLResponse
     root = settings.courses_dir.resolve()
-    target = (root / course / filename).resolve()
-    if not target.is_file() or ".." in course or ".." in filename:
+    course_root = (root / course).resolve()
+    target = (course_root / filename).resolve()
+    if course_root.parent != root or not target.is_relative_to(course_root) or not target.is_file() or ".." in course or ".." in filename:
         raise HTTPException(status_code=404, detail="Study material not found")
     ext = target.suffix.lower()
     if ext == '.ipynb':
@@ -549,256 +273,34 @@ def get_course_material(course: str, filename: str):
                     cells_html.append(f"<div style='padding:12px 16px;background:#161f33;border-radius:8px;margin-bottom:10px;white-space:pre-wrap;line-height:1.5'>{esc}</div>")
                 else:
                     cells_html.append(f"<div style='margin-bottom:10px'><div style='font-size:11px;color:#74c0fc;margin-bottom:4px'>In [{idx}]:</div><pre style='margin:0;padding:12px;background:#0b0f19;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:auto;color:#e9ecef;font-size:13px'>{esc}</pre></div>")
-            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{filename}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}</style></head><body><h2>📓 {filename}</h2>{''.join(cells_html)}</body></html>"
-            return HTMLResponse(page)
+            page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}</style></head><body><h2> {html.escape(filename)}</h2>{''.join(cells_html)}</body></html>"
+            return HTMLResponse(page, headers={'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'"})
         except Exception:
             pass
     if ext in ('.py', '.txt', '.sql', '.csv', '.md', '.json'):
         import html as _h
         raw = target.read_text(errors='ignore')[:200000]
-        page = f"<!doctype html><html><head><meta charset='utf-8'><title>{filename}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}pre{{background:#0b0f19;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);overflow:auto;font-size:13px;line-height:1.5}}</style></head><body><h2>📄 {filename}</h2><pre>{_h.escape(raw)}</pre></body></html>"
-        return HTMLResponse(page)
-    return FileResponse(target, content_disposition_type='inline')
+        page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>body{{background:#0f1420;color:#f1f5f9;font-family:system-ui,sans-serif;padding:24px;max-width:980px;margin:0 auto}}pre{{background:#0b0f19;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);overflow:auto;font-size:13px;line-height:1.5}}</style></head><body><h2> {html.escape(filename)}</h2><pre>{_h.escape(raw)}</pre></body></html>"
+        return HTMLResponse(page, headers={'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'"})
+    return FileResponse(target, filename=filename, content_disposition_type='inline' if ext=='.pdf' else 'attachment',
+                        headers={'Content-Security-Policy': "sandbox; default-src 'none'"})
 
 
-_ODYSEE_CACHE: dict = {"last_sync": 0.0, "by_prefix": {}, "by_name": {}, "embeds": {}}
-
-
-def get_signed_embed_url(claim_name: str, claim_id: str) -> str:
-    import json, os, urllib.request
-    cache_key = f"{claim_name}#{claim_id}"
-    if cache_key in _ODYSEE_CACHE["embeds"]:
-        return _ODYSEE_CACHE["embeds"][cache_key]
-
-    clean_name = claim_name.split("/")[-1].split(":")[0] if "/" in claim_name else claim_name.split(":")[0]
-    token = os.getenv("ODYSEE_AUTH_TOKEN", "")
-    channel_id = os.getenv("ODYSEE_CHANNEL_ID", "29a2037dd2bf5e8d3c5eaee36243368fd8410fba")
-    try:
-        req = urllib.request.Request(
-            "https://api.na-backend.odysee.com/api/v1/proxy?m=channel_sign",
-            data=json.dumps({
-                "jsonrpc": "2.0",
-                "method": "channel_sign",
-                "params": {"channel_id": channel_id, "hexdata": claim_id.encode().hex()},
-                "id": 1,
-            }).encode(),
-            headers={
-                "X-Lbry-Auth-Token": token,
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=8) as r:
-            sig_res = json.loads(r.read().decode()).get("result") or {}
-        sig = sig_res.get("signature")
-        sig_ts = sig_res.get("signing_ts")
-        if sig and sig_ts:
-            url = f"https://odysee.com/$/embed/{clean_name}/{claim_id}?signature={sig}&signature_ts={sig_ts}"
-            _ODYSEE_CACHE["embeds"][cache_key] = url
-            return url
-    except Exception:
-        pass
-    return f"https://odysee.com/$/embed/{clean_name}/{claim_id}"
-
-
-def _sync_odysee_platform() -> None:
-    import json, os, re, time, urllib.request
-    now = time.time()
-    if now - _ODYSEE_CACHE["last_sync"] < 45 and _ODYSEE_CACHE["by_prefix"]:
-        return
-    _ODYSEE_CACHE["last_sync"] = now
-
-    manifest_candidates = [
-        settings.data_dir / 'odysee_manifest.json',
-        settings.courses_dir / 'odysee_manifest.json',
-        Path('/Users/lavkushkumar/Desktop/Courses/odysee_manifest.json'),
-    ]
-    manifest: dict = {}
-    for mp in manifest_candidates:
-        if mp.is_file():
-            try:
-                manifest.update(json.loads(mp.read_text()))
-            except Exception:
-                pass
-
-    # Also query live Odysee platform stream_list API directly
-    token = os.getenv("ODYSEE_AUTH_TOKEN", "")
-    try:
-        req = urllib.request.Request(
-            "https://api.na-backend.odysee.com/api/v1/proxy?m=stream_list",
-            data=json.dumps({
-                "jsonrpc": "2.0",
-                "method": "stream_list",
-                "params": {"page": 1, "page_size": 250, "no_totals": False},
-                "id": 1,
-            }).encode(),
-            headers={
-                "X-Lbry-Auth-Token": token,
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=8) as r:
-            res = json.loads(r.read().decode())
-        items = (res.get("result") or {}).get("items", [])
-        for it in items:
-            name = it.get("name", "")
-            cid = it.get("claim_id", "")
-            title = (it.get("value") or {}).get("title") or name
-            if not name or not cid:
-                continue
-            course = (
-                "Advanced Agentic AI And Gen AI By Prudhvi Sir Nareshit 2026"
-                if name.startswith("agentic-genai-")
-                else "Deepak Data Engg"
-            )
-            entry = {
-                "course": course,
-                "title": title,
-                "claim_name": name,
-                "claim_id": cid,
-                "odysee_url": f"https://odysee.com/{name}:{cid}",
-                "stream_url": f"https://odysee.com/$/stream/{name}/{cid}",
-            }
-            manifest[f"{course}/{title}.mp4"] = entry
-    except Exception:
-        pass
-
-    by_prefix = {}
-    by_name = {}
-    for k, val in manifest.items():
-        if not val.get("stream_url"):
-            continue
-        fname = Path(k).name
-        course = val.get("course", "")
-        by_name[fname] = val
-        by_name[f"{course}/{fname}"] = val
-        m = re.match(r"^(\[\d{3}\])", val.get("title", "") or fname)
-        if m:
-            by_prefix[f"{course}:{m.group(1)}"] = val
-
-    _ODYSEE_CACHE["by_prefix"] = by_prefix
-    _ODYSEE_CACHE["by_name"] = by_name
-
-
-def find_odysee_info(video: dict) -> dict | None:
-    import re
-    _sync_odysee_platform()
-    fname = Path(video['path']).name
-    course = video.get('course', '')
-    by_name = _ODYSEE_CACHE["by_name"]
-    for key in (f"{course}/{fname}", fname):
-        if key in by_name:
-            return by_name[key]
-    idx_match = re.match(r'^(\[\d{3}\])', fname)
-    if idx_match:
-        pref_key = f"{course}:{idx_match.group(1)}"
-        if pref_key in _ODYSEE_CACHE["by_prefix"]:
-            return _ODYSEE_CACHE["by_prefix"][pref_key]
-    return None
-
-
-_ODYCDN_URLS: dict[str, tuple[float, str]] = {}
-
-
-def resolve_odycdn_url(claim_name: str, claim_id: str) -> str | None:
-    import json, os, time, urllib.request
-    cache_key = f"{claim_name}#{claim_id}"
-    now = time.time()
-    cached = _ODYCDN_URLS.get(cache_key)
-    if cached and now - cached[0] < 3600:
-        return cached[1]
-
-    token = os.getenv("ODYSEE_AUTH_TOKEN", "")
-    uri = f"lbry://{claim_name}#{claim_id}" if not claim_name.startswith("@") else f"lbry://{claim_name}"
-    req = urllib.request.Request(
-        "https://api.na-backend.odysee.com/api/v1/proxy?m=get",
-        data=json.dumps({
-            "jsonrpc": "2.0",
-            "method": "get",
-            "params": {"uri": uri},
-            "id": 1,
-        }).encode(),
-        headers={
-            "X-Lbry-Auth-Token": token,
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=12) as r:
-            res = json.loads(r.read().decode())
-        streaming_url = (res.get("result") or {}).get("streaming_url")
-        if streaming_url:
-            _ODYCDN_URLS[cache_key] = (now, streaming_url)
-            return streaming_url
-    except Exception:
-        pass
-    return None
+from .media import provider_info as find_odysee_info
+from .media import router as media_router
+app.include_router(media_router)
 
 
 @app.api_route('/api/videos/{video_id}/stream', methods=['GET', 'HEAD'])
-async def stream_video(video_id: str, request: Request):
-    import httpx
-    from fastapi.responses import Response, StreamingResponse
-
-    video = fetch_video(video_id)
+def stream(video_id: str, request: Request):
+    video=fetch_video(video_id)
     if not video:
-        raise HTTPException(status_code=404, detail='Video not found')
-
-    info = find_odysee_info(video)
-    if info and info.get('claim_name') and info.get('claim_id'):
-        cdn_url = resolve_odycdn_url(info['claim_name'], info['claim_id'])
-        if cdn_url:
-            req_headers = {
-                "Referer": "https://odysee.com/",
-                "Origin": "https://odysee.com",
-                "User-Agent": "Mozilla/5.0",
-            }
-            range_header = request.headers.get("range")
-            if range_header:
-                req_headers["Range"] = range_header
-            else:
-                req_headers["Range"] = "bytes=0-"
-
-            client = httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=15.0), follow_redirects=True)
-            upstream_req = client.build_request("GET", cdn_url, headers=req_headers)
-            upstream_resp = await client.send(upstream_req, stream=True)
-
-            if upstream_resp.status_code in (200, 206):
-                resp_headers = {
-                    "Accept-Ranges": "bytes",
-                    "Content-Type": upstream_resp.headers.get("content-type", "video/mp4"),
-                }
-                for h in ("Content-Range", "Content-Length", "Cache-Control", "Last-Modified"):
-                    val = upstream_resp.headers.get(h)
-                    if val:
-                        resp_headers[h] = val
-
-                status_code = 206 if range_header and "Content-Range" in resp_headers else upstream_resp.status_code
-
-                if request.method == "HEAD":
-                    await upstream_resp.aclose()
-                    await client.aclose()
-                    return Response(status_code=status_code, headers=resp_headers)
-
-                async def iter_odycdn():
-                    try:
-                        async for chunk in upstream_resp.aiter_bytes(chunk_size=256 * 1024):
-                            yield chunk
-                    finally:
-                        await upstream_resp.aclose()
-                        await client.aclose()
-
-                return StreamingResponse(iter_odycdn(), status_code=status_code, headers=resp_headers)
-            else:
-                await upstream_resp.aclose()
-                await client.aclose()
-
-    path = Path(video['path']).resolve()
-    if path.is_file():
-        return FileResponse(path, content_disposition_type='inline')
-    raise HTTPException(status_code=404, detail='Video not yet uploaded to Odysee platform')
+        raise HTTPException(404, 'Video not found')
+    if auth.require_user(request)['role']=='admin':
+        path=Path(video['path']).resolve()
+        if path.is_relative_to(settings.courses_dir.resolve()) and path.is_file():
+            return FileResponse(path,content_disposition_type='inline')
+    raise HTTPException(409, 'Open this lecture with the CourseForge embedded player')
 
 
 @app.get('/api/chunks/{chunk_id}/frame')
@@ -819,10 +321,12 @@ class QueryBody(BaseModel):
     mode: Literal['explain', 'notes', 'quiz', 'lab'] = 'explain'
 
 
-@app.post('/api/ask')
+@app.post('/api/ask',status_code=202)
 def ask_tutor(body: QueryBody):
     try:
-        return ask(question=body.question, mode=body.mode, course=body.course, video_id=body.video_id)
+        return enqueue('ask',body.model_dump())
+    except HTTPException:
+        raise
     except Exception as exc:
         # Avoid leaking backend credentials/paths in error responses.
         raise HTTPException(status_code=503, detail='AI services unavailable or search failed. '
@@ -833,9 +337,13 @@ def ask_tutor(body: QueryBody):
 def search(q: str = Query(min_length=2, max_length=500), course: str | None = None,
            video_id: str | None = None):
     try:
-        return {'results': retrieve(q, course=course, video_id=video_id, limit=10)}
+        # Model-based retrieval runs in queued tutor tasks, keeping browsing
+        # independent of model latency and resource limits.
+        return {'results': [dict(hit,chunk_id=hit['id']) for hit in keyword_search(q,course=course,video_id=video_id,limit=10)]}
+    except HTTPException:
+        raise
     except Exception as exc:
-        raise HTTPException(status_code=503, detail='Semantic search unavailable. Check Ollama and Qdrant.') from exc
+        raise HTTPException(status_code=503, detail='Course search is temporarily unavailable.') from exc
 
 
 class ProgressBody(BaseModel):
@@ -865,12 +373,14 @@ class CourseBody(BaseModel):
     course: str = Field(min_length=1, max_length=200)
 
 
-@app.post('/api/syllabus/generate')
+@app.post('/api/syllabus/generate',status_code=202)
 def build_syllabus(body: CourseBody):
     try:
-        return syllabus.generate(body.course)
+        return enqueue('syllabus',{'course':body.course})
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(503, 'Syllabus AI unavailable; check Ollama models') from exc
 
@@ -890,10 +400,13 @@ def list_learning_paths():
     return {'paths': learning_paths.list_paths()}
 
 
-@app.post('/api/learning-paths', status_code=201)
+@app.post('/api/learning-paths', status_code=202)
 def create_learning_path(body: LearningPathBody):
     try:
-        return learning_paths.generate(body.courses, body.goal, use_ai=body.use_ai)
+        for course in body.courses:
+            if not syllabus.get_syllabus(course):
+                raise learning_paths.PathInputError('Build the course syllabus before creating a learning path')
+        return enqueue('path',body.model_dump())
     except learning_paths.PathInputError as exc:
         raise HTTPException(422, str(exc)) from exc
 
@@ -924,16 +437,19 @@ class AssessmentAnswersBody(BaseModel):
     answers: dict[str, int] = Field(min_length=3, max_length=5)
 
 
-@app.post('/api/learning-paths/{path_id}/steps/{step_id}/assessments', status_code=201)
+@app.post('/api/learning-paths/{path_id}/steps/{step_id}/assessments', status_code=202)
 def create_topic_assessment(path_id: str, step_id: str, body: AssessmentCreateBody):
     try:
-        return assessments.create(path_id, step_id, count=body.count)
+        assessments._step(path_id,step_id)
+        return enqueue('assessment',{'path_id':path_id,'step_id':step_id,'count':body.count})
     except assessments.AssessmentNotFound as exc:
         raise HTTPException(404, str(exc)) from exc
     except assessments.AssessmentConflict as exc:
         raise HTTPException(409, str(exc)) from exc
     except assessments.AssessmentInputError as exc:
         raise HTTPException(422, str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(503, 'Assessment AI unavailable. Check Ollama and indexed lecture content.') from exc
 
@@ -973,12 +489,14 @@ class CardCreateBody(CourseBody):
     count: int = Field(default=5, ge=1, le=10)
 
 
-@app.post('/api/reviews/generate')
+@app.post('/api/reviews/generate',status_code=202)
 def create_review_cards(body: CardCreateBody):
     try:
-        return reviews.generate_cards(body.course, body.topic, body.count)
+        return enqueue('reviews',body.model_dump())
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(503, 'Quiz generation unavailable; check Ollama and indexes') from exc
 
@@ -1065,14 +583,11 @@ class LabSubmitBody(BaseModel):
     validate_in_kind: bool = False
 
 
-@app.post('/api/lab-sessions/{session_id}/submit')
+@app.post('/api/lab-sessions/{session_id}/submit',status_code=202)
 def submit_lab(session_id: str, body: LabSubmitBody):
     try:
-        result = labs.submit_lab(session_id, kind=body.validate_in_kind)
-        linked = practice.record_verified_grade(session_id, result)
-        if linked:
-            result['practice_attempt'] = linked
-        return result
+        labs.get_lab(session_id)
+        return enqueue('lab',{'session_id':session_id,'kind':body.validate_in_kind})
     except KeyError:
         raise HTTPException(404,'Lab not found')
     except (ValueError, RuntimeError) as exc:
@@ -1260,7 +775,7 @@ def studio_insights():
 
 class VideoNoteBody(BaseModel):
     content: str = Field(min_length=1, max_length=3000)
-    position: float = Field(ge=0, lt=1e9)
+    position: float = Field(ge=0, lt=1e9, allow_inf_nan=False)
 
 
 @app.get('/api/videos/{video_id}/notes')

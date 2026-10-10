@@ -50,7 +50,7 @@ def ensure_schema(db_path: Path | None = None):
 
 def preferences(db_path: Path | None = None) -> dict:
     with connect(db_path) as db:
-        row = db.execute('SELECT daily_minutes,path_id FROM planner_preferences WHERE singleton=1').fetchone()
+        row = db.execute('SELECT daily_minutes,path_id FROM planner_preferences WHERE planner_preferences.user_id=cf_user_id() AND singleton=1').fetchone()
     return dict(row) if row else {'daily_minutes': 45, 'path_id': None}
 
 
@@ -64,7 +64,9 @@ def save_preferences(daily_minutes: int, path_id: str | None, db_path: Path | No
         except PathNotFound as exc:
             raise PlannerNotFound('Selected learning path not found') from exc
     with connect(db_path) as db:
-        db.execute('''UPDATE planner_preferences SET daily_minutes=?,path_id=?,updated_at=? WHERE singleton=1''',
+        db.execute('''INSERT INTO planner_preferences(user_id,singleton,daily_minutes,path_id,updated_at)
+                      VALUES(cf_user_id(),1,?,?,?) ON CONFLICT(user_id,singleton) DO UPDATE SET
+                      daily_minutes=excluded.daily_minutes,path_id=excluded.path_id,updated_at=excluded.updated_at''',
                    (daily_minutes, path_id or None, utcnow()))
     return preferences(db_path)
 
@@ -96,7 +98,7 @@ def _candidates(local_date: date, tz_offset_minutes: int, path_id: str | None,
     candidates: list[dict] = []
     cutoff = _date_limit(local_date, tz_offset_minutes)
     with connect(db_path) as db:
-        due = db.execute('SELECT id,course FROM review_cards WHERE due_at < ? ORDER BY due_at,id LIMIT 20',
+        due = db.execute('SELECT id,course FROM review_cards WHERE review_cards.user_id=cf_user_id() AND due_at < ? ORDER BY due_at,id LIMIT 20',
                          (cutoff,)).fetchall()
     if due:
         count = len(due)
@@ -151,8 +153,8 @@ def _candidates(local_date: date, tz_offset_minutes: int, path_id: str | None,
         with connect(db_path) as db:
             rows = db.execute('''SELECT v.id,v.title,v.duration,COALESCE(p.percent,0) AS percent,
                                        COALESCE(p.position,0) AS position FROM videos v
-                                LEFT JOIN video_progress p ON p.video_id=v.id
-                                WHERE v.status='done' AND COALESCE(p.completed,0)=0
+                                LEFT JOIN video_progress p ON p.video_id=v.id AND p.user_id=cf_user_id()
+                                WHERE cf_course_allowed(v.course) AND v.status='done' AND COALESCE(p.completed,0)=0
                                 ORDER BY COALESCE(p.percent,0) DESC,v.created_at LIMIT 3''').fetchall()
         for v in rows:
             estimate = min(20, max(8, math.ceil(max(0, (v['duration'] or 900)-v['position'])/60)))
@@ -215,7 +217,7 @@ def generate(study_date: str, tz_offset_minutes: int = 0, *, refresh: bool = Fal
     now = utcnow()
     with connect(db_path) as db:
         existing = {r['item_key']: dict(r) for r in db.execute(
-            'SELECT * FROM daily_plan_items WHERE study_date=?', (study_date,))}
+            'SELECT * FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND study_date=?', (study_date,))}
         if retain_recorded:
             pinned = [r for r in existing.values() if r['status'] != 'pending' or r['actual_minutes'] > 0]
             selected = [dict(item_key=r['item_key'], kind=r['kind'], title=r['title'],
@@ -228,17 +230,17 @@ def generate(study_date: str, tz_offset_minutes: int = 0, *, refresh: bool = Fal
             available = max(0, budget - total_pinned)
             new_tasks = [c for c in selected if c['item_key'] not in pinned_keys]
             selected = selected[:len(pinned)] + _select(new_tasks, available) if available >= 15 else selected[:len(pinned)]
-        db.execute('''INSERT INTO daily_plans(study_date,path_id,budget_minutes,tz_offset_minutes,created_at,updated_at)
-                      VALUES(?,?,?,?,?,?) ON CONFLICT(study_date) DO UPDATE SET
+        db.execute('''INSERT INTO daily_plans(user_id,study_date,path_id,budget_minutes,tz_offset_minutes,created_at,updated_at)
+                      VALUES(cf_user_id(),?,?,?,?,?,?) ON CONFLICT(user_id,study_date) DO UPDATE SET
                       path_id=excluded.path_id,budget_minutes=excluded.budget_minutes,
                       tz_offset_minutes=excluded.tz_offset_minutes,updated_at=excluded.updated_at''',
                    (study_date, pref['path_id'], budget, tz_offset_minutes, now, now))
-        db.execute('DELETE FROM daily_plan_items WHERE study_date=?', (study_date,))
+        db.execute('DELETE FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND study_date=?', (study_date,))
         for item in selected:
             prior = existing.get(item['item_key'])
             db.execute('''INSERT INTO daily_plan_items
-                          (id,study_date,item_key,kind,title,description,minutes,action_json,status,actual_minutes,updated_at)
-                          VALUES(?,?,?,?,?,?,?,?,?,?,?)''',
+                          (user_id,id,study_date,item_key,kind,title,description,minutes,action_json,status,actual_minutes,updated_at)
+                          VALUES(cf_user_id(),?,?,?,?,?,?,?,?,?,?,?)''',
                        (prior['id'] if prior else uuid.uuid4().hex, study_date, item['item_key'], item['kind'],
                         item['title'], item['description'], item['minutes'], json.dumps(item['action']),
                         prior['status'] if prior and json.loads(prior['action_json']) == item['action'] else 'pending',
@@ -251,10 +253,10 @@ def generate(study_date: str, tz_offset_minutes: int = 0, *, refresh: bool = Fal
 def get_day(study_date: str, db_path: Path | None = None) -> dict | None:
     _study_date(study_date)
     with connect(db_path) as db:
-        row = db.execute('SELECT * FROM daily_plans WHERE study_date=?', (study_date,)).fetchone()
+        row = db.execute('SELECT * FROM daily_plans WHERE daily_plans.user_id=cf_user_id() AND study_date=?', (study_date,)).fetchone()
         if not row:
             return None
-        items = db.execute('SELECT * FROM daily_plan_items WHERE study_date=? ORDER BY rowid', (study_date,)).fetchall()
+        items = db.execute('SELECT * FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND study_date=? ORDER BY rowid', (study_date,)).fetchall()
     items_out = [{**dict(x), 'action': json.loads(x['action_json'])} for x in items]
     for item in items_out:
         del item['action_json']
@@ -278,10 +280,10 @@ def set_item_status(item_id: str, status: str, db_path: Path | None = None) -> d
     if status not in ('pending', 'done', 'skipped'):
         raise PlannerInputError('Choose pending, done, or skipped')
     with connect(db_path) as db:
-        row = db.execute('SELECT study_date FROM daily_plan_items WHERE id=?', (item_id,)).fetchone()
+        row = db.execute('SELECT study_date FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND id=?', (item_id,)).fetchone()
         if not row:
             raise PlannerNotFound('Daily plan item not found')
-        db.execute('UPDATE daily_plan_items SET status=?,updated_at=? WHERE id=?', (status,utcnow(),item_id))
+        db.execute('UPDATE daily_plan_items SET status=?,updated_at=? WHERE daily_plan_items.user_id=cf_user_id() AND id=?', (status,utcnow(),item_id))
     return get_day(row['study_date'], db_path)
 
 
@@ -290,9 +292,9 @@ def set_item_actual_minutes(item_id: str, minutes: int, db_path: Path | None = N
     if type(minutes) is not int or not 0 <= minutes <= 600:
         raise PlannerInputError('Actual time must be 0–600 minutes')
     with connect(db_path) as db:
-        row = db.execute('SELECT study_date FROM daily_plan_items WHERE id=?', (item_id,)).fetchone()
+        row = db.execute('SELECT study_date FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND id=?', (item_id,)).fetchone()
         if not row:
             raise PlannerNotFound('Daily plan item not found')
-        db.execute('UPDATE daily_plan_items SET actual_minutes=?,updated_at=? WHERE id=?',
+        db.execute('UPDATE daily_plan_items SET actual_minutes=?,updated_at=? WHERE daily_plan_items.user_id=cf_user_id() AND id=?',
                    (minutes,utcnow(),item_id))
     return get_day(row['study_date'], db_path)

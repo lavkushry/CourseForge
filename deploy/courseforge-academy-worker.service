@@ -1,0 +1,16 @@
+[Unit]
+Description=CourseForge bounded learning task worker
+After=courseforge.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/CourseForge
+EnvironmentFile=/home/ubuntu/CourseForge/.env
+ExecStart=/home/ubuntu/CourseForge/.venv/bin/python -m app.academy_worker
+Restart=on-failure
+RestartSec=3
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

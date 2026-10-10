@@ -3,7 +3,7 @@ import json
 from dataclasses import replace
 
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 from app import db, library, main, labs, learning_paths, planner, practice, study
 
 

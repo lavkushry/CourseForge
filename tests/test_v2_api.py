@@ -1,5 +1,5 @@
 from dataclasses import replace
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 from app import main, db, library, labs
 import pytest
 

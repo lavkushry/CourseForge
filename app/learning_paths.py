@@ -12,7 +12,7 @@ from pathlib import Path
 import httpx
 
 from .config import settings
-from .db import connect, utcnow
+from .db import connect, utcnow, owner, course_allowed
 from .syllabus import canonical, cluster_topics
 
 MAX_COURSES = 8
@@ -220,7 +220,7 @@ def generate(courses: list[str], goal: str, *, db_path: Path | None = None,
     with connect(db_path) as db:
         valid_video_courses = {row['id']: row['course'] for row in db.execute('SELECT id,course FROM videos')}
     steps = _steps(selected, embed=embed, valid_video_courses=valid_video_courses)
-    path_id = 'lp_' + hashlib.sha256(json.dumps([courses, goal.casefold()]).encode()).hexdigest()[:20]
+    path_id = 'lp_' + hashlib.sha256(json.dumps([owner(), courses, goal.casefold()]).encode()).hexdigest()[:20]
     inferred_by = 'ai' if use_ai else 'local-rules'
     try:
         suggestion = (planner or _ai_plan)(steps, goal) if use_ai else {'edges': _curated_edges(steps), 'focus': []}
@@ -240,25 +240,27 @@ def generate(courses: list[str], goal: str, *, db_path: Path | None = None,
               'source_fingerprint': _fingerprint(selected), 'generated_at': utcnow(),
               'topics_collapsed': len(_source_topics(selected, valid_video_courses)) - len(steps)}
     with connect(db_path) as db:
-        db.execute('''INSERT INTO learning_paths (id, goal, courses_json, content_json, source_fingerprint, updated_at)
-                      VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+        db.execute('''INSERT INTO learning_paths (user_id,id, goal, courses_json, content_json, source_fingerprint, updated_at)
+                      VALUES(cf_user_id(),?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
                       goal=excluded.goal, courses_json=excluded.courses_json,
                       content_json=excluded.content_json, source_fingerprint=excluded.source_fingerprint,
                       updated_at=excluded.updated_at''',
                    (path_id, goal, json.dumps(courses), json.dumps(record), record['source_fingerprint'], utcnow()))
-        db.execute('''DELETE FROM learning_path_completions WHERE path_id=? AND step_id NOT IN
+        db.execute('''DELETE FROM learning_path_completions WHERE learning_path_completions.user_id=cf_user_id() AND path_id=? AND step_id NOT IN
                       (SELECT value FROM json_each(?))''', (path_id, json.dumps([s['id'] for s in ordered])))
     return get_path(path_id, db_path)
 
 
 def get_path(path_id: str, db_path: Path | None = None) -> dict:
     with connect(db_path) as db:
-        row = db.execute('SELECT * FROM learning_paths WHERE id=?', (path_id,)).fetchone()
+        row = db.execute('SELECT * FROM learning_paths WHERE learning_paths.user_id=cf_user_id() AND id=?', (path_id,)).fetchone()
         if not row:
             raise PathNotFound(path_id)
         result = json.loads(row['content_json'])
-        marked = {r['step_id'] for r in db.execute('SELECT step_id FROM learning_path_completions WHERE path_id=?', (path_id,))}
-        watched = {r['video_id'] for r in db.execute('SELECT video_id FROM video_progress WHERE completed=1')}
+        if any(not course_allowed(c) for c in result['courses']):
+            raise PathNotFound(path_id)
+        marked = {r['step_id'] for r in db.execute('SELECT step_id FROM learning_path_completions WHERE learning_path_completions.user_id=cf_user_id() AND path_id=?', (path_id,))}
+        watched = {r['video_id'] for r in db.execute('SELECT video_id FROM video_progress WHERE video_progress.user_id=cf_user_id() AND completed=1')}
         current = []
         for course in result['courses']:
             syllabus = db.execute('SELECT content_json FROM syllabi WHERE course=?', (course,)).fetchone()
@@ -288,8 +290,14 @@ def get_path(path_id: str, db_path: Path | None = None) -> dict:
 
 def list_paths(db_path: Path | None = None) -> list[dict]:
     with connect(db_path) as db:
-        ids = [r['id'] for r in db.execute('SELECT id FROM learning_paths ORDER BY updated_at DESC LIMIT 30')]
-    return [get_path(path_id, db_path) for path_id in ids]
+        ids = [r['id'] for r in db.execute('SELECT id FROM learning_paths  WHERE learning_paths.user_id=cf_user_id() ORDER BY updated_at DESC LIMIT 30')]
+    paths = []
+    for path_id in ids:
+        try:
+            paths.append(get_path(path_id, db_path))
+        except PathNotFound:
+            continue
+    return paths
 
 
 def mark_step(path_id: str, step_id: str, completed: bool, db_path: Path | None = None) -> dict:
@@ -302,7 +310,7 @@ def mark_step(path_id: str, step_id: str, completed: bool, db_path: Path | None 
         raise PathInputError('Complete prerequisite path steps before marking this one done')
     with connect(db_path) as db:
         if completed:
-            db.execute('INSERT OR IGNORE INTO learning_path_completions(path_id,step_id,completed_at) VALUES (?,?,?)',
+            db.execute('INSERT OR IGNORE INTO learning_path_completions(user_id,path_id,step_id,completed_at) VALUES(cf_user_id(),?,?,?)',
                        (path_id,step_id,utcnow()))
         else:
             # Clearing a foundational step clears its dependents so progress remains consistent.
@@ -312,6 +320,6 @@ def mark_step(path_id: str, step_id: str, completed: bool, db_path: Path | None 
                 prior = len(affected)
                 affected.update(s['id'] for s in path['steps'] if any(pre in affected for pre in s['prerequisites']))
                 changed = prior != len(affected)
-            db.executemany('DELETE FROM learning_path_completions WHERE path_id=? AND step_id=?',
+            db.executemany('DELETE FROM learning_path_completions WHERE learning_path_completions.user_id=cf_user_id() AND path_id=? AND step_id=?',
                            [(path_id, item) for item in affected])
     return get_path(path_id, db_path)

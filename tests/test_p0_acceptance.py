@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 
 from app import main, db, library, worker, extractor, labs, tutor
 from app.config import settings
@@ -48,9 +48,9 @@ def test_api_media_notes_tutor_and_sandbox_contract(tmp_path, monkeypatch):
         for flag in ('--network=none','--cap-drop=ALL','--read-only','--pull=never'):
             assert flag in cmd
         assert not any('docker.sock' in argument or 'kubeconfig' in argument for argument in cmd)
-        monkeypatch.setattr(main, 'ask', lambda **kwargs: {'answer':'Pods are deployable units [S1]',
+        monkeypatch.setattr(__import__('app.tutor',fromlist=['ask']), 'ask', lambda **kwargs: {'answer':'Pods are deployable units [S1]',
                               'sources':[{'label':'S1','video_id':vid,'start':0,'end':2,'text':speech[0]['text']}]})
-        answer = client.post('/api/ask',json={'question':'What are pods?', 'video_id':vid}).json()
+        answer = client.resolve(client.post('/api/ask',json={'question':'What are pods?', 'video_id':vid})).json()
         assert answer['sources'][0]['start']==0 and answer['sources'][0]['video_id']==vid
 
 

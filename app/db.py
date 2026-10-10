@@ -1,11 +1,26 @@
 """SQLite metadata and durable single-worker queue."""
 import sqlite3
+from contextvars import ContextVar
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
 from .config import settings
+
+# Set by the HTTP access boundary and explicitly propagated to queued work.
+# 'legacy' is used only by local maintenance and migration of pre-account data.
+learner_id: ContextVar[str] = ContextVar('learner_id', default='legacy')
+learner_courses: ContextVar[frozenset[str] | None] = ContextVar('learner_courses', default=None)
+
+
+def owner() -> str:
+    return learner_id.get()
+
+
+def course_allowed(course: str) -> bool:
+    allowed = learner_courses.get()
+    return allowed is None or course in allowed
 
 
 def utcnow() -> str:
@@ -18,6 +33,8 @@ def connect(path: Path | None = None) -> Iterator[sqlite3.Connection]:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(db_path), timeout=30)
     conn.row_factory = sqlite3.Row
+    conn.create_function('cf_user_id', 0, owner)
+    conn.create_function('cf_course_allowed', 1, course_allowed)
     conn.execute('PRAGMA foreign_keys = ON')
     conn.execute('PRAGMA busy_timeout = 30000')
     try:
@@ -89,18 +106,21 @@ def init_db(path: Path | None = None) -> None:
     ensure_weekly_schema(path)
     from .focus import ensure_schema as ensure_focus_schema
     ensure_focus_schema(path)
+    from .migrations import migrate
+    migrate(path)
 
 
 def fetch_videos(path: Path | None = None) -> list[dict]:
     with connect(path) as conn:
         rows = conn.execute('''SELECT v.*, (SELECT COUNT(*) FROM chunks c WHERE c.video_id=v.id) AS chunk_count
-                               FROM videos v ORDER BY course COLLATE NOCASE, title COLLATE NOCASE''').fetchall()
+                               FROM videos v WHERE cf_course_allowed(v.course)
+                               ORDER BY course COLLATE NOCASE, title COLLATE NOCASE''').fetchall()
         return [dict(row) for row in rows]
 
 
 def fetch_video(video_id: str, path: Path | None = None) -> dict | None:
     with connect(path) as conn:
-        row = conn.execute('SELECT * FROM videos WHERE id=?', (video_id,)).fetchone()
+        row = conn.execute('SELECT * FROM videos WHERE id=? AND cf_course_allowed(course)', (video_id,)).fetchone()
         return dict(row) if row else None
 
 
@@ -202,7 +222,7 @@ def keyword_search(phrase: str, *, course: str | None = None, video_id: str | No
     query = ' OR '.join('"' + w + '"' for w in words[:12])
     sql = '''SELECT c.*,v.title,v.course, bm25(chunk_fts) AS rank
              FROM chunk_fts JOIN chunks c ON c.id=chunk_fts.chunk_id
-             JOIN videos v ON v.id=c.video_id WHERE chunk_fts MATCH ?'''
+             JOIN videos v ON v.id=c.video_id WHERE chunk_fts MATCH ? AND cf_course_allowed(v.course)'''
     params: list = [query]
     if course:
         sql += ' AND v.course=?'

@@ -3,7 +3,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 from app import db, focus, main, planner, weekly
 from test_daily_planner import seed
 

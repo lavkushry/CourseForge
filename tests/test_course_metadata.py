@@ -5,7 +5,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 from PIL import Image
 import pytest
 

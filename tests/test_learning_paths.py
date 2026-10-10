@@ -3,7 +3,7 @@ import json
 from dataclasses import replace
 import httpx
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 from app import db, library, main, learning_paths
 
 def seeded(tmp_path, monkeypatch):
@@ -91,7 +91,8 @@ def test_learning_path_api_source_progress_and_gating(tmp_path,monkeypatch):
     with TestClient(main.app) as client:
         response=client.post('/api/learning-paths',json={'courses':['SQL','Python'],
                                     'goal':'Learn SQL joins','use_ai':False})
-        assert response.status_code==201,response.text
+        response=client.resolve(response)
+        assert response.status_code==200,response.text
         path=response.json()
         assert len(path['steps'])==3
         assert client.get('/api/learning-paths').json()['paths'][0]['id']==path['id']

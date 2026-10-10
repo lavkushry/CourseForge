@@ -47,14 +47,16 @@ def validate_minutes(minutes: list[int]) -> list[int]:
 
 def preferences(db_path: Path | None = None) -> dict:
     with connect(db_path) as db:
-        row = db.execute('SELECT minutes_json FROM weekly_preferences WHERE singleton=1').fetchone()
+        row = db.execute('SELECT minutes_json FROM weekly_preferences WHERE weekly_preferences.user_id=cf_user_id() AND singleton=1').fetchone()
     return {'weekday_minutes': json.loads(row['minutes_json']) if row else list(DEFAULT_MINUTES)}
 
 
 def save_preferences(minutes: list[int], db_path: Path | None = None) -> dict:
     validate_minutes(minutes)
     with connect(db_path) as db:
-        db.execute('UPDATE weekly_preferences SET minutes_json=?,updated_at=? WHERE singleton=1',
+        db.execute('''INSERT INTO weekly_preferences(user_id,singleton,minutes_json,updated_at)
+                      VALUES(cf_user_id(),1,?,?) ON CONFLICT(user_id,singleton) DO UPDATE SET
+                      minutes_json=excluded.minutes_json,updated_at=excluded.updated_at''',
                    (json.dumps(minutes), utcnow()))
     return preferences(db_path)
 
@@ -71,7 +73,7 @@ def _forecast(start: date, offset: int, budgets: list[int], db_path: Path | None
     forecasts = [{'count': 0, 'overdue': 0, 'ids': []} for _ in range(7)]
     unscheduled = 0
     with connect(db_path) as db:
-        cards = db.execute('SELECT id,due_at FROM review_cards ORDER BY due_at,id').fetchall()
+        cards = db.execute('SELECT id,due_at FROM review_cards  WHERE review_cards.user_id=cf_user_id() ORDER BY due_at,id').fetchall()
     for card in cards:
         try:
             due = datetime.fromisoformat(card['due_at'])
@@ -133,8 +135,8 @@ def build(week_start: str, tz_offset_minutes: int, *, refresh: bool = False,
     now = utcnow()
     with connect(db_path) as db:
         db.execute('''INSERT INTO weekly_plans
-                      (week_start,tz_offset_minutes,minutes_json,forecast_json,path_id,unscheduled_reviews,created_at,updated_at)
-                      VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(week_start) DO UPDATE SET
+                      (user_id,week_start,tz_offset_minutes,minutes_json,forecast_json,path_id,unscheduled_reviews,created_at,updated_at)
+                      VALUES(cf_user_id(),?,?,?,?,?,?,?,?) ON CONFLICT(user_id,week_start) DO UPDATE SET
                       tz_offset_minutes=excluded.tz_offset_minutes,
                       minutes_json=excluded.minutes_json,forecast_json=excluded.forecast_json,
                       path_id=excluded.path_id,unscheduled_reviews=excluded.unscheduled_reviews,updated_at=excluded.updated_at''',
@@ -145,7 +147,7 @@ def build(week_start: str, tz_offset_minutes: int, *, refresh: bool = False,
 def get_week(week_start: str, db_path: Path | None = None) -> dict | None:
     start = _monday(week_start)
     with connect(db_path) as db:
-        row = db.execute('SELECT * FROM weekly_plans WHERE week_start=?', (week_start,)).fetchone()
+        row = db.execute('SELECT * FROM weekly_plans WHERE weekly_plans.user_id=cf_user_id() AND week_start=?', (week_start,)).fetchone()
     if row is None:
         return None
     budgets = json.loads(row['minutes_json'])

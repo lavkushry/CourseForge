@@ -39,8 +39,8 @@ def set_progress(video_id: str, *, percent: int, position: float, path: Path | N
     with connect(path) as db:
         if not db.execute('SELECT 1 FROM videos WHERE id=?', (video_id,)).fetchone():
             raise KeyError(video_id)
-        db.execute('''INSERT INTO video_progress(video_id,percent,position,completed,updated_at)
-                      VALUES(?,?,?,?,?) ON CONFLICT(video_id) DO UPDATE SET
+        db.execute('''INSERT INTO video_progress(user_id,video_id,percent,position,completed,updated_at)
+                      VALUES(cf_user_id(),?,?,?,?,?) ON CONFLICT(user_id,video_id) DO UPDATE SET
                       percent=excluded.percent,position=excluded.position,
                       completed=excluded.completed,updated_at=excluded.updated_at''',
                    (video_id, percent, position, int(percent == 100), utcnow()))
@@ -52,10 +52,10 @@ def get_progress(course: str | None = None, path: Path | None = None) -> list[di
         sql = '''SELECT v.id AS video_id,v.course,v.title,COALESCE(p.percent,0) AS percent,
                         COALESCE(p.position,0) AS position,COALESCE(p.completed,0) AS completed,
                         p.updated_at AS updated_at
-                 FROM videos v LEFT JOIN video_progress p ON p.video_id=v.id'''
+                 FROM videos v LEFT JOIN video_progress p ON p.video_id=v.id AND p.user_id=cf_user_id() WHERE cf_course_allowed(v.course)'''
         params = []
         if course:
-            sql += ' WHERE v.course=?'
+            sql += ' AND v.course=?'
             params.append(course)
         return [dict(row) for row in db.execute(sql+' ORDER BY v.course,v.title', params)]
 
@@ -77,15 +77,15 @@ def add_cards(course: str, cards: list[dict], path: Path | None = None) -> list[
                    'question': question, 'answer': answer,
                    'source_start': max(0, float(card.get('source_start', 0))),
                    'due_at': now, 'created_at': now}
-            db.execute('''INSERT INTO review_cards(id,course,video_id,question,answer,source_start,due_at,created_at)
-                          VALUES(:id,:course,:video_id,:question,:answer,:source_start,:due_at,:created_at)''', row)
+            db.execute('''INSERT INTO review_cards(user_id,id,course,video_id,question,answer,source_start,due_at,created_at)
+                          VALUES(cf_user_id(),:id,:course,:video_id,:question,:answer,:source_start,:due_at,:created_at)''', row)
             output.append(row)
     return output
 
 
 def due_cards(course: str | None = None, limit: int = 40, now: str | None = None,
               path: Path | None = None) -> list[dict]:
-    sql = 'SELECT * FROM review_cards WHERE due_at<=?'
+    sql = 'SELECT * FROM review_cards WHERE review_cards.user_id=cf_user_id() AND due_at<=?'
     params: list = [now or utcnow()]
     if course:
         sql += ' AND course=?'
@@ -111,14 +111,14 @@ def grade_card(card_id: str, quality: int, *, path: Path | None = None,
                now: datetime | None = None) -> dict:
     instant = now or datetime.now(timezone.utc)
     with connect(path) as db:
-        row = db.execute('SELECT * FROM review_cards WHERE id=?', (card_id,)).fetchone()
+        row = db.execute('SELECT * FROM review_cards WHERE review_cards.user_id=cf_user_id() AND id=?', (card_id,)).fetchone()
         if not row:
             raise KeyError(card_id)
         reps, interval, ease = sm2(row['repetitions'], row['interval_days'], row['ease'], quality)
         next_due = (instant + timedelta(days=interval)).isoformat(timespec='seconds')
-        db.execute('UPDATE review_cards SET repetitions=?,interval_days=?,ease=?,due_at=? WHERE id=?',
+        db.execute('UPDATE review_cards SET repetitions=?,interval_days=?,ease=?,due_at=? WHERE review_cards.user_id=cf_user_id() AND id=?',
                    (reps, interval, ease, next_due, card_id))
-        db.execute('INSERT INTO review_attempts(card_id,quality,reviewed_at) VALUES(?,?,?)',
+        db.execute('INSERT INTO review_attempts(user_id,card_id,quality,reviewed_at) VALUES(cf_user_id(),?,?,?)',
                    (card_id, quality, instant.isoformat(timespec='seconds')))
         return {'id': card_id, 'repetitions': reps, 'interval_days': interval, 'ease': ease, 'due_at': next_due}
 
@@ -126,7 +126,7 @@ def grade_card(card_id: str, quality: int, *, path: Path | None = None,
 def list_notes(video_id: str, path: Path | None = None) -> list[dict]:
     with connect(path) as db:
         return [dict(r) for r in db.execute(
-            'SELECT id,video_id,position,content,created_at FROM video_notes WHERE video_id=? ORDER BY created_at DESC,id DESC',
+            'SELECT id,video_id,position,content,created_at FROM video_notes WHERE video_notes.user_id=cf_user_id() AND video_id=? ORDER BY created_at DESC,id DESC',
             (video_id,))]
 
 
@@ -138,13 +138,13 @@ def add_note(video_id: str, position: float, content: str, path: Path | None = N
     with connect(path) as db:
         if not db.execute('SELECT 1 FROM videos WHERE id=?', (video_id,)).fetchone():
             raise KeyError(video_id)
-        db.execute('''INSERT INTO video_notes(id,video_id,position,content,created_at)
-                      VALUES(:id,:video_id,:position,:content,:created_at)''', row)
+        db.execute('''INSERT INTO video_notes(user_id,id,video_id,position,content,created_at)
+                      VALUES(cf_user_id(),:id,:video_id,:position,:content,:created_at)''', row)
     return row
 
 
 def delete_note(note_id: str, path: Path | None = None) -> None:
     with connect(path) as db:
-        cursor = db.execute('DELETE FROM video_notes WHERE id=?', (note_id,))
+        cursor = db.execute('DELETE FROM video_notes WHERE video_notes.user_id=cf_user_id() AND id=?', (note_id,))
         if not cursor.rowcount:
             raise KeyError(note_id)

@@ -66,14 +66,14 @@ def ensure_schema(path: Path | None = None) -> None:
 
 
 def _row(db, sid: str):
-    record = db.execute('SELECT * FROM focus_sessions WHERE id=?', (sid,)).fetchone()
+    record = db.execute('SELECT * FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND id=?', (sid,)).fetchone()
     if record is None:
         raise FocusNotFound('Focus session not found')
     return record
 
 
 def _intervals(db, sid: str):
-    return db.execute('SELECT * FROM focus_intervals WHERE session_id=? ORDER BY id', (sid,)).fetchall()
+    return db.execute('SELECT * FROM focus_intervals WHERE focus_intervals.user_id=cf_user_id() AND session_id=? ORDER BY id', (sid,)).fetchall()
 
 
 def _seconds(db, row, now: datetime) -> float:
@@ -83,22 +83,22 @@ def _seconds(db, row, now: datetime) -> float:
 
 
 def _close(db, sid: str, now: datetime):
-    db.execute('UPDATE focus_intervals SET ended_at=? WHERE session_id=? AND ended_at IS NULL', (now.isoformat(), sid))
+    db.execute('UPDATE focus_intervals SET ended_at=? WHERE focus_intervals.user_id=cf_user_id() AND session_id=? AND ended_at IS NULL', (now.isoformat(), sid))
 
 
 def _reconcile(db, now: datetime):
     # Expire abandoned sessions at their bounded target time. This prevents
     # an overnight forgotten browser tab from accumulating unlimited hours.
-    active = db.execute("SELECT * FROM focus_sessions WHERE status='running'").fetchone()
+    active = db.execute("SELECT * FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND status='running'").fetchone()
     if active and _seconds(db, active, now) >= active['duration_seconds']:
         # End at the point when configured duration was exhausted, not at now.
-        running = db.execute('SELECT * FROM focus_intervals WHERE session_id=? AND ended_at IS NULL', (active['id'],)).fetchone()
+        running = db.execute('SELECT * FROM focus_intervals WHERE focus_intervals.user_id=cf_user_id() AND session_id=? AND ended_at IS NULL', (active['id'],)).fetchone()
         if running:
             historical = sum(max(0.0, (_parse(i['ended_at'])-_parse(i['began_at'])).total_seconds())
                              for i in _intervals(db, active['id']) if i['ended_at'])
             cutoff = _parse(running['began_at']) + timedelta(seconds=max(0, active['duration_seconds']-historical))
             _close(db, active['id'], cutoff)
-        db.execute("UPDATE focus_sessions SET status='finished',updated_at=? WHERE id=?", (now.isoformat(), active['id']))
+        db.execute("UPDATE focus_sessions SET status='finished',updated_at=? WHERE focus_sessions.user_id=cf_user_id() AND id=?", (now.isoformat(), active['id']))
 
 
 def _snapshot(db, row, now: datetime) -> dict:
@@ -125,10 +125,10 @@ def start(*, mode: str='focus', duration_minutes: int=25, planner_item_id: str |
     sid = uuid.uuid4().hex
     with connect(db_path) as db:
         _reconcile(db, now)
-        if db.execute("SELECT 1 FROM focus_sessions WHERE status='running'").fetchone():
+        if db.execute("SELECT 1 FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND status='running'").fetchone():
             raise FocusConflict('Pause or finish your running timer first')
         if planner_item_id:
-            row = db.execute('SELECT title FROM daily_plan_items WHERE id=?',(planner_item_id,)).fetchone()
+            row = db.execute('SELECT title FROM daily_plan_items WHERE daily_plan_items.user_id=cf_user_id() AND id=?',(planner_item_id,)).fetchone()
             if row is None: raise FocusNotFound('Planner item not found')
             title = title or row['title']
         if video_id:
@@ -136,16 +136,16 @@ def start(*, mode: str='focus', duration_minutes: int=25, planner_item_id: str |
             if row is None: raise FocusNotFound('Video not found')
             title = title or row['title']
         if lab_session_id:
-            row = db.execute('SELECT slug FROM lab_sessions WHERE id=?',(lab_session_id,)).fetchone()
+            row = db.execute('SELECT slug FROM lab_sessions WHERE lab_sessions.user_id=cf_user_id() AND id=?',(lab_session_id,)).fetchone()
             if row is None: raise FocusNotFound('Lab session not found')
             title = title or row['slug']
         try:
             db.execute('''INSERT INTO focus_sessions
-                (id,mode,status,duration_seconds,planner_item_id,video_id,lab_session_id,title,created_at,updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?)''',
+                (user_id,id,mode,status,duration_seconds,planner_item_id,video_id,lab_session_id,title,created_at,updated_at)
+                VALUES(cf_user_id(),?,?,?,?,?,?,?,?,?,?)''',
                 (sid,mode,'running',duration_minutes*60,planner_item_id,video_id,lab_session_id,
                  title.strip() or ('Rest break' if mode=='break' else 'Focused study'),now.isoformat(),now.isoformat()))
-            db.execute('INSERT INTO focus_intervals(session_id,began_at) VALUES(?,?)',(sid,now.isoformat()))
+            db.execute('INSERT INTO focus_intervals(user_id,session_id,began_at) VALUES(cf_user_id(),?,?)',(sid,now.isoformat()))
         except sqlite3.IntegrityError as exc:
             raise FocusConflict('Another timer is running') from exc
         return _snapshot(db, _row(db,sid), now)
@@ -163,13 +163,13 @@ def transition(sid: str, action: str, db_path: Path | None=None, at: datetime | 
             raise FocusConflict('This session is already closed')
         if action == 'pause' and old!='running': raise FocusConflict('Only running sessions can be paused')
         if action == 'resume' and old!='paused': raise FocusConflict('Only paused sessions can resume')
-        if action == 'resume' and db.execute("SELECT 1 FROM focus_sessions WHERE status='running'").fetchone():
+        if action == 'resume' and db.execute("SELECT 1 FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND status='running'").fetchone():
             raise FocusConflict('Another timer is running')
         if action != 'resume' and old=='running': _close(db,sid,now)
         new_status={'pause':'paused','resume':'running','finish':'finished','cancel':'cancelled'}[action]
         if action == 'resume':
-            db.execute('INSERT INTO focus_intervals(session_id,began_at) VALUES(?,?)',(sid,now.isoformat()))
-        db.execute('UPDATE focus_sessions SET status=?,updated_at=? WHERE id=?',(new_status,now.isoformat(),sid))
+            db.execute('INSERT INTO focus_intervals(user_id,session_id,began_at) VALUES(cf_user_id(),?,?)',(sid,now.isoformat()))
+        db.execute('UPDATE focus_sessions SET status=?,updated_at=? WHERE focus_sessions.user_id=cf_user_id() AND id=?',(new_status,now.isoformat(),sid))
         return _snapshot(db,_row(db,sid),now)
 
 
@@ -177,7 +177,7 @@ def active(db_path: Path | None=None, at: datetime | None=None) -> dict:
     now=_now(at)
     with connect(db_path) as db:
         _reconcile(db,now)
-        row=db.execute("SELECT * FROM focus_sessions WHERE status IN ('running','paused') ORDER BY CASE status WHEN 'running' THEN 0 ELSE 1 END,created_at DESC LIMIT 1").fetchone()
+        row=db.execute("SELECT * FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND status IN ('running','paused') ORDER BY CASE status WHEN 'running' THEN 0 ELSE 1 END,created_at DESC LIMIT 1").fetchone()
         return {'session':_snapshot(db,row,now) if row else None}
 
 
@@ -186,7 +186,7 @@ def history(db_path: Path | None=None, *, limit: int=30, at: datetime | None=Non
     if type(limit) is not int or not 1 <= limit <= 200: raise FocusInputError('Limit must be 1–200')
     with connect(db_path) as db:
         _reconcile(db,now)
-        rows=db.execute('SELECT * FROM focus_sessions ORDER BY created_at DESC LIMIT ?', (limit,)).fetchall()
+        rows=db.execute('SELECT * FROM focus_sessions  WHERE focus_sessions.user_id=cf_user_id() ORDER BY created_at DESC LIMIT ?', (limit,)).fetchall()
         return {'sessions':[_snapshot(db,r,now) for r in rows]}
 
 
@@ -202,7 +202,7 @@ def analytics(week_start: str, tz_offset_minutes: int, db_path: Path | None=None
            'self_reported_minutes':0, 'planned_minutes':0} for i in range(7)]
     with connect(db_path) as db:
         _reconcile(db,now)
-        sessions=db.execute("SELECT * FROM focus_sessions WHERE mode='focus' AND status!='cancelled'").fetchall()
+        sessions=db.execute("SELECT * FROM focus_sessions WHERE focus_sessions.user_id=cf_user_id() AND mode='focus' AND status!='cancelled'").fetchall()
         for s in sessions:
             remaining=float(s['duration_seconds'])
             for x in _intervals(db,s['id']):
@@ -222,7 +222,7 @@ def analytics(week_start: str, tz_offset_minutes: int, db_path: Path | None=None
             d=day['date']
             row=db.execute('''SELECT COALESCE(SUM(i.minutes),0) planned,
                        COALESCE(SUM(i.actual_minutes),0) actual
-                       FROM daily_plan_items i WHERE study_date=?''',(d,)).fetchone()
+                       FROM daily_plan_items i WHERE i.user_id=cf_user_id() AND study_date=?''',(d,)).fetchone()
             day['planned_minutes']=row['planned'] or 0
             day['self_reported_minutes']=row['actual'] or 0
             day['measured_seconds']=round(day['measured_seconds'],2)

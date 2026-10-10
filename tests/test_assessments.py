@@ -4,7 +4,7 @@ from dataclasses import replace
 
 import httpx
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 
 from app import assessments, db, learning_paths, library, main
 
@@ -121,7 +121,8 @@ def test_http_assessment_flow(tmp_path, monkeypatch):
     with TestClient(main.app) as client:
         url=f'/api/learning-paths/{path_id}/steps/{step_id}/assessments'
         response=client.post(url,json={'count':3})
-        assert response.status_code == 201, response.text
+        response=client.resolve(response)
+        assert response.status_code == 200, response.text
         body=response.json()
         assert client.get('/api/assessments/'+body['id']).json()==body
         assert client.post(url,json={'count':10}).status_code==422

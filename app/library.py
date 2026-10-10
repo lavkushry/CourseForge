@@ -14,12 +14,12 @@ def scan_courses(courses_dir: Path | None = None, db_path: Path | None = None) -
     imported = changed = unchanged = 0
     found_paths: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root, followlinks=True):
-        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+        dirnames[:] = [d for d in dirnames if not d.startswith('.') and (Path(dirpath)/d).resolve().is_relative_to(root)]
         for fname in filenames:
             if fname.startswith('.'):
                 continue
             p = Path(dirpath) / fname
-            if p.suffix.lower() in VIDEO_EXTENSIONS and p.is_file():
+            if p.suffix.lower() in VIDEO_EXTENSIONS and p.is_file() and p.resolve().is_relative_to(root):
                 found_paths.append(p)
     files = sorted(found_paths)
     with connect(db_path) as conn:

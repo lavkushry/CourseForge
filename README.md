@@ -1,8 +1,8 @@
-# CourseForge Local v2
+# CourseForge Academy
 
-**Turn downloaded video courses into a private AI tutor, a de-duplicated study plan, scheduled recall cards, and verifiable hands-on labs.** All video content stays on your computer when you keep the supplied loopback-only configuration. No account or cloud API is needed. Internet access is necessary for initial dependency/model downloads.
+**Organize your course library, learn with source-linked AI tools, and manage student access and progress.** Verified accounts protect private notes, study plans, assessments and labs. Published courses support free enrollment. Administrators can inspect learning and access reports, suspend accounts and manage course publication.
 
-This is an **advanced single-user local prototype**. Unit and media-extraction integration tests are included. Full real-model and Docker/kind checks require running the supplied smoke test on your own machine; they are not guaranteed to pass without installing the stated prerequisites.
+For hosting, administrator setup, email configuration and database recovery, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md). The player embeds unlisted Odysee uploads. Lesson activity and self-reported completion remain separate from verified playback or assessment performance. The AI and Docker tools require their configured local services.
 
 ## Step 10 — Real-device acceptance gate
 
@@ -25,7 +25,8 @@ The **Today’s plan** screen includes a Pomodoro-style focus/break timer (1–1
 | On-screen visual interpretation | FFmpeg changed-frame samples, Tesseract OCR, optional Gemma 3 local vision captions |
 | RAG tutor | Ollama embeddings, Qdrant semantic search, SQLite FTS fallback; lecture citations + timestamp links |
 | De-duplicated syllabus | Local model extracts topics from sampled lecture excerpts; merges lexical and embedding-similar topics; preserves sources |
-| Watch history | Saves current playback position, percentage and completion locally in SQLite |
+| Learning records | Private notes/bookmarks, bounded lesson activity and self-reported completion per account |
+| Administration | Account controls, enrollment, course publication and individual learning/access reports |
 | Spaced repetition | Source-linked flashcards, answer reveal and learner quality 0–5; SM-2 interval scheduling |
 | Verifiable practice | Eight **curated** labs: Python, shell, Kubernetes, SQL, PySpark, Docker, Ansible and backend API; submit code for automatic tests in a locked-down Docker runner |
 | Optional kind check | Kubernetes server-side dry-run in dedicated project-created `courseforge-lab` cluster only; never uses normal kubeconfig |
@@ -36,7 +37,7 @@ The **Today’s plan** screen includes a Pomodoro-style focus/break timer (1–1
 
 ## P1.7: Personalized daily learning planner
 
-Open **Today's plan** from the sidebar or dashboard. Select a realistic daily time budget (15–180 minutes) and optionally a cross-course learning roadmap. Click **Build / refresh plan** to combine due flashcards, source-linked lessons, unlocked topics, assessments and curated labs into one prioritized schedule. Source lecture actions seek to the original timestamp; lab actions open only reviewed lab templates. Plans and your own checklist statuses persist in SQLite. You can select another calendar date; the browser passes its local timezone offset to avoid UTC day-boundary surprises.
+Open **Today's plan** from the sidebar or dashboard. Select a realistic daily time budget (15–180 minutes) and optionally a cross-course learning roadmap. Click **Build / refresh plan** to combine due flashcards, source-linked lessons, unlocked topics, assessments and curated labs into one prioritized schedule. Source lecture actions show the original timestamp for seeking with the embedded controls; lab actions open only reviewed lab templates. Plans and your own checklist statuses persist in SQLite. You can select another calendar date; the browser passes its local timezone offset to avoid UTC day-boundary surprises.
 
 **Checklist ≠ mastery.** Checking off an action never awards quiz points, never grades reviews or labs, and never claims video progress. Scheduled durations are planning estimates, not watched-time measurements. A 15-minute day stays within the 15-minute budget. See [`docs/P1_DAILY_PLANNER.md`](docs/P1_DAILY_PLANNER.md) for endpoints, data rules, and caveats.
 
@@ -126,7 +127,7 @@ source .venv/bin/activate
 python -m app.worker
 ```
 
-Open **http://127.0.0.1:8000**. Click **Scan Library**. The worker processes lectures one at a time; the UI shows queued, processing and failed jobs. Use the 4 tutor modes for questions, notes, quizzes or explanations; source citations jump to original video positions.
+Open **http://127.0.0.1:8000**. Click **Scan Library**. The worker processes lectures one at a time; the UI shows queued, processing and failed jobs. Use the 4 tutor modes for questions, notes, quizzes or explanations; source citations show timestamps to seek using the embedded player controls.
 
 ## Workflows
 
@@ -147,7 +148,7 @@ The de-duplication is approximate, not a guarantee that all paraphrases are equi
 
 ### 3. Track learning and review
 
-When you play a lecture, progress is saved to SQLite every ~12 seconds of playback movement and when the video ends. Opening a lecture from the library resumes near the saved point; opening a citation seeks to the cited point.
+Use the embedded player controls to play and seek. CourseForge records visible lesson activity and your explicit completion choice. Enter timestamps manually when saving notes or bookmarks; cross-origin playback does not supply verified watch time or automatic resume.
 
 Select your course, enter a topic, and click **Generate 5 cards** in **Spaced repetition**. Click **Reveal answer**, self-rate `Again (0)`, `Hard (3)`, `Good (4)` or `Easy (5)`. These ratings determine the next due date through an SM-2 style scheduler. Use **Review due cards** on future days. This is *self-rated* active recall, not objective answer grading; check original sources for accuracy.
 

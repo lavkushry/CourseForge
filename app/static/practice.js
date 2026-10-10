@@ -118,5 +118,5 @@
     if (location.hash === '#labs') syncPaths().catch(() => {});
   });
   window.CourseForgePractice = Object.freeze({decorateStep, showSelectedPath, refresh:syncPaths});
-  syncPaths().catch(error => $('#practiceRecommendations').replaceChildren(make('p', 'muted', error.message)));
+  window.addEventListener('courseforge-ready',()=>syncPaths().catch(error => $('#practiceRecommendations').replaceChildren(make('p', 'muted', error.message))));
 })();

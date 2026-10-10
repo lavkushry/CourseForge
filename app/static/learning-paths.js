@@ -66,7 +66,7 @@ async function showLearningPath(id){
     assess.type='button';assess.dataset.assessStep=step.id;
     assess.addEventListener('click',()=>window.CourseForgeAssessments.begin(path.id,step));
     card.append(assess);
-    if(step.watched_sources)card.append(make('p','path-evidence',`${step.watched_sources} source video${step.watched_sources===1?'':'s'} watched. Confirm understanding before marking done.`));
+    if(step.watched_sources)card.append(make('p','path-evidence',`${step.watched_sources} source video${step.watched_sources===1?'':'s'} marked complete. Confirm understanding before marking done.`));
     window.CourseForgePractice?.decorateStep(card,path,step,recommendationsByStep.get(step.id)||[]);
     list.append(card);
   }
@@ -95,5 +95,5 @@ window.addEventListener('hashchange',()=>{if(location.hash==='#syllabus'){
   renderPathCourseChoices();loadLearningPaths().catch(err=>toast(err.message,true));
 }});
 window.CourseForgeLearningPaths = Object.freeze({show:showLearningPath});
-initCrossPaths();
+window.addEventListener('courseforge-ready',initCrossPaths);
 })();

@@ -4,7 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 
 from app import db, labs, library, main, learning_paths, practice
 
@@ -33,9 +33,9 @@ def seed(tmp_path, monkeypatch):
 def assessed(config, path, score):
     id = 'a' + str(score)
     with db.connect(config.db_path) as dbconn:
-        dbconn.execute('INSERT INTO topic_assessments VALUES (?,?,?,?,?,?)',
+        dbconn.execute('INSERT INTO topic_assessments(id,path_id,step_id,source_fingerprint,content_json,created_at) VALUES (?,?,?,?,?,?)',
                        (id, path['id'], path['steps'][0]['id'], 'fingerprint', '{}', db.utcnow()))
-        dbconn.execute('INSERT INTO topic_assessment_attempts VALUES (?,?,?,?,?,?,?)',
+        dbconn.execute('INSERT INTO topic_assessment_attempts(id,assessment_id,score,correct_count,total_count,answers_json,completed_at) VALUES (?,?,?,?,?,?,?)',
                        ('t'+str(score), id, score, round(score/100*3), 3, '{}', db.utcnow()))
 
 
@@ -142,6 +142,7 @@ def test_api_recommend_launch_grade_read_history(tmp_path, monkeypatch):
         assert created.status_code == 201, created.text
         session = created.json()['session_id']
         graded = client.post(f'/api/lab-sessions/{session}/submit', json={'validate_in_kind':False})
+        graded=client.resolve(graded)
         assert graded.status_code == 200, graded.text
         assert graded.json()['practice_attempt']['passed']
         timeline = client.get(base+'/practice-history').json()['attempts']
@@ -157,7 +158,7 @@ def test_unlinked_lab_keeps_original_behavior(tmp_path, monkeypatch):
     monkeypatch.setattr(labs, '_offline_grading', lambda sid, slug: result(True))
     with TestClient(main.app) as client:
         sid = client.post('/api/labs/sql-customer-revenue/start').json()['session_id']
-        finished = client.post('/api/lab-sessions/'+sid+'/submit', json={}).json()
+        finished = client.resolve(client.post('/api/lab-sessions/'+sid+'/submit', json={})).json()
         assert finished['passed'] is True and 'practice_attempt' not in finished
         assert practice.history(path['id'], db_path=config.db_path) == []
 

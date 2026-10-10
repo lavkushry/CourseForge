@@ -9,7 +9,7 @@ import subprocess
 from types import SimpleNamespace
 
 import pytest
-from fastapi.testclient import TestClient
+from client_helpers import TestClient
 
 from app import main, db, library, worker, extractor, labs
 from app.config import settings

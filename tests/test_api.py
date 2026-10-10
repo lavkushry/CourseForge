@@ -1,6 +1,14 @@
 from pathlib import Path
-from fastapi.testclient import TestClient
-from app import main
+from client_helpers import TestClient
+from app import main, db
+from dataclasses import replace
+import pytest
+
+@pytest.fixture(autouse=True)
+def isolated(tmp_path,monkeypatch):
+    config=replace(db.settings,data_dir=tmp_path/"data",courses_dir=tmp_path/"courses")
+    monkeypatch.setattr(db,"settings",config)
+    monkeypatch.setattr(main,"settings",config)
 
 
 def test_app_root_and_health(tmp_path, monkeypatch):

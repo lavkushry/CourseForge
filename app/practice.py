@@ -69,7 +69,7 @@ def outcomes_for_path(path_id: str, db_path: Path | None = None) -> dict[str, di
         rows = db.execute('''
             SELECT s.step_id,s.lab_slug,a.passed,a.checks_passed,a.checks_total,a.completed_at,a.rowid
             FROM practice_sessions s JOIN practice_attempts a ON a.session_id=s.session_id
-            WHERE s.path_id=? ORDER BY a.rowid DESC
+            WHERE s.user_id=cf_user_id() AND a.user_id=cf_user_id() AND s.path_id=? ORDER BY a.rowid DESC
         ''', (path_id,)).fetchall()
     result: dict[str, dict] = {}
     for row in rows:
@@ -161,8 +161,8 @@ def start_recommended(path_id: str, step_id: str, slug: str, db_path: Path | Non
         raise PracticeInputError('Lab does not match this topic; choose a relevant curated exercise')
     session = labs.start_lab(slug)
     with connect(db_path) as db:
-        db.execute('''INSERT INTO practice_sessions(session_id,path_id,step_id,lab_slug,created_at)
-                      VALUES(?,?,?,?,?)''', (session['session_id'], path_id, step_id, slug, utcnow()))
+        db.execute('''INSERT INTO practice_sessions(user_id,session_id,path_id,step_id,lab_slug,created_at)
+                      VALUES(cf_user_id(),?,?,?,?,?)''', (session['session_id'], path_id, step_id, slug, utcnow()))
     session['practice_context'] = {'path_id': path_id, 'step_id': step_id}
     return session
 
@@ -170,7 +170,7 @@ def start_recommended(path_id: str, step_id: str, slug: str, db_path: Path | Non
 def record_verified_grade(session_id: str, result: dict, db_path: Path | None = None) -> dict | None:
     """Called only after the existing restricted Docker grader finishes successfully."""
     with connect(db_path) as db:
-        link = db.execute('SELECT * FROM practice_sessions WHERE session_id=?', (session_id,)).fetchone()
+        link = db.execute('SELECT * FROM practice_sessions WHERE practice_sessions.user_id=cf_user_id() AND session_id=?', (session_id,)).fetchone()
         if not link:
             return None  # ordinary unlinked lab retains existing v2 behavior
         checks = result.get('checks')
@@ -184,8 +184,8 @@ def record_verified_grade(session_id: str, result: dict, db_path: Path | None = 
             'passed': verified_pass, 'checks_passed': sum(x['passed'] for x in checks),
             'checks_total': len(checks), 'completed_at': utcnow(),
         }
-        db.execute('''INSERT INTO practice_attempts(id,session_id,passed,checks_passed,checks_total,result_json,completed_at)
-                      VALUES(?,?,?,?,?,?,?)''',
+        db.execute('''INSERT INTO practice_attempts(user_id,id,session_id,passed,checks_passed,checks_total,result_json,completed_at)
+                      VALUES(cf_user_id(),?,?,?,?,?,?,?)''',
                    (saved['id'], session_id, int(verified_pass), saved['checks_passed'],
                     saved['checks_total'], json.dumps(result), saved['completed_at']))
         return saved
@@ -198,7 +198,7 @@ def history(path_id: str, step_id: str | None = None, db_path: Path | None = Non
         raise PracticeNotFound(step_id)
     sql = '''SELECT a.id,a.session_id,s.step_id,s.lab_slug,a.passed,a.checks_passed,
                     a.checks_total,a.completed_at FROM practice_attempts a
-             JOIN practice_sessions s ON s.session_id=a.session_id WHERE s.path_id=?'''
+             JOIN practice_sessions s ON s.session_id=a.session_id WHERE a.user_id=cf_user_id() AND s.user_id=cf_user_id() AND s.path_id=?'''
     args: list = [path_id]
     if step_id:
         sql += ' AND s.step_id=?'

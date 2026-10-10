@@ -125,5 +125,5 @@
     if(session?.status==='running'&&currentRemaining()<=0){reload().catch(()=>{});}
     render();
   },1000);
-  reload().catch(e=>msg(e.message));
+  window.addEventListener('courseforge-ready',()=>reload().catch(e=>msg(e.message)));
 })();

@@ -15,11 +15,11 @@ def insights(path: Path | None = None, *, now: datetime | None = None) -> dict:
     with connect(path) as db:
         rows = db.execute('''SELECT a.quality,a.reviewed_at,c.course,c.question
                              FROM review_attempts a JOIN review_cards c ON c.id=a.card_id
-                             ORDER BY a.reviewed_at DESC LIMIT 500''').fetchall()
-        completed = db.execute('''SELECT updated_at FROM video_progress WHERE completed=1''').fetchall()
-        due = db.execute('SELECT COUNT(*) FROM review_cards WHERE due_at<=?',
+                              WHERE a.user_id=cf_user_id() AND c.user_id=cf_user_id() ORDER BY a.reviewed_at DESC LIMIT 500''').fetchall()
+        completed = db.execute('''SELECT updated_at FROM video_progress WHERE video_progress.user_id=cf_user_id() AND completed=1''').fetchall()
+        due = db.execute('SELECT COUNT(*) FROM review_cards WHERE review_cards.user_id=cf_user_id() AND due_at<=?',
                          (instant.isoformat(timespec='seconds'),)).fetchone()[0]
-        total_cards = db.execute('SELECT COUNT(*) FROM review_cards').fetchone()[0]
+        total_cards = db.execute('SELECT COUNT(*) FROM review_cards WHERE review_cards.user_id=cf_user_id() ').fetchone()[0]
     daily = Counter()
     attempts = []
     for r in rows:
