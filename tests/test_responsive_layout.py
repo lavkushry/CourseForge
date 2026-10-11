@@ -13,17 +13,23 @@ STATIC = Path(__file__).resolve().parents[1] / 'app' / 'static'
 
 
 @pytest.fixture(scope='module')
-def browser():
+def pw_session():
     with playwright.sync_playwright() as pw:
-        try:
-            instance = pw.chromium.launch()
-        except playwright.Error as error:
-            pytest.skip(f'Chromium unavailable: {str(error).splitlines()[0]}')
-        yield instance
-        instance.close()
+        yield pw
 
 
-@pytest.mark.parametrize('width', [320, 390, 768, 1024, 1366])
+@pytest.fixture(scope='module')
+def browser(pw_session):
+    try:
+        instance = pw_session.chromium.launch()
+    except playwright.Error as error:
+        pytest.skip(f'Chromium unavailable: {str(error).splitlines()[0]}')
+    yield instance
+    instance.close()
+
+
+
+@pytest.mark.parametrize('width', [320, 390, 768, 1024, 1366, 1920])
 def test_workspace_controls_fit_their_containers(browser, width):
     page = browser.new_page(viewport={'width': width, 'height': 600})
     html = re.sub(r'<script\b[^>]*>.*?</script>', '', (STATIC / 'index.html').read_text(), flags=re.S)
@@ -68,10 +74,9 @@ def test_workspace_controls_fit_their_containers(browser, width):
             const r=e.getBoundingClientRect();return r.left>=container.left-1&&r.right<=container.right+1;
           });
         }''')
-        # Audit the other learner screens, including the full planner and
-        # question form rather than only an empty lesson panel.
+        # Audit the other learner screens, including the full planner, tutor, labs, and question form
         page.add_style_tag(content=(STATIC / 'tools.css').read_text())
-        for view in ['dashboard', 'planner', 'syllabus', 'reviews', 'settings']:
+        for view in ['dashboard', 'planner', 'syllabus', 'reviews', 'settings', 'labs', 'tutor']:
             show(view)
             if view == 'syllabus':
                 page.evaluate("document.querySelector('#assessmentPanel').hidden=false")
@@ -155,3 +160,56 @@ def test_workspace_controls_fit_their_containers(browser, width):
         assert not failures, f'{width}px: ' + '; '.join(failures)
     finally:
         page.close()
+
+
+@pytest.fixture(scope='module')
+def webkit_browser(pw_session):
+    try:
+        instance = pw_session.webkit.launch()
+    except playwright.Error as error:
+        pytest.skip(f'WebKit unavailable: {str(error).splitlines()[0]}')
+    yield instance
+    instance.close()
+
+
+
+@pytest.mark.parametrize('width', [320, 390, 768, 1366, 1920])
+def test_zero_overflow_and_token_alignment_webkit(webkit_browser, width):
+    """Verify zero horizontal overflow and strict token alignment in WebKit."""
+    page = webkit_browser.new_page(viewport={'width': width, 'height': 800})
+    html = re.sub(r'<script\b[^>]*>.*?</script>', '', (STATIC / 'index.html').read_text(), flags=re.S)
+
+    def serve(route):
+        from urllib.parse import urlsplit
+        path = urlsplit(route.request.url).path
+        if path == '/':
+            route.fulfill(body=html, content_type='text/html')
+        elif path.startswith('/static/') and (STATIC / Path(path).name).is_file():
+            route.fulfill(path=str(STATIC / Path(path).name))
+        else:
+            route.abort()
+
+    page.route('**/*', serve)
+    try:
+        page.goto('http://courseforge.test/')
+        page.evaluate('''() => {
+          document.querySelector('#academyContent').hidden = true;
+          document.querySelector('#appShell').hidden = false;
+          for (const id of ['learningNav', 'adminNav', 'accountNav', 'logoutNav']) {
+              const el = document.getElementById(id);
+              if (el) el.hidden = false;
+          }
+        }''')
+        page.add_style_tag(content=(STATIC / 'tools.css').read_text())
+
+        for view in ['dashboard', 'library', 'learning', 'planner', 'syllabus', 'reviews', 'labs', 'tutor', 'settings']:
+            page.evaluate('''(v) => {
+              document.querySelectorAll('[data-view]').forEach(e => e.hidden = (e.dataset.view !== v));
+              document.body.classList.toggle('in-learning', v === 'learning');
+            }''', view)
+            overflow = page.evaluate('() => document.documentElement.scrollWidth > innerWidth + 1')
+            assert not overflow, f"WebKit {width}px: {view} horizontally overflows container"
+    finally:
+        page.close()
+
+

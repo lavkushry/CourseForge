@@ -186,3 +186,21 @@ running. Asset version 15 invalidates previous page bundles.
   - 181/181 pytest suite tests passing.
   - Deployed and live verified on Oracle Cloud VM and Cloudflare tunnel.
 
+## UI Excellence Pass — Stage 2: Alignment Audit, Every View
+
+- **Comprehensive View Alignment**:
+  - Standardized alignment against tokens across every single view: Top Navigation, Workspace Sidebar, Dashboard, Course Library grid & cards, Course Page, Lesson Sidebar, Materials Viewer, Notes & Bookmarks, Mastery Assessments, Daily Planner, Practice Labs, AI Tutor, Settings, Auth pages (Sign in / Register), Administration dashboard, Viewer Tracking modal, and Study Materials Browser (`#resourcesDialog`).
+  - Lesson Sidebar Rows: Upgraded to a clean 2-column grid (`28px minmax(0, 1fr)`) with tabular-numeric lesson numbers (`28x28px`), baseline-aligned lesson titles, and unified status rows (`"57m · Completed"`, duration · status · materials) that never wrap raggedly.
+- **Consistency Rules Enforced**:
+  - **Identical Card Padding**: Strict `var(--space-6)` (24px) on desktop, `var(--space-4)` (16px) on mobile ($\le 670$px) across all panels, cards, and modal dialogs.
+  - **Unified Control Heights**: Default button/input height `var(--control-h-md)` (40px) on desktop, small `var(--control-h-sm)` (32px), with touch targets guaranteed $\ge 44$px (`var(--control-h-lg)`) on mobile viewports.
+  - **One Chip Style**: Universal inline-flex architecture (`border-radius: var(--radius-full)`, `font-size: var(--text-xs)`, `font-weight: 600`, `padding: 3px 8px`) across tags, pills, next-up badges, and learned chips.
+  - **Focus & Motion**: Consistent 2px focus ring (`outline: 2px solid var(--accent); outline-offset: 2px`), and snappy 150–200ms transitions (`--transition-fast`) with zero jank.
+- **Automated Multi-Engine & Multi-Viewport Evidence**:
+  - Created `scripts/verify_alignment_evidence.py` to test all 12 views at `[320, 390, 768, 1366, 1920]` across Chromium and WebKit.
+  - 120/120 automated checks passed: zero horizontal scrolling anywhere (`scrollWidth <= innerWidth + 1`).
+  - Saved full screenshot evidence gallery into `data/evidence/`.
+- **Validation**:
+  - 187/187 tests passing in pytest (extended `test_responsive_layout.py` with 1920 desktop and WebKit engine verification).
+
+
