@@ -93,7 +93,7 @@ def run_stage6_verification():
         # 3. Dedicated Watch History View (#/history)
         # ----------------------------------------------------------------------
         print("\n--- 3. Verifying Watch History Surface (#/history) ---")
-        page.evaluate("location.hash = '#/history'")
+        page.goto(LIVE_URL + '/#/history', wait_until="networkidle")
         time.sleep(1.5)
 
         history_surface = page.wait_for_selector('.history-surface', timeout=10000)
