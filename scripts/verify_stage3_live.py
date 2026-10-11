@@ -155,14 +155,20 @@ def run_stage3_verification():
 
         print(f"  [PASS] My List surface rendered (Empty: {has_empty}, Saved titles: {page.locator('.mylist-card').count()})")
 
-        # Test adding a title to My List via API or UI
-        # Let's add a course to my-list via fetch to ensure it shows cards
         page.evaluate("""async () => {
-            await fetch('/api/streaming/my-list', {
+            const csrf = window.CourseForgeAccount?.csrf || '';
+            const res = await fetch('/api/streaming/my-list', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({course_slug: 'mission-azure-data-engineer-march-2026'})
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({
+                    item_type: 'course',
+                    item_id: 'Mission Azure Data Engineer (March 2026)'
+                })
             });
+            if (!res.ok) console.error('Failed to add to my-list', await res.text());
         }""")
         # Reload my-list
         page.goto(LIVE_URL + '/#/my-list', wait_until="networkidle")

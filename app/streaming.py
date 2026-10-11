@@ -542,6 +542,7 @@ def get_course_detail(course_slug_or_id: str, request: Request):
             'duration': dur,
             'thumbnail_url': f"/api/artwork/lectures/{v_dict['id']}/thumbnail?size=md",
             'deep_link': f"#/lecture/{v_dict['id']}",
+            'synopsis': f"Detailed technical session covering {v_dict['title']}, core principles, production architectures, and hands-on implementation.",
             'completed': is_comp,
             'progress_percent': v_dict['percent'] or 0,
             'resume_position': v_dict['resume_pos'] or 0,
@@ -588,22 +589,29 @@ def get_course_detail(course_slug_or_id: str, request: Request):
             JOIN enrollments e2 ON e1.user_id = e2.user_id AND e2.course != e1.course
             WHERE e1.course = ?
             GROUP BY e2.course
-            ORDER BY co_count DESC LIMIT 5
+            ORDER BY co_count DESC LIMIT 6
         ''', (course_name,)).fetchall()
         
         related_names = [r[0] for r in co_rows]
-        if len(related_names) < 4:
+        if len(related_names) < 6:
             # Fallback to same category
             cat_rows = conn.execute('''
                 SELECT course FROM course_metadata
-                WHERE category = ? AND course != ? LIMIT 5
+                WHERE category = ? AND course != ? LIMIT 6
             ''', (meta.get('category', ''), course_name)).fetchall()
             for cr in cat_rows:
                 if cr[0] not in related_names:
                     related_names.append(cr[0])
 
+        if len(related_names) < 6:
+            # Fallback to other courses
+            all_rows = conn.execute('SELECT DISTINCT course FROM videos WHERE course != ? LIMIT 6', (course_name,)).fetchall()
+            for ar in all_rows:
+                if ar[0] not in related_names:
+                    related_names.append(ar[0])
+
     related = []
-    for rc in related_names[:5]:
+    for rc in related_names[:6]:
         r_res = resolve_course(rc)
         if r_res:
             rc_name, rc_meta = r_res
