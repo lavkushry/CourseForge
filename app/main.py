@@ -29,7 +29,7 @@ async def lifespan(_app: FastAPI):
     init_db()
     from .academy import maintenance_loop
     import asyncio
-    _app.state.media_slots = asyncio.Semaphore(24)
+    _app.state.media_slots = asyncio.Semaphore(64)
     maintenance = asyncio.create_task(maintenance_loop())
     yield
     maintenance.cancel()

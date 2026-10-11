@@ -33,7 +33,7 @@
     stage.tabIndex=0;stage.setAttribute('aria-label','Lesson player. Space plays or pauses, arrows seek, M mutes, F opens fullscreen, L locks controls.');
     controller.setAttribute('autohide','3');controller.setAttribute('nohotkeys','');controller.setAttribute('gesturesdisabled','');
     controller.setAttribute('fullscreenelement','lecturePlayerWrap');
-    v.id='nativeLecturePlayer';v.controls=true;v.playsInline=true;v.preload='metadata';v.slot='media';
+    v.id='nativeLecturePlayer';v.controls=true;v.playsInline=true;v.preload='auto';v.slot='media';
     v.disablePictureInPicture=true;v.setAttribute('disableRemotePlayback','');
     v.setAttribute('aria-label',lesson.title);v.setAttribute('controlsList','nodownload nofullscreen noremoteplayback');
     const watermark=element('div','native-watermark',session.watermark),feedback=element('div','seek-feedback');feedback.hidden=true;feedback.setAttribute('aria-live','polite');
@@ -138,7 +138,7 @@
     });
     v.addEventListener('error',()=>{if(active===a&&!a.reloading){a.send('error');a.recovery.fail(v.error?.code===3?{code:'decode'}:new Error('Media unavailable'));}});
     a.timer=setInterval(()=>{if(active===a&&!a.reloading)a.send(document.hidden?'hidden':'heartbeat');},10000);
-    a.watchdog=setInterval(()=>{if(active===a&&!a.recovery.busy()&&(v.readyState===0||a.wantsPlay&&!v.ended)&&performance.now()-a.lastAdvance>20000){a.lastAdvance=performance.now();a.recovery.fail(new Error('Playback stalled'));}},2000);
+    a.watchdog=setInterval(()=>{if(active===a&&!a.recovery.busy()&&(v.readyState===0||a.wantsPlay&&!v.ended)&&performance.now()-a.lastAdvance>45000){a.lastAdvance=performance.now();a.recovery.fail(new Error('Playback stalled'));}},2000);
     // Media Chrome is locally hosted. Preserve the browser's controls if the
     // component bundle cannot load, rather than leaving an unusable player.
     const ready=await Promise.race([customElements.whenDefined('media-controller').then(()=>true),new Promise(r=>setTimeout(()=>r(false),4000))]);

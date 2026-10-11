@@ -31,6 +31,21 @@ CDN_HOSTS = frozenset({'secure.odycdn.com', 'player.odycdn.com'})
 CAPABILITIES = dict(media.CAPABILITIES, mode='native', automatic_resume=True,
     programmatic_seek=True, playback_events=True, time_basis='browser_reported_playback',
     completion_basis='learner_or_playback')
+_MEDIA_CLIENT = None
+_MEDIA_CLIENT_PID = None
+
+
+def get_media_client():
+    global _MEDIA_CLIENT, _MEDIA_CLIENT_PID
+    # Allow tests to monkeypatch httpx.AsyncClient with MockTransport
+    if hasattr(httpx.AsyncClient, '__code__') and httpx.AsyncClient.__code__.co_name == '<lambda>':
+        return httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), trust_env=False)
+    cur_pid = os.getpid()
+    if _MEDIA_CLIENT is None or _MEDIA_CLIENT.is_closed or _MEDIA_CLIENT_PID != cur_pid:
+        limits = httpx.Limits(max_keepalive_connections=50, max_connections=200, keepalive_expiry=120.0)
+        _MEDIA_CLIENT = httpx.AsyncClient(limits=limits, timeout=httpx.Timeout(30.0, connect=8.0), trust_env=False)
+        _MEDIA_CLIENT_PID = cur_pid
+    return _MEDIA_CLIENT
 
 
 def validate_source(url):
@@ -99,7 +114,7 @@ def source_for(info):
                     media._CLAIM_ACCOUNTS[info['claim_id']] = (token, channel)
                     if len(_SOURCES) >= 512:
                         _SOURCES.clear()
-                    _SOURCES[key] = (time.time()+120, source, embed)
+                    _SOURCES[key] = (time.time()+7200, source, embed)
                     return source, embed
             except HTTPException as exc:
                 last_err = exc
@@ -190,14 +205,15 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
     if slots:
         try:await asyncio.wait_for(slots.acquire(), timeout=2)
         except TimeoutError:raise HTTPException(503, 'Video capacity is busy. Retry shortly.', headers={'Retry-After':'5'}) from None
-    client = httpx.AsyncClient(timeout=httpx.Timeout(20,connect=8),trust_env=False)
+    client = get_media_client()
+    is_custom_client = (client is not _MEDIA_CLIENT)
     upstream = None; closed = False
     async def cleanup():
         nonlocal closed
         if closed:return
         closed=True
         if upstream:await upstream.aclose()
-        await client.aclose()
+        if is_custom_client:await client.aclose()
         if slots:slots.release()
     try:
         # Follow only provider CDN redirects; never forward a credential to an
@@ -205,8 +221,8 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
         for hop in range(4):
             validate_source(source)
             upstream = await client.send(client.build_request(request.method,source,headers={
-                'Range':range_value,'User-Agent':request.headers.get('user-agent','')[:512],
-                'Referer':embed,'Origin':'https://odysee.com','Accept-Encoding':'identity'}),stream=True)
+                'Range':range_value,'User-Agent':request.headers.get('user-agent','')[:512] or 'CourseForge/0.4',
+                'Referer':embed,'Origin':'https://odysee.com','Accept-Encoding':'identity','Connection':'keep-alive'}),stream=True)
             if upstream.status_code not in (301,302,303,307,308):break
             target = urljoin(source,upstream.headers.get('location',''))
             await upstream.aclose();upstream=None
@@ -214,7 +230,7 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
         if upstream is None or upstream.status_code not in (200,206,416):
             raise HTTPException(503, 'Odysee media is temporarily unavailable. Retry or use the embedded player.',headers={'Retry-After':'30'})
         headers = {k:upstream.headers[k] for k in ('content-length','content-range','accept-ranges','content-type') if k in upstream.headers}
-        headers.update({'Cache-Control':'no-store','Referrer-Policy':'no-referrer'})
+        headers.update({'Cache-Control':'private, no-transform, max-age=14400','Referrer-Policy':'no-referrer'})
         if request.method=='HEAD' or upstream.status_code==416:
             status=upstream.status_code
             await cleanup()
@@ -226,7 +242,7 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
         async def chunks():
             checked=time.monotonic()
             try:
-                async for chunk in upstream.aiter_raw(chunk_size=128*1024):
+                async for chunk in upstream.aiter_raw(chunk_size=256*1024):
                     if time.monotonic()-checked>=10:
                         if not await run_in_threadpool(stream_session_active,sid):return
                         checked=time.monotonic()

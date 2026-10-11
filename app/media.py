@@ -195,8 +195,8 @@ def signed_embed_with(info: dict, token: str, channel: str) -> str:
         if not result.get('signature') or not result.get('signing_ts'):
             raise ValueError('No signature')
         url = f"https://odysee.com/$/embed/{quote(info['claim_name'], safe='')}/{quote(info['claim_id'], safe='')}?" + urlencode({'signature': result['signature'], 'signature_ts': result['signing_ts']})
-        _SIGNATURES[key] = (now + 120, url)
-        _SIGNATURES[(info['claim_name'], info['claim_id'])] = (now + 120, url)
+        _SIGNATURES[key] = (now + 7200, url)
+        _SIGNATURES[(info['claim_name'], info['claim_id'])] = (now + 7200, url)
         return url
 
 
