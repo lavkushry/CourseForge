@@ -1,83 +1,255 @@
 'use strict';
 (() => {
-  let countdown=null,seconds=0;
-  const prefs=()=>window.CourseForgePlayerSession.preferences();
-  function cancelNext(){clearInterval(countdown);countdown=null;document.querySelector('.player-next')?.remove();}
-  function adjacent(direction,availableOnly=false){
-    const current=state.videos.find(v=>v.id===state.currentVideoId);if(!current)return null;
-    const lessons=state.videos.filter(v=>v.course===current.course),at=lessons.findIndex(v=>v.id===current.id);
-    for(let i=at+direction;i>=0&&i<lessons.length;i+=direction){if(!availableOnly||lessons[i].cloud_ready)return lessons[i];}
+  let countdown = null, seconds = 0;
+  let upNextTriggered = false, upNextCancelled = false;
+  const prefs = () => window.CourseForgePlayerSession.preferences();
+
+  function cancelNext() {
+    clearInterval(countdown);
+    countdown = null;
+    upNextTriggered = false;
+    document.querySelector('.player-next, .player-up-next-card')?.remove();
+  }
+
+  function adjacent(direction, availableOnly = false) {
+    const current = state.videos.find(v => v.id === state.currentVideoId);
+    if (!current) return null;
+    const lessons = state.videos.filter(v => v.course === current.course);
+    const at = lessons.findIndex(v => v.id === current.id);
+    for (let i = at + direction; i >= 0 && i < lessons.length; i += direction) {
+      if (!availableOnly || lessons[i].cloud_ready) return lessons[i];
+    }
     return null;
   }
-  function update(video){
-    cancelNext();document.body.classList.add('in-learning');
-    $('#learningHeader').textContent=state.courseMeta.get(video.course)?.title||video.course;
-    $('#learningSubhead').textContent=lessonTitle(video.title);
+
+  function update(video) {
+    cancelNext();
+    upNextTriggered = false;
+    upNextCancelled = false;
+    document.body.classList.add('in-learning');
+    $('#learningHeader').textContent = state.courseMeta.get(video.course)?.title || video.course;
+    $('#learningSubhead').textContent = lessonTitle(video.title);
     completion(Boolean(state.progress.get(video.id)?.completed));
-    $('#playerAutoplay').checked=prefs().autoplay;
-    $('.learning-grid').classList.toggle('cinema-expanded',prefs().theater);
-    for(const [id,step]of [['previousLessonBtn',-1],['nextLessonBtn',1]]){const next=adjacent(step);$('#'+id).disabled=!next;$('#'+id).title=next?.title||'No more lessons';}
-  }
-  function overlay(cls,text,actions){
-    const stage=document.querySelector('.native-player-stage')||$('#lecturePlayerWrap');if(!stage)return null;
-    stage.querySelector('.'+cls)?.remove();const box=make('div',cls);box.setAttribute('role','status');
-    if(cls==='player-recovery'){
-      stage.querySelector('.player-resume')?.remove();
-      const status=stage.querySelector('.native-player-status');if(status)status.textContent='';
-      const iconWrap=make('div','player-recovery-icon');
-      iconWrap.innerHTML='<svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>';
-      box.append(iconWrap,make('h3','','Stream Interrupted'));
+    $('#playerAutoplay').checked = prefs().autoplay;
+    $('.learning-grid').classList.toggle('cinema-expanded', prefs().theater);
+    for (const [id, step] of [['previousLessonBtn', -1], ['nextLessonBtn', 1]]) {
+      const next = adjacent(step);
+      $('#' + id).disabled = !next;
+      $('#' + id).title = next?.title || 'No more lessons';
     }
-    box.append(make('p','',text));const row=make('div',cls==='player-recovery'?'player-recovery-actions':'');
-    for(const [label,action]of actions){
-      const isPrimary=label.toLowerCase().includes('resume')||label.toLowerCase().includes('play');
-      const b=make('button',`btn ${isPrimary?'btn-primary':'btn-outline'}`,label);
-      b.type='button';b.onclick=()=>Promise.resolve(action()).catch(error=>toast(error.message,true));
+  }
+
+  function overlay(cls, text, actions) {
+    const stage = document.querySelector('.native-player-stage') || $('#lecturePlayerWrap');
+    if (!stage) return null;
+    stage.querySelector('.' + cls)?.remove();
+    const box = make('div', cls);
+    box.setAttribute('role', 'status');
+    if (cls === 'player-recovery') {
+      stage.querySelector('.player-resume')?.remove();
+      const status = stage.querySelector('.native-player-status');
+      if (status) status.textContent = '';
+      const iconWrap = make('div', 'player-recovery-icon');
+      iconWrap.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>';
+      box.append(iconWrap, make('h3', '', 'Stream Interrupted'));
+    }
+    box.append(make('p', '', text));
+    const row = make('div', cls === 'player-recovery' ? 'player-recovery-actions' : '');
+    for (const [label, action] of actions) {
+      const isPrimary = label.toLowerCase().includes('resume') || label.toLowerCase().includes('play');
+      const b = make('button', `btn ${isPrimary ? 'btn-primary' : 'btn-outline'}`, label);
+      b.type = 'button';
+      b.onclick = () => Promise.resolve(action()).catch(error => toast(error.message, true));
       row.append(b);
     }
-    box.append(row);stage.append(box);return box;
+    box.append(row);
+    stage.append(box);
+    return box;
   }
-  function ownershipLost(text){
-    cancelNext();const v=window.CourseForgeNative.video();if(v){window.CourseForgeNative.unlock();window.CourseForgeNative.pauseForRecovery();}
-    else document.querySelector('#lecturePlayerWrap iframe')?.remove();
-    overlay('player-recovery',text,[['Resume here',async()=>{
-      try{if(!await window.CourseForgePlayerSession.reclaim())return;}catch(error){if([403,404].includes(error.status)){await openVideo(state.currentVideoId);return;}throw error;}
-      const media=window.CourseForgeNative.video();
-      if(media&&!media.error&&media.readyState>=1){
-        document.querySelector('.player-recovery')?.remove();window.CourseForgeNative.resumeRecovery();await media.play();
-      }else await openVideo(state.currentVideoId,window.CourseForgeNative.currentPosition());
-    }],['Back to courses',()=>navigate('library')]]);
+
+  function checkUpNext(lesson, currentTime, duration) {
+    if (upNextTriggered || upNextCancelled || !duration || Number.isNaN(duration)) return;
+    const remaining = duration - currentTime;
+    if (remaining <= 30 && remaining > 0) {
+      upNextTriggered = true;
+      showUpNextCard(lesson);
+    }
   }
-  function ended(lesson){
-    cancelNext();if(!prefs().autoplay||window.CourseForgeNative.locked())return;
-    const next=adjacent(1,true);if(!next||next.course!==lesson.course)return;
-    seconds=10;const box=overlay('player-next',`Next lesson in ${seconds}s: ${next.title}`,[['Play next',async()=>{cancelNext();await openVideo(next.id);await window.CourseForgeNative.video()?.play();}],['Cancel autoplay',cancelNext]]);
-    if(!box)return;countdown=setInterval(()=>{
-      if(document.hidden||window.CourseForgeNative.locked()){cancelNext();return;}
-      seconds--;box.querySelector('p').textContent=`Next lesson in ${seconds}s: ${next.title}`;
-      if(seconds<=0){cancelNext();openVideo(next.id).then(()=>window.CourseForgeNative.video()?.play()).catch(error=>toast(error.message,true));}
-    },1000);
+
+  function showUpNextCard(lesson) {
+    cancelNext();
+    upNextTriggered = true;
+    const next = adjacent(1, true);
+    if (!next || next.course !== lesson.course) return;
+
+    const stage = document.querySelector('.native-player-stage') || $('#lecturePlayerWrap');
+    if (!stage) return;
+
+    const card = document.createElement('div');
+    card.className = 'player-up-next-card';
+    card.id = 'playerUpNextCard';
+    card.setAttribute('role', 'region');
+    card.setAttribute('aria-label', 'Next episode countdown');
+
+    seconds = 10;
+    const thumbUrl = `/api/artwork/lectures/${next.id}/thumbnail?size=sm`;
+
+    card.innerHTML = `
+      <div class="up-next-thumb-wrap">
+        <img src="${thumbUrl}" alt="" loading="lazy" />
+        <span class="up-next-countdown-badge" id="upNextCountdownBadge">${seconds}s</span>
+      </div>
+      <div class="up-next-content">
+        <span class="up-next-eyebrow">UP NEXT</span>
+        <h4 class="up-next-title">${escapeHtml(next.title)}</h4>
+        <div class="up-next-actions">
+          <button type="button" class="btn btn-primary btn-sm up-next-watch-btn" id="upNextWatchBtn">
+            <svg class="icon"><use href="#i-play"/></svg> Watch Now
+          </button>
+          <button type="button" class="btn btn-outline btn-sm up-next-cancel-btn" id="upNextCancelBtn">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('#upNextWatchBtn').onclick = async () => {
+      cancelNext();
+      await openVideo(next.id);
+      await window.CourseForgeNative.video()?.play();
+    };
+
+    card.querySelector('#upNextCancelBtn').onclick = () => {
+      upNextCancelled = true;
+      cancelNext();
+    };
+
+    stage.append(card);
+
+    countdown = setInterval(() => {
+      if (document.hidden || window.CourseForgeNative.locked()) {
+        cancelNext();
+        return;
+      }
+      seconds--;
+      const badge = document.getElementById('upNextCountdownBadge');
+      if (badge) badge.textContent = `${seconds}s`;
+
+      if (seconds <= 0) {
+        cancelNext();
+        openVideo(next.id).then(() => window.CourseForgeNative.video()?.play()).catch(error => toast(error.message, true));
+      }
+    }, 1000);
   }
-  function resumePrompt(start){
-    if(!start)return;
-    overlay('player-resume',`Continue from ${prettyTime(start)}?`,[['Resume',()=>{document.querySelector('.player-resume')?.remove();return window.CourseForgeNative.video()?.play();}],['Restart',()=>{window.CourseForgeNative.seek(0,true);document.querySelector('.player-resume')?.remove();return window.CourseForgeNative.video()?.play();}]]);
+
+  function ownershipLost(text) {
+    cancelNext();
+    const v = window.CourseForgeNative.video();
+    if (v) {
+      window.CourseForgeNative.unlock();
+      window.CourseForgeNative.pauseForRecovery();
+    } else {
+      document.querySelector('#lecturePlayerWrap iframe')?.remove();
+    }
+    overlay('player-recovery', text, [['Resume here', async () => {
+      try {
+        if (!await window.CourseForgePlayerSession.reclaim()) return;
+      } catch (error) {
+        if ([403, 404].includes(error.status)) {
+          await openVideo(state.currentVideoId);
+          return;
+        }
+        throw error;
+      }
+      const media = window.CourseForgeNative.video();
+      if (media && !media.error && media.readyState >= 1) {
+        document.querySelector('.player-recovery')?.remove();
+        window.CourseForgeNative.resumeRecovery();
+        await media.play();
+      } else {
+        await openVideo(state.currentVideoId, window.CourseForgeNative.currentPosition());
+      }
+    }], ['Back to courses', () => navigate('library')]]);
   }
-  function capture(){
-    const position=window.CourseForgeNative.currentPosition();if(position===null)return;
-    for(const id of ['notePosition','bookmarkPosition'])$('#'+id).value=prettyTime(position);
-    selectLessonTab('notes');$('#noteText').focus({preventScroll:true});toast('Timestamp added. Write a note or bookmark to save it.');
+
+  function ended(lesson) {
+    if (!upNextTriggered && !upNextCancelled && prefs().autoplay) {
+      showUpNextCard(lesson);
+    }
   }
-  function completion(completed){
-    const button=$('#markCompleteBtn');button.textContent=completed?'Completed':'Complete lesson';
-    button.setAttribute('aria-pressed',String(Boolean(completed)));
-    button.title=completed?'Undo lesson completion':'Mark this lesson complete';
-    button.classList.toggle('lesson-completed',Boolean(completed));
-    $('#playingCourse').textContent=completed?'Lesson completed. Continue to the next lesson when you’re ready.':'Pick up where you left off. Your place is saved automatically.';
+
+  function resumePrompt(start) {
+    if (!start) return;
+    overlay('player-resume', `Continue from ${prettyTime(start)}?`, [
+      ['Resume', () => {
+        document.querySelector('.player-resume')?.remove();
+        return window.CourseForgeNative.video()?.play();
+      }],
+      ['Restart', () => {
+        window.CourseForgeNative.seek(0, true);
+        document.querySelector('.player-resume')?.remove();
+        return window.CourseForgeNative.video()?.play();
+      }]
+    ]);
   }
-  function toggleTheater(){const theater=!prefs().theater;window.CourseForgePlayerSession.setPreferences({theater});$('.learning-grid').classList.toggle('cinema-expanded',theater);}
-  $('#playerAutoplay').onchange=event=>{window.CourseForgePlayerSession.setPreferences({autoplay:event.target.checked});if(!event.target.checked)cancelNext();};
-  $('#studioAccount').onclick=()=>$('#accountNav').click();
-  $('#studioResources').onclick=()=>{const video=state.videos.find(v=>v.id===state.currentVideoId);if(video)openMaterialsModal(video.course);};
-  document.querySelectorAll('[data-study-extra]').forEach(button=>button.onclick=()=>{selectLessonTab(button.dataset.studyExtra);button.closest('details').open=false;});
-  window.CourseForgeStudio={update,completion,cancelNext,adjacent,ended,ownershipLost,capture,toggleTheater,resumePrompt};
+
+  function capture() {
+    const position = window.CourseForgeNative.currentPosition();
+    if (position === null) return;
+    for (const id of ['notePosition', 'bookmarkPosition']) $('#' + id).value = prettyTime(position);
+    selectLessonTab('notes');
+    $('#noteText').focus({ preventScroll: true });
+    toast('Timestamp added. Write a note or bookmark to save it.');
+  }
+
+  function completion(completed) {
+    const button = $('#markCompleteBtn');
+    button.textContent = completed ? 'Completed' : 'Complete lesson';
+    button.setAttribute('aria-pressed', String(Boolean(completed)));
+    button.title = completed ? 'Undo lesson completion' : 'Mark this lesson complete';
+    button.classList.toggle('lesson-completed', Boolean(completed));
+    $('#playingCourse').textContent = completed ? 'Lesson completed. Continue to the next lesson when you’re ready.' : 'Pick up where you left off. Your place is saved automatically.';
+  }
+
+  function toggleTheater() {
+    const theater = !prefs().theater;
+    window.CourseForgePlayerSession.setPreferences({ theater });
+    $('.learning-grid').classList.toggle('cinema-expanded', theater);
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  $('#playerAutoplay').onchange = event => {
+    window.CourseForgePlayerSession.setPreferences({ autoplay: event.target.checked });
+    if (!event.target.checked) cancelNext();
+  };
+  $('#studioAccount').onclick = () => $('#accountNav').click();
+  $('#studioResources').onclick = () => {
+    const video = state.videos.find(v => v.id === state.currentVideoId);
+    if (video) openMaterialsModal(video.course);
+  };
+  document.querySelectorAll('[data-study-extra]').forEach(button => button.onclick = () => {
+    selectLessonTab(button.dataset.studyExtra);
+    button.closest('details').open = false;
+  });
+
+  window.CourseForgeStudio = {
+    update,
+    completion,
+    cancelNext,
+    adjacent,
+    ended,
+    checkUpNext,
+    showUpNextCard,
+    ownershipLost,
+    capture,
+    toggleTheater,
+    resumePrompt
+  };
 })();

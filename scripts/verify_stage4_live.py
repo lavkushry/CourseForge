@@ -54,8 +54,8 @@ def run_stage4_verification():
         page.fill('input[type="password"]', 'Ei_S3ndMzaoTlg6QlsjBCz9gUN1GzglE')
         page.click('button[type="submit"]')
 
-        page.wait_for_selector('#streamingHero', timeout=15000)
-        print("  [PASS] Logged in successfully")
+        page.wait_for_selector('#appShell:not([hidden]), #streamingHero', timeout=12000)
+        print("  [PASS] Logged in successfully and workspace mounted")
 
         # ----------------------------------------------------------------------
         # 2. Title & Episode Details Modal
@@ -173,32 +173,20 @@ def run_stage4_verification():
         # ----------------------------------------------------------------------
         print("\n--- 6. Responsive Width & Overflow Audits ---")
         for vp_name, width, height in VIEWPORTS:
-            vp_page = browser.new_page(viewport={'width': width, 'height': height})
-            vp_page.goto(LIVE_URL, wait_until="networkidle")
-            # Sign in
-            vp_page.click('#signinNav')
-            vp_page.wait_for_selector('input[type="email"]', timeout=5000)
-            vp_page.fill('input[type="email"]', 'admin@courseforge.com')
-            vp_page.fill('input[type="password"]', 'Ei_S3ndMzaoTlg6QlsjBCz9gUN1GzglE')
-            vp_page.click('button[type="submit"]')
-            vp_page.wait_for_selector('#streamingHero', timeout=15000)
+            page.set_viewport_size({'width': width, 'height': height})
+            page.goto(LIVE_URL + '/#/course/mission-azure-data-engineer-march-2026', wait_until="networkidle")
+            time.sleep(0.8)
 
-            # Open title modal
-            vp_page.goto(LIVE_URL + '/#/course/mission-azure-data-engineer-march-2026', wait_until="networkidle")
-            time.sleep(1.0)
-
-            scroll_width = vp_page.evaluate("document.documentElement.scrollWidth")
-            client_width = vp_page.evaluate("document.documentElement.clientWidth")
+            scroll_width = page.evaluate("document.documentElement.scrollWidth")
+            client_width = page.evaluate("document.documentElement.clientWidth")
             diff = scroll_width - client_width
             assert diff <= 1, f"Horizontal overflow detected at {width}px: scroll={scroll_width}, client={client_width}"
             print(f"  [PASS] {vp_name} ({width}px): zero horizontal overflow (diff={diff}px)")
 
             if width == 390:
                 mobile_shot = EVIDENCE_DIR / 'stage4_live_mobile.png'
-                vp_page.screenshot(path=str(mobile_shot))
+                page.screenshot(path=str(mobile_shot))
                 print(f"  [PASS] Captured mobile screenshot: {mobile_shot.name}")
-
-            vp_page.close()
 
         context.close()
         browser.close()

@@ -109,6 +109,7 @@
       if(active!==a||v.error||v.readyState<1)return;
       const advanced=v.currentTime-a.savedPosition;a.savedPosition=v.currentTime;
       if(!v.paused&&advanced>0&&advanced<2){a.lastAdvance=performance.now();a.recovery.healthy(advanced/Math.max(.25,v.playbackRate));}
+      window.CourseForgeStudio?.checkUpNext?.(lesson, v.currentTime, v.duration);
     });
     v.addEventListener('play',()=>{if(!a.reloading){a.wantsPlay=true;a.lastAdvance=performance.now();}});
     a.recovery=window.CourseForgePlayerRecovery({
@@ -147,11 +148,81 @@
       v.controls=false;
       const top=element('div','player-top-controls');top.slot='top-chrome';
       const capture=button('Capture timestamp','i-bookmark',()=>window.CourseForgeStudio?.capture());
+      const episodesBtn=button('Course episodes drawer','i-menu',()=>toggleEpisodesDrawer());
       const theater=button('Theater mode','i-theater',()=>window.CourseForgeStudio?.toggleTheater());
       const shortcutsBtn=button('Keyboard shortcuts','i-help',()=>toggleShortcuts(shortcutsPopover.hidden));
       shortcutsBtn.setAttribute('aria-haspopup','dialog');shortcutsBtn.setAttribute('aria-expanded','false');
       const lock=button('Lock player controls','i-lock',()=>setLock(true));
-      top.append(capture,theater,shortcutsBtn,lock);controller.append(top);
+      top.append(capture,episodesBtn,theater,shortcutsBtn,lock);controller.append(top);
+
+      const drawer=element('aside','player-episodes-drawer');
+      drawer.hidden=true;drawer.setAttribute('role','region');drawer.setAttribute('aria-label','Course episodes list');
+      stage.append(drawer);
+
+      function toggleEpisodesDrawer(open){
+        const shouldOpen=open!==undefined?open:drawer.hidden;
+        drawer.hidden=!shouldOpen;episodesBtn.setAttribute('aria-expanded',String(shouldOpen));
+        pinControls();
+        if(shouldOpen)renderDrawerEpisodes();
+      }
+
+      function renderDrawerEpisodes(){
+        const currentVid=state.videos.find(item=>item.id===a.lesson);
+        if(!currentVid)return;
+        const courseLessons=state.videos.filter(item=>item.course===currentVid.course);
+        const escapeStr=str=>String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+        drawer.innerHTML=`
+          <div class="drawer-header">
+            <div class="drawer-header-titles">
+              <span class="drawer-eyebrow">COURSE EPISODES</span>
+              <h3 class="drawer-title">${escapeStr(state.courseMeta.get(currentVid.course)?.title||currentVid.course)}</h3>
+            </div>
+            <button type="button" class="player-button drawer-close-btn" aria-label="Close drawer">
+              <svg class="icon"><use href="#i-close"/></svg>
+            </button>
+          </div>
+          <div class="drawer-list">
+            ${courseLessons.map((ep,idx)=>{
+              const isCurrent=ep.id===currentVid.id;
+              const dur=ep.duration?Math.ceil(ep.duration/60)+'m':'';
+              const thumbUrl=`/api/artwork/lectures/${ep.id}/thumbnail?size=sm`;
+              const isDone=Boolean(state.progress.get(ep.id)?.completed);
+              return `
+                <div class="drawer-episode-item ${isCurrent?'is-current':''}" data-id="${ep.id}">
+                  <div class="drawer-ep-thumb-wrap">
+                    <img src="${thumbUrl}" alt="" loading="lazy" />
+                    ${isCurrent?'<div class="drawer-playing-indicator"><svg class="icon"><use href="#i-play"/></svg></div>':''}
+                    ${dur?`<span class="drawer-duration">${dur}</span>`:''}
+                  </div>
+                  <div class="drawer-ep-info">
+                    <div class="drawer-ep-num-row">
+                      <span class="drawer-ep-num">E${idx+1}</span>
+                      ${isDone?'<span class="drawer-done-check"><svg class="icon"><use href="#i-check-circle"/></svg></span>':''}
+                    </div>
+                    <strong class="drawer-ep-title">${escapeStr(ep.title)}</strong>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        drawer.querySelector('.drawer-close-btn').onclick=()=>toggleEpisodesDrawer(false);
+        drawer.querySelectorAll('.drawer-episode-item').forEach(item=>{
+          item.onclick=async()=>{
+            const epId=item.dataset.id;
+            if(epId&&epId!==currentVid.id){
+              toggleEpisodesDrawer(false);
+              if(typeof window.openVideo==='function'){
+                await window.openVideo(epId);
+                window.CourseForgeNative.video()?.play().catch(()=>{});
+              }
+            }
+          };
+        });
+      }
+
       const timeline=element('media-time-range','player-timeline');timeline.setAttribute('aria-label','Seek lecture');
       const row=element('media-control-bar','player-control-row');
       for(const [tag,attrs] of [['media-play-button',{}],['media-seek-backward-button',{seekoffset:'10'}],['media-seek-forward-button',{seekoffset:'10'}],['media-mute-button',{}],['media-volume-range',{}]]){
@@ -182,10 +253,12 @@
       popHeader.append(closeShortcuts);
       const scList=element('div','shortcuts-grid');
       for(const [keys,label] of [
-        [['Space'],'Play / Pause'],
-        [['←','→'],'Seek ±10s'],
-        [['F'],'Toggle fullscreen'],
+        [['Space','K'],'Play / Pause'],
+        [['J','← / →'],'Seek backward / forward'],
+        [['↑','↓'],'Volume ±10%'],
         [['M'],'Mute audio'],
+        [['F'],'Toggle fullscreen'],
+        [['C'],'Cinema mode'],
         [['L'],'Lock controls'],
         [['Esc'],'Close popups']
       ]){
@@ -209,7 +282,7 @@
         if(event.key==='Escape'){event.preventDefault();event.stopPropagation();toggleShortcuts(false);shortcutsBtn.focus();}
       });
 
-      const pinControls=()=>controller.setAttribute('autohide',a.locked||!menu.hidden||!shortcutsPopover.hidden||stage.matches(':focus-visible')||stage.querySelector(':focus-visible')?'-1':'3');
+      const pinControls=()=>controller.setAttribute('autohide',a.locked||!menu.hidden||!shortcutsPopover.hidden||!drawer.hidden||stage.matches(':focus-visible')||stage.querySelector(':focus-visible')?'-1':'3');
       function toggleMenu(open){menu.hidden=!open;speed.setAttribute('aria-expanded',String(open));pinControls();if(open)rates.querySelector('[aria-pressed="true"]')?.focus();}
       v.addEventListener('ratechange',()=>{for(const choice of rates.children)choice.setAttribute('aria-pressed',String(Number(choice.dataset.rate)===v.playbackRate));});
       stage.addEventListener('pointerdown',event=>{if(!menu.hidden&&!event.composedPath().includes(menu)&&!event.composedPath().includes(speed))toggleMenu(false);});
@@ -236,7 +309,7 @@
       for(const event of ['play','pause','ended'])v.addEventListener(event,updatePlay);
       const unlock=element('button','player-unlock','Hold to unlock');unlock.type='button';unlock.hidden=true;unlock.setAttribute('aria-label','Hold for one second to unlock, or press Enter or Escape');stage.append(unlock);
       function setLock(locked){
-        a.locked=locked;toggleMenu(false);toggleShortcuts(false);stage.classList.toggle('controls-locked',locked);chrome.inert=locked;top.inert=locked;center.inert=locked;
+        a.locked=locked;toggleMenu(false);toggleShortcuts(false);toggleEpisodesDrawer(false);stage.classList.toggle('controls-locked',locked);chrome.inert=locked;top.inert=locked;center.inert=locked;
         unlock.hidden=!locked;pinControls();unlock.textContent='Hold to unlock';
         if(locked)unlock.focus();else stage.focus();
       }
@@ -244,13 +317,36 @@
       unlock.addEventListener('pointerdown',event=>{if(event.button!==0)return;unlock.setPointerCapture(event.pointerId);unlock.textContent='Keep holding…';a.hold=setTimeout(()=>setLock(false),1000);});
       for(const event of ['pointerup','pointercancel','lostpointercapture'])unlock.addEventListener(event,()=>{clearTimeout(a.hold);if(a.locked)unlock.textContent='Hold to unlock';});
       unlock.onclick=event=>{if(event.detail===0)setLock(false);};
+
+      function changeVolume(delta){
+        v.volume=Math.max(0,Math.min(1,Number((v.volume+delta).toFixed(2))));
+        if(v.muted&&delta>0)v.muted=false;
+        a.feedback.textContent=`Volume: ${Math.round(v.volume*100)}%`;
+        a.feedback.hidden=false;clearTimeout(a.feedbackTimer);a.feedbackTimer=setTimeout(()=>a.feedback.hidden=true,900);
+      }
+
       stage.addEventListener('keydown',event=>{
         if(event.key==='Escape'&&a.locked){event.preventDefault();event.stopPropagation();setLock(false);return;}
+        if(!drawer.hidden&&event.key==='Escape'){event.preventDefault();toggleEpisodesDrawer(false);return;}
         if(a.locked)return;
         const target=event.composedPath()[0];if(target.tagName==='INPUT'||target.tagName==='TEXTAREA'||target.isContentEditable)return;
         if(event.ctrlKey||event.metaKey||event.altKey)return;
-        const actions={' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),ArrowLeft:()=>seek(-10),ArrowRight:()=>seek(10),m:()=>v.muted=!v.muted,f:()=>full.click(),l:()=>setLock(true),'?':()=>toggleShortcuts(!shortcutsPopover.hidden)};
-        const action=actions[event.key.length===1?event.key.toLowerCase():event.key];if(action){event.preventDefault();action();}
+        const keyChar=event.key.length===1?event.key.toLowerCase():event.key;
+        const actions={
+          ' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),
+          'k':()=>v.paused?v.play().catch(()=>{}):v.pause(),
+          'j':()=>seek(-10),
+          'ArrowLeft':()=>seek(-10),
+          'ArrowRight':()=>seek(10),
+          'ArrowUp':()=>changeVolume(0.1),
+          'ArrowDown':()=>changeVolume(-0.1),
+          'm':()=>{v.muted=!v.muted;a.feedback.textContent=v.muted?'Muted':'Unmuted';a.feedback.hidden=false;clearTimeout(a.feedbackTimer);a.feedbackTimer=setTimeout(()=>a.feedback.hidden=true,900);},
+          'f':()=>full.click(),
+          'c':()=>window.CourseForgeStudio?.toggleTheater(),
+          'l':()=>setLock(true),
+          '?':()=>toggleShortcuts(!shortcutsPopover.hidden)
+        };
+        const action=actions[keyChar]||actions[event.key];if(action){event.preventDefault();action();}
       });
       let lastTap=0,lastSide=null;
       stage.addEventListener('pointerup',event=>{
