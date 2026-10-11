@@ -1543,8 +1543,10 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       const top=element('div','player-top-controls');top.slot='top-chrome';
       const capture=button('Capture timestamp','i-bookmark',()=>window.CourseForgeStudio?.capture());
       const theater=button('Theater mode','i-theater',()=>window.CourseForgeStudio?.toggleTheater());
+      const shortcutsBtn=button('Keyboard shortcuts','i-help',()=>toggleShortcuts(shortcutsPopover.hidden));
+      shortcutsBtn.setAttribute('aria-haspopup','dialog');shortcutsBtn.setAttribute('aria-expanded','false');
       const lock=button('Lock player controls','i-lock',()=>setLock(true));
-      top.append(capture,theater,lock);controller.append(top);
+      top.append(capture,theater,shortcutsBtn,lock);controller.append(top);
       const timeline=element('media-time-range','player-timeline');timeline.setAttribute('aria-label','Seek lecture');
       const row=element('media-control-bar','player-control-row');
       for(const [tag,attrs] of [['media-play-button',{}],['media-seek-backward-button',{seekoffset:'10'}],['media-seek-forward-button',{seekoffset:'10'}],['media-mute-button',{}],['media-volume-range',{}]]){
@@ -1565,7 +1567,44 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
         choice.setAttribute('aria-pressed',String(rate===prefs.speed));choice.onclick=()=>{v.playbackRate=rate;toggleMenu(false);speed.focus();};rates.append(choice);
       }
       menu.append(rates);stage.append(menu);
-      const pinControls=()=>controller.setAttribute('autohide',a.locked||!menu.hidden||stage.matches(':focus-visible')||stage.querySelector(':focus-visible')?'-1':'3');
+
+      const shortcutsPopover=element('div','player-shortcuts-popover');shortcutsPopover.hidden=true;
+      shortcutsPopover.setAttribute('role','dialog');shortcutsPopover.setAttribute('aria-label','Keyboard shortcuts');
+      const popHeader=element('div','shortcuts-header');
+      popHeader.append(element('strong','','Keyboard shortcuts'));
+      const closeShortcuts=button('Close shortcuts','i-close',()=>toggleShortcuts(false));
+      closeShortcuts.classList.add('shortcuts-close');
+      popHeader.append(closeShortcuts);
+      const scList=element('div','shortcuts-grid');
+      for(const [keys,label] of [
+        [['Space'],'Play / Pause'],
+        [['←','→'],'Seek ±10s'],
+        [['F'],'Toggle fullscreen'],
+        [['M'],'Mute audio'],
+        [['L'],'Lock controls'],
+        [['Esc'],'Close popups']
+      ]){
+        const item=element('div','shortcut-row');
+        const kw=element('span','shortcut-keys');
+        for(const k of keys)kw.append(element('kbd','',k));
+        item.append(kw,element('span','shortcut-label',label));
+        scList.append(item);
+      }
+      shortcutsPopover.append(popHeader,scList);stage.append(shortcutsPopover);
+
+      function toggleShortcuts(open){
+        shortcutsPopover.hidden=!open;shortcutsBtn.setAttribute('aria-expanded',String(open));
+        pinControls();
+        if(open)closeShortcuts.focus();else shortcutsBtn.focus();
+      }
+      stage.addEventListener('pointerdown',event=>{
+        if(!shortcutsPopover.hidden&&!event.composedPath().includes(shortcutsPopover)&&!event.composedPath().includes(shortcutsBtn))toggleShortcuts(false);
+      });
+      shortcutsPopover.addEventListener('keydown',event=>{
+        if(event.key==='Escape'){event.preventDefault();event.stopPropagation();toggleShortcuts(false);shortcutsBtn.focus();}
+      });
+
+      const pinControls=()=>controller.setAttribute('autohide',a.locked||!menu.hidden||!shortcutsPopover.hidden||stage.matches(':focus-visible')||stage.querySelector(':focus-visible')?'-1':'3');
       function toggleMenu(open){menu.hidden=!open;speed.setAttribute('aria-expanded',String(open));pinControls();if(open)rates.querySelector('[aria-pressed="true"]')?.focus();}
       v.addEventListener('ratechange',()=>{for(const choice of rates.children)choice.setAttribute('aria-pressed',String(Number(choice.dataset.rate)===v.playbackRate));});
       stage.addEventListener('pointerdown',event=>{if(!menu.hidden&&!event.composedPath().includes(menu)&&!event.composedPath().includes(speed))toggleMenu(false);});
@@ -1592,7 +1631,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       for(const event of ['play','pause','ended'])v.addEventListener(event,updatePlay);
       const unlock=element('button','player-unlock','Hold to unlock');unlock.type='button';unlock.hidden=true;unlock.setAttribute('aria-label','Hold for one second to unlock, or press Enter or Escape');stage.append(unlock);
       function setLock(locked){
-        a.locked=locked;toggleMenu(false);stage.classList.toggle('controls-locked',locked);chrome.inert=locked;top.inert=locked;center.inert=locked;
+        a.locked=locked;toggleMenu(false);toggleShortcuts(false);stage.classList.toggle('controls-locked',locked);chrome.inert=locked;top.inert=locked;center.inert=locked;
         unlock.hidden=!locked;pinControls();unlock.textContent='Hold to unlock';
         if(locked)unlock.focus();else stage.focus();
       }
@@ -1605,15 +1644,26 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
         if(a.locked)return;
         const target=event.composedPath()[0];if(target.tagName==='INPUT'||target.tagName==='TEXTAREA'||target.isContentEditable)return;
         if(event.ctrlKey||event.metaKey||event.altKey)return;
-        const actions={' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),ArrowLeft:()=>seek(-10),ArrowRight:()=>seek(10),m:()=>v.muted=!v.muted,f:()=>full.click(),l:()=>setLock(true)};
+        const actions={' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),ArrowLeft:()=>seek(-10),ArrowRight:()=>seek(10),m:()=>v.muted=!v.muted,f:()=>full.click(),l:()=>setLock(true),'?':()=>toggleShortcuts(!shortcutsPopover.hidden)};
         const action=actions[event.key.length===1?event.key.toLowerCase():event.key];if(action){event.preventDefault();action();}
       });
       let lastTap=0,lastSide=null;
-      v.addEventListener('pointerup',event=>{
+      stage.addEventListener('pointerup',event=>{
         if(a.locked)return;
-        if(event.pointerType==='mouse'){v.paused?v.play().catch(()=>{}):v.pause();return;}
-        const side=event.offsetX<v.clientWidth/2?'left':'right',now=performance.now();
-        if(now-lastTap<350&&side===lastSide){seek(side==='left'?-10:10);lastTap=0;}else{lastTap=now;lastSide=side;}
+        if(event.target.closest('button, media-control-bar, .player-speed-menu, .player-shortcuts-popover, input, select'))return;
+        if(event.pointerType==='mouse'){
+          if(event.target===v||event.target===controller){v.paused?v.play().catch(()=>{}):v.pause();}
+          return;
+        }
+        const rect=stage.getBoundingClientRect();
+        const x=event.clientX-rect.left;
+        const side=x<rect.width/2?'left':'right';
+        const now=performance.now();
+        if(now-lastTap<350&&side===lastSide){
+          seek(side==='left'?-10:10);lastTap=0;lastSide=null;
+        }else{
+          lastTap=now;lastSide=side;
+        }
       });
       stage.addEventListener('focusin',pinControls);
       stage.addEventListener('focusout',()=>queueMicrotask(pinControls));
@@ -1660,9 +1710,20 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
   function overlay(cls,text,actions){
     const stage=document.querySelector('.native-player-stage')||$('#lecturePlayerWrap');if(!stage)return null;
     stage.querySelector('.'+cls)?.remove();const box=make('div',cls);box.setAttribute('role','status');
-    if(cls==='player-recovery'){stage.querySelector('.player-resume')?.remove();const status=stage.querySelector('.native-player-status');if(status)status.textContent='';}
-    box.append(make('p','',text));const row=make('div');
-    for(const [label,action]of actions){const b=make('button','btn btn-outline',label);b.type='button';b.onclick=()=>Promise.resolve(action()).catch(error=>toast(error.message,true));row.append(b);}
+    if(cls==='player-recovery'){
+      stage.querySelector('.player-resume')?.remove();
+      const status=stage.querySelector('.native-player-status');if(status)status.textContent='';
+      const iconWrap=make('div','player-recovery-icon');
+      iconWrap.innerHTML='<svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>';
+      box.append(iconWrap,make('h3','','Stream Interrupted'));
+    }
+    box.append(make('p','',text));const row=make('div',cls==='player-recovery'?'player-recovery-actions':'');
+    for(const [label,action]of actions){
+      const isPrimary=label.toLowerCase().includes('resume')||label.toLowerCase().includes('play');
+      const b=make('button',`btn ${isPrimary?'btn-primary':'btn-outline'}`,label);
+      b.type='button';b.onclick=()=>Promise.resolve(action()).catch(error=>toast(error.message,true));
+      row.append(b);
+    }
     box.append(row);stage.append(box);return box;
   }
   function ownershipLost(text){

@@ -203,4 +203,24 @@ running. Asset version 15 invalidates previous page bundles.
 - **Validation**:
   - 187/187 tests passing in pytest (extended `test_responsive_layout.py` with 1920 desktop and WebKit engine verification).
 
+## UI Excellence Pass — Stage 3: Player as Flagship
+
+- **Seamless Custom Player Chrome**:
+  - Protected player styled strictly with design tokens (`--space-*`, `--radius-*`, `--font-sans`, `--font-mono`).
+  - No visible seams or cropping artifacts from shield overlays. Explicit `z-index` layering ensuring control bars, scrubbers, and DRM shields coexist without click-fighting.
+- **Subtle, Professional Watermark Redesign**:
+  - Re-engineered `.native-watermark` from abrasive bright badge to subtle, low-opacity, modern floating protection: monospace font (`var(--font-mono, monospace)`), 10px font size, semi-transparent text `rgba(255, 255, 255, 0.42)`, soft backdrop blur (`backdrop-filter: blur(2px)`), delicate translucent border `rgba(255, 255, 255, 0.08)`.
+  - 36s smooth 5-point keyframe drift animation (`0%`, `25%`, `50%`, `75%`, `100%`) oscillating opacity between 0.38 and 0.46 across the stage so it never obstructs code, terminal output, or architectural diagrams while deterring screen capture. Retains all forensic identifying metadata (name, IP, user ID).
+- **Player Behaviors & Ergonomics**:
+  - **In-Player Shortcuts Popover**: Added `i-help` outline SVG icon and an accessible in-player keyboard shortcuts popover (`.player-shortcuts-popover`) in the top chrome bar. Displays hotkeys: `Space` (Play/Pause), `←`/`→` (Seek ±10s), `F` (Fullscreen), `M` (Mute/Unmute), `L` (Lock controls), `Esc` (Dismiss/Close) with keyboard accessibility (Escape listener, click-outside auto-close).
+  - **Mobile Stage Double-Tap Seek (±10s)**: Built an intuitive stage gesture recognizer on mobile: double-tap on the left half seeks backwards 10s, double-tap on the right half seeks forwards 10s with snappy visual HUD feedback (`-10s` / `+10s`), without triggering single-click pause or conflicting with play/pause or timeline touches.
+  - **Smooth Timeline Dragging & Buffered Range**: Styled `--media-time-range-buffered-color: rgba(255, 255, 255, 0.35)` to clearly display buffered video range, smooth thumb interaction, and elevated `z-index: 4` preventing DRM overlay interference.
+  - **Playback Speed Menu**: Clean focus management and $\ge 44$px touch targets maintained across all devices.
+- **Loading & Error Recovery States**:
+  - Branded animated spinner while signed media streams are authenticated and loaded.
+  - Friendly full-screen recovery card (`.player-recovery`) with shield icon, "Stream Interrupted" heading, reassuring explanation, and prominent 1-tap "Resume here" primary retry CTA.
+- **Security Guardrails & Test Verification**:
+  - Zero API contract changes; cryptographic vault tokens, right-click/developer-shortcut prevention, DRM shield collision tests, and blocked-event audit logging verified intact.
+  - 187/187 tests passing in pytest suite; 0 emojis, 59/59 outline SVG icons mapped.
+
 

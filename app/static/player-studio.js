@@ -21,9 +21,20 @@
   function overlay(cls,text,actions){
     const stage=document.querySelector('.native-player-stage')||$('#lecturePlayerWrap');if(!stage)return null;
     stage.querySelector('.'+cls)?.remove();const box=make('div',cls);box.setAttribute('role','status');
-    if(cls==='player-recovery'){stage.querySelector('.player-resume')?.remove();const status=stage.querySelector('.native-player-status');if(status)status.textContent='';}
-    box.append(make('p','',text));const row=make('div');
-    for(const [label,action]of actions){const b=make('button','btn btn-outline',label);b.type='button';b.onclick=()=>Promise.resolve(action()).catch(error=>toast(error.message,true));row.append(b);}
+    if(cls==='player-recovery'){
+      stage.querySelector('.player-resume')?.remove();
+      const status=stage.querySelector('.native-player-status');if(status)status.textContent='';
+      const iconWrap=make('div','player-recovery-icon');
+      iconWrap.innerHTML='<svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>';
+      box.append(iconWrap,make('h3','','Stream Interrupted'));
+    }
+    box.append(make('p','',text));const row=make('div',cls==='player-recovery'?'player-recovery-actions':'');
+    for(const [label,action]of actions){
+      const isPrimary=label.toLowerCase().includes('resume')||label.toLowerCase().includes('play');
+      const b=make('button',`btn ${isPrimary?'btn-primary':'btn-outline'}`,label);
+      b.type='button';b.onclick=()=>Promise.resolve(action()).catch(error=>toast(error.message,true));
+      row.append(b);
+    }
     box.append(row);stage.append(box);return box;
   }
   function ownershipLost(text){
