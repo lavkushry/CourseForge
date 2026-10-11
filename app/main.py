@@ -1,8 +1,9 @@
 """CourseForge academy: account-protected learning APIs and public catalog."""
 from pathlib import Path
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import Literal, Any
 import os
+import re
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -17,7 +18,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk, keyword_search)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus, retention
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus, retention, companion
 from . import auth
 from .db import learner_id, learner_courses, connect, course_allowed
 
@@ -66,7 +67,7 @@ async def guard_local_actions(request: Request, call_next):
     try:
         path=request.url.path
         admin_change=bool(user and user['role']=='admin' and request.method not in ('GET','HEAD','OPTIONS') and
-            (path.startswith('/api/admin/') or (path.startswith('/api/courses/') and not path.endswith('/enroll')) or
+            (path.startswith('/api/admin/') or (path.startswith('/api/courses/') and not (path.endswith('/enroll') or path.endswith('/placement-test/submit'))) or
              path=='/api/scan' or path.endswith('/reindex')))
         audit_payload={}
         if admin_change and request.headers.get('content-type','').split(';')[0]=='application/json':
@@ -654,10 +655,10 @@ def get_course_material(course: str, filename: str, download: int = 0):
 
 
 @app.get('/api/search')
-def universal_search(q: str = ''):
+def universal_search(q: str = '', course: str | None = None, video_id: str | None = None):
     needle = q.strip().lower()
     if not needle:
-        return {'query': '', 'courses': [], 'lessons': [], 'materials': []}
+        return {'query': '', 'courses': [], 'lessons': [], 'materials': [], 'moments': [], 'results': []}
     all_courses = courses_catalog()['courses']
     all_lessons = videos()['videos']
     all_materials = list_course_materials()['materials']
@@ -682,11 +683,51 @@ def universal_search(q: str = ''):
             for val in (m.get('friendly_name'), m.get('name'), m.get('material_type'), m.get('section'), m.get('course'))
         )
     ]
+    # Search transcript moments across indexed videos
+    raw_moments = keyword_search(q.strip(), course=course, video_id=video_id, limit=15)
+    if not raw_moments:
+        with connect() as conn:
+            needle = f"%{q.strip()}%"
+            sql = '''SELECT c.*, v.title, v.course FROM chunks c
+                     JOIN videos v ON v.id = c.video_id
+                     WHERE c.text LIKE ? AND cf_course_allowed(v.course)'''
+            params = [needle]
+            if course:
+                sql += ' AND v.course = ?'
+                params.append(course)
+            if video_id:
+                sql += ' AND c.video_id = ?'
+                params.append(video_id)
+            sql += ' ORDER BY c.start LIMIT 15'
+            raw_moments = [dict(r) for r in conn.execute(sql, params).fetchall()]
+    moments = []
+    for m in raw_moments:
+        start_sec = float(m.get('start', 0))
+        mins = int(start_sec // 60)
+        secs = int(start_sec % 60)
+        t_label = f"{mins}:{secs:02d}"
+        t_clean = re.sub(r'^\[\d+(?: Part\d+)?\]\s*', '', str(m.get('title', '')))
+        t_clean = re.sub(r'\s*(?:\[Live\]|\(Live\))\s*', ' ', t_clean, flags=re.IGNORECASE).strip()
+        moments.append({
+            'chunk_id': m.get('id'),
+            'video_id': m.get('video_id'),
+            'title': t_clean,
+            'course': m.get('course'),
+            'start': start_sec,
+            'end': float(m.get('end', 0)),
+            'time_label': t_label,
+            'text': m.get('text', '').strip()[:180],
+            'display': f"{t_clean} at {t_label}",
+            'action_url': f"#learning/{m.get('video_id')}?t={int(start_sec)}",
+        })
+
     return {
         'query': q.strip(),
         'courses': matched_courses[:20],
         'lessons': matched_lessons[:30],
         'materials': matched_materials[:30],
+        'moments': moments,
+        'results': moments,
     }
 
 
@@ -739,17 +780,6 @@ def ask_tutor(body: QueryBody):
                             'Check Ollama, Qdrant, pulled models and worker logs.') from exc
 
 
-@app.get('/api/search')
-def search(q: str = Query(min_length=2, max_length=500), course: str | None = None,
-           video_id: str | None = None):
-    try:
-        # Model-based retrieval runs in queued tutor tasks, keeping browsing
-        # independent of model latency and resource limits.
-        return {'results': [dict(hit,chunk_id=hit['id']) for hit in keyword_search(q,course=course,video_id=video_id,limit=10)]}
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail='Course search is temporarily unavailable.') from exc
 
 
 class ProgressBody(BaseModel):
@@ -1343,4 +1373,115 @@ h1{{font-size:1.15rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--
 </body>
 </html>"""
     return HTMLResponse(content=html)
+
+
+class InterviewStartBody(BaseModel):
+    topic_id: str = Field(min_length=2, max_length=100)
+    course: str = Field(default='', max_length=200)
+
+
+class InterviewEvaluateBody(BaseModel):
+    session_id: str = Field(min_length=2, max_length=100)
+    answer: str = Field(min_length=1, max_length=5000)
+
+
+class PlacementSubmitBody(BaseModel):
+    answers: dict[str, int]
+
+
+class QuizUpdateAdminBody(BaseModel):
+    questions: list[dict[str, Any]]
+    status: str = Field(default='approved')
+
+
+@app.get('/api/videos/{video_id}/brief')
+def get_video_brief(video_id: str):
+    return companion.get_or_create_lesson_brief(video_id)
+
+
+@app.get('/api/smart-resume')
+def get_learner_smart_resume(request: Request):
+    user = auth.require_user(request)
+    return companion.get_smart_resume(user['id'])
+
+
+@app.get('/api/reviews/adaptive')
+def get_adaptive_reviews(request: Request, course: str | None = None, limit: int = 20):
+    user = auth.require_user(request)
+    return {'cards': companion.get_adaptive_review_cards(user['id'], course=course, limit=limit)}
+
+
+@app.get('/api/interview-prep/topics')
+def get_interview_topics_api(request: Request):
+    user = auth.require_user(request)
+    return {'topics': companion.get_interview_topics(user['id'])}
+
+
+@app.post('/api/interview-prep/start', status_code=201)
+def start_interview_prep(body: InterviewStartBody, request: Request):
+    user = auth.require_user(request)
+    return companion.start_interview_session(user['id'], body.topic_id, body.course)
+
+
+@app.post('/api/interview-prep/evaluate')
+def evaluate_interview_prep(body: InterviewEvaluateBody, request: Request):
+    user = auth.require_user(request)
+    try:
+        return companion.evaluate_interview_answer(body.session_id, user['id'], body.answer)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+
+
+@app.get('/api/courses/{course}/placement-test')
+def get_placement_test(course: str):
+    return companion.get_placement_diagnostic(course)
+
+
+@app.post('/api/courses/{course}/placement-test/submit', status_code=201)
+def submit_placement_test(course: str, body: PlacementSubmitBody, request: Request):
+    user = auth.require_user(request)
+    return companion.evaluate_placement_diagnostic(user['id'], course, body.answers)
+
+
+@app.get('/api/admin/teacher-insights')
+def get_admin_teacher_insights(request: Request):
+    user = auth.require_user(request)
+    if user.get('role') != 'admin':
+        raise HTTPException(403, 'Admin access required')
+    return companion.get_teacher_insights()
+
+
+@app.get('/api/admin/courses/{course}/quizzes')
+def get_admin_course_quizzes(course: str, request: Request):
+    user = auth.require_user(request)
+    if user.get('role') != 'admin':
+        raise HTTPException(403, 'Admin access required')
+    return {'quizzes': companion.list_course_quizzes_admin(course)}
+
+
+@app.get('/api/admin/quizzes/{quiz_id}')
+def get_admin_quiz(quiz_id: str, request: Request):
+    user = auth.require_user(request)
+    if user.get('role') != 'admin':
+        raise HTTPException(403, 'Admin access required')
+    try:
+        return companion.get_quiz_admin(quiz_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+
+
+@app.put('/api/admin/quizzes/{quiz_id}')
+def update_admin_quiz(quiz_id: str, body: QuizUpdateAdminBody, request: Request):
+    user = auth.require_user(request)
+    if user.get('role') != 'admin':
+        raise HTTPException(403, 'Admin access required')
+    return companion.update_quiz_admin(quiz_id, body.questions, body.status)
+
+
+@app.post('/api/admin/videos/{video_id}/quiz/regenerate')
+def regenerate_admin_quiz(video_id: str, request: Request):
+    user = auth.require_user(request)
+    if user.get('role') != 'admin':
+        raise HTTPException(403, 'Admin access required')
+    return companion.regenerate_quiz_admin(video_id)
 

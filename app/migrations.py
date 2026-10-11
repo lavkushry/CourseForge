@@ -101,6 +101,7 @@ def migrate(path: Path | None = None) -> None:
             migrate_player_ownership(db)
             migrate_habits(db)
             migrate_retention(db)
+            migrate_companion(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -138,6 +139,7 @@ def migrate(path: Path | None = None) -> None:
         migrate_player_ownership(db)
         migrate_habits(db)
         migrate_retention(db)
+        migrate_companion(db)
 
 
 def migrate_console(db):
@@ -310,4 +312,67 @@ def migrate_retention(db):
     except BaseException:
         db.rollback()
         raise
+
+
+def migrate_companion(db):
+    """Phase 5 proactive AI companion tables: briefs, tutor logs, mock interviews, placement tests."""
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=7').fetchone(): return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute('''CREATE TABLE IF NOT EXISTS lesson_briefs(
+            video_id TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+            course TEXT NOT NULL,
+            bullets_json TEXT NOT NULL,
+            prerequisites TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            generated_at TEXT NOT NULL)''')
+        db.execute('''CREATE TABLE IF NOT EXISTS ai_tutor_logs(
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            question TEXT NOT NULL,
+            course TEXT,
+            video_id TEXT,
+            mode TEXT,
+            language TEXT,
+            prompt_tokens INTEGER DEFAULT 0,
+            completion_tokens INTEGER DEFAULT 0,
+            cost_estimate REAL DEFAULT 0.0,
+            model TEXT,
+            offline_fallback INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS ai_tutor_logs_user ON ai_tutor_logs(user_id,created_at)')
+        db.execute('CREATE INDEX IF NOT EXISTS ai_tutor_logs_course ON ai_tutor_logs(course)')
+        db.execute('''CREATE TABLE IF NOT EXISTS interview_prep_sessions(
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            course TEXT NOT NULL,
+            topic TEXT NOT NULL,
+            question TEXT NOT NULL,
+            answer TEXT,
+            score INTEGER DEFAULT 0,
+            feedback TEXT,
+            readiness_score INTEGER DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'active',
+            created_at TEXT NOT NULL,
+            completed_at TEXT)''')
+        db.execute('CREATE INDEX IF NOT EXISTS interview_prep_user ON interview_prep_sessions(user_id,course)')
+        db.execute('''CREATE TABLE IF NOT EXISTS placement_tests(
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            course TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            recommended_lesson_id TEXT,
+            recommended_lesson_title TEXT,
+            answers_json TEXT NOT NULL,
+            created_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS placement_tests_user ON placement_tests(user_id,course)')
+        cols = [r['name'] for r in db.execute('PRAGMA table_info(lesson_quizzes)')]
+        if 'status' not in cols:
+            db.execute("ALTER TABLE lesson_quizzes ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'")
+        db.execute("INSERT INTO schema_migrations VALUES(7,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+
 

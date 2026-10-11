@@ -131,4 +131,38 @@ running. Asset version 15 invalidates previous page bundles.
 
 ## Phase 5: proactive AI companion
 
-Pending companion intelligence release.
+- **Timestamp-Grounded AI Tutor (Criteria 24 & 33)**:
+  - Every tutor response is grounded in lecture transcripts and cites exact lesson titles and timestamps in clickable markdown format: `[Watch MM:SS in Lesson Title](#learning/{video_id}?t={seconds})`.
+  - Clicking any citation jumps the player directly to that second and begins playback.
+  - Transparent fallback: when Ollama is offline or warming up, the tutor performs direct extractive synthesis from retrieved excerpts without throwing 500/503 errors.
+  - Queries in Hinglish are detected and answered in natural, professional Hinglish while keeping technical keywords (e.g. "Azure Blob Storage", "Spark Dataframe", "Partition Key") intact.
+- **Search the Moment (Criterion 25)**:
+  - Universal search (`/api/search?q=...`) surfaces exact transcript moments alongside courses, lessons, and materials.
+  - Each moment displays lesson title, timestamp pill (e.g. `12:45`), matched excerpt, and 1-click jump action.
+- **Ready-Made Lesson Briefs (Criterion 26)**:
+  - Dedicated "Brief" tab in the lesson study rail (`#tab-brief`, `#panel-brief`).
+  - Summarizes 5 bullet-point key takeaways, prerequisites, and build outcomes generated from transcripts.
+  - If a lesson lacks transcripts, shows a clean empty state with no broken containers.
+- **Auto Quizzes & Admin Management (Criterion 27)**:
+  - Automatically synthesizes mastery quizzes and review flashcards from lesson content.
+  - Admin Course Detail includes a Quiz Management table (`GET /api/admin/courses/{course}/quizzes`) with status tracking (`approved`, `draft`), edit questions modal (`PUT /api/admin/quizzes/{quiz_id}`), and one-click quiz regeneration (`POST /api/admin/videos/{video_id}/quiz/regenerate`).
+- **Adaptive Spaced Repetition (Criterion 28)**:
+  - Adaptive review endpoint (`GET /api/reviews/adaptive`) dynamically scores flashcards based on learner struggles.
+  - Prioritizes failed quiz questions (+60 score, tagged `Quiz retry priority`), hard recall cards (+30 score), overdue intervals (+25 score), and older unreviewed lessons (+15 score).
+- **Smart Resume Hero Banner (Criterion 29)**:
+  - When a student returns after 2+ days away, a warm banner appears above the dashboard: `"Last time you learned about {Last Lesson}. Ready to pick up with {Next Lesson}?"`
+  - Includes a direct "Pick up where you left off" resume button and dismiss action.
+- **Interview-Prep Mode (Criterion 30)**:
+  - AI Tutor features a dedicated "Mock Interview" practice mode (`#interviewPrepModeBtn`).
+  - Assesses technical interview readiness across topics (0–100% score).
+  - Evaluates student answers with rubrics, provides constructive feedback, and cites exact lesson timestamps for brushing up.
+- **Teacher Insights Analytics (Criterion 31)**:
+  - Dedicated Teacher Insights analytics card in the Admin Overview (`GET /api/admin/teacher-insights`).
+  - Tracks top student AI query topics, quiz questions with highest failure rates, total AI queries, token usage, and cost estimates.
+- **Placement Diagnostic Onboarding (Criterion 32)**:
+  - Adaptive 10-question placement test available from the Course Library (`#openPlacementBtn`, `/api/courses/{course}/placement-test`).
+  - Benchmarks knowledge across foundational, intermediate, and advanced concepts.
+  - Recommends the optimal starting lesson so learners can skip topics they already know.
+- **Validation**:
+  - 5/5 acceptance tests passing in `tests/test_phase5_ai_companion.py`.
+  - 178/178 core suite tests passing with 0 regressions.

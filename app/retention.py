@@ -240,6 +240,15 @@ def submit_quiz(video_id: str, quiz_id: str, answers: dict[str, int], user_id: s
                 'INSERT INTO learning_events(user_id, video_id, event_type, details, created_at) VALUES(?,?,?,?,?)',
                 (user_id, video_id, 'lesson_quiz_failed', f'Score: {score}%', now)
             )
+            # Create review card immediately for failed quiz so learner can review and master it
+            q_first = questions[0]
+            card_id = f"rc_{hashlib.md5(f'{user_id}:{video_id}'.encode()).hexdigest()[:12]}"
+            db.execute(
+                '''INSERT OR IGNORE INTO review_cards(user_id, id, course, video_id, question, answer, source_start, due_at, created_at)
+                   VALUES(?,?,?,?,?,?,?,?,?)''',
+                (user_id, card_id, v['course'], video_id, q_first['question'], q_first['options'][q_first['correct_index']],
+                 float(q_first.get('source_start', 0)), now, now)
+            )
 
         db.commit()
 

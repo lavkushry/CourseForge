@@ -254,7 +254,7 @@ async def authorize(request: Request) -> dict | None:
     require_user(request, verified=not (path.startswith('/api/auth/') or path=='/api/me'))
     admin_only = (path.startswith('/api/admin/') or path in ('/api/scan','/api/jobs','/api/docs','/api/openapi.json')
                   or path.startswith('/api/analytics/') or path.endswith('/reindex')
-                  or (path.startswith('/api/courses/') and mutation and not path.endswith('/enroll'))
+                  or (path.startswith('/api/courses/') and mutation and not (path.endswith('/enroll') or path.endswith('/placement-test/submit')))
                   or path=='/api/syllabus/generate')
     if admin_only:
         require_admin(request)

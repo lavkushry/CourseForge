@@ -155,6 +155,29 @@
     root.append(table(['Student','Activity','Lecture','Time'],report.recent_activity.map(e=>[e.name,e.event_type.replaceAll('_',' '),e.title||e.details,date(e.created_at)])));
     heading(root,'Course enrollment funnel');root.append(table(['Course','Enrolled','Started'],report.funnels.map(r=>[r.course,r.enrolled,r.started])));
     heading(root,'Recent access events');root.append(table(['Event','IP address','Device','Time'],report.access_events.map(e=>[e.event_type.replaceAll('_',' '),e.ip,e.device,date(e.created_at)])));
+
+    try{
+      const ti = await api('/api/admin/teacher-insights');
+      heading(root,'Teacher insights & AI companion analytics','Aggregated student tutor questions, token tracking, and quiz fail rates');
+      const tiMetrics=node('div','academy-metrics');
+      for(const [label,val] of [
+        ['AI Tutor queries', ti.total_ai_queries],
+        ['Tokens tracked', ti.total_tokens],
+        ['Estimated AI cost', `$${ti.estimated_cost_usd}`],
+        ['Overall quiz pass rate', `${ti.overall_quiz_pass_rate}%`],
+      ]){
+        const c=node('div','panel metric-card');c.append(node('span','muted',label),node('strong','',String(val)));tiMetrics.append(c);
+      }
+      root.append(tiMetrics);
+      if(ti.top_tutor_topics && ti.top_tutor_topics.length){
+        heading(root,'Top AI companion query topics','Areas where students seek extra explanation');
+        root.append(table(['Topic / Concept','Queries'],ti.top_tutor_topics.map(t=>[t.topic,t.query_count])));
+      }
+      if(ti.high_fail_quiz_questions && ti.high_fail_quiz_questions.length){
+        heading(root,'Challenging quiz questions','Questions with highest failure rates needing instructor clarification');
+        root.append(table(['Question','Lesson','Course','Fail rate','Attempts'],ti.high_fail_quiz_questions.map(q=>[q.question,q.lesson_title,q.course,`${q.fail_rate}%`,q.total_attempts])));
+      }
+    }catch(err){}
   }
   async function adminUsers(query='',offset=0){
     const root=adminPage('Student management','students');
@@ -461,6 +484,31 @@
         return act;
       })()
     ])));
+
+    try{
+      const qRes = await api(`/api/admin/courses/${encodeURIComponent(courseId)}/quizzes`);
+      if(qRes.quizzes && qRes.quizzes.length){
+        heading(root,'Lesson mastery quizzes & review flashcards','Admin review, approval, and regeneration of auto-generated quizzes from transcripts.');
+        root.append(table(['Lesson','Status','Questions','Attempts','Pass rate','Actions'],qRes.quizzes.map(q=>[
+          q.lesson_title,
+          q.status||'Approved',
+          `${q.question_count} questions`,
+          q.attempts,
+          `${q.pass_rate}%`,
+          (()=>{
+            const act=node('div','toolbar');
+            act.append(
+              button('Regenerate',async()=>{
+                await api(`/api/admin/videos/${encodeURIComponent(q.video_id)}/quiz/regenerate`,{method:'POST'});
+                message(`Regenerated quiz for “${q.lesson_title}”.`);
+                await adminCourseDetail(courseId);
+              })
+            );
+            return act;
+          })()
+        ])));
+      }
+    }catch(err){}
   }
   function selectField(f,label,name,choices,value){
     const l=node('label','field');l.append(node('span','',label));const s=node('select','form-input');s.name=name;for(const [text,id] of choices)s.add(new Option(text,id));s.value=value;l.append(s);f.append(l);return s;

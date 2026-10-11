@@ -108,3 +108,44 @@ body.in-learning #mobileScrim{z-index:79}
 .quiz-retry-box p{margin:0;font-size:13px;color:var(--studio-ink,#f8fafc);max-width:44ch}
 .lesson-learned-badge{display:inline-flex;align-items:center;background:#10b98120;border:1px solid #10b98150;color:#10b981;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px}
 .completion-verify-box{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#0f172a;border-radius:8px;border:1px solid #334155}
+
+/* Phase 5: Proactive AI Companion styles */
+.smart-resume-banner{background:linear-gradient(135deg,rgba(99,102,241,0.15) 0%,rgba(168,85,247,0.1) 100%);border:1px solid rgba(99,102,241,0.3);border-radius:14px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.smart-resume-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,0.25);color:#a5b4fc;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:4px 10px;border-radius:999px}
+.smart-resume-text{margin:0;font-size:13px;color:var(--ink,#f8fafc);line-height:1.4;flex:1}
+
+.brief-container{display:grid;gap:16px;padding:8px 0}
+.brief-section{background:var(--studio-panel,#131b2e);border:1px solid var(--studio-line,#22304d);border-radius:12px;padding:16px;display:grid;gap:8px}
+.brief-section h4{margin:0;font-size:13px;font-weight:700;color:var(--studio-accent,#a5b4fc);text-transform:uppercase;letter-spacing:0.04em}
+.brief-bullets{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px;color:var(--studio-ink,#f8fafc);line-height:1.45}
+.brief-text{margin:0;font-size:13px;color:var(--studio-ink,#f8fafc);line-height:1.45}
+
+.interview-dialog,.placement-dialog{border:none;background:transparent;padding:16px;max-width:680px;width:100%;margin:auto}
+.interview-dialog::backdrop,.placement-dialog::backdrop{background:rgba(7,11,19,0.8);backdrop-filter:blur(6px)}
+.interview-card,.placement-card{background:var(--card,#111827);border:1px solid var(--line,#1f293d);border-radius:20px;padding:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);display:grid;gap:18px;max-height:90vh;overflow-y:auto}
+.dialog-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.dialog-header h2{margin:4px 0 0;font-size:20px}
+.interview-topic-list{display:grid;gap:10px;margin-top:8px}
+.interview-topic-btn{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--surface,#1e293b);border:1px solid var(--line,#334155);border-radius:12px;color:var(--text,#f8fafc);text-align:left;cursor:pointer;transition:border-color .15s,background .15s;font-size:14px;font-weight:600}
+.interview-topic-btn:hover{background:#ffffff0a;border-color:var(--accent,#6366f1)}
+.interview-topic-badge{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.interview-question-box{background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:16px;display:grid;gap:6px}
+.interview-question-box h3{margin:0;font-size:15px;line-height:1.45;color:var(--ink,#f8fafc)}
+.interview-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.interview-feedback-panel{background:var(--surface,#1e293b);border:1px solid var(--line,#334155);border-radius:12px;padding:18px;display:grid;gap:12px}
+.feedback-header{display:flex;justify-content:space-between;align-items:center}
+.feedback-text{font-size:13px;line-height:1.55;color:var(--text,#f8fafc);white-space:pre-wrap}
+.interview-citations{display:grid;gap:6px}
+
+.placement-quiz-container{display:grid;gap:14px}
+.placement-question-card{background:var(--surface,#1e293b);border:1px solid var(--line,#334155);border-radius:12px;padding:16px;display:grid;gap:10px}
+.placement-jump-card{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.placement-jump-card h4{margin:4px 0 0;font-size:16px;color:#10b981}
+
+.search-moment-item{display:grid;gap:3px;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--line,#334155);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+.search-moment-item:hover{background:#ffffff08;border-color:var(--accent,#6366f1)}
+.search-moment-item strong{font-size:12px;color:var(--accent,#a5b4fc)}
+.search-moment-item p{margin:0;font-size:11px;color:var(--muted,#94a3b8);line-height:1.35}
+
+.tutor-timestamp-link{display:inline-flex;align-items:center;gap:4px;color:var(--accent,#818cf8);font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.tutor-timestamp-link:hover{color:#a5b4fc}

@@ -75,6 +75,17 @@ function openCourse(course){const lessons=state.videos.filter(v=>v.course===cour
 function updateHeroAction(){
   const btn=$('#heroLearnBtn');
   if(!btn)return;
+  const resumeBanner=$('#smartResumeBanner');
+  if(resumeBanner){
+    request('/api/smart-resume').then(res=>{
+      if(res&&res.show_banner){
+        $('#smartResumeText').textContent=res.banner_text;
+        resumeBanner.hidden=false;
+      }else{
+        resumeBanner.hidden=true;
+      }
+    }).catch(()=>{if(resumeBanner)resumeBanner.hidden=true;});
+  }
   const courses=groupCourses();
   if(!courses.length){
     btn.innerHTML=`<span>Browse courses</span> <svg class="icon"><use href="#i-arrow"/></svg>`;
@@ -476,7 +487,28 @@ function renderUniversalSearch(rawQuery){
     grid.append(col);
   }
   panel.append(grid);panel.hidden=false;
+  const curGen=++searchReqGen;
+  request(`/api/search?q=${encodeURIComponent(rawQuery.trim())}`).then(data=>{
+    if(curGen!==searchReqGen||panel.hidden)return;
+    if(data.moments&&data.moments.length){
+      let col=grid.querySelector('#searchMomentsCol');
+      if(!col){
+        col=make('div','search-group');
+        col.id='searchMomentsCol';
+        grid.append(col);
+      }
+      col.replaceChildren(make('h4','','Transcript moments'));
+      for(const m of data.moments.slice(0,6)){
+        const item=make('button','search-result-item search-moment-item');
+        item.type='button';
+        item.append(make('strong','',`${lessonTitle(m.title)} · ${m.time_label}`),make('p','',`“${m.text}…”`));
+        item.onclick=()=>{panel.hidden=true;openVideo(m.video_id,m.start).catch(err=>toast(err.message,true));};
+        col.append(item);
+      }
+    }
+  }).catch(()=>{});
 }
+let searchReqGen=0;
 function renderJobs(){const active=state.jobs.filter(j=>j.status==='processing');const queued=state.jobs.filter(j=>j.status==='queued');const failed=state.jobs.filter(j=>j.status==='failed');$('#jobSummary').textContent=active.length?`Indexing: ${active[0].title}`:queued.length?`${queued.length} queued · ${failed.length} failed`:failed.length?`${failed.length} imports need attention`:'Your library is ready';}
 async function loadLibrary(){const [{videos},{jobs},{progress},catalog,matRes]=await Promise.all([request('/api/videos'),(window.CourseForgeAccount?.user?.role==='admin'?request('/api/jobs'):Promise.resolve({jobs:[]})),request('/api/progress'),services.courses().catch(()=>({courses:[]})),request('/api/materials').catch(()=>({materials:[]}))]);state.videos=videos;state.materials=matRes.materials||[];state.jobs=jobs;state.progress=new Map(progress.map(p=>[p.video_id,p]));state.courseMeta=new Map((catalog.courses||[]).map(c=>[c.id,c]));renderCatalog();renderSelects();renderLessons();renderJobs();}
 async function scanLibrary(){for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=true;try{const result=await request('/api/scan',{method:'POST'});await loadLibrary();toast(`Found ${result.found} videos · ${result.imported} new · ${result.changed} changed. Processing continues in the worker.`);}catch(err){toast(err.message,true)}finally{for(const btn of ['#scanBtn','#scanBtnSide','#scanBtnLibrary','#emptyScanBtn'])$(btn).disabled=false;}}
@@ -633,6 +665,45 @@ async function renderLessonQuiz(video){
   }
 }
 
+async function renderLessonBrief(video){
+  const container=$('#briefContainer');
+  const tag=$('#briefStatusTag');
+  const heading=$('#briefHeading');
+  if(!container)return;
+  container.replaceChildren(make('p','muted','Loading lesson brief…'));
+  if(heading)heading.textContent=`In this lesson: ${lessonTitle(video.title)}`;
+  try{
+    const res=await request(`/api/videos/${encodeURIComponent(video.id)}/brief`);
+    if(!res.available||!res.bullets||!res.bullets.length){
+      if(tag)tag.textContent='Transcribing';
+      container.replaceChildren(make('p','muted','Lesson brief will appear once lecture transcripts are indexed.'));
+      return;
+    }
+    if(tag)tag.textContent='Ready';
+    container.replaceChildren();
+
+    const sec1=make('div','brief-section');
+    sec1.append(make('h4','','5 Key Concepts & Takeaways'));
+    const ul=make('ul','brief-bullets');
+    for(const b of res.bullets){
+      ul.append(make('li','',b));
+    }
+    sec1.append(ul);
+
+    const sec2=make('div','brief-section');
+    sec2.append(make('h4','','Prerequisites'));
+    sec2.append(make('p','brief-text',res.prerequisites||'Basic cloud & data fundamentals.'));
+
+    const sec3=make('div','brief-section');
+    sec3.append(make('h4','','What you’ll be able to build'));
+    sec3.append(make('p','brief-text',res.outcome||'Production architectures and workflows.'));
+
+    container.append(sec1,sec2,sec3);
+  }catch(err){
+    container.replaceChildren(make('p','muted','Brief currently unavailable for this lesson.'));
+  }
+}
+
 async function openVideo(id,at=null){
   const existingMedia=window.CourseForgeNative?.video();
   if(id===state.currentVideoId&&at!==null&&existingMedia&&!existingMedia.error&&existingMedia.readyState>=1&&Number.isFinite(existingMedia.duration)){
@@ -647,6 +718,7 @@ async function openVideo(id,at=null){
   updateBreadcrumbs(video.course,lessonTitle(video.title));
   renderLessonMaterials(video);
   renderLessonQuiz(video);
+  renderLessonBrief(video);
   loadCourseQuizzes(video.course).then(()=>renderLessons());
   const player=$('#player');player.pause();player.hidden=true;$('#emptyPlayer').hidden=true;
   let wrap=document.getElementById('lecturePlayerWrap');if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
@@ -726,7 +798,29 @@ $('#askAboutVideo').addEventListener('click',()=>{if(!state.currentVideoId)retur
 const currentScope=()=>{const value=$('#scope').value;return value==='all'?{}:value.startsWith('video:')?{video_id:value.slice(6)}:{course:value.slice(7)};};
 $$('.mode').forEach(button=>button.addEventListener('click',()=>{state.mode=button.dataset.mode;$$('.mode').forEach(el=>el.classList.toggle('active',el===button));$('#question').placeholder=({explain:'Explain a concept from my lectures…',notes:'Create concise notes from this course…',quiz:'Quiz me on what I learned…',lab:'Give me a practical exercise…'})[state.mode]}));
 $$('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{$('#question').value=button.dataset.prompt;$('#question').focus();}));
-async function askTutor(){const question=$('#question').value.trim();if(!question)return toast('Enter a question first.',true);const btn=$('#askBtn');btn.disabled=true;btn.textContent='Searching your lessons…';try{const result=await request('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,mode:state.mode,...currentScope()})});state.lastAnswer=result.answer;$('#answer').textContent=result.answer;$('#answerPanel').hidden=false;
+function renderTutorAnswer(text){
+  const el=$('#answer');
+  if(!el)return;
+  el.replaceChildren();
+  const linkRegex=/\[([^\]]+)\]\(#learning\/([^?]+)\?t=(\d+)\)/g;
+  let lastIdx=0,m;
+  const wrap=document.createElement('div');
+  while((m=linkRegex.exec(text))!==null){
+    const before=text.slice(lastIdx,m.index);
+    if(before)wrap.append(document.createTextNode(before));
+    const label=m[1],vid=m[2],seek=parseInt(m[3],10);
+    const a=make('a','tutor-timestamp-link',label);
+    a.href=`#learning/${vid}?t=${seek}`;
+    a.onclick=e=>{e.preventDefault();openVideo(vid,seek).catch(err=>toast(err.message,true));};
+    wrap.append(a);
+    lastIdx=m.index+m[0].length;
+  }
+  const rem=text.slice(lastIdx);
+  if(rem)wrap.append(document.createTextNode(rem));
+  el.append(wrap);
+}
+
+async function askTutor(){const question=$('#question').value.trim();if(!question)return toast('Enter a question first.',true);const btn=$('#askBtn');btn.disabled=true;btn.textContent='Searching your lessons…';try{const result=await request('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,mode:state.mode,...currentScope()})});state.lastAnswer=result.answer;renderTutorAnswer(result.answer);$('#answerPanel').hidden=false;
     const turn=make('div','chat-turn');turn.append(make('strong','','You asked'));turn.append(make('p','',question));$('#tutorHistory').prepend(turn);
     const follow=$('#followUps');follow.replaceChildren();for(const prompt of ['Show me a practical example with a timestamp.','Give me one question to check my understanding.','Compare this concept with a related one.']){const suggestion=make('button','btn btn-outline',prompt);suggestion.addEventListener('click',()=>{$('#question').value=prompt+' Context: '+question;$('#question').focus()});follow.append(suggestion)}
 const sources=$('#sources');sources.replaceChildren();for(const source of result.sources||[]){const button=make('button','source');button.append(make('strong','',`${source.label} · ${source.title}`));button.append(make('small','',`${source.course} · ${prettyTime(source.start)} · ${source.kind}`));button.append(make('p','',(source.text||'Extracted frame').slice(0,185)));if(source.frame_path){const image=make('img');image.src=`/api/chunks/${encodeURIComponent(source.chunk_id)}/frame`;image.loading='lazy';image.alt='Extracted source screen';button.append(image);}button.addEventListener('click',()=>openVideo(source.video_id,source.start).catch(err=>toast(err.message,true)));sources.append(button);}toast(`${(result.sources||[]).length} lecture sources retrieved. Check the original video for critical details.`);}catch(err){toast(err.message,true)}finally{btn.disabled=false;btn.replaceChildren(document.createTextNode('Ask tutor '),icon('arrow'));}}
@@ -737,8 +831,8 @@ async function loadSyllabus(){if(!selectedStudyCourse()){$('#syllabusSummary').t
 $('#studyCourse').addEventListener('change',()=>{loadSyllabus().catch(err=>toast(err.message,true));loadDue().catch(()=>{})});
 $('#loadSyllabusBtn').addEventListener('click',()=>loadSyllabus().catch(err=>toast(err.message,true)));
 $('#buildSyllabusBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course first.',true);const btn=$('#buildSyllabusBtn');btn.disabled=true;$('#syllabusSummary').textContent='Creating your study path…';try{await request('/api/syllabus/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course})});await loadSyllabus();}catch(err){$('#syllabusSummary').textContent=err.message}finally{btn.disabled=false}});
-async function loadDue(){const {cards}=await request('/api/reviews/due'+(selectedStudyCourse()?'?course='+encodeURIComponent(selectedStudyCourse()):''));state.dueCards=cards;showReview();}
-function showReview(){state.activeCard=state.dueCards.shift()||null;$('#reviewCard').hidden=!state.activeCard;$('#reviewStatus').textContent=state.activeCard?`${state.dueCards.length+1} cards in this review session`:'You’re all caught up. Create flashcards from your lessons to keep practising.';if(!state.activeCard)return;$('#reviewQuestion').textContent=state.activeCard.question;$('#reviewAnswer').textContent=state.activeCard.answer;$('#reviewAnswer').hidden=true;$('#reviewGrades').hidden=true;$('#revealAnswerBtn').hidden=false;}
+async function loadDue(){let url='/api/reviews/adaptive';if(selectedStudyCourse())url+='?course='+encodeURIComponent(selectedStudyCourse());const {cards}=await request(url).catch(()=>request('/api/reviews/due'+(selectedStudyCourse()?'?course='+encodeURIComponent(selectedStudyCourse()):'')));state.dueCards=cards||[];showReview();}
+function showReview(){state.activeCard=state.dueCards.shift()||null;$('#reviewCard').hidden=!state.activeCard;const badge=state.activeCard?.adaptive_tag?` [${state.activeCard.adaptive_tag}]`:'';$('#reviewStatus').textContent=state.activeCard?`${state.dueCards.length+1} cards in this review session${badge}`:'You’re all caught up. Create flashcards from your lessons to keep practising.';if(!state.activeCard)return;$('#reviewQuestion').textContent=state.activeCard.question;$('#reviewAnswer').textContent=state.activeCard.answer;$('#reviewAnswer').hidden=true;$('#reviewGrades').hidden=true;$('#revealAnswerBtn').hidden=false;}
 $('#generateCardsBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course in Study paths first.',true);const btn=$('#generateCardsBtn');btn.disabled=true;$('#reviewStatus').textContent='Creating your flashcards…';try{const result=await request('/api/reviews/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course,topic:$('#reviewTopic').value.trim()||'key concepts',count:5})});await loadDue();toast(`${result.created} flashcards created.`)}catch(err){$('#reviewStatus').textContent=err.message}finally{btn.disabled=false}});
 $('#loadDueBtn').addEventListener('click',()=>loadDue().catch(err=>toast(err.message,true)));
 $('#revealAnswerBtn').addEventListener('click',()=>{$('#reviewAnswer').hidden=false;$('#revealAnswerBtn').hidden=true;$('#reviewGrades').hidden=false});
@@ -856,7 +950,7 @@ async function loadNotes(id){
 }
 $('#noteForm').addEventListener('submit',async(event)=>{event.preventDefault();if(!state.currentVideoId)return toast('Choose a lesson first.',true);const text=$('#noteText').value.trim();if(!text)return;const btn=$('#saveNoteBtn');btn.disabled=true;try{await services.saveNote(state.currentVideoId,window.CourseForgeAcademy.parseTimestamp($('#notePosition').value),text);$('#noteText').value='';await loadNotes(state.currentVideoId);toast('Note saved at your selected timestamp.')}catch(err){toast(err.message,true)}finally{btn.disabled=false}});
 function selectLessonTab(name,sync=true){
-  if(!['lessons','materials','quiz','notes','transcript','summary','path'].includes(name))name='lessons';
+  if(!['lessons','brief','materials','quiz','notes','transcript','summary','path'].includes(name))name='lessons';
   if(name==='materials'&&$('#tab-materials')?.hidden)name='lessons';
   state.studyTab=name;
   $$('[data-lesson-tab]').forEach(tab=>{const selected=tab.dataset.lessonTab===name;tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected||(['summary','path'].includes(name)&&tab.dataset.lessonTab==='lessons')?0:-1;});
@@ -878,7 +972,164 @@ $('#conceptUnsure').addEventListener('click',()=>recordConceptSignal('unsure'));
 function renderPlannedLabs(){const target=$('#plannedLabs');target.replaceChildren();for(const text of ['Choose an exercise', 'Write your solution', 'Check your work', 'Review feedback']){const card=make('div','planned-lab');card.append(make('strong','',text));target.append(card);}}
 async function loadSettings(){$('#settingsPaths').textContent='Your saved lessons, notes, and progress stay together in your account.';}
 function syncGoal(){let value='30';try{value=localStorage.getItem('courseforge-daily-goal:'+window.CourseForgeAccount.user.id)||'30';}catch{}if(!['15','30','45','60'].includes(value))value='30';$('#goalMinutes').value=value;$('#settingsGoal').value=value;}
-for(const selector of ['#goalMinutes','#settingsGoal'])$(selector).addEventListener('change',event=>{const value=event.target.value;try{localStorage.setItem('courseforge-daily-goal:'+window.CourseForgeAccount.user.id,value)}catch{}syncGoal();toast(`Daily target set to ${value} minutes on this device.`)});
+// Phase 5: Interview Prep Mode
+let currentInterviewSession=null;
+$('#interviewPrepModeBtn')?.addEventListener('click',async()=>{
+  const dialog=$('#interviewPrepDialog');
+  if(!dialog)return;
+  dialog.showModal();
+  $('#interviewWorkspace').hidden=true;
+  $('#interviewTopicPicker').hidden=false;
+  const list=$('#interviewTopicList');
+  list.replaceChildren(make('p','muted','Analyzing your course library…'));
+  try{
+    const res=await request('/api/interview-prep/topics');
+    list.replaceChildren();
+    if(!res.topics||!res.topics.length){
+      list.append(make('p','muted','Complete or watch lessons in your courses to unlock technical interview topics.'));
+      return;
+    }
+    for(const t of res.topics){
+      const btn=make('button','interview-topic-btn');
+      btn.type='button';
+      btn.append(
+        make('span','',t.name),
+        make('span','tag',`Readiness: ${t.readiness_score}%`)
+      );
+      btn.onclick=async()=>{
+        list.replaceChildren(make('p','muted','Preparing question…'));
+        try{
+          const session=await request('/api/interview-prep/start',services.json('POST',{topic_id:t.topic_id}));
+          currentInterviewSession=session;
+          $('#activeTopicBadge').textContent=session.topic_name;
+          $('#activeReadinessBadge').textContent=`Readiness: ${t.readiness_score}%`;
+          $('#activeInterviewQuestion').textContent=session.question;
+          $('#interviewAnswerInput').value='';
+          $('#interviewFeedbackPanel').hidden=true;
+          $('#interviewTopicPicker').hidden=true;
+          $('#interviewWorkspace').hidden=false;
+        }catch(err){toast(err.message,true);}
+      };
+      list.append(btn);
+    }
+  }catch(err){
+    list.replaceChildren(make('p','muted','Interview prep topics currently unavailable.'));
+  }
+});
+
+$('#interviewCloseBtn')?.addEventListener('click',()=>$('#interviewPrepDialog')?.close());
+$('#interviewChangeTopicBtn')?.addEventListener('click',()=>{
+  $('#interviewWorkspace').hidden=true;
+  $('#interviewTopicPicker').hidden=false;
+  $('#interviewPrepModeBtn')?.click();
+});
+
+$('#interviewAnswerForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!currentInterviewSession)return;
+  const ans=$('#interviewAnswerInput').value.trim();
+  if(!ans)return;
+  const btn=$('#interviewSubmitBtn');
+  btn.disabled=true;
+  btn.textContent='Evaluating…';
+  try{
+    const evalRes=await request('/api/interview-prep/evaluate',services.json('POST',{
+      session_id:currentInterviewSession.session_id,
+      answer:ans
+    }));
+    $('#interviewScoreTag').textContent=`Score: ${evalRes.score}/100`;
+    $('#activeReadinessBadge').textContent=`Readiness: ${evalRes.readiness_score}%`;
+    $('#interviewFeedbackText').textContent=evalRes.feedback;
+    const citBox=$('#interviewCitations');
+    citBox.replaceChildren();
+    if(evalRes.citations&&evalRes.citations.length){
+      citBox.append(make('h4','','Relevant Course Excerpts & Timestamps'));
+      for(const cit of evalRes.citations){
+        const cBtn=make('button','btn btn-outline',`Watch ${cit.timestamp} in ${cit.title}`);
+        cBtn.type='button';
+        cBtn.onclick=()=>{
+          $('#interviewPrepDialog')?.close();
+          openVideo(cit.video_id,cit.seconds).catch(err=>toast(err.message,true));
+        };
+        citBox.append(cBtn);
+      }
+    }
+    $('#interviewFeedbackPanel').hidden=false;
+  }catch(err){toast(err.message,true);}
+  finally{btn.disabled=false;btn.innerHTML=`Evaluate answer <svg class="icon"><use href="#i-arrow"/></svg>`;}
+});
+
+$('#interviewNextQBtn')?.addEventListener('click',()=>{
+  $('#interviewWorkspace').hidden=true;
+  $('#interviewTopicPicker').hidden=false;
+  $('#interviewPrepModeBtn')?.click();
+});
+
+// Phase 5: Placement Diagnostic
+$('#openPlacementBtn')?.addEventListener('click',async()=>{
+  const dialog=$('#placementDialog');
+  if(!dialog)return;
+  dialog.showModal();
+  const container=$('#placementQuizContainer');
+  const resultPanel=$('#placementResultPanel');
+  resultPanel.hidden=true;
+  container.replaceChildren(make('p','muted','Preparing 10 diagnostic questions…'));
+
+  const curCourse=state.currentCourse||(state.videos[0]?.course)||'Deepak Data Engg';
+  try{
+    const res=await request(`/api/courses/${encodeURIComponent(curCourse)}/placement-test`);
+    container.replaceChildren();
+    const form=make('form','quiz-form');
+    for(let i=0;i<res.questions.length;i++){
+      const q=res.questions[i];
+      const block=make('div','placement-question-card');
+      const stem=make('p','quiz-stem',`${i+1}. [${q.level}] ${q.question}`);
+      const optsDiv=make('div','quiz-options');
+      q.options.forEach((optText,optIdx)=>{
+        const lbl=make('label','quiz-option-label');
+        const radio=document.createElement('input');
+        radio.type='radio';
+        radio.name=q.id;
+        radio.value=String(optIdx);
+        radio.required=true;
+        lbl.append(radio,make('span','quiz-opt-text',optText));
+        optsDiv.append(lbl);
+      });
+      block.append(stem,optsDiv);
+      form.append(block);
+    }
+    const submitBtn=make('button','btn btn-primary full','Submit Diagnostic');
+    submitBtn.type='submit';
+    form.append(submitBtn);
+
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      submitBtn.disabled=true;
+      submitBtn.textContent='Analyzing…';
+      const answers={};
+      const fd=new FormData(form);
+      for(const [k,v] of fd.entries()){
+        answers[k]=parseInt(v,10);
+      }
+      try{
+        const evalRes=await request(`/api/courses/${encodeURIComponent(curCourse)}/placement-test/submit`,services.json('POST',{answers}));
+        $('#placementScoreBadge').textContent=`Score: ${evalRes.score}% (${evalRes.level_label})`;
+        $('#placementResultMessage').textContent=evalRes.message;
+        $('#placementRecLessonTitle').textContent=evalRes.recommended_lesson_title;
+        $('#placementJumpBtn').onclick=()=>{
+          dialog.close();
+          openVideo(evalRes.recommended_lesson_id).catch(err=>toast(err.message,true));
+        };
+        form.hidden=true;
+        resultPanel.hidden=false;
+      }catch(err){toast(err.message,true);submitBtn.disabled=false;submitBtn.textContent='Submit Diagnostic';}
+    };
+    container.append(form);
+  }catch(err){
+    container.replaceChildren(make('p','muted','Placement diagnostic currently unavailable.'));
+  }
+});
+$('#placementCloseBtn')?.addEventListener('click',()=>$('#placementDialog')?.close());
 
 window.CourseForgeBoot=async(initialData)=>{
   const initial=readLessonRoute();applyingRoute++;try{navigate(navNames[initial.view]?initial.view:'dashboard');}finally{applyingRoute--;}
