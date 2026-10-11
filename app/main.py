@@ -606,7 +606,7 @@ def get_course_material(course: str, filename: str, download: int = 0):
                 texts = [t.text.strip() for t in root_xml.iter() if t.tag.endswith('}t') and t.text and t.text.strip()]
                 body_txt = '\n'.join(texts) if texts else '(Visual diagram slide — download PPTX to view graphics)'
                 slides_html.append(
-                    f"<div class='card'><div style='font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:8px'>📊 Slide {idx} of {len(slide_files)}</div>"
+                    f"<div class='card'><div style='font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:8px'><svg style='width:16px;height:16px;vertical-align:-2px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round' viewBox='0 0 24 24'><rect x='2' y='3' width='20' height='14' rx='2'/><path d='M8 21h8'/><path d='M12 17v4'/><polygon points='10 8 15 10 10 12 10 8'/></svg>Slide {idx} of {len(slide_files)}</div>"
                     f"<div style='white-space:pre-wrap;font-size:14px'>{html.escape(body_txt)}</div></div>"
                 )
             page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}{''.join(slides_html)}</body></html>"
@@ -635,12 +635,12 @@ def get_course_material(course: str, filename: str, download: int = 0):
             zf = zipfile.ZipFile(io.BytesIO(raw_bytes))
             infos = [i for i in zf.infolist() if not i.is_dir() and '__MACOSX' not in i.filename]
             listing = "\n".join(f"• {i.filename} ({round(i.file_size/1024, 1)} KB)" for i in infos)
-            previews = [f"<div class='card'><div style='font-weight:700;color:#38bdf8;margin-bottom:8px'>📦 Archive Contents ({len(infos)} files)</div><pre>{html.escape(listing)}</pre></div>"]
+            previews = [f"<div class='card'><div style='font-weight:700;color:#38bdf8;margin-bottom:8px'><svg style='width:16px;height:16px;vertical-align:-2px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round' viewBox='0 0 24 24'><rect x='3' y='3' width='18' height='4' rx='1'/><rect x='4' y='7' width='16' height='14' rx='2'/><line x1='10' y1='12' x2='14' y2='12'/></svg>Archive Contents ({len(infos)} files)</div><pre>{html.escape(listing)}</pre></div>"]
             for i in infos[:12]:
                 sub_ext = Path(i.filename).suffix.lower()
                 if sub_ext in ('.py', '.txt', '.md', '.json', '.sql', '.yaml', '.yml') and i.file_size < 120000:
                     sub_txt = zf.read(i.filename).decode('utf-8', errors='ignore')
-                    previews.append(f"<div class='card'><div style='font-size:12px;font-weight:700;color:#74c0fc;margin-bottom:6px'>📄 {html.escape(i.filename)}</div><pre>{html.escape(sub_txt[:20000])}</pre></div>")
+                    previews.append(f"<div class='card'><div style='font-size:12px;font-weight:700;color:#74c0fc;margin-bottom:6px'><svg style='width:14px;height:14px;vertical-align:-2px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round' viewBox='0 0 24 24'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/></svg>{html.escape(i.filename)}</div><pre>{html.escape(sub_txt[:20000])}</pre></div>")
             page = f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(filename)}</title><style>{base_style}</style></head><body>{header_bar}{''.join(previews)}</body></html>"
             return HTMLResponse(page)
         except Exception:
@@ -648,7 +648,7 @@ def get_course_material(course: str, filename: str, download: int = 0):
 
     page = (
         f"<!doctype html><html><head><meta charset='utf-8'><title>{html.escape(dir_friendly if 'dir_friendly' in locals() else filename)}</title><style>{base_style}</style></head>"
-        f"<body>{header_bar}<div class='card'><h3>📦 Dataset / Study File</h3>"
+        f"<body>{header_bar}<div class='card'><h3><svg style='width:20px;height:20px;vertical-align:-3px;margin-right:8px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round' viewBox='0 0 24 24'><ellipse cx='12' cy='5' rx='9' ry='3'/><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'/><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/></svg>Dataset / Study File</h3>"
         f"<p>This study file (<code>{html.escape(filename)}</code>, {round(len(raw_bytes)/1024, 1)} KB) is ready to download. Click the download button above to open it on your device.</p></div></body></html>"
     )
     return HTMLResponse(page)
@@ -1362,7 +1362,7 @@ h1{{font-size:1.15rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--
     <div class="meta-item"><span>Status</span><strong style="color:#10b981">Verified Valid</strong></div>
   </div>
   <div class="seal">
-    <div class="seal-icon">✓</div>
+    <div class="seal-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
     <span>Verified by CourseForge Learning Platform</span>
   </div>
   <div class="actions">

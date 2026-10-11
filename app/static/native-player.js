@@ -3,9 +3,14 @@
   const api=window.CourseForgeServices.request,json=window.CourseForgeServices.json;
   let active=null;
   const element=(tag,cls='',text='')=>{const e=document.createElement(tag);e.className=cls;e.textContent=text;return e;};
-  function button(label,svg,action){
+  function button(label,svgOrId,action){
     const b=element('button','player-button');b.type='button';b.title=label;b.setAttribute('aria-label',label);
-    b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${svg}</svg>`;b.onclick=action;return b;
+    if(typeof svgOrId==='string'&&svgOrId.startsWith('i-')){
+      b.innerHTML=`<svg class="icon" aria-hidden="true"><use href="#${svgOrId}"/></svg>`;
+    }else{
+      b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${svgOrId}</svg>`;
+    }
+    b.onclick=action;return b;
   }
   function stop(){
     const a=active;active=null;if(!a)return;
@@ -141,9 +146,9 @@
     if(ready){
       v.controls=false;
       const top=element('div','player-top-controls');top.slot='top-chrome';
-      const capture=button('Capture timestamp','<path d="M6 3h12v18l-6-4-6 4z"/>',()=>window.CourseForgeStudio?.capture());
-      const theater=button('Theater mode','<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14"/>',()=>window.CourseForgeStudio?.toggleTheater());
-      const lock=button('Lock player controls','<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',()=>setLock(true));
+      const capture=button('Capture timestamp','i-bookmark',()=>window.CourseForgeStudio?.capture());
+      const theater=button('Theater mode','i-theater',()=>window.CourseForgeStudio?.toggleTheater());
+      const lock=button('Lock player controls','i-lock',()=>setLock(true));
       top.append(capture,theater,lock);controller.append(top);
       const timeline=element('media-time-range','player-timeline');timeline.setAttribute('aria-label','Seek lecture');
       const row=element('media-control-bar','player-control-row');
@@ -155,7 +160,7 @@
       const updateClock=()=>{clock.textContent=`${compactTime(position(a))} / ${Number.isFinite(v.duration)?compactTime(v.duration):'--:--'}`;};
       updateClock();v.addEventListener('timeupdate',updateClock);v.addEventListener('loadedmetadata',updateClock);
       row.append(clock);
-      const speed=button('Playback speed','<path d="m9 3 .5 2a7 7 0 0 1 5 0L15 3l3 2-1 2a7 7 0 0 1 2.5 4L22 12l-2.5 1a7 7 0 0 1-2.5 4l1 2-3 2-.5-2a7 7 0 0 1-5 0L9 21l-3-2 1-2a7 7 0 0 1-2.5-4L2 12l2.5-1A7 7 0 0 1 7 7L6 5z"/><circle cx="12" cy="12" r="3"/>',()=>toggleMenu(menu.hidden));
+      const speed=button('Playback speed','i-speed',()=>toggleMenu(menu.hidden));
       speed.classList.add('player-settings');speed.setAttribute('aria-haspopup','true');speed.setAttribute('aria-expanded','false');
       const menu=element('div','player-speed-menu');menu.hidden=true;menu.setAttribute('role','group');menu.setAttribute('aria-label','Playback speed');
       menu.append(element('strong','','Playback speed'));
@@ -171,7 +176,7 @@
       stage.addEventListener('pointerdown',event=>{if(!menu.hidden&&!event.composedPath().includes(menu)&&!event.composedPath().includes(speed))toggleMenu(false);});
       menu.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();toggleMenu(false);speed.focus();}});
       menu.addEventListener('focusout',event=>{if(event.relatedTarget&&!menu.contains(event.relatedTarget)&&event.relatedTarget!==speed)toggleMenu(false);});
-      const full=button('Fullscreen','<path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/>',async()=>{
+      const full=button('Fullscreen','i-fullscreen',async()=>{
         try{if(document.fullscreenElement)await document.exitFullscreen();else{await wrap.requestFullscreen();if(matchMedia('(pointer:coarse)').matches)await screen.orientation?.lock?.('landscape').catch(()=>{});}}
         catch{toast('Fullscreen is unavailable.',true);}
       });
@@ -180,14 +185,14 @@
       a.cleanup=()=>{document.removeEventListener('fullscreenchange',fullscreen);screen.orientation?.unlock?.();};
       row.append(spacer,speed,full);chrome.append(timeline,row);controller.append(chrome);
       const center=element('div','player-center-controls');
-      const back=button('Back 10 seconds','<path d="M3 9a9 9 0 1 1 1 9M3 4v5h5"/><text x="12" y="15" text-anchor="middle" stroke="none" fill="currentColor" font-size="8" font-weight="600">10</text>',()=>seek(-10));
-      const play=button('Play lesson','<path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/>',()=>v.paused?v.play().catch(()=>{}):v.pause());
-      const forward=button('Forward 10 seconds','<path d="M21 9a9 9 0 1 0-1 9M21 4v5h-5"/><text x="12" y="15" text-anchor="middle" stroke="none" fill="currentColor" font-size="8" font-weight="600">10</text>',()=>seek(10));
+      const back=button('Back 10 seconds','i-replay-10',()=>seek(-10));
+      const play=button('Play lesson','i-play',()=>v.paused?v.play().catch(()=>{}):v.pause());
+      const forward=button('Forward 10 seconds','i-forward-10',()=>seek(10));
       play.classList.add('player-center-play');center.append(back,play,forward);stage.append(center);
       const updatePlay=()=>{
         stage.classList.toggle('is-playing',!v.paused);
         play.setAttribute('aria-label',v.paused?'Play lesson':'Pause lesson');play.title=v.paused?'Play lesson':'Pause lesson';
-        play.querySelector('svg').innerHTML=v.paused?'<path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/>':'<path d="M8 5v14M16 5v14" stroke-width="4"/>';
+        play.querySelector('use')?.setAttribute('href',v.paused?'#i-play':'#i-pause');
       };
       for(const event of ['play','pause','ended'])v.addEventListener(event,updatePlay);
       const unlock=element('button','player-unlock','Hold to unlock');unlock.type='button';unlock.hidden=true;unlock.setAttribute('aria-label','Hold for one second to unlock, or press Enter or Escape');stage.append(unlock);

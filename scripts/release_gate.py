@@ -133,15 +133,28 @@ def main(argv=None) -> int:
     parser.add_argument('--expected-commit',help='Exact full Git SHA of the code tested on the device')
     parser.add_argument('--max-age-hours',type=int,default=72)
     parser.add_argument('--audit-tree',action='store_true',help='Also check tracked paths for personal/secret assets')
+    parser.add_argument('--audit-icons',action='store_true',help='Scan HTML/JS for emoji UI icons and unknown icon references')
     parser.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
     args=parser.parse_args(argv)
-    if not args.report and not args.audit_tree:
-        parser.error('Specify --report, --audit-tree, or both')
+    if not args.report and not args.audit_tree and not args.audit_icons:
+        parser.error('Specify --report, --audit-tree, --audit-icons, or a combination')
     if args.report and not args.expected_commit:
         parser.error('--expected-commit is required for release report evaluation')
     if not 1 <= args.max_age_hours <= 168:
         parser.error('--max-age-hours must be 1–168')
     issues=[]
+    if args.audit_icons:
+        try:
+            import sys
+            if str(args.repo_root) not in sys.path:
+                sys.path.insert(0, str(args.repo_root))
+            from scripts import audit_icons
+            if audit_icons.run_audit() != 0:
+                issues.append('Icon and emoji audit failed')
+            else:
+                print('PASS: Icon system consistent and zero emojis in UI')
+        except Exception as exc:
+            issues.append(f'Could not run icon audit: {exc}')
     if args.audit_tree:
         try:
             leaks=tracked_file_audit(git_tracked_files(args.repo_root))
