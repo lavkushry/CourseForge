@@ -1350,3 +1350,77 @@
   max-width: 480px;
   margin: var(--space-8) auto;
 }
+
+/* ==========================================================================
+   Section 9: Category Hub & Browse Pills (Stage 3)
+   ========================================================================== */
+.category-pills-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: var(--space-2) 0 var(--space-4);
+  margin-bottom: var(--space-4);
+  scrollbar-width: none;
+}
+
+.category-pills-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.category-pill:hover {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.category-pill.active {
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+}
+
+.category-pill .badge-count {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+}
+
+.category-pill.active .badge-count {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.browse-poster-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.browse-poster-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.mylist-surface {
+  width: 100%;
+}
+

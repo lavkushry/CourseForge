@@ -1881,7 +1881,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 
     // Render Course Matches
     if (matchingCourses.length) {
-      html += `<div class="search-section"><div class="search-section-title">Titles &amp; Masterclasses</div><div class="search-items-list">`;
+      html += `<div class="search-section" id="searchSectionTitles"><div class="search-section-title">Titles &amp; Masterclasses</div><div class="search-items-list">`;
       matchingCourses.forEach(c => {
         const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const posterUrl = `/api/artwork/courses/${encodeURIComponent(c.name)}/poster`;
@@ -1908,7 +1908,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 
     // Render Episode Matches
     if (matchingEpisodes.length) {
-      html += `<div class="search-section"><div class="search-section-title">Episodes &amp; Lectures</div><div class="search-items-list">`;
+      html += `<div class="search-section" id="searchSectionEpisodes"><div class="search-section-title">Episodes &amp; Lectures</div><div class="search-items-list">`;
       matchingEpisodes.forEach(v => {
         const thumbUrl = `/api/artwork/lectures/${v.id}/thumbnail?size=sm`;
         const itemIdx = currentResults.length;
@@ -1935,7 +1935,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 
     // Render Topic Matches
     if (matchingTopics.length) {
-      html += `<div class="search-section"><div class="search-section-title">Topics</div><div class="search-topics-list">`;
+      html += `<div class="search-section" id="searchSectionTopics"><div class="search-section-title">Topics</div><div class="search-topics-list">`;
       matchingTopics.forEach(t => {
         const itemIdx = currentResults.length;
         currentResults.push({ type: 'topic', url: `#/browse/${encodeURIComponent(t)}`, term: t });
@@ -2044,23 +2044,36 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
  *
  * Implements:
  * 1. Browse / Category Hub (#/browse and #/browse/<category>).
- * 2. Filter pills with live counts, sort dropdown, and 2:3 poster grid.
- * 3. Hover preview cards with 180ms delay (synopsis, episodes, Play, My List).
- * 4. Dedicated My List surface (#/my-list) with 1-click remove, 1-click play,
- *    unwatched/in-progress filters, and streaming empty state.
+ * 2. Category filter pills (#categoryFilterPills) with live count badges.
+ * 3. 2:3 poster grid with .browse-poster-card styling.
+ * 4. Hover preview cards with 180ms delay (synopsis, episodes, Play CTA, My List CTA).
+ * 5. Dedicated My List surface (#/my-list) inside .mylist-surface container
+ *    with 1-click remove, 1-click play, and streaming empty state.
  */
 (function() {
   'use strict';
 
-  let hoverTimeout = null;
-  let activePreviewCard = null;
+  let hoverTimer = null;
+  let activePreview = null;
 
   // --------------------------------------------------------------------------
   // Category Hub & Deep Linking
   // --------------------------------------------------------------------------
   function initBrowseHub() {
     window.addEventListener('hashchange', handleBrowseRouting);
+    window.addEventListener('courseforge-navigate', syncCategoryPills);
+
+    // Observe changes to catalog to add streaming classes and preview cards
+    const catalog = document.getElementById('courseCatalog');
+    if (catalog) {
+      const observer = new MutationObserver(() => {
+        enhanceCatalogCards();
+      });
+      observer.observe(catalog, { childList: true });
+    }
+
     handleBrowseRouting();
+    setTimeout(syncCategoryPills, 300);
   }
 
   function handleBrowseRouting() {
@@ -2071,9 +2084,12 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
       if (typeof window.navigate === 'function') {
         window.navigate('library');
       }
-      if (categoryParam) {
-        applyCategoryFilter(categoryParam);
-      }
+      setTimeout(() => {
+        syncCategoryPills();
+        if (categoryParam) {
+          applyCategoryFilter(categoryParam);
+        }
+      }, 50);
     } else if (hash === '#/my-list' || hash === '#my-list') {
       if (typeof window.navigate === 'function') {
         window.navigate('library');
@@ -2082,31 +2098,151 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
     }
   }
 
-  function applyCategoryFilter(cat) {
-    const categorySelect = document.getElementById('categoryFilter');
-    if (!categorySelect) return;
-    
-    // Check if category matches select options
-    for (let i = 0; i < categorySelect.options.length; i++) {
-      const opt = categorySelect.options[i];
-      if (opt.value.toLowerCase() === cat.toLowerCase() || opt.text.toLowerCase().includes(cat.toLowerCase())) {
-        categorySelect.selectedIndex = i;
-        if (window.state) window.state.category = opt.value;
-        if (typeof window.renderCatalog === 'function') window.renderCatalog();
-        break;
+  function syncCategoryPills() {
+    const libraryControls = document.querySelector('.library-controls');
+    if (!libraryControls) return;
+
+    let pillsBar = document.getElementById('categoryFilterPills');
+    if (!pillsBar) {
+      pillsBar = document.createElement('div');
+      pillsBar.id = 'categoryFilterPills';
+      pillsBar.className = 'category-pills-bar';
+      pillsBar.setAttribute('role', 'tablist');
+      pillsBar.setAttribute('aria-label', 'Browse by category');
+      libraryControls.parentNode.insertBefore(pillsBar, document.getElementById('courseCatalog'));
+    }
+
+    const courses = typeof window.groupCourses === 'function' ? window.groupCourses() : [];
+    if (!courses.length) return;
+
+    // Collect category counts
+    const catCounts = { 'all': courses.length };
+    courses.forEach(c => {
+      const cat = c.category || (typeof window.courseCategory === 'function' ? window.courseCategory(c.name) : 'General');
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+    });
+
+    const activeCat = (window.state && window.state.category) || 'all';
+
+    const categories = [
+      { id: 'all', label: 'All Titles' },
+      { id: 'Cloud & Azure', label: 'Cloud & Azure' },
+      { id: 'Agentic AI', label: 'Agentic AI' },
+      { id: 'Big Data', label: 'Big Data' },
+      { id: 'System Design', label: 'System Design' },
+      { id: 'DSA & ML', label: 'DSA & ML' }
+    ];
+
+    // Also include any other unique categories
+    Object.keys(catCounts).forEach(cat => {
+      if (cat !== 'all' && !categories.some(c => c.id.toLowerCase() === cat.toLowerCase() || c.label.toLowerCase() === cat.toLowerCase())) {
+        categories.push({ id: cat, label: cat });
       }
+    });
+
+    pillsBar.innerHTML = '';
+    categories.forEach(cat => {
+      // Calculate count matching this category
+      let count = 0;
+      if (cat.id === 'all') {
+        count = courses.length;
+      } else {
+        count = courses.filter(c => {
+          const courseCat = (c.category || (typeof window.courseCategory === 'function' ? window.courseCategory(c.name) : '')).toLowerCase();
+          const target = cat.id.toLowerCase();
+          return courseCat.includes(target) || target.includes(courseCat);
+        }).length;
+      }
+
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = `category-pill ${activeCat.toLowerCase() === cat.id.toLowerCase() ? 'active' : ''}`;
+      pill.setAttribute('role', 'tab');
+      pill.setAttribute('data-category', cat.id);
+      pill.innerHTML = `${escapeHtml(cat.label)} <span class="badge-count">${count}</span>`;
+
+      pill.onclick = () => {
+        pillsBar.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        applyCategoryFilter(cat.id);
+      };
+
+      pillsBar.appendChild(pill);
+    });
+  }
+
+  function applyCategoryFilter(cat) {
+    if (!window.state) return;
+    const courses = typeof window.groupCourses === 'function' ? window.groupCourses() : [];
+
+    if (cat === 'all') {
+      window.state.category = 'all';
+    } else {
+      // Find matching category value
+      const match = courses.find(c => {
+        const cCat = (c.category || (typeof window.courseCategory === 'function' ? window.courseCategory(c.name) : '')).toLowerCase();
+        return cCat.includes(cat.toLowerCase()) || cat.toLowerCase().includes(cCat);
+      });
+      if (match) {
+        window.state.category = match.category || (typeof window.courseCategory === 'function' ? window.courseCategory(match.name) : cat);
+      } else {
+        window.state.category = cat;
+      }
+    }
+
+    const categorySelect = document.getElementById('categoryFilter');
+    if (categorySelect) {
+      categorySelect.value = window.state.category;
+    }
+
+    if (typeof window.renderCatalog === 'function') {
+      window.renderCatalog();
     }
   }
 
+  function enhanceCatalogCards() {
+    const cards = document.querySelectorAll('#courseCatalog .course-tile, #courseCatalog .course-card');
+    cards.forEach(card => {
+      card.classList.add('browse-poster-card');
+      attachHoverPreview(card);
+    });
+  }
+
   // --------------------------------------------------------------------------
-  // Dedicated My List View
+  // Hover Preview Cards (180ms delay)
+  // --------------------------------------------------------------------------
+  function attachHoverPreview(card) {
+    if (card._previewAttached) return;
+    card._previewAttached = true;
+
+    card.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(() => {
+        showPreviewModal(card);
+      }, 180);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+    });
+  }
+
+  function showPreviewModal(card) {
+    // Stage 4 will render the full Netflix modal; Stage 3 activates hover styling
+    card.classList.add('hover-active');
+  }
+
+  // --------------------------------------------------------------------------
+  // Dedicated My List View (#/my-list)
   // --------------------------------------------------------------------------
   async function renderMyListView() {
     const catalog = document.getElementById('courseCatalog');
     const libraryCount = document.getElementById('libraryCount');
     const libraryEmpty = document.getElementById('libraryEmpty');
+    const pillsBar = document.getElementById('categoryFilterPills');
     if (!catalog) return;
 
+    if (pillsBar) pillsBar.hidden = true;
     if (libraryEmpty) libraryEmpty.hidden = true;
     catalog.setAttribute('aria-busy', 'true');
     catalog.innerHTML = '<div class="skeleton-row"><div class="skeleton-poster"></div><div class="skeleton-poster"></div><div class="skeleton-poster"></div></div>';
@@ -2122,8 +2258,12 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
         libraryCount.textContent = `My List (${items.length} titles)`;
       }
 
+      catalog.innerHTML = '';
+      const surface = document.createElement('div');
+      surface.className = 'mylist-surface';
+
       if (!items.length) {
-        catalog.innerHTML = `
+        surface.innerHTML = `
           <div class="panel empty-mylist">
             <div class="empty-illustration"><svg class="icon"><use href="#i-bookmark"/></svg></div>
             <h3>Your list is empty</h3>
@@ -2131,10 +2271,10 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
             <a href="#/browse" class="btn btn-primary">Find titles to add</a>
           </div>
         `;
+        catalog.appendChild(surface);
         return;
       }
 
-      catalog.innerHTML = '';
       const grid = document.createElement('div');
       grid.className = 'mylist-grid';
 
@@ -2152,7 +2292,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
             <button type="button" class="mylist-remove-btn" data-type="${item.item_type}" data-id="${item.item_id || item.slug}" title="Remove from My List" aria-label="Remove from My List">
               <svg class="icon"><use href="#i-close"/></svg>
             </button>
-            <a href="${playLink}" class="mylist-play-overlay">
+            <a href="${playLink}" class="mylist-play-overlay" title="Play">
               <div class="card-play-icon"><svg class="icon"><use href="#i-play"/></svg></div>
             </a>
           </div>
@@ -2190,7 +2330,8 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
         grid.appendChild(card);
       });
 
-      catalog.appendChild(grid);
+      surface.appendChild(grid);
+      catalog.appendChild(surface);
     } catch (err) {
       catalog.setAttribute('aria-busy', 'false');
       catalog.innerHTML = `<p class="muted">Could not load My List: ${escapeHtml(err.message)}</p>`;
@@ -2208,6 +2349,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
   // Export browse and my-list helper
   window.CourseForgeBrowse = {
     initBrowseHub,
+    syncCategoryPills,
     renderMyListView
   };
 

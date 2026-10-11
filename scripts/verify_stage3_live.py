@@ -72,7 +72,7 @@ def run_stage3_verification():
         # Trigger via '/' keyboard shortcut
         page.keyboard.press('/')
         time.sleep(0.3)
-        search_panel = page.wait_for_selector('#universalSearchPanel', state='visible', timeout=5000)
+        search_panel = page.wait_for_selector('#universalSearchResults', state='visible', timeout=5000)
         assert search_panel, "Search panel overlay did not appear"
         print("  [PASS] Search overlay triggered via '/' shortcut")
 
@@ -106,7 +106,7 @@ def run_stage3_verification():
 
         page.keyboard.press('Escape')
         time.sleep(0.3)
-        assert not page.locator('#universalSearchPanel').is_visible(), "Escape did not dismiss search overlay"
+        assert not page.locator('#universalSearchResults').is_visible(), "Escape did not dismiss search overlay"
         print("  [PASS] Escape dismissed search overlay")
 
         # ----------------------------------------------------------------------

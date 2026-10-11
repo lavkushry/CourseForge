@@ -192,7 +192,7 @@
 
     // Render Course Matches
     if (matchingCourses.length) {
-      html += `<div class="search-section"><div class="search-section-title">Titles &amp; Masterclasses</div><div class="search-items-list">`;
+      html += `<div class="search-section" id="searchSectionTitles"><div class="search-section-title">Titles &amp; Masterclasses</div><div class="search-items-list">`;
       matchingCourses.forEach(c => {
         const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         const posterUrl = `/api/artwork/courses/${encodeURIComponent(c.name)}/poster`;
@@ -219,7 +219,7 @@
 
     // Render Episode Matches
     if (matchingEpisodes.length) {
-      html += `<div class="search-section"><div class="search-section-title">Episodes &amp; Lectures</div><div class="search-items-list">`;
+      html += `<div class="search-section" id="searchSectionEpisodes"><div class="search-section-title">Episodes &amp; Lectures</div><div class="search-items-list">`;
       matchingEpisodes.forEach(v => {
         const thumbUrl = `/api/artwork/lectures/${v.id}/thumbnail?size=sm`;
         const itemIdx = currentResults.length;
@@ -246,7 +246,7 @@
 
     // Render Topic Matches
     if (matchingTopics.length) {
-      html += `<div class="search-section"><div class="search-section-title">Topics</div><div class="search-topics-list">`;
+      html += `<div class="search-section" id="searchSectionTopics"><div class="search-section-title">Topics</div><div class="search-topics-list">`;
       matchingTopics.forEach(t => {
         const itemIdx = currentResults.length;
         currentResults.push({ type: 'topic', url: `#/browse/${encodeURIComponent(t)}`, term: t });
