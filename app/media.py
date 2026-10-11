@@ -127,15 +127,34 @@ def _sync_provider_mappings():
     return {'mapped':mapped,'lectures':total,'mappings_updated':changed,'durations_added':durations,'error':error}
 
 
-def sdk_call(client, method, params):
+_CLAIM_ACCOUNTS: dict[str, tuple[str, str]] = {}
+
+
+def get_odysee_accounts() -> list[tuple[str, str]]:
+    accounts: list[tuple[str, str]] = []
+    # Primary channel
+    t1 = os.getenv('ODYSEE_AUTH_TOKEN', '')
+    c1 = os.getenv('ODYSEE_CHANNEL_ID', '')
+    if t1 and c1:
+        accounts.append((t1, c1))
+    # Secondary channel (vault 2)
+    t2 = os.getenv('ODYSEE_AUTH_TOKEN_2', '5hgCwtn2GCcunCpPg7z8fuUgYV5frxBF')
+    c2 = os.getenv('ODYSEE_CHANNEL_ID_2', '027d08f9b8aa21f9530fd44cc6d7f7de4aa57dce')
+    if t2 and c2 and (t2, c2) not in accounts:
+        accounts.append((t2, c2))
+    return accounts
+
+
+def sdk_call(client, method, params, auth_token=None):
     """Recover a sleeping Odysee SDK once, without a client retry loop.
 
     Odysee's own client calls status before using wallet-backed SDK methods.
     Never expose the RPC error data: it can contain account identifiers.
     """
+    token = auth_token or os.getenv('ODYSEE_AUTH_TOKEN', '')
     for attempt in range(2):
         response=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m='+method,
-            headers={'X-Lbry-Auth-Token':os.getenv('ODYSEE_AUTH_TOKEN','')},
+            headers={'X-Lbry-Auth-Token':token},
             json={'jsonrpc':'2.0','id':1,'method':method,'params':params})
         response.raise_for_status()
         payload=response.json()
@@ -150,7 +169,7 @@ def sdk_call(client, method, params):
         if not isinstance(data,dict):data={}
         if attempt==0 and data.get('name')=='ComponentsNotStartedError':
             ready=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=status',
-                headers={'X-Lbry-Auth-Token':os.getenv('ODYSEE_AUTH_TOKEN','')},
+                headers={'X-Lbry-Auth-Token':token},
                 json={'jsonrpc':'2.0','id':1,'method':'status','params':{}})
             ready.raise_for_status()
             continue
@@ -158,22 +177,48 @@ def sdk_call(client, method, params):
     raise HTTPException(503,'Odysee is starting its playback service. Retry shortly.',headers={'Retry-After':'30'})
 
 
+def signed_embed_with(info: dict, token: str, channel: str) -> str:
+    key = (info['claim_name'], info['claim_id'], channel)
+    now = time.time()
+    cached = _SIGNATURES.get(key)
+    if cached and cached[0] > now:
+        return cached[1]
+    with httpx.Client(timeout=8) as client:
+        result = sdk_call(client, 'channel_sign', {'channel_id': channel, 'hexdata': info['claim_id'].encode().hex()}, auth_token=token)
+        if not result.get('signature') or not result.get('signing_ts'):
+            raise ValueError('No signature')
+        url = f"https://odysee.com/$/embed/{quote(info['claim_name'], safe='')}/{quote(info['claim_id'], safe='')}?" + urlencode({'signature': result['signature'], 'signature_ts': result['signing_ts']})
+        _SIGNATURES[key] = (now + 120, url)
+        _SIGNATURES[(info['claim_name'], info['claim_id'])] = (now + 120, url)
+        return url
+
+
 def signed_embed(info: dict) -> str:
     key=(info['claim_name'],info['claim_id']);now=time.time()
     cached=_SIGNATURES.get(key)
     if cached and cached[0]>now:return cached[1]
-    token=os.getenv('ODYSEE_AUTH_TOKEN','');channel=os.getenv('ODYSEE_CHANNEL_ID','')
-    if not token or not channel:
+    accounts = get_odysee_accounts()
+    if not accounts:
         raise HTTPException(503,'Odysee playback is not configured. Please contact the administrator.')
-    try:
-        with httpx.Client(timeout=8) as client:
-            result=sdk_call(client,'channel_sign',{'channel_id':channel,'hexdata':info['claim_id'].encode().hex()})
-            if not result.get('signature') or not result.get('signing_ts'):raise ValueError('No signature')
-            url=f"https://odysee.com/$/embed/{quote(info['claim_name'],safe='')}/{quote(info['claim_id'],safe='')}?"+urlencode({'signature':result['signature'],'signature_ts':result['signing_ts']})
-            _SIGNATURES[key]=(now+120,url)
+    known = _CLAIM_ACCOUNTS.get(info.get('claim_id'))
+    if known and known in accounts:
+        accounts = [known] + [a for a in accounts if a != known]
+    elif info.get('claim_name', '').startswith(('scaler-', 'gaurav', 'keerti', 'namaste', 'arpit')):
+        vault2 = (os.getenv('ODYSEE_AUTH_TOKEN_2', '5hgCwtn2GCcunCpPg7z8fuUgYV5frxBF'),
+                  os.getenv('ODYSEE_CHANNEL_ID_2', '027d08f9b8aa21f9530fd44cc6d7f7de4aa57dce'))
+        if vault2 in accounts:
+            accounts = [vault2] + [a for a in accounts if a != vault2]
+
+    last_exc = None
+    for token, channel in accounts:
+        try:
+            url = signed_embed_with(info, token, channel)
+            _CLAIM_ACCOUNTS[info['claim_id']] = (token, channel)
             return url
-    except (httpx.HTTPError,ValueError,TypeError) as exc:
-        raise HTTPException(503,'Odysee could not authorize this lecture. Please retry shortly.') from exc
+        except Exception as exc:
+            last_exc = exc
+            continue
+    raise HTTPException(503,'Odysee could not authorize this lecture. Please retry shortly.') from last_exc
 
 
 class PlaybackBody(BaseModel):
