@@ -1031,3 +1031,322 @@
     width: 220px;
   }
 }
+
+/* ==========================================================================
+   Section 7: Search Overlay & Suggest Dropdown (Stage 3)
+   ========================================================================== */
+.universal-search-panel {
+  position: absolute;
+  top: calc(var(--header-h) + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, calc(100vw - var(--space-8)));
+  max-height: 520px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-4);
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.search-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-section-title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 0;
+}
+
+.search-clear-btn:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.recent-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.recent-chip:hover {
+  background: var(--surface-3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chip-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.chip-remove:hover {
+  color: #e11d48;
+}
+
+.search-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.search-item:hover,
+.search-item.selected {
+  background: var(--surface-2);
+}
+
+.search-thumb-poster {
+  width: 36px;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.search-thumb-backdrop {
+  width: 56px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.search-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.search-item-title {
+  font-size: var(--text-sm);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-item-meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-match {
+  background: rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-action-play,
+.search-action-hint {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.search-topics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.search-topic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.search-topic-pill:hover,
+.search-topic-pill.selected {
+  background: var(--surface-3);
+  border-color: var(--brand);
+}
+
+/* ==========================================================================
+   Section 8: My List Surface Styles (Stage 3)
+   ========================================================================== */
+.mylist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.mylist-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  position: relative;
+}
+
+.mylist-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mylist-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mylist-card:hover .mylist-thumb-wrap {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.mylist-remove-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  z-index: 3;
+}
+
+.mylist-card:hover .mylist-remove-btn,
+.mylist-card:focus-within .mylist-remove-btn {
+  opacity: 1;
+}
+
+.mylist-remove-btn:hover {
+  background: #e11d48;
+}
+
+.mylist-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+  text-decoration: none;
+}
+
+.mylist-card:hover .mylist-play-overlay {
+  opacity: 1;
+}
+
+.mylist-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mylist-card-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mylist-card-meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.empty-mylist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  gap: var(--space-3);
+  max-width: 480px;
+  margin: var(--space-8) auto;
+}

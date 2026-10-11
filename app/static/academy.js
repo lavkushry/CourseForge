@@ -119,7 +119,7 @@
       const result=await api('/api/me',json('PATCH',body));account.user=result.user;message('Account updated.');
     });
     field(f,'Name','name').value=account.user.name;field(f,'Current password (for password changes)','current_password','password',false).autocomplete='current-password';
-    const password=field(f,'New password (optional)','password','password',false);password.minLength=12;password.autocomplete='new-password';submitButton(f,'Save account');
+    const password=field(f,'New password (optional)','password','password',false);password.minLength=6;password.autocomplete='new-password';submitButton(f,'Save account');
     heading(root,'Signed-in devices');const sessions=await api('/api/auth/sessions');
     root.append(table(['Device','Last active','Session'],sessions.sessions.map(s=>[s.device||'Browser',date(s.last_seen),s.current?'This device':button('Revoke',async()=>{await api(`/api/auth/sessions/${s.id}`,{method:'DELETE'});await myAccount();})])));
     heading(root,'Your learning history','Your saved places, completed lessons, study activity, and results are stored in your account. Administrators can review learning records and account access. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until you delete your account.');

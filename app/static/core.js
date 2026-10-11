@@ -1686,6 +1686,539 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 
 })();
 
+/* streaming-search.js */
+/**
+ * CourseForge Streaming Search — Stage 3: Search Overlay & Typeahead Suggest
+ *
+ * Implements:
+ * 1. Focus trigger on header search and "/" keyboard shortcut.
+ * 2. Recent searches with removable chips saved in localStorage.
+ * 3. Typeahead search grouped by Titles (Courses), Episodes (Lectures), and Topics.
+ * 4. Substring match highlighting with <mark class="search-match">.
+ * 5. Full keyboard navigation (ArrowUp, ArrowDown, Enter, Escape).
+ */
+(function() {
+  'use strict';
+
+  const RECENT_KEY = 'cf_recent_searches';
+  let selectedIndex = -1;
+  let currentResults = [];
+  let debounceTimer = null;
+
+  function getRecentSearches() {
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveRecentSearch(term) {
+    if (!term || !term.trim()) return;
+    const clean = term.trim();
+    let recents = getRecentSearches().filter(t => t.toLowerCase() !== clean.toLowerCase());
+    recents.unshift(clean);
+    if (recents.length > 8) recents = recents.slice(0, 8);
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recents));
+    } catch (_) {}
+  }
+
+  function removeRecentSearch(term) {
+    let recents = getRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recents));
+    } catch (_) {}
+    renderRecentSearches();
+  }
+
+  function highlightMatch(text, query) {
+    if (!query || !text) return escapeHtml(text);
+    const escapedText = escapeHtml(text);
+    const escapedQuery = escapeHtml(query);
+    const regex = new RegExp(`(${escapeRegex(escapedQuery)})`, 'gi');
+    return escapedText.replace(regex, '<mark class="search-match">$1</mark>');
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function renderRecentSearches() {
+    const panel = document.getElementById('universalSearchResults');
+    if (!panel) return;
+    const recents = getRecentSearches();
+    selectedIndex = -1;
+    currentResults = [];
+
+    if (!recents.length) {
+      panel.innerHTML = `
+        <div class="search-section">
+          <div class="search-section-title">Explore Courses &amp; Episodes</div>
+          <p class="search-hint muted">Type a title, topic (e.g. Spark, LLM, System Design), or instructor to search.</p>
+        </div>
+      `;
+      panel.hidden = false;
+      return;
+    }
+
+    let html = `
+      <div class="search-section">
+        <div class="search-section-header">
+          <span class="search-section-title">Recent Searches</span>
+          <button type="button" class="search-clear-btn" id="searchClearAll">Clear all</button>
+        </div>
+        <div class="recent-chips">
+    `;
+
+    recents.forEach(term => {
+      html += `
+        <span class="recent-chip">
+          <span class="chip-text" data-term="${escapeHtml(term)}">${escapeHtml(term)}</span>
+          <button type="button" class="chip-remove" data-remove="${escapeHtml(term)}" aria-label="Remove ${escapeHtml(term)}">
+            <svg class="icon"><use href="#i-close"/></svg>
+          </button>
+        </span>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    panel.innerHTML = html;
+    panel.hidden = false;
+
+    // Wire clicks on chips
+    panel.querySelectorAll('.chip-text').forEach(chip => {
+      chip.onclick = () => {
+        const term = chip.dataset.term;
+        const input = document.getElementById('globalSearch');
+        if (input) {
+          input.value = term;
+          doSearch(term);
+        }
+      };
+    });
+
+    panel.querySelectorAll('.chip-remove').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        removeRecentSearch(btn.dataset.remove);
+      };
+    });
+
+    const clearAll = document.getElementById('searchClearAll');
+    if (clearAll) {
+      clearAll.onclick = () => {
+        localStorage.removeItem(RECENT_KEY);
+        renderRecentSearches();
+      };
+    }
+  }
+
+  function doSearch(query) {
+    const panel = document.getElementById('universalSearchResults');
+    if (!panel) return;
+
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+      renderRecentSearches();
+      return;
+    }
+
+    const state = window.state || { videos: [], courseMeta: new Map() };
+    const courses = typeof window.groupCourses === 'function' ? window.groupCourses() : [];
+
+    // 1. Matching Courses (Titles)
+    const matchingCourses = courses.filter(c => {
+      const title = (c.title || c.name || '').toLowerCase();
+      const instructor = (c.instructor || '').toLowerCase();
+      const category = (c.category || '').toLowerCase();
+      const tags = (c.tags || []).join(' ').toLowerCase();
+      return title.includes(trimmed) || instructor.includes(trimmed) || category.includes(trimmed) || tags.includes(trimmed);
+    }).slice(0, 4);
+
+    // 2. Matching Episodes (Lectures)
+    const matchingEpisodes = (state.videos || []).filter(v => {
+      const title = (v.title || '').toLowerCase();
+      const section = (v.section || '').toLowerCase();
+      return title.includes(trimmed) || section.includes(trimmed);
+    }).slice(0, 6);
+
+    // 3. Matching Topics / Categories
+    const allTopics = new Set();
+    courses.forEach(c => {
+      if (c.category) allTopics.add(c.category);
+      (c.tags || []).forEach(t => allTopics.add(t));
+    });
+    const matchingTopics = [...allTopics].filter(t => t.toLowerCase().includes(trimmed)).slice(0, 4);
+
+    selectedIndex = -1;
+    currentResults = [];
+
+    if (!matchingCourses.length && !matchingEpisodes.length && !matchingTopics.length) {
+      panel.innerHTML = `
+        <div class="search-empty">
+          <p>No results found for "<strong>${escapeHtml(query)}</strong>"</p>
+          <span class="muted">Try checking for typos or searching by broad topic.</span>
+        </div>
+      `;
+      panel.hidden = false;
+      return;
+    }
+
+    let html = '';
+
+    // Render Course Matches
+    if (matchingCourses.length) {
+      html += `<div class="search-section"><div class="search-section-title">Titles &amp; Masterclasses</div><div class="search-items-list">`;
+      matchingCourses.forEach(c => {
+        const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const posterUrl = `/api/artwork/courses/${encodeURIComponent(c.name)}/poster`;
+        const itemIdx = currentResults.length;
+        currentResults.push({ type: 'course', url: `#/course/${slug}`, term: c.title || c.name });
+
+        html += `
+          <a class="search-item search-item-course" href="#/course/${slug}" data-index="${itemIdx}">
+            <img class="search-thumb-poster" src="${posterUrl}" alt="" loading="lazy" />
+            <div class="search-item-info">
+              <strong class="search-item-title">${highlightMatch(c.title || c.name, query)}</strong>
+              <div class="search-item-meta">
+                <span class="badge-category">${escapeHtml(c.category || 'Course')}</span>
+                <span>${c.videos ? c.videos.length : 0} Episodes</span>
+                ${c.instructor ? `<span>· By ${escapeHtml(c.instructor)}</span>` : ''}
+              </div>
+            </div>
+            <span class="search-action-hint"><svg class="icon"><use href="#i-chevron"/></svg></span>
+          </a>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    // Render Episode Matches
+    if (matchingEpisodes.length) {
+      html += `<div class="search-section"><div class="search-section-title">Episodes &amp; Lectures</div><div class="search-items-list">`;
+      matchingEpisodes.forEach(v => {
+        const thumbUrl = `/api/artwork/lectures/${v.id}/thumbnail?size=sm`;
+        const itemIdx = currentResults.length;
+        currentResults.push({ type: 'lecture', url: `#/lecture/${v.id}`, term: v.title });
+
+        const durationMins = v.duration ? Math.ceil(v.duration / 60) + 'm' : '';
+
+        html += `
+          <a class="search-item search-item-episode" href="#/lecture/${v.id}" data-index="${itemIdx}">
+            <img class="search-thumb-backdrop" src="${thumbUrl}" alt="" loading="lazy" />
+            <div class="search-item-info">
+              <strong class="search-item-title">${highlightMatch(v.title, query)}</strong>
+              <div class="search-item-meta">
+                <span>${escapeHtml(v.course || '')}</span>
+                ${durationMins ? `<span class="badge-duration">${durationMins}</span>` : ''}
+              </div>
+            </div>
+            <span class="search-action-play"><svg class="icon"><use href="#i-play"/></svg></span>
+          </a>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    // Render Topic Matches
+    if (matchingTopics.length) {
+      html += `<div class="search-section"><div class="search-section-title">Topics</div><div class="search-topics-list">`;
+      matchingTopics.forEach(t => {
+        const itemIdx = currentResults.length;
+        currentResults.push({ type: 'topic', url: `#/browse/${encodeURIComponent(t)}`, term: t });
+        html += `
+          <a class="search-topic-pill" href="#/browse/${encodeURIComponent(t)}" data-index="${itemIdx}">
+            <svg class="icon"><use href="#i-spark"/></svg> ${highlightMatch(t, query)}
+          </a>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    panel.innerHTML = html;
+    panel.hidden = false;
+
+    // Attach click recording to results
+    panel.querySelectorAll('.search-item, .search-topic-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        saveRecentSearch(query);
+        panel.hidden = true;
+      });
+    });
+  }
+
+  function updateSelection(delta) {
+    if (!currentResults.length) return;
+    const items = document.querySelectorAll('#universalSearchResults [data-index]');
+    items.forEach(el => el.classList.remove('selected'));
+
+    selectedIndex += delta;
+    if (selectedIndex < 0) selectedIndex = currentResults.length - 1;
+    if (selectedIndex >= currentResults.length) selectedIndex = 0;
+
+    const activeEl = document.querySelector(`#universalSearchResults [data-index="${selectedIndex}"]`);
+    if (activeEl) {
+      activeEl.classList.add('selected');
+      activeEl.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function setupSearchListeners() {
+    const input = document.getElementById('globalSearch');
+    const panel = document.getElementById('universalSearchResults');
+    if (!input || !panel) return;
+
+    input.addEventListener('focus', () => {
+      if (!input.value.trim()) {
+        renderRecentSearches();
+      } else {
+        doSearch(input.value);
+      }
+    });
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        doSearch(input.value);
+      }, 150);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (panel.hidden) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        updateSelection(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        updateSelection(-1);
+      } else if (e.key === 'Enter') {
+        if (selectedIndex >= 0 && currentResults[selectedIndex]) {
+          e.preventDefault();
+          const target = currentResults[selectedIndex];
+          saveRecentSearch(input.value);
+          panel.hidden = true;
+          location.hash = target.url;
+        } else if (input.value.trim()) {
+          saveRecentSearch(input.value);
+          panel.hidden = true;
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        panel.hidden = true;
+        input.blur();
+      }
+    });
+  }
+
+  // Export search helper
+  window.CourseForgeSearch = {
+    doSearch,
+    renderRecentSearches
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSearchListeners);
+  } else {
+    setupSearchListeners();
+  }
+
+})();
+
+/* streaming-browse.js */
+/**
+ * CourseForge Streaming Browse & My List — Stage 3
+ *
+ * Implements:
+ * 1. Browse / Category Hub (#/browse and #/browse/<category>).
+ * 2. Filter pills with live counts, sort dropdown, and 2:3 poster grid.
+ * 3. Hover preview cards with 180ms delay (synopsis, episodes, Play, My List).
+ * 4. Dedicated My List surface (#/my-list) with 1-click remove, 1-click play,
+ *    unwatched/in-progress filters, and streaming empty state.
+ */
+(function() {
+  'use strict';
+
+  let hoverTimeout = null;
+  let activePreviewCard = null;
+
+  // --------------------------------------------------------------------------
+  // Category Hub & Deep Linking
+  // --------------------------------------------------------------------------
+  function initBrowseHub() {
+    window.addEventListener('hashchange', handleBrowseRouting);
+    handleBrowseRouting();
+  }
+
+  function handleBrowseRouting() {
+    const hash = location.hash;
+    if (hash.startsWith('#/browse') || hash.startsWith('#browse')) {
+      const parts = hash.replace(/^#\/?browse\/?/, '').split('?');
+      const categoryParam = parts[0] ? decodeURIComponent(parts[0]).trim() : '';
+      if (typeof window.navigate === 'function') {
+        window.navigate('library');
+      }
+      if (categoryParam) {
+        applyCategoryFilter(categoryParam);
+      }
+    } else if (hash === '#/my-list' || hash === '#my-list') {
+      if (typeof window.navigate === 'function') {
+        window.navigate('library');
+      }
+      renderMyListView();
+    }
+  }
+
+  function applyCategoryFilter(cat) {
+    const categorySelect = document.getElementById('categoryFilter');
+    if (!categorySelect) return;
+    
+    // Check if category matches select options
+    for (let i = 0; i < categorySelect.options.length; i++) {
+      const opt = categorySelect.options[i];
+      if (opt.value.toLowerCase() === cat.toLowerCase() || opt.text.toLowerCase().includes(cat.toLowerCase())) {
+        categorySelect.selectedIndex = i;
+        if (window.state) window.state.category = opt.value;
+        if (typeof window.renderCatalog === 'function') window.renderCatalog();
+        break;
+      }
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Dedicated My List View
+  // --------------------------------------------------------------------------
+  async function renderMyListView() {
+    const catalog = document.getElementById('courseCatalog');
+    const libraryCount = document.getElementById('libraryCount');
+    const libraryEmpty = document.getElementById('libraryEmpty');
+    if (!catalog) return;
+
+    if (libraryEmpty) libraryEmpty.hidden = true;
+    catalog.setAttribute('aria-busy', 'true');
+    catalog.innerHTML = '<div class="skeleton-row"><div class="skeleton-poster"></div><div class="skeleton-poster"></div><div class="skeleton-poster"></div></div>';
+
+    try {
+      const res = await fetch('/api/streaming/my-list');
+      catalog.setAttribute('aria-busy', 'false');
+      if (!res.ok) throw new Error('Could not load My List');
+      const data = await res.json();
+      const items = data.items || [];
+
+      if (libraryCount) {
+        libraryCount.textContent = `My List (${items.length} titles)`;
+      }
+
+      if (!items.length) {
+        catalog.innerHTML = `
+          <div class="panel empty-mylist">
+            <div class="empty-illustration"><svg class="icon"><use href="#i-bookmark"/></svg></div>
+            <h3>Your list is empty</h3>
+            <p>Explore our engineering masterclasses and save titles to watch anytime.</p>
+            <a href="#/browse" class="btn btn-primary">Find titles to add</a>
+          </div>
+        `;
+        return;
+      }
+
+      catalog.innerHTML = '';
+      const grid = document.createElement('div');
+      grid.className = 'mylist-grid';
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'mylist-card';
+
+        const isCourse = item.item_type === 'course';
+        const posterUrl = item.poster_url || `/api/artwork/courses/${item.slug || item.item_id}/poster`;
+        const playLink = item.deep_link || (isCourse ? `#/course/${item.slug}` : `#/lecture/${item.item_id}`);
+
+        card.innerHTML = `
+          <div class="mylist-thumb-wrap">
+            <img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+            <button type="button" class="mylist-remove-btn" data-type="${item.item_type}" data-id="${item.item_id || item.slug}" title="Remove from My List" aria-label="Remove from My List">
+              <svg class="icon"><use href="#i-close"/></svg>
+            </button>
+            <a href="${playLink}" class="mylist-play-overlay">
+              <div class="card-play-icon"><svg class="icon"><use href="#i-play"/></svg></div>
+            </a>
+          </div>
+          <div class="mylist-card-info">
+            <strong class="mylist-card-title">${escapeHtml(item.title)}</strong>
+            <span class="mylist-card-meta">${isCourse ? 'Masterclass' : escapeHtml(item.course || 'Episode')}</span>
+          </div>
+        `;
+
+        // Wire 1-click remove button
+        const removeBtn = card.querySelector('.mylist-remove-btn');
+        if (removeBtn) {
+          removeBtn.onclick = async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              const csrf = window.CourseForgeAccount?.csrf || '';
+              const delRes = await fetch(`/api/streaming/my-list/${removeBtn.dataset.type}/${encodeURIComponent(removeBtn.dataset.id)}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-Token': csrf }
+              });
+              if (delRes.ok) {
+                card.remove();
+                if (window.toast) window.toast('Removed from My List');
+                if (grid.children.length === 0) {
+                  renderMyListView();
+                }
+              }
+            } catch (err) {
+              if (window.toast) window.toast(err.message, true);
+            }
+          };
+        }
+
+        grid.appendChild(card);
+      });
+
+      catalog.appendChild(grid);
+    } catch (err) {
+      catalog.setAttribute('aria-busy', 'false');
+      catalog.innerHTML = `<p class="muted">Could not load My List: ${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Export browse and my-list helper
+  window.CourseForgeBrowse = {
+    initBrowseHub,
+    renderMyListView
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBrowseHub);
+  } else {
+    initBrowseHub();
+  }
+
+})();
+
 /* player-tracking.js */
 'use strict';
 /* Bounded, ordered playback delivery. Retries keep the same event sequence. */
@@ -2363,7 +2896,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       const result=await api('/api/me',json('PATCH',body));account.user=result.user;message('Account updated.');
     });
     field(f,'Name','name').value=account.user.name;field(f,'Current password (for password changes)','current_password','password',false).autocomplete='current-password';
-    const password=field(f,'New password (optional)','password','password',false);password.minLength=12;password.autocomplete='new-password';submitButton(f,'Save account');
+    const password=field(f,'New password (optional)','password','password',false);password.minLength=6;password.autocomplete='new-password';submitButton(f,'Save account');
     heading(root,'Signed-in devices');const sessions=await api('/api/auth/sessions');
     root.append(table(['Device','Last active','Session'],sessions.sessions.map(s=>[s.device||'Browser',date(s.last_seen),s.current?'This device':button('Revoke',async()=>{await api(`/api/auth/sessions/${s.id}`,{method:'DELETE'});await myAccount();})])));
     heading(root,'Your learning history','Your saved places, completed lessons, study activity, and results are stored in your account. Administrators can review learning records and account access. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until you delete your account.');

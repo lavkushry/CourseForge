@@ -301,7 +301,7 @@ def user_detail(uid: str,request: Request):
 class AdminUserBody(BaseModel):
     name: str=Field(min_length=1,max_length=120)
     email: str=Field(max_length=254)
-    password: str=Field(min_length=12,max_length=128)
+    password: str=Field(min_length=6,max_length=128)
 
 
 @router.post('/api/admin/users',status_code=201)

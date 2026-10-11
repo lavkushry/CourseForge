@@ -3,7 +3,8 @@ from pathlib import Path
 
 static = Path(__file__).resolve().parents[1] / 'app' / 'static'
 groups = {
-    'core.js': ['services.js', 'app.js', 'streaming-home.js', 'player-tracking.js', 'player-session.js',
+    'core.js': ['services.js', 'app.js', 'streaming-home.js', 'streaming-search.js', 'streaming-browse.js',
+                'player-tracking.js', 'player-session.js',
                 'player-recovery.js', 'native-player.js', 'player-studio.js',
                 'loaders.js', 'academy.js', 'mobile.js'],
     'tools.js': ['learning-paths.js', 'assessments.js', 'practice.js', 'planner.js', 'weekly.js', 'focus.js'],
