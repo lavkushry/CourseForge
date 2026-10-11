@@ -3978,7 +3978,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     });
     if(mode==='register'){const n=field(f,'Name','name');n.maxLength=120;n.autocomplete='name';}
     const email=field(f,'Email address','email','email');email.autocomplete='email';email.maxLength=254;
-    if(mode==='login'||mode==='register'){const password=field(f,'Password','password','password');password.autocomplete=mode==='login'?'current-password':'new-password';if(mode==='register'){password.minLength=6;f.append(node('p','muted','Use at least 6 characters.'));}}
+    if(mode==='login'||mode==='register'){const password=field(f,'Password','password','password');password.autocomplete=mode==='login'?'current-password':'new-password';if(mode==='register'){password.minLength=4;f.append(node('p','muted','Use at least 4 characters.'));}}
     if(mode==='register')f.append(node('p','muted','Your account keeps your progress, notes, playback activity, and sign-in history. Administrators can review learning and access records.'));
     const submit=submitButton(f,mode==='login'?'Sign in':mode==='register'?'Create account':'Send email');
     if(mode!=='login')submit.disabled=true;
@@ -4012,7 +4012,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       const result=await api('/api/me',json('PATCH',body));account.user=result.user;message('Account updated.');
     });
     field(f,'Name','name').value=account.user.name;field(f,'Current password (for password changes)','current_password','password',false).autocomplete='current-password';
-    const password=field(f,'New password (optional)','password','password',false);password.minLength=6;password.autocomplete='new-password';submitButton(f,'Save account');
+    const password=field(f,'New password (optional)','password','password',false);password.minLength=4;password.autocomplete='new-password';submitButton(f,'Save account');
     heading(root,'Signed-in devices');const sessions=await api('/api/auth/sessions');
     root.append(table(['Device','Last active','Session'],sessions.sessions.map(s=>[s.device||'Browser',date(s.last_seen),s.current?'This device':button('Revoke',async()=>{await api(`/api/auth/sessions/${s.id}`,{method:'DELETE'});await myAccount();})])));
     heading(root,'Your learning history','Your saved places, completed lessons, study activity, and results are stored in your account. Administrators can review learning records and account access. Access logs are kept for 30 days and detailed sessions for 90 days. Your learning totals remain until you delete your account.');
@@ -4533,8 +4533,8 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     }
     if(token&&(action==='reset'||action==='activate')){
       const root=page(action==='activate'?'Activate your account':'Choose a new password');
-      if(action==='activate')root.append(node('p','muted','Your administrator invited you to CourseForge. Choose a password with at least 6 characters.'));
-      const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=6;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
+      if(action==='activate')root.append(node('p','muted','Your administrator invited you to CourseForge. Choose a password with at least 4 characters.'));
+      const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=4;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
     }
     const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
     const h=location.hash;

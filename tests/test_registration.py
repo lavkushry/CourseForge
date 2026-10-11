@@ -74,7 +74,7 @@ def test_registration_does_not_replace_existing_or_activate_invited_accounts(aca
 def test_registration_validates_input_and_rejects_cross_origin(academy_env, monkeypatch):
     open_registration(monkeypatch)
     guest = TestClient(main.app, base_url='https://testserver')
-    for extra in ({'password':'short'}, {'name':'   '}, {'email':'invalid'}):
+    for extra in ({'password':'sh'}, {'name':'   '}, {'email':'invalid'}):
         assert register(guest, **extra).status_code == 422
     assert guest.post('/api/auth/register', headers={'origin':'https://other.test'}, json={
         'name':'Learner', 'email':'cross@courseforge.test', 'password':PASSWORD}).status_code == 403
