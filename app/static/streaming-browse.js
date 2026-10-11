@@ -75,6 +75,7 @@
       pillsBar.setAttribute('aria-label', 'Browse by category');
       libraryControls.parentNode.insertBefore(pillsBar, document.getElementById('courseCatalog'));
     }
+    pillsBar.hidden = false;
 
     const courses = typeof window.groupCourses === 'function' ? window.groupCourses() : [];
     if (!courses.length) return;

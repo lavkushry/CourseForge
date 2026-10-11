@@ -152,19 +152,19 @@ def run_stage6_verification():
         # ----------------------------------------------------------------------
         print("\n--- 5. End-to-End Streaming Walkthrough ---")
         # 1. Home Billboard
-        page.evaluate("location.hash = '#dashboard'")
+        page.goto(LIVE_URL + '/#dashboard', wait_until="networkidle")
         time.sleep(1.0)
         assert page.locator('#streamingHero').is_visible(), "Hero billboard not visible"
         print("  [PASS] 1. Home Billboard active")
 
         # 2. Category Hub & Filters
-        page.evaluate("location.hash = '#/browse'")
+        page.goto(LIVE_URL + '/#/browse', wait_until="networkidle")
         time.sleep(1.0)
         assert page.locator('#categoryFilterPills').is_visible(), "Category filter pills not visible"
         print("  [PASS] 2. Category Hub & Filter pills active")
 
         # 3. Title Detail Modal
-        page.evaluate("location.hash = '#/course/mission-azure-data-engineer-march-2026'")
+        page.goto(LIVE_URL + '/#/course/mission-azure-data-engineer-march-2026', wait_until="networkidle")
         time.sleep(1.0)
         assert page.locator('#titleDetailDialog[open]').is_visible(), "Title modal did not open"
         print("  [PASS] 3. Title detail modal opened via deep link")
@@ -172,13 +172,13 @@ def run_stage6_verification():
         time.sleep(0.5)
 
         # 4. My List
-        page.evaluate("location.hash = '#/my-list'")
+        page.goto(LIVE_URL + '/#/my-list', wait_until="networkidle")
         time.sleep(1.0)
         assert page.locator('.mylist-surface').is_visible(), "My List surface not visible"
         print("  [PASS] 4. My List surface active")
 
         # 5. History
-        page.evaluate("location.hash = '#/history'")
+        page.goto(LIVE_URL + '/#/history', wait_until="networkidle")
         time.sleep(1.0)
         assert page.locator('.history-surface').is_visible(), "Watch History surface not visible"
         print("  [PASS] 5. Watch History surface active")
