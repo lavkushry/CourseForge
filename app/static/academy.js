@@ -644,8 +644,11 @@
       const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=6;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
     }
     const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
-    if(location.hash==='#register'&&!account.user)signIn('register');
-    else if(location.hash==='#courses')await catalog();
+    const h=location.hash;
+    if(h==='#register'&&!account.user)signIn('register');
+    else if(h==='#courses'||h==='#/browse'||h==='#browse'||h.startsWith('#/course/')||h.startsWith('#course/')) {
+      if(!account.user)await catalog();else await workspace();
+    }
     else if(adminRoute&&!account.user)signIn();
     else if(adminRoute&&account.user?.role==='admin'){
       const route=adminRoute[1]||'';

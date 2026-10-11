@@ -106,6 +106,8 @@ def init_db(path: Path | None = None) -> None:
     ensure_weekly_schema(path)
     from .focus import ensure_schema as ensure_focus_schema
     ensure_focus_schema(path)
+    from .streaming import ensure_schema as ensure_streaming_schema
+    ensure_streaming_schema(path)
     from .migrations import migrate
     migrate(path)
 

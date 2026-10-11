@@ -18,6 +18,7 @@ class TestClient(BaseClient):
         with db.connect() as conn:
             conn.execute('''INSERT OR IGNORE INTO users VALUES('legacy','regression@courseforge.test',
                 'Regression administrator',?,'admin',1,0,?)''',(auth.hasher.hash('Regression password 123'),db.utcnow()))
+            conn.execute("DELETE FROM rate_limits WHERE key LIKE 'login%'")
         response=super().request('POST','/api/auth/login',json={'email':'regression@courseforge.test','password':'Regression password 123'})
         assert response.status_code==200,response.text
         self.headers['X-CSRF-Token']=response.json()['csrf_token']

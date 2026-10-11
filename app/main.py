@@ -96,7 +96,7 @@ async def guard_local_actions(request: Request, call_next):
         response.headers['X-Content-Type-Options']='nosniff'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
-        if request.url.path.startswith('/api/'):
+        if request.url.path.startswith('/api/') and not request.url.path.startswith('/api/artwork/'):
             response.headers['Cache-Control']='no-store'
         return response
     finally:
@@ -114,6 +114,10 @@ from .admin_console import router as admin_console_router
 app.include_router(admin_console_router)
 from .habits import router as habits_router
 app.include_router(habits_router)
+from .artwork import router as artwork_router
+app.include_router(artwork_router)
+from .streaming import router as streaming_router
+app.include_router(streaming_router)
 
 static_path = Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=static_path), name='static')

@@ -167,7 +167,7 @@ def test_instant_momentum_hero_leads_with_continue_and_resumes(browser):
     # Clicking hero button transitions directly to learning studio with the lesson
     hero_btn.click()
     page.wait_for_selector('[data-view="learning"]:not([hidden])')
-    assert 'learning' in page.url
+    assert 'learning' in page.url or 'lecture' in page.url
     page.close()
 
 

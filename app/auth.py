@@ -243,6 +243,8 @@ async def authorize(request: Request) -> dict | None:
     public = public or (request.method in ('GET','HEAD') and path.startswith('/api/public/courses/'))
     public = public or (request.method in ('GET','HEAD') and path.startswith('/api/certificates/verify/'))
     public = public or (request.method in ('GET','HEAD') and re.fullmatch(r'/api/courses/[^/]+/cover',path) is not None)
+    public = public or (request.method in ('GET','HEAD') and path.startswith('/api/artwork/'))
+    public = public or (request.method in ('GET','HEAD') and path.startswith('/api/streaming/'))
     if public:
         if '/cover' in path:
             course = unquote(path.split('/')[3])
