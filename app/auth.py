@@ -78,8 +78,8 @@ def normalize_email(value: str) -> str:
 
 
 def validate_password(value: str):
-    if not 12 <= len(value) <= 128:
-        raise HTTPException(422, 'Use a password between 12 and 128 characters')
+    if not 6 <= len(value) <= 128:
+        raise HTTPException(422, 'Use a password between 6 and 128 characters')
 
 
 def check_password(encoded: str, value: str) -> bool:
@@ -310,7 +310,7 @@ class TokenBody(BaseModel):
 
 
 class ResetBody(TokenBody):
-    password: str = Field(min_length=12,max_length=128)
+    password: str = Field(min_length=6,max_length=128)
 
 
 @router.post('/api/auth/register',status_code=201)
@@ -454,7 +454,7 @@ def revoke(sid: str,request: Request):
 class ProfileBody(BaseModel):
     name: str = Field(min_length=1,max_length=120)
     current_password: str | None = Field(default=None,max_length=128)
-    password: str | None = Field(default=None,min_length=12,max_length=128)
+    password: str | None = Field(default=None,min_length=6,max_length=128)
 
 
 @router.patch('/api/me')

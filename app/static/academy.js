@@ -85,7 +85,7 @@
     });
     if(mode==='register'){const n=field(f,'Name','name');n.maxLength=120;n.autocomplete='name';}
     const email=field(f,'Email address','email','email');email.autocomplete='email';email.maxLength=254;
-    if(mode==='login'||mode==='register'){const password=field(f,'Password','password','password');password.autocomplete=mode==='login'?'current-password':'new-password';if(mode==='register'){password.minLength=12;f.append(node('p','muted','Use at least 12 characters.'));}}
+    if(mode==='login'||mode==='register'){const password=field(f,'Password','password','password');password.autocomplete=mode==='login'?'current-password':'new-password';if(mode==='register'){password.minLength=6;f.append(node('p','muted','Use at least 6 characters.'));}}
     if(mode==='register')f.append(node('p','muted','Your account keeps your progress, notes, playback activity, and sign-in history. Administrators can review learning and access records.'));
     const submit=submitButton(f,mode==='login'?'Sign in':mode==='register'?'Create account':'Send email');
     if(mode!=='login')submit.disabled=true;
@@ -640,8 +640,8 @@
     }
     if(token&&(action==='reset'||action==='activate')){
       const root=page(action==='activate'?'Activate your account':'Choose a new password');
-      if(action==='activate')root.append(node('p','muted','Your administrator invited you to CourseForge. Choose a password with at least 12 characters.'));
-      const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=12;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
+      if(action==='activate')root.append(node('p','muted','Your administrator invited you to CourseForge. Choose a password with at least 6 characters.'));
+      const f=form(root,'',async data=>{const r=await api('/api/auth/'+action,json('POST',{token,password:data.get('password')}));history.replaceState(null,'','/');signIn();message(r.message);});field(f,'New password','password','password').minLength=6;submitButton(f,action==='activate'?'Activate account':'Reset password');return;
     }
     const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
     if(location.hash==='#register'&&!account.user)signIn('register');
