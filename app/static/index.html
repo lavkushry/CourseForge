@@ -168,7 +168,7 @@
               </section>
             </div>
             <aside class="panel transcript-panel study-rail" aria-label="Lesson study panel">
-              <div class="lesson-tabs" role="tablist" aria-label="Lesson workspace"><button id="tab-lessons" class="lesson-tab active" role="tab" aria-selected="true" aria-controls="panel-lessons" data-lesson-tab="lessons">Lessons</button><button id="tab-materials" class="lesson-tab-conditional" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-materials" data-lesson-tab="materials" hidden>Materials</button><button id="tab-notes" class="lesson-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-notes" data-lesson-tab="notes">Notes</button><button id="tab-transcript" class="lesson-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-transcript" data-lesson-tab="transcript">Transcript</button></div>
+              <div class="lesson-tabs" role="tablist" aria-label="Lesson workspace"><button id="tab-lessons" class="lesson-tab active" role="tab" aria-selected="true" aria-controls="panel-lessons" data-lesson-tab="lessons">Lessons</button><button id="tab-materials" class="lesson-tab-conditional" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-materials" data-lesson-tab="materials" hidden>Materials</button><button id="tab-quiz" class="lesson-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-quiz" data-lesson-tab="quiz">Quiz</button><button id="tab-notes" class="lesson-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-notes" data-lesson-tab="notes">Notes</button><button id="tab-transcript" class="lesson-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-transcript" data-lesson-tab="transcript">Transcript</button></div>
               <div id="panel-lessons" class="lesson-sidebar" data-lesson-panel="lessons" role="tabpanel" aria-labelledby="tab-lessons">
                 <div class="panel-top"><h3>Course content</h3><span class="tag" id="lessonCount">0 lessons</span></div>
                 <label class="input-label" for="lessonCourse">Course</label><select id="lessonCourse" class="form-input"><option value="">All courses</option></select>
@@ -178,6 +178,11 @@
               <div id="panel-materials" data-lesson-panel="materials" role="tabpanel" aria-labelledby="tab-materials" hidden>
                 <h3>Lesson materials</h3><p class="muted">Notebooks, PDFs, slides, datasets, and code files for this lesson.</p>
                 <div id="railMaterialsList" class="rail-materials-list"></div>
+              </div>
+              <div id="panel-quiz" data-lesson-panel="quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+                <div class="panel-top"><div><span class="eyebrow">LESSON MASTERY</span><h3 id="quizHeading">Lesson Quiz</h3></div><span class="tag" id="quizStatusTag">Not attempted</span></div>
+                <p class="muted" id="quizSubtext">Test your understanding to earn your Learned ✓ status.</p>
+                <div id="quizContainer" class="quiz-container"></div>
               </div>
               <div id="panel-notes" data-lesson-panel="notes" role="tabpanel" aria-labelledby="tab-notes" hidden><h3>Timestamped notes</h3><p class="muted">Keep study notes next to the moments you want to remember. Saved privately in your account.</p><form id="noteForm"><label class="field timestamp-field"><span>Timestamp (MM:SS or HH:MM:SS)</span><input id="notePosition" class="form-input" value="00:00" required pattern="[0-9]+(:[0-5][0-9]){0,2}"/></label><label for="noteText" class="input-label">Note</label><textarea id="noteText" class="form-input" maxlength="3000" rows="4" placeholder="What did you learn?" required></textarea><button id="saveNoteBtn" class="btn btn-primary" type="submit">Save timestamped note</button></form><div id="notesList" class="notes-list"></div><h3>Bookmarks</h3><form id="bookmarkForm" class="bookmark-form"><input id="bookmarkPosition" class="form-input timestamp-field" aria-label="Bookmark timestamp" value="00:00" required pattern="[0-9]+(:[0-5][0-9]){0,2}"/><input id="bookmarkLabel" class="form-input" aria-label="Bookmark label" placeholder="Bookmark label" maxlength="160" required/><button class="btn btn-outline" type="submit">Save bookmark</button></form><div id="bookmarksList"></div></div>
               <div id="panel-transcript" data-lesson-panel="transcript" role="tabpanel" aria-labelledby="tab-transcript" hidden><h3>Lecture transcript</h3><div id="timeline" class="timeline"><p class="muted">Select a lecture to view its transcript.</p></div></div>
@@ -242,15 +247,19 @@
           <span>·</span>
           <span id="completionDate">Today</span>
         </div>
+        <div class="completion-verify-box" id="completionVerifyBox" style="margin-top:12px;font-size:0.85rem;color:var(--muted)">
+          <span>Verification: </span><strong id="completionCode" style="color:var(--ink);font-family:monospace"></strong> · <a id="completionVerifyLink" href="#" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Verify certificate ↗</a>
+        </div>
       </div>
       <div class="completion-actions">
         <button type="button" class="btn btn-outline" id="completionShareBtn">Copy achievement</button>
+        <a class="btn btn-outline" id="completionVerifyBtn" target="_blank" rel="noopener" href="#" hidden>Public certificate ↗</a>
         <button type="button" class="btn btn-primary" id="completionCloseBtn">Back to library</button>
       </div>
     </div>
   </dialog>
   <div id="notice" class="toast" role="status" aria-live="polite" hidden></div>
   <div id="mobileScrim" class="mobile-scrim" hidden></div>
-  <script src="/static/core.js?v=18" defer></script>
+  <script src="/static/core.js?v=19" defer></script>
 </body>
 </html>

@@ -241,6 +241,7 @@ async def authorize(request: Request) -> dict | None:
                       '/api/auth/verify','/api/auth/forgot','/api/auth/reset','/api/auth/resend',
                       '/api/auth/activate','/api/public/account-options')
     public = public or (request.method in ('GET','HEAD') and path.startswith('/api/public/courses/'))
+    public = public or (request.method in ('GET','HEAD') and path.startswith('/api/certificates/verify/'))
     public = public or (request.method in ('GET','HEAD') and re.fullmatch(r'/api/courses/[^/]+/cover',path) is not None)
     if public:
         if '/cover' in path:

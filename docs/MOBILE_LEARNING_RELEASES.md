@@ -106,7 +106,28 @@ running. Asset version 15 invalidates previous page bundles.
 
 ## Phase 4: learning that sticks
 
-Pending instructor assessments and per-lesson active recall quizzes.
+- **Per-Lesson Mastery Quizzes**:
+  - 3–5 grounded, concept and applied questions per lesson.
+  - Passing ($\ge 70\%$) awards the green `Learned ✓` badge on the lesson in both the study rail and sidebar.
+  - Failing offers a friendly retry with a specific suggested lesson timestamp/section — never a dead end.
+  - All quiz questions and submissions are deterministic and fail-safe even if external AI services are offline.
+- **Review Tab & Spaced Repetition**:
+  - Spaced-repetition sessions resurface concepts and lessons from past days and weeks at growing intervals using SM-2.
+  - Self-rated recall evaluations ("Again", "Hard", "Good", "Easy") schedule card intervals.
+  - Active recall grading automatically calls `/api/reviews/complete` and credits the daily habit loop (`kind='review'`).
+- **Official Course Completion Certificates & Public Verification**:
+  - Completing all lessons (100% watched) AND passing all quizzes for a course issues an official Certificate of Completion.
+  - Contains student name, course title, issue date, unique verification code (e.g. `CF-XXXX-XXXX`), and a public verification URL (`/verify/{code}`).
+  - Verification endpoint `/verify/{code}` is accessible without an account (publicly verifiable by employers or peers from any browser).
+  - Screenshot-worthy modal with copy-achievement and open-public-certificate actions.
+- **Habit & Learning Loop Reinforcement**:
+  - Passing a quiz (`lesson_quiz_passed`) and completing a review session (`lesson_review_completed`) feed daily streaks and weekly recaps.
+  - Daily goal of "1 lesson completed" counts lessons + quizzes + reviews.
+- **Admin Engagement Measurement**:
+  - Added `quiz_pass_rate` (percentage with attempt counts) and `review_session_completion` count to `/api/admin/overview`.
+- **Validation**:
+  - 4/4 acceptance tests passing in `tests/test_phase4_learning_retention.py`.
+  - 173/173 core suite tests passing with 0 regressions.
 
 ## Phase 5: proactive AI companion
 

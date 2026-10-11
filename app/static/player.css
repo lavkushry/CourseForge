@@ -92,3 +92,19 @@ body.in-learning #mobileScrim{z-index:79}
 .in-learning .section-shared-info strong,.in-learning .material-item-text strong{color:var(--studio-ink)}
 .in-learning .lesson-materials-panel,.in-learning .material-item-card,.in-learning .lesson-material-preview,.in-learning .material-preview-bar{--surface:var(--studio-panel);--surface-2:#101727;--line:var(--studio-line);--line-strong:var(--studio-line);--ink:var(--studio-ink);--muted:var(--studio-muted);--accent-subtle:#a7b3ff20;--accent-text:var(--studio-accent);background:var(--studio-panel);border-color:var(--studio-line);color:var(--studio-ink)}
 .in-learning .material-item-card,.in-learning .material-preview-bar{background:#101727}
+
+/* Phase 4: Learning That Sticks styles */
+.quiz-container{display:grid;gap:16px;padding:8px 0}
+.quiz-form{display:grid;gap:18px}
+.quiz-question-block{background:var(--studio-panel,#131b2e);border:1px solid var(--studio-line,#22304d);border-radius:12px;padding:16px;display:grid;gap:12px}
+.quiz-stem{margin:0;font-size:14px;font-weight:600;color:var(--studio-ink,#f8fafc);line-height:1.4}
+.quiz-options{display:grid;gap:8px}
+.quiz-option-label{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--studio-line,#22304d);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:13px;color:var(--studio-ink,#f8fafc);line-height:1.4}
+.quiz-option-label:hover{background:#ffffff08;border-color:var(--studio-accent,#6366f1)}
+.quiz-option-label input[type="radio"]{margin-top:2px;accent-color:var(--studio-accent,#6366f1);cursor:pointer;flex-shrink:0}
+.quiz-opt-text{flex:1}
+.quiz-retry-box{background:#f59e0b15;border:1px solid #f59e0b40;border-radius:12px;padding:18px;text-align:center;display:grid;gap:10px;place-items:center}
+.quiz-retry-box h4{margin:0;color:#f59e0b;font-size:16px}
+.quiz-retry-box p{margin:0;font-size:13px;color:var(--studio-ink,#f8fafc);max-width:44ch}
+.lesson-learned-badge{display:inline-flex;align-items:center;background:#10b98120;border:1px solid #10b98150;color:#10b981;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px}
+.completion-verify-box{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#0f172a;border-radius:8px;border:1px solid #334155}

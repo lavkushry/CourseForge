@@ -143,7 +143,9 @@
         ['Daily active students',report.engagement.daily_active_students],
         ['Average session duration',`${report.engagement.average_session_minutes} min`],
         ['7-day return rate',report.engagement.seven_day_return_rate!==null?`${report.engagement.seven_day_return_rate}%`:'Not enough cohort data'],
-        ['Returning cohort',`${report.engagement.returning_students} of ${report.engagement.return_cohort} students`]
+        ['Returning cohort',`${report.engagement.returning_students} of ${report.engagement.return_cohort} students`],
+        ['Quiz pass rate',report.engagement.quiz_pass_rate!==null?`${report.engagement.quiz_pass_rate}% (${report.engagement.quizzes_passed}/${report.engagement.quizzes_taken})`:'No quizzes yet'],
+        ['Review sessions completed',report.engagement.review_session_completion]
       ]){
         const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));engMetrics.append(card);
       }

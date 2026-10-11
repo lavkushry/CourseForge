@@ -100,6 +100,7 @@ def migrate(path: Path | None = None) -> None:
             migrate_player(db)
             migrate_player_ownership(db)
             migrate_habits(db)
+            migrate_retention(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -136,6 +137,7 @@ def migrate(path: Path | None = None) -> None:
         migrate_player(db)
         migrate_player_ownership(db)
         migrate_habits(db)
+        migrate_retention(db)
 
 
 def migrate_console(db):
@@ -258,6 +260,52 @@ def migrate_habits(db):
             updated_at TEXT NOT NULL,
             PRIMARY KEY(user_id, week))''')
         db.execute("INSERT INTO schema_migrations VALUES(5,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+
+
+def migrate_retention(db):
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=6').fetchone(): return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute('''CREATE TABLE IF NOT EXISTS lesson_quizzes(
+            id TEXT PRIMARY KEY,
+            video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+            course TEXT NOT NULL,
+            questions_json TEXT NOT NULL,
+            created_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS lesson_quizzes_video ON lesson_quizzes(video_id)')
+        db.execute('''CREATE TABLE IF NOT EXISTS lesson_quiz_attempts(
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+            quiz_id TEXT NOT NULL REFERENCES lesson_quizzes(id) ON DELETE CASCADE,
+            score INTEGER NOT NULL,
+            correct_count INTEGER NOT NULL,
+            total_count INTEGER NOT NULL,
+            passed INTEGER NOT NULL CHECK(passed IN (0,1)),
+            answers_json TEXT NOT NULL,
+            completed_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS lesson_quiz_attempts_user ON lesson_quiz_attempts(user_id,video_id,completed_at)')
+        db.execute('''CREATE TABLE IF NOT EXISTS course_certificates(
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            course TEXT NOT NULL,
+            student_name TEXT NOT NULL,
+            verification_code TEXT NOT NULL UNIQUE,
+            completed_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS course_certificates_lookup ON course_certificates(user_id,course)')
+        db.execute('CREATE INDEX IF NOT EXISTS course_certificates_code ON course_certificates(verification_code)')
+        db.execute('''CREATE TABLE IF NOT EXISTS review_sessions(
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            course TEXT,
+            cards_reviewed INTEGER NOT NULL DEFAULT 0,
+            completed_at TEXT NOT NULL)''')
+        db.execute('CREATE INDEX IF NOT EXISTS review_sessions_user ON review_sessions(user_id,completed_at)')
+        db.execute("INSERT INTO schema_migrations VALUES(6,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
         db.commit()
     except BaseException:
         db.rollback()

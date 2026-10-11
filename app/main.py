@@ -17,7 +17,7 @@ from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk, keyword_search)
 from .library import scan_courses
 from .tutor import ask, retrieve
-from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus
+from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus, retention
 from . import auth
 from .db import learner_id, learner_courses, connect, course_allowed
 
@@ -1207,3 +1207,140 @@ def remove_video_note(note_id: str):
         study.delete_note(note_id)
     except KeyError:
         raise HTTPException(404, 'Note not found')
+
+
+class LessonQuizSubmitBody(BaseModel):
+    quiz_id: str
+    answers: dict[str, int]
+
+
+class ReviewCompleteBody(BaseModel):
+    course: str | None = None
+    cards_count: int = 1
+
+
+@app.get('/api/videos/{video_id}/quiz')
+def get_video_quiz(video_id: str, request: Request):
+    auth.require_user(request)
+    try:
+        return retention.get_or_create_quiz(video_id)
+    except KeyError:
+        raise HTTPException(404, 'Video not found')
+
+
+@app.post('/api/videos/{video_id}/quiz/attempts', status_code=201)
+def submit_video_quiz(video_id: str, body: LessonQuizSubmitBody, request: Request):
+    user = auth.require_user(request)
+    try:
+        return retention.submit_quiz(video_id, body.quiz_id, body.answers, user['id'])
+    except KeyError as exc:
+        raise HTTPException(404, str(exc))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+
+
+@app.get('/api/courses/{course}/quizzes/status')
+def get_course_quizzes_status(course: str, request: Request):
+    user = auth.require_user(request)
+    return {'status': retention.get_quiz_status_for_course(user['id'], course)}
+
+
+@app.post('/api/reviews/complete', status_code=201)
+def complete_review(body: ReviewCompleteBody, request: Request):
+    user = auth.require_user(request)
+    return retention.complete_review_session(user['id'], body.course, body.cards_count)
+
+
+@app.get('/api/courses/{course}/certificate')
+def course_certificate(course: str, request: Request):
+    user = auth.require_user(request)
+    return retention.check_or_issue_certificate(user['id'], course)
+
+
+@app.get('/api/certificates/verify/{code}')
+def verify_certificate_api(code: str):
+    res = retention.verify_certificate(code)
+    if not res.get('valid'):
+        raise HTTPException(404, 'Certificate not found')
+    return res
+
+
+@app.get('/verify/{code}')
+def verify_certificate_page(code: str):
+    from fastapi.responses import HTMLResponse
+    res = retention.verify_certificate(code)
+    if not res.get('valid'):
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Certificate Not Found · CourseForge</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{{font-family:system-ui,-apple-system,sans-serif;background:#0b0f19;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;}}
+.card{{background:#1e293b;border:1px solid #334155;border-radius:16px;max-width:480px;padding:32px;text-align:center;}}
+h1{{color:#ef4444;font-size:1.5rem;margin-top:0;}}
+p{{color:#94a3b8;line-height:1.5;}}
+a{{color:#6366f1;text-decoration:none;}}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Certificate Not Found</h1>
+<p>The verification code <strong>{code}</strong> does not correspond to a valid CourseForge credential.</p>
+<p><a href="/">Return to CourseForge</a></p>
+</div>
+</body>
+</html>"""
+        return HTMLResponse(content=html, status_code=404)
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Official Certificate of Completion · {res['student_name']}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{{--bg:#090d16;--card:#111827;--border:#1f293d;--accent:#6366f1;--text:#f8fafc;--muted:#94a3b8;}}
+*{{box-sizing:border-box;}}
+body{{font-family:'Inter',system-ui,-apple-system,sans-serif;background:radial-gradient(circle at 50% 10%,#1e1b4b 0%,#090d16 60%);color:var(--text);margin:0;padding:24px;min-height:100vh;display:flex;align-items:center;justify-content:center;}}
+.cert-frame{{background:var(--card);border:2px solid var(--border);box-shadow:0 25px 50px -12px rgba(0,0,0,0.7),0 0 0 1px rgba(99,102,241,0.2);border-radius:24px;max-width:760px;width:100%;padding:48px 40px;position:relative;text-align:center;overflow:hidden;}}
+.badge{{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;padding:6px 16px;border-radius:999px;font-size:0.85rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:24px;}}
+h1{{font-size:1.15rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px 0;font-weight:600;}}
+.student-name{{font-size:2.2rem;font-weight:800;letter-spacing:-0.02em;color:#fff;margin:0 0 16px 0;background:linear-gradient(135deg,#ffffff 0%,#c7d2fe 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}}
+.cert-text{{color:var(--muted);font-size:1rem;margin:0 0 16px 0;}}
+.course-title{{font-size:1.5rem;font-weight:700;color:#e0e7ff;margin:0 0 28px 0;line-height:1.3;}}
+.cert-meta{{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;background:rgba(15,23,42,0.6);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:28px;text-align:left;}}
+.meta-item span{{display:block;font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}}
+.meta-item strong{{font-size:0.95rem;color:#f8fafc;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}}
+.seal{{display:flex;align-items:center;justify-content:center;gap:12px;color:#10b981;font-weight:600;font-size:0.95rem;margin-bottom:20px;}}
+.seal-icon{{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;}}
+.actions{{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}}
+.btn{{background:var(--accent);color:#fff;padding:10px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}}
+.btn-outline{{background:transparent;border:1px solid var(--border);color:var(--text);}}
+@media(max-width:540px){{.cert-frame{{padding:32px 20px;border-radius:18px;}}.student-name{{font-size:1.75rem;}}.course-title{{font-size:1.25rem;}}}}
+</style>
+</head>
+<body>
+<div class="cert-frame">
+  <div class="badge">Official Credential</div>
+  <h1>Certificate of Completion</h1>
+  <div class="student-name">{res['student_name']}</div>
+  <p class="cert-text">has successfully completed all lectures, curriculum requirements, and mastery assessments for</p>
+  <div class="course-title">{res['course']}</div>
+  <div class="cert-meta">
+    <div class="meta-item"><span>Issue Date</span><strong>{res['completed_at'][:10]}</strong></div>
+    <div class="meta-item"><span>Verification Code</span><strong>{res['verification_code']}</strong></div>
+    <div class="meta-item"><span>Status</span><strong style="color:#10b981">Verified Valid</strong></div>
+  </div>
+  <div class="seal">
+    <div class="seal-icon">✓</div>
+    <span>Verified by CourseForge Learning Platform</span>
+  </div>
+  <div class="actions">
+    <button class="btn" onclick="window.print()">Print / Save PDF</button>
+    <a class="btn btn-outline" href="/">Explore CourseForge</a>
+  </div>
+</div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
+

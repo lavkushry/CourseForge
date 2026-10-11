@@ -115,13 +115,33 @@ function showCourseCompletion(course){
   const dialog=$('#courseCompletionDialog');
   if(!dialog)return;
   const user=window.CourseForgeAccount?.user?.name||'Dedicated Learner';
+  const cName=course.title||course.name||course.id;
   $('#completionStudentName').textContent=user;
-  $('#completionCourseName').textContent=course.title||course.name;
+  $('#completionCourseName').textContent=cName;
   $('#completionLessonCount').textContent=`${(course.videos||[]).length} lessons completed`;
   $('#completionDate').textContent=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  const codeEl=$('#completionCode');const linkEl=$('#completionVerifyLink');const btnEl=$('#completionVerifyBtn');
+  if(codeEl)codeEl.textContent='Checking…';
+  if(linkEl)linkEl.hidden=true;
+  if(btnEl)btnEl.hidden=true;
+  request(`/api/courses/${encodeURIComponent(cName)}/certificate`).then(res=>{
+    if(res.issued){
+      if(codeEl)codeEl.textContent=res.verification_code;
+      if(linkEl){linkEl.href=res.verify_url;linkEl.hidden=false;}
+      if(btnEl){btnEl.href=res.verify_url;btnEl.hidden=false;}
+      $('#completionShareBtn').onclick=()=>{
+        const shareText=`I just completed ${cName} and earned an official Certificate of Completion on CourseForge! Verify at: ${window.location.origin}${res.verify_url} 🎓`;
+        navigator.clipboard?.writeText(shareText).then(()=>toast('Achievement & verification link copied!')).catch(()=>toast('Ready to screenshot.'));
+      };
+    }else{
+      if(codeEl)codeEl.textContent='Complete all lesson quizzes to issue public certificate';
+    }
+  }).catch(()=>{
+    if(codeEl)codeEl.textContent='Complete all lesson quizzes to issue certificate';
+  });
   $('#completionShareBtn').onclick=()=>{
-    const shareText=`I just completed all ${(course.videos||[]).length} lessons in ${course.title||course.name} on CourseForge! 🎓`;
-    navigator.clipboard?.writeText(shareText).then(()=>toast('Achievement copied to clipboard! Ready to share.')).catch(()=>toast('Course completed! Ready to screenshot.'));
+    const shareText=`I just completed all ${(course.videos||[]).length} lessons in ${cName} on CourseForge! 🎓`;
+    navigator.clipboard?.writeText(shareText).then(()=>toast('Achievement copied to clipboard!')).catch(()=>toast('Course completed! Ready to screenshot.'));
   };
   $('#completionCloseBtn').onclick=()=>{dialog.close();navigate('library');};
   dialog.showModal();
@@ -371,6 +391,7 @@ function renderLessons(){
         const t=make('span','lesson-text');
         const nameRow=make('span','name',lessonTitle(item.title));
         if(isNextUp)nameRow.append(make('span','next-up-badge','Next up'));
+        if(state.quizPassed?.has(item.id))nameRow.append(make('span','lesson-learned-badge','Learned ✓'));
         t.append(nameRow);
         const p=state.progress.get(item.id);
         const baseStatus=p?.completed?'Completed':p?.position>0?'In progress':item.cloud_ready?'Ready to watch':'Coming soon';
@@ -494,6 +515,124 @@ async function openMaterial(item){
   updateBreadcrumbs(item.course,item.friendly_name||item.name);
   $('#lessonCourse').value=item.course;renderLessons();navigate('learning');
 }
+async function loadCourseQuizzes(courseName){
+  if(!courseName)return;
+  try{
+    const res=await request(`/api/courses/${encodeURIComponent(courseName)}/quizzes/status`);
+    if(!state.quizPassed)state.quizPassed=new Set();
+    Object.keys(res.status||{}).forEach(id=>state.quizPassed.add(id));
+  }catch{}
+}
+
+async function renderLessonQuiz(video){
+  const container=$('#quizContainer');
+  const tag=$('#quizStatusTag');
+  const heading=$('#quizHeading');
+  const subtext=$('#quizSubtext');
+  if(!container)return;
+  container.replaceChildren(make('p','muted','Loading lesson quiz…'));
+  try{
+    const data=await request(`/api/videos/${encodeURIComponent(video.id)}/quiz`);
+    const status=data.status||{};
+    heading.textContent=`Quiz: ${lessonTitle(video.title)}`;
+    if(status.passed){
+      tag.className='tag mint';
+      tag.textContent='Learned ✓';
+      subtext.textContent=`You passed this quiz with ${status.last_score}%. Retake anytime to refresh your recall.`;
+      if(!state.quizPassed)state.quizPassed=new Set();
+      state.quizPassed.add(video.id);
+    }else if(status.attempts>0){
+      tag.className='tag orange';
+      tag.textContent=`Score: ${status.last_score}%`;
+      subtext.textContent='Review suggested sections and try again to earn your Learned ✓ badge.';
+    }else{
+      tag.className='tag';
+      tag.textContent='Not attempted';
+      subtext.textContent=`Answer ${data.question_count} questions to test your understanding and earn Learned ✓.`;
+    }
+
+    container.replaceChildren();
+    const form=make('form','quiz-form');
+    data.questions.forEach((q,idx)=>{
+      const qBlock=make('div','quiz-question-block');
+      qBlock.append(make('h4','quiz-stem',`${idx+1}. ${q.question}`));
+      const optList=make('div','quiz-options');
+      q.options.forEach((optText,oIdx)=>{
+        const optLabel=make('label','quiz-option-label');
+        const radio=document.createElement('input');
+        radio.type='radio';
+        radio.name=`quiz_q_${q.id}`;
+        radio.value=String(oIdx);
+        radio.required=true;
+        optLabel.append(radio,make('span','quiz-opt-text',optText));
+        optList.append(optLabel);
+      });
+      qBlock.append(optList);
+      form.append(qBlock);
+    });
+
+    const submitBtn=make('button','btn btn-primary full',status.passed?'Submit re-attempt':'Submit answers');
+    submitBtn.type='submit';
+    form.append(submitBtn);
+
+    form.onsubmit=async(e)=>{
+      e.preventDefault();
+      const answers={};
+      data.questions.forEach(q=>{
+        const sel=form.querySelector(`input[name="quiz_q_${q.id}"]:checked`);
+        if(sel)answers[q.id]=parseInt(sel.value,10);
+      });
+      submitBtn.disabled=true;
+      submitBtn.textContent='Grading quiz…';
+      try{
+        const res=await request(`/api/videos/${encodeURIComponent(video.id)}/quiz/attempts`,services.json('POST',{
+          quiz_id:data.quiz_id,
+          answers:answers
+        }));
+        if(res.passed){
+          tag.className='tag mint';
+          tag.textContent='Learned ✓';
+          toast(`Learned ✓! Scored ${res.score}%. Your streak and habit have been updated.`);
+          if(!state.quizPassed)state.quizPassed=new Set();
+          state.quizPassed.add(video.id);
+          const checkEl=document.querySelector('.lesson-check-moment');
+          if(checkEl){
+            checkEl.classList.remove('active');
+            void checkEl.offsetWidth;
+            checkEl.classList.add('active');
+            setTimeout(()=>checkEl.classList.remove('active'),2500);
+          }
+          await renderLessonQuiz(video);
+          await loadHabits();
+          renderLessons();
+          const crs=state.videos.filter(v=>v.course===video.course);
+          const doneAll=crs.every(v=>state.progress.get(v.id)?.completed);
+          if(doneAll)showCourseCompletion({name:video.course,title:video.course,videos:crs});
+        }else{
+          tag.className='tag orange';
+          tag.textContent=`Score: ${res.score}%`;
+          toast(`Scored ${res.score}%. ${res.suggested_review}`,true);
+          const fb=make('div','quiz-retry-box');
+          fb.append(make('h4','','Keep going — you’re close!'));
+          fb.append(make('p','muted',res.suggested_review));
+          const retryBtn=make('button','btn btn-outline','Try again');
+          retryBtn.type='button';
+          retryBtn.onclick=()=>renderLessonQuiz(video);
+          fb.append(retryBtn);
+          container.replaceChildren(fb);
+        }
+      }catch(err){
+        toast(err.message||'Quiz submission failed',true);
+        submitBtn.disabled=false;
+        submitBtn.textContent='Submit answers';
+      }
+    };
+    container.append(form);
+  }catch(err){
+    container.replaceChildren(make('p','muted','Quiz questions for this lesson are being prepared.'));
+  }
+}
+
 async function openVideo(id,at=null){
   const existingMedia=window.CourseForgeNative?.video();
   if(id===state.currentVideoId&&at!==null&&existingMedia&&!existingMedia.error&&existingMedia.readyState>=1&&Number.isFinite(existingMedia.duration)){
@@ -507,6 +646,8 @@ async function openVideo(id,at=null){
   state.selectedId=id;state.currentVideoId=id;state.currentCourse=video.course;if(window.CourseForgeAccount){if(!window.CourseForgeAccount.lastLessons)window.CourseForgeAccount.lastLessons={};window.CourseForgeAccount.lastLessons[video.course]=id;}
   updateBreadcrumbs(video.course,lessonTitle(video.title));
   renderLessonMaterials(video);
+  renderLessonQuiz(video);
+  loadCourseQuizzes(video.course).then(()=>renderLessons());
   const player=$('#player');player.pause();player.hidden=true;$('#emptyPlayer').hidden=true;
   let wrap=document.getElementById('lecturePlayerWrap');if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
   wrap.replaceChildren(make('p','player-loading','Preparing your lecture…'));
@@ -601,7 +742,7 @@ function showReview(){state.activeCard=state.dueCards.shift()||null;$('#reviewCa
 $('#generateCardsBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course in Study paths first.',true);const btn=$('#generateCardsBtn');btn.disabled=true;$('#reviewStatus').textContent='Creating your flashcards…';try{const result=await request('/api/reviews/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course,topic:$('#reviewTopic').value.trim()||'key concepts',count:5})});await loadDue();toast(`${result.created} flashcards created.`)}catch(err){$('#reviewStatus').textContent=err.message}finally{btn.disabled=false}});
 $('#loadDueBtn').addEventListener('click',()=>loadDue().catch(err=>toast(err.message,true)));
 $('#revealAnswerBtn').addEventListener('click',()=>{$('#reviewAnswer').hidden=false;$('#revealAnswerBtn').hidden=true;$('#reviewGrades').hidden=false});
-$$('[data-quality]').forEach(button=>button.addEventListener('click',async()=>{if(!state.activeCard)return;button.disabled=true;try{await request(`/api/reviews/${state.activeCard.id}/grade`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quality:Number(button.dataset.quality)})});showReview();loadInsights().catch(()=>{});}catch(err){toast(err.message,true)}finally{button.disabled=false}}));
+$$('[data-quality]').forEach(button=>button.addEventListener('click',async()=>{if(!state.activeCard)return;button.disabled=true;try{const curCourse=state.activeCard.course;await request(`/api/reviews/${state.activeCard.id}/grade`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quality:Number(button.dataset.quality)})});await request('/api/reviews/complete',services.json('POST',{course:curCourse,cards_count:1})).catch(()=>{});await loadHabits().catch(()=>{});showReview();loadInsights().catch(()=>{});}catch(err){toast(err.message,true)}finally{button.disabled=false}}));
 $('#reviewSource').addEventListener('click',()=>{if(state.activeCard)openVideo(state.activeCard.video_id,state.activeCard.source_start).catch(err=>toast(err.message,true))});
 let labCatalogCache=[];
 function paintLabCatalog(){
@@ -715,7 +856,7 @@ async function loadNotes(id){
 }
 $('#noteForm').addEventListener('submit',async(event)=>{event.preventDefault();if(!state.currentVideoId)return toast('Choose a lesson first.',true);const text=$('#noteText').value.trim();if(!text)return;const btn=$('#saveNoteBtn');btn.disabled=true;try{await services.saveNote(state.currentVideoId,window.CourseForgeAcademy.parseTimestamp($('#notePosition').value),text);$('#noteText').value='';await loadNotes(state.currentVideoId);toast('Note saved at your selected timestamp.')}catch(err){toast(err.message,true)}finally{btn.disabled=false}});
 function selectLessonTab(name,sync=true){
-  if(!['lessons','materials','notes','transcript','summary','path'].includes(name))name='lessons';
+  if(!['lessons','materials','quiz','notes','transcript','summary','path'].includes(name))name='lessons';
   if(name==='materials'&&$('#tab-materials')?.hidden)name='lessons';
   state.studyTab=name;
   $$('[data-lesson-tab]').forEach(tab=>{const selected=tab.dataset.lessonTab===name;tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected||(['summary','path'].includes(name)&&tab.dataset.lessonTab==='lessons')?0:-1;});
