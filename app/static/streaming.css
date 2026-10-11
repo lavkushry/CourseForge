@@ -598,7 +598,10 @@
 
 /* Continue Watching Card (16:9) */
 .stream-card-continue {
-  width: 280px;
+  width: 270px;
+  flex: 0 0 270px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .stream-card-continue .card-thumb-wrap {
@@ -606,6 +609,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--surface-2);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -690,8 +694,8 @@
 .stream-card-top10 {
   display: flex;
   align-items: flex-end;
-  width: 220px;
-  flex: 0 0 220px;
+  width: 240px;
+  flex: 0 0 240px;
   text-decoration: none;
   color: inherit;
 }
@@ -699,7 +703,7 @@
 .top10-rank-wrap {
   position: relative;
   width: 80px;
-  height: 220px;
+  height: 255px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -727,7 +731,8 @@
 }
 
 .stream-card-top10 .top10-poster-wrap {
-  width: 140px;
+  width: 170px;
+  flex: 0 0 170px;
   aspect-ratio: 2 / 3;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1028,31 +1033,6 @@
   .streaming-billboard {
     min-height: 360px;
   }
-
-  .stream-card-continue {
-    width: 220px;
-  }
-
-  .stream-card-top10 {
-    width: 180px;
-  }
-
-  .top10-rank-wrap {
-    width: 60px;
-    height: 180px;
-  }
-
-  .stream-card-top10 .top10-poster-wrap {
-    width: 120px;
-  }
-
-  .stream-card-poster {
-    width: 140px;
-  }
-
-  .stream-card-backdrop {
-    width: 220px;
-  }
 }
 
 /* ==========================================================================
@@ -1261,7 +1241,7 @@
    ========================================================================== */
 .mylist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--space-5);
   margin-top: var(--space-4);
 }
@@ -1863,7 +1843,7 @@
 
 .more-like-this-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--space-4);
 }
 
@@ -1982,10 +1962,6 @@
 
   .title-dialog-body {
     padding: var(--space-4);
-  }
-
-  .episode-thumb-wrap {
-    width: 100px;
   }
 }
 
