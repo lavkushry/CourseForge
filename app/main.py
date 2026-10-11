@@ -96,7 +96,7 @@ async def guard_local_actions(request: Request, call_next):
         response.headers['X-Content-Type-Options']='nosniff'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['X-Frame-Options']='SAMEORIGIN'
-        if request.url.path.startswith('/api/') and not request.url.path.startswith('/api/artwork/'):
+        if request.url.path.startswith('/api/') and not request.url.path.startswith('/api/artwork/') and '/media/' not in request.url.path:
             response.headers['Cache-Control']='no-store'
         return response
     finally:
