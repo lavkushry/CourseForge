@@ -99,6 +99,7 @@ def migrate(path: Path | None = None) -> None:
             migrate_console(db)
             migrate_player(db)
             migrate_player_ownership(db)
+            migrate_habits(db)
             return
         # Foreign keys are checked before commit; rebuilding a parent must not
         # cascade-delete its existing children in the middle of the transaction.
@@ -134,6 +135,7 @@ def migrate(path: Path | None = None) -> None:
         migrate_console(db)
         migrate_player(db)
         migrate_player_ownership(db)
+        migrate_habits(db)
 
 
 def migrate_console(db):
@@ -221,3 +223,43 @@ def migrate_player_ownership(db):
     except BaseException:
         db.rollback()
         raise
+
+
+def migrate_habits(db):
+    if db.execute('SELECT 1 FROM schema_migrations WHERE version=5').fetchone(): return
+    db.execute('BEGIN IMMEDIATE')
+    try:
+        db.execute('''CREATE TABLE IF NOT EXISTS habit_preferences(
+            user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            goal TEXT NOT NULL DEFAULT 'minutes',
+            timezone TEXT NOT NULL DEFAULT 'UTC',
+            reminder_email INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL)''')
+        db.execute('''CREATE TABLE IF NOT EXISTS habit_actions(
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            action TEXT NOT NULL,
+            resource TEXT NOT NULL,
+            day TEXT NOT NULL,
+            PRIMARY KEY(user_id, action, resource, day))''')
+        db.execute('''CREATE TABLE IF NOT EXISTS habit_days(
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            day TEXT NOT NULL,
+            watched_seconds REAL NOT NULL DEFAULT 0,
+            lessons INTEGER NOT NULL DEFAULT 0,
+            quizzes INTEGER NOT NULL DEFAULT 0,
+            reviews INTEGER NOT NULL DEFAULT 0,
+            goal_met INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(user_id, day))''')
+        db.execute('CREATE INDEX IF NOT EXISTS habit_days_day ON habit_days(user_id, day)')
+        db.execute('''CREATE TABLE IF NOT EXISTS reminder_deliveries(
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            week TEXT NOT NULL,
+            status TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(user_id, week))''')
+        db.execute("INSERT INTO schema_migrations VALUES(5,strftime('%Y-%m-%dT%H:%M:%SZ','now'))")
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+

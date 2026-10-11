@@ -136,6 +136,19 @@
     for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Completed lessons',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
       const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));metrics.append(card);
     }root.append(metrics);
+    if(report.engagement){
+      heading(root,'Active engagement & return rate',report.engagement.period);
+      const engMetrics=node('div','academy-metrics');
+      for(const [label,value] of [
+        ['Daily active students',report.engagement.daily_active_students],
+        ['Average session duration',`${report.engagement.average_session_minutes} min`],
+        ['7-day return rate',report.engagement.seven_day_return_rate!==null?`${report.engagement.seven_day_return_rate}%`:'Not enough cohort data'],
+        ['Returning cohort',`${report.engagement.returning_students} of ${report.engagement.return_cohort} students`]
+      ]){
+        const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));engMetrics.append(card);
+      }
+      root.append(engMetrics);
+    }
     heading(root,'Recent student activity',report.activity_basis+'. '+report.completion_basis+'.');
     root.append(table(['Student','Activity','Lecture','Time'],report.recent_activity.map(e=>[e.name,e.event_type.replaceAll('_',' '),e.title||e.details,date(e.created_at)])));
     heading(root,'Course enrollment funnel');root.append(table(['Course','Enrolled','Started'],report.funnels.map(r=>[r.course,r.enrolled,r.started])));

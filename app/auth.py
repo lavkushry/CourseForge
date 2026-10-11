@@ -115,18 +115,11 @@ def require_mail_configuration():
         raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
 
 
-def send_account_email(email: str, token: str, kind: str):
+def deliver_email(msg: EmailMessage) -> None:
     require_mail_configuration()
-    base = os.getenv('PUBLIC_BASE_URL', '').rstrip('/')
     host = os.getenv('SMTP_HOST', '')
-    if not base or not host or not os.getenv('SMTP_FROM'):
+    if not host or not os.getenv('SMTP_FROM'):
         raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
-    link = f'{base}/#{kind}?token={token}'
-    msg = EmailMessage()
-    msg['Subject'] = 'Verify your CourseForge email' if kind == 'verify' else 'Reset your CourseForge password'
-    msg['From'] = os.environ['SMTP_FROM']
-    msg['To'] = email
-    msg.set_content(f'Open this link to {"verify your email" if kind == "verify" else "reset your password"}:\n{link}\n\nIf you did not request this, ignore this email.')
     try:
         with smtplib.SMTP(host, int(os.getenv('SMTP_PORT', '587')), timeout=8) as smtp:
             smtp.starttls(context=ssl.create_default_context())
@@ -134,7 +127,21 @@ def send_account_email(email: str, token: str, kind: str):
                 smtp.login(os.environ['SMTP_USER'], os.getenv('SMTP_PASSWORD', ''))
             smtp.send_message(msg)
     except (OSError, smtplib.SMTPException) as exc:
-        raise HTTPException(503, 'Unable to send account email. Please try again later.') from exc
+        raise HTTPException(503, 'Unable to send email. Please try again later.') from exc
+
+
+def send_account_email(email: str, token: str, kind: str):
+    require_mail_configuration()
+    base = os.getenv('PUBLIC_BASE_URL', '').rstrip('/')
+    if not base or not os.getenv('SMTP_FROM'):
+        raise HTTPException(503, 'Account email is not configured. Please contact the administrator.')
+    link = f'{base}/#{kind}?token={token}'
+    msg = EmailMessage()
+    msg['Subject'] = 'Verify your CourseForge email' if kind == 'verify' else 'Reset your CourseForge password'
+    msg['From'] = os.environ['SMTP_FROM']
+    msg['To'] = email
+    msg.set_content(f'Open this link to {"verify your email" if kind == "verify" else "reset your password"}:\n{link}\n\nIf you did not request this, ignore this email.')
+    deliver_email(msg)
 
 
 def account_token(db, uid: str, kind: str) -> str:

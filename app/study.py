@@ -44,6 +44,13 @@ def set_progress(video_id: str, *, percent: int, position: float, path: Path | N
                       percent=excluded.percent,position=excluded.position,
                       completed=excluded.completed,updated_at=excluded.updated_at''',
                    (video_id, percent, position, int(percent == 100), utcnow()))
+        if percent == 100:
+            uid = db.execute('SELECT cf_user_id()').fetchone()[0]
+            if uid and uid != 'legacy':
+                from . import habits
+                habits.credit(db, uid, kind='lesson', resource=video_id)
+                db.execute('INSERT INTO learning_events(user_id,video_id,event_type,details,created_at) VALUES(?,?,?,?,?)',
+                           (uid, video_id, 'lesson_completed', '', utcnow()))
     return {'video_id': video_id, 'percent': percent, 'position': position, 'completed': percent == 100}
 
 

@@ -197,3 +197,42 @@ button:disabled { opacity:.6;cursor:not-allowed; }
 .material-preview-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .material-preview-frame{display:block;width:100%;height:460px;border:0;background:#fff}
 @media(max-width:670px){.universal-search-panel{left:12px;right:12px;width:auto;padding:14px}.lesson-materials-grid{grid-template-columns:1fr}}
+
+/* Phase 3: Habit Loop & Momentum */
+.streak-flame{display:inline-block;margin-right:2px;animation:flamePulse 1.8s infinite ease-in-out}
+@keyframes flamePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.goal-met-badge{display:inline-block;padding:2px 6px;margin-left:6px;border-radius:6px;background:#e6f8f0;color:#0e704a;font-size:10px;font-weight:700}
+.dark .goal-met-badge{background:#113827;color:#5de2a5}
+.weekly-recap-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px;margin:16px 0 24px;border-radius:12px;background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(14,165,233,0.08));border:1px solid var(--accent);color:var(--ink);flex-wrap:wrap}
+.recap-spark{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;flex:none}
+.recap-spark .icon{width:20px;height:20px}
+.recap-body{flex:1 1 240px;min-width:0}
+.recap-body strong{display:block;font-size:14px;font-weight:750;margin-bottom:2px}
+.recap-body p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+.recap-action{flex:none}
+.goal-celebration-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:#10b981;color:#fff;padding:12px 20px;border-radius:30px;box-shadow:0 10px 25px rgba(16,185,129,0.3);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.175,.885,.32,1.275)}
+.goal-celebration-toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
+.lesson-check-moment{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) scale(0.9);background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);color:#fff;padding:12px 22px;border-radius:40px;box-shadow:0 12px 30px rgba(0,0,0,0.35);font-size:13px;font-weight:650;display:flex;align-items:center;gap:10px;z-index:9999;opacity:0;pointer-events:none;transition:all .25s ease-out}
+.lesson-check-moment.visible{opacity:1;transform:translateX(-50%) scale(1)}
+.lesson-check-moment .check-circle{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff}
+.lesson-check-moment .check-circle svg{width:15px;height:15px}
+
+/* Course Completion Certificate Modal */
+.completion-dialog{border:0;border-radius:18px;padding:0;background:transparent;max-width:540px;width:calc(100% - 32px);box-shadow:0 24px 60px rgba(0,0,0,0.45);color:var(--ink);overflow:visible}
+.completion-dialog::backdrop{background:rgba(15,23,42,0.75);backdrop-filter:blur(6px)}
+.completion-card{background:var(--surface);border:2px solid var(--accent);border-radius:18px;padding:32px 28px;text-align:center;position:relative;display:grid;gap:16px;box-shadow:inset 0 0 40px rgba(99,102,241,0.06)}
+.completion-ribbon{display:inline-flex;align-items:center;gap:6px;align-self:center;margin:0 auto;padding:4px 12px;border-radius:20px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.completion-header{display:grid;gap:6px;justify-items:center}
+.completion-school{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+.completion-header h2{margin:0;font-size:24px;font-weight:850;color:var(--ink)}
+.completion-seal{width:64px;height:64px;color:#f59e0b;margin:8px 0}
+.completion-seal svg{width:100%;height:100%}
+.completion-body{display:grid;gap:8px}
+.completion-lead{font-size:13px;color:var(--muted);margin:0}
+.completion-student{font-size:20px;font-weight:800;color:var(--ink);margin:0;letter-spacing:-.01em}
+.completion-statement{font-size:12px;color:var(--muted);margin:0;line-height:1.4}
+.completion-course{display:block;font-size:17px;font-weight:750;color:var(--accent-text);margin:4px 0}
+.completion-meta{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--muted);margin-top:6px}
+.completion-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+@media(max-width:480px){.completion-card{padding:24px 16px}.completion-header h2{font-size:20px}.completion-student{font-size:18px}}
+

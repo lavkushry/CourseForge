@@ -141,7 +141,7 @@ def heartbeat(sid: str, body: Heartbeat, request: Request):
 
 class Preferences(BaseModel):
     speed: float = Field(default=1,ge=.5,le=3,allow_inf_nan=False)
-    autoplay: bool = False
+    autoplay: bool = True
     theater: bool = False
 
 

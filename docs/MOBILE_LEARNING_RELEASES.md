@@ -75,7 +75,31 @@ running. Asset version 15 invalidates previous page bundles.
 
 ## Phase 3: habit loop
 
-Pending the next independently validated release (daily streak loop, return triggers, admin engagement metrics).
+- **Instant Momentum**:
+  - After sign-in, the dashboard leads with `Continue "[Lesson Name]"` or `Start "[Lesson Name]"`.
+  - Resumes playback in one click directly to the saved position.
+  - A new learner reaches a playing lesson within 3 clicks of registration.
+- **Daily Habit & Streak Loop**:
+  - Streak tracking is private and resilient to device timezone travels (`app/habits.py`).
+  - Daily goal preference: 15 minutes of watching or 1 completed lesson.
+  - Reaching the daily goal triggers an uplifting celebration badge and toast.
+  - Missing a day never shames, nags, or resets progress; 0 streak presents a welcoming start invitation.
+- **Visible Progress & Milestone Celebrations**:
+  - Course cards display clean progress bars with explicit "X of Y lessons" count.
+  - Finishing a lesson triggers a brief animated check-mark moment (`.lesson-check-moment`).
+  - Finishing all lessons in a course triggers a screenshot-worthy Certificate of Completion dialog (`#courseCompletionDialog`) featuring student name, course title, completion date, and share action.
+- **Zero-Friction Watching**:
+  - Autoplay-next is enabled by default with a 10-second countdown and one-click opt-out checkbox, saved to user player preferences.
+  - Player keyboard shortcuts (Space for play/pause, ArrowLeft/ArrowRight for 10s seek, F for fullscreen, M for mute, L for lock).
+- **Come-Back Triggers**:
+  - In-app weekly recap banner on the dashboard ("You learned 2h 40m across 3 lessons this week").
+  - Opt-in email reminder toggle saved in preferences, wired to automated Sunday weekly digest once SMTP is active.
+- **Admin Engagement Measurement**:
+  - Dedicated admin metrics for Daily active students, Average session minutes, and 7-day return rate with explicit denominators. Excludes admin accounts and suspended users.
+- **Validation**:
+  - 6/6 acceptance tests passing in `tests/test_phase3_habit_loop.py`.
+  - 5/5 backend tests passing in `tests/test_habits.py`.
+  - 169/169 core suite tests passing with 0 regressions.
 
 ## Phase 4: learning that sticks
 

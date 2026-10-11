@@ -10,7 +10,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Request, Query
 from pydantic import BaseModel,Field
 
-from . import auth, course_metadata
+from . import auth, course_metadata, engagement
 from .db import connect,fetch_video,utcnow,learner_id,learner_courses
 from .media import sync_provider_mappings
 
@@ -242,6 +242,7 @@ def overview(request: Request):
             COUNT(DISTINCT l.user_id) started FROM enrollments e LEFT JOIN lesson_visits l
             ON l.user_id=e.user_id AND l.course=e.course GROUP BY e.course''')]
     return {'summary':totals,'recent_activity':events,'access_events':access,'funnels':funnels,
+            'engagement':engagement.report(),
             'activity_basis':'Visible lesson activity; not verified video watch time',
             'completion_basis':'Lessons completed by students or after reaching the end with at least 90% watched coverage'}
 

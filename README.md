@@ -45,6 +45,30 @@ The **Today’s plan** screen includes a Pomodoro-style focus/break timer (1–1
 - **Verification**:
   - 7/7 tests passing in `tests/test_phase2_mobile_foundation.py` and 158/158 regression suite tests passing.
 
+## Phase 3 — Habit Loop
+
+- **Instant Momentum**:
+  - Sign-in lands immediately on the dashboard leading with `Continue "[Lesson Name]"` or `Start "[Lesson Name]"`.
+  - Resumes video playback in a single click directly at the student's saved second.
+  - A newly registered student reaches a playing lesson in ≤ 3 clicks.
+- **Daily Habit & Streak System**:
+  - Timezone-safe daily streak calculation (`app/habits.py`) stored privately per student.
+  - Customizable daily habit goals: 15 minutes of video watching or 1 completed lesson (`/api/me/habit-preferences`).
+  - Reaching the daily goal triggers an uplifting celebration badge and toast without shame or guilt on 0-day streaks.
+- **Visible Progress & Milestone Celebrations**:
+  - Course cards display a progress bar and exact count format: `X of Y lessons`.
+  - Completing a lesson triggers an animated check-mark moment (`.lesson-check-moment`).
+  - Completing an entire course opens a screenshot-worthy Certificate of Completion modal (`#courseCompletionDialog`) with student name, course title, date, and clipboard share action.
+- **Zero-Friction Watching**:
+  - Autoplay-next is enabled by default with a 10s countdown and persistent one-click opt-out in player controls.
+  - Keyboard shortcuts: Space (play/pause), ArrowLeft/ArrowRight (10s seek), F (fullscreen), M (mute), L (lock controls).
+- **Come-Back Triggers & Engagement Reports**:
+  - Weekly in-app recap banner on the dashboard ("You learned 2h 40m across 3 lessons this week").
+  - Opt-in email recap preference saved in settings, wired to automated weekly Sunday digest when SMTP is configured.
+  - Dedicated admin metrics for Daily active students, Average session minutes, and 7-day return rate with explicit denominators, excluding administrative accounts.
+- **Verification**:
+  - 6/6 tests passing in `tests/test_phase3_habit_loop.py`, 5/5 backend tests in `tests/test_habits.py`, and 169/169 core suite tests passing.
+
 ## What is working
 
 | Feature | Behavior |

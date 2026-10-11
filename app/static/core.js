@@ -78,7 +78,9 @@
   const activeFocus = () => request('/api/focus/active');
   const focusHistory = () => request('/api/focus/history');
   const focusAnalytics = (week,offset) => request(`/api/focus/analytics/${encodeURIComponent(week)}?tz_offset_minutes=${encodeURIComponent(offset)}`);
-  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover});
+  const habits = () => request('/api/me/habits');
+  const saveHabitPrefs = (body) => request('/api/me/habit-preferences', json('PUT', body));
+  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover, habits, saveHabitPrefs});
 })();
 
 /* app.js */
@@ -155,6 +157,106 @@ function materialSvgIcon(ext){const e=String(ext||'').toLowerCase();return icon(
 function openFlowItem(item){if(!item)return Promise.resolve();return item.item_type==='material'?openMaterial(item):openVideo(item.id);}
 window.getCourseFlow=getCourseFlow;window.openFlowItem=openFlowItem;
 function openCourse(course){const lessons=state.videos.filter(v=>v.course===course.name);$('#lessonCourse').value=course.name;renderLessons();const recent=nextUpLesson({name:course.name,videos:lessons})||lessons[0];updateBreadcrumbs(course.name,recent?lessonTitle(recent.title):null);navigate('learning');if(recent)openVideo(recent.id).catch(err=>toast(err.message,true));}
+
+function updateHeroAction(){
+  const btn=$('#heroLearnBtn');
+  if(!btn)return;
+  const courses=groupCourses();
+  if(!courses.length){
+    btn.innerHTML=`<span>Browse courses</span> <svg class="icon"><use href="#i-arrow"/></svg>`;
+    btn.onclick=()=>navigate('library');
+    return;
+  }
+  let targetCourse=courses.find(c=>c.percent>0&&c.percent<100);
+  if(!targetCourse)targetCourse=courses.find(c=>c.percent===0)||courses[0];
+  const next=targetCourse.nextLesson||targetCourse.videos[0];
+  if(next){
+    const p=state.progress.get(next.id);
+    const isStarted=p&&(p.percent>0||p.position>0);
+    const label=isStarted?`Continue "${lessonTitle(next.title)}"`:`Start "${lessonTitle(next.title)}"`;
+    btn.innerHTML=`<span>${label}</span> <svg class="icon"><use href="#i-arrow"/></svg>`;
+    btn.onclick=()=>{
+      openCourse(targetCourse);
+      openVideo(next.id).catch(err=>toast(err.message,true));
+    };
+  }else{
+    btn.innerHTML=`<span>Continue learning</span> <svg class="icon"><use href="#i-arrow"/></svg>`;
+    btn.onclick=()=>openCourse(targetCourse);
+  }
+}
+
+function triggerLessonCheckMoment(){
+  document.querySelector('.lesson-check-moment')?.remove();
+  const checkEl=make('div','lesson-check-moment');
+  checkEl.innerHTML=`<div class="check-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><strong>Lesson completed!</strong>`;
+  document.body.append(checkEl);
+  setTimeout(()=>checkEl.classList.add('visible'),30);
+  setTimeout(()=>{
+    checkEl.classList.remove('visible');
+    setTimeout(()=>checkEl.remove(),400);
+  },2200);
+}
+
+function showCourseCompletion(course){
+  const dialog=$('#courseCompletionDialog');
+  if(!dialog)return;
+  const user=window.CourseForgeAccount?.user?.name||'Dedicated Learner';
+  $('#completionStudentName').textContent=user;
+  $('#completionCourseName').textContent=course.title||course.name;
+  $('#completionLessonCount').textContent=`${(course.videos||[]).length} lessons completed`;
+  $('#completionDate').textContent=new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  $('#completionShareBtn').onclick=()=>{
+    const shareText=`I just completed all ${(course.videos||[]).length} lessons in ${course.title||course.name} on CourseForge! 🎓`;
+    navigator.clipboard?.writeText(shareText).then(()=>toast('Achievement copied to clipboard! Ready to share.')).catch(()=>toast('Course completed! Ready to screenshot.'));
+  };
+  $('#completionCloseBtn').onclick=()=>{dialog.close();navigate('library');};
+  dialog.showModal();
+}
+
+function updateWeeklyRecap(habitData){
+  const recap=$('#weeklyRecap');
+  if(!recap)return;
+  if(!habitData?.week){recap.hidden=true;return;}
+  recap.hidden=false;
+  const secs=habitData.week.watched_seconds||0;
+  const lessons=habitData.week.lessons||0;
+  const mins=Math.round(secs/60);
+  const hrs=Math.floor(mins/60);
+  const remMins=mins%60;
+  const timeStr=hrs>0?`${hrs}h ${remMins}m`:`${mins}m`;
+  $('#recapText').textContent=`You learned ${timeStr} across ${lessons} lesson${lessons===1?'':'s'} this week. Your next lesson is ready whenever you are!`;
+  const optInBtn=$('#recapOptInBtn');
+  if(optInBtn){
+    const on=Boolean(habitData.preferences?.reminder_email);
+    optInBtn.textContent=`Email recap: ${on?'On':'Off'}`;
+    optInBtn.classList.toggle('active',on);
+    optInBtn.onclick=async()=>{
+      try{
+        const nextState=!on;
+        const res=await services.saveHabitPrefs({
+          goal:habitData.preferences?.goal||'minutes',
+          timezone:habitData.preferences?.timezone||'UTC',
+          reminder_email:nextState
+        });
+        toast(nextState?'Weekly recap emails turned on.':'Weekly recap emails turned off.');
+        updateWeeklyRecap(res);
+      }catch(err){toast(err.message,true);}
+    };
+  }
+}
+
+function triggerGoalCelebration(){
+  const toastEl=make('div','goal-celebration-toast');
+  toastEl.innerHTML=`<span class="celebration-spark">🎉</span> <strong>Daily goal reached!</strong> Streak updated.`;
+  document.body.append(toastEl);
+  setTimeout(()=>toastEl.classList.add('visible'),50);
+  setTimeout(()=>{
+    toastEl.classList.remove('visible');
+    setTimeout(()=>toastEl.remove(),400);
+  },3500);
+}
+window.CourseForgeCompletion={triggerLessonCheckMoment,showCourseCompletion,triggerGoalCelebration};
+
 function buildCourseCard(course){
   const tile=make('div','course-tile');
   const button=make('button','course-card');button.type='button';button.style.cssText='border:1px solid var(--line);padding:0;text-align:left;color:inherit';
@@ -177,10 +279,19 @@ function buildCourseCard(course){
     body.append(nextRow);
   }
   if(course.tags?.length){const tags=make('div','course-tags');for(const tag of course.tags.slice(0,3))tags.append(make('span','course-tag',tag));body.append(tags);}
-  const line=make('div','course-progress-line');line.append(make('span','',`${course.completed} of ${course.videos.length} completed`));line.append(make('b','',`${course.percent}%`));body.append(line);
+  const line=make('div','course-progress-line');line.append(make('span','',`${course.completed} of ${course.videos.length} lessons`));line.append(make('b','',`${course.percent}%`));body.append(line);
   const progress=make('div','progress-track');const bar=make('span');bar.style.width=course.percent+'%';progress.append(bar);body.append(progress);
-  const bottom=make('div','course-bottom');bottom.append(make('span','',course.percent===100?'Review course':course.percent>0?'Continue learning':'Start learning'));bottom.append(icon('arrow'));body.append(bottom);
-  button.append(body);button.addEventListener('click',()=>openCourse(course));
+  const bottom=make('div','course-bottom');
+  if(course.percent===100){
+    bottom.append(make('span','','View certificate'));
+    bottom.append(icon('arrow'));
+    button.addEventListener('click',()=>showCourseCompletion(course));
+  }else{
+    bottom.append(make('span','',course.percent>0?'Continue learning':'Start learning'));
+    bottom.append(icon('arrow'));
+    button.addEventListener('click',()=>openCourse(course));
+  }
+  button.append(body);
   tile.append(button);
   if(course.cover_url&&window.CourseForgeAccount?.user?.role==='admin'){const edit=make('button','course-edit-btn','Edit details');edit.type='button';edit.setAttribute('aria-label',`Edit details for ${course.title||course.name}`);edit.addEventListener('click',()=>openCourseEditor(course));tile.append(edit);}
   return tile;
@@ -216,7 +327,7 @@ $('#courseCoverReset').addEventListener('click',async()=>{
   try{await services.resetCover(course);const {courses}=await services.courses();state.courseMeta=new Map(courses.map(c=>[c.id,c]));state.coverRevision++;renderCatalog();$('#courseEditDialog').close();toast('Automatic video cover restored.');}catch(error){$('#courseEditError').textContent=error.message;}
 });
 function courseCategory(name){return (/kubernetes|ansible|docker|devops|cloud|linux/i.test(name)?'Cloud & DevOps Engineering':/data|spark|sql|databricks|analytics/i.test(name)?'Data Engineering':/agentic|genai|llm|ai/i.test(name)?'AI & Agentic Systems':/java|backend|python|javascript|golang|web/i.test(name)?'Software Development':'General');}
-function renderCatalog(){const all=groupCourses();const totalMats=(state.materials||[]).length;$('#featuredCourses').setAttribute('aria-busy','false');$('#courseCatalog').setAttribute('aria-busy','false');$('#statCourses').textContent=all.length;$('#statVideos').textContent=state.videos.length;$('#statIndexed').textContent=state.videos.filter(v=>v.status==='done').length;$('#statCompleted').textContent=state.videos.filter(v=>state.progress.get(v.id)?.completed).length;$('#sideCourseCount').textContent=all.length;$('#countLabel').textContent=`${state.videos.length} lessons · ${totalMats} materials`;
+function renderCatalog(){const all=groupCourses();updateHeroAction();const totalMats=(state.materials||[]).length;$('#featuredCourses').setAttribute('aria-busy','false');$('#courseCatalog').setAttribute('aria-busy','false');$('#statCourses').textContent=all.length;$('#statVideos').textContent=state.videos.length;$('#statIndexed').textContent=state.videos.filter(v=>v.status==='done').length;$('#statCompleted').textContent=state.videos.filter(v=>state.progress.get(v.id)?.completed).length;$('#sideCourseCount').textContent=all.length;$('#countLabel').textContent=`${state.videos.length} lessons · ${totalMats} materials`;
   const featured=$('#featuredCourses');featured.replaceChildren();
   const recentFirst=[...all].sort((a,b)=>(Number(b.recentlyViewed)-Number(a.recentlyViewed))||(b.lastActivity-a.lastActivity)||(b.percent-a.percent));
   for(const course of recentFirst.slice(0,3))featured.append(buildCourseCard(course));
@@ -540,6 +651,18 @@ $('#markCompleteBtn').addEventListener('click',async()=>{
   const button=$('#markCompleteBtn');button.disabled=true;
   try{await request(`/api/videos/${id}/progress`,services.json('PUT',{percent:completed?0:100,position:state.progress.get(id)?.position||0}));
     await loadLibrary();if(state.currentVideoId===id)window.CourseForgeStudio.completion(!completed);
+    if(!completed){
+      triggerLessonCheckMoment();
+      const currentVid=state.videos.find(v=>v.id===id);
+      if(currentVid){
+        const courseLessons=state.videos.filter(v=>v.course===currentVid.course);
+        const allDone=courseLessons.every(v=>v.id===id||state.progress.get(v.id)?.completed);
+        if(allDone){
+          const meta=state.courseMeta.get(currentVid.course)||{};
+          showCourseCompletion({name:currentVid.course,title:meta.title||currentVid.course,videos:courseLessons});
+        }
+      }
+    }
     toast(completed?'Completion undone.':'Lesson completed.');
   }catch(error){toast('We couldn’t save your progress. Please try again.',true);}finally{button.disabled=false;}
 });
@@ -633,7 +756,39 @@ async function loadInsights(){
   if(failed)notifications.append(make('p','',`${failed} video processing jobs need attention.`));
   if(!data.due_count&&!failed)notifications.append(make('p','muted','All caught up. Your learning activity is up to date.'));
   $('#notificationDot').hidden=!data.due_count&&!failed;
+
+  try {
+    const habitData=await services.habits();
+    state.habits=habitData;
+    const streakEl=$('#dashStreak');
+    if(streakEl){
+      if(habitData.streak>0){
+        streakEl.innerHTML=`<span class="streak-flame">🔥</span> ${habitData.streak} day${habitData.streak===1?'':'s'}${habitData.today?.goal_met?' <span class="goal-met-badge">✓ Done</span>':''}`;
+      } else {
+        streakEl.textContent='0 days (start today)';
+      }
+    }
+    const goalSelect=$('#goalMinutes');
+    if(goalSelect&&habitData.preferences?.goal){
+      goalSelect.value=habitData.preferences.goal;
+    }
+    updateWeeklyRecap(habitData);
+  } catch(e) {
+    $('#dashStreak').textContent=`${data.streak_days} day${data.streak_days===1?'':'s'}`;
+  }
 }
+$('#goalMinutes')?.addEventListener('change',async event=>{
+  const newGoal=event.target.value;
+  try{
+    const tz=state.habits?.preferences?.timezone||'UTC';
+    const email=Boolean(state.habits?.preferences?.reminder_email);
+    const updated=await services.saveHabitPrefs({goal:newGoal,timezone:tz,reminder_email:email});
+    state.habits=updated;
+    toast(`Daily habit goal set to ${newGoal==='lesson'?'1 lesson completed':'15 minutes of watching'}.`);
+    if(updated.today?.goal_met)triggerGoalCelebration();
+    await loadInsights();
+  }catch(err){toast(err.message,true);}
+});
 function closeNotify(){$('#notifyPopover').hidden=true;$('#notifyBtn').setAttribute('aria-expanded','false');}
 $('#notifyBtn').addEventListener('click',()=>{const open=$('#notifyPopover').hidden;closeTheme();$('#notifyPopover').hidden=!open;$('#notifyBtn').setAttribute('aria-expanded',String(open));if(open)$('#closeNotify').focus();});
 $('#closeNotify').addEventListener('click',()=>{closeNotify();$('#notifyBtn').focus()});
@@ -907,9 +1062,21 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
         if(r.resume_saved===false)return;
         const p=state.progress.get(a.lesson)||{};
         const completed=r.completed??p.completed;
-        state.progress.set(a.lesson,{...p,video_id:a.lesson,position:r.position,completed,percent:completed?100:r.coverage_percent});
         window.CourseForgeStudio?.completion(completed);
-        if(completed&&!p.completed){renderLessons();toast('Lesson completed.');}
+        if(completed&&!p.completed){
+          renderLessons();
+          toast('Lesson completed.');
+          window.CourseForgeCompletion?.triggerLessonCheckMoment?.();
+          const currentVid=state.videos.find(v=>v.id===a.lesson);
+          if(currentVid){
+            const courseLessons=state.videos.filter(v=>v.course===currentVid.course);
+            const allDone=courseLessons.every(v=>v.id===a.lesson||state.progress.get(v.id)?.completed);
+            if(allDone){
+              const meta=state.courseMeta.get(currentVid.course)||{};
+              window.CourseForgeCompletion?.showCourseCompletion?.({name:currentVid.course,title:meta.title||currentVid.course,videos:courseLessons});
+            }
+          }
+        }
       };
       if(final){
         a.delivery?.stop();fetch(`/api/player/${a.id}/events`,{method:'POST',keepalive:true,credentials:'same-origin',
@@ -1038,7 +1205,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       stage.addEventListener('keydown',event=>{
         if(event.key==='Escape'&&a.locked){event.preventDefault();event.stopPropagation();setLock(false);return;}
         if(a.locked)return;
-        const target=event.composedPath()[0];if(target!==stage&&target!==v)return;
+        const target=event.composedPath()[0];if(target.tagName==='INPUT'||target.tagName==='TEXTAREA'||target.isContentEditable)return;
         if(event.ctrlKey||event.metaKey||event.altKey)return;
         const actions={' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),ArrowLeft:()=>seek(-10),ArrowRight:()=>seek(10),m:()=>v.muted=!v.muted,f:()=>full.click(),l:()=>setLock(true)};
         const action=actions[event.key.length===1?event.key.toLowerCase():event.key];if(action){event.preventDefault();action();}
@@ -1296,6 +1463,19 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Completed lessons',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
       const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));metrics.append(card);
     }root.append(metrics);
+    if(report.engagement){
+      heading(root,'Active engagement & return rate',report.engagement.period);
+      const engMetrics=node('div','academy-metrics');
+      for(const [label,value] of [
+        ['Daily active students',report.engagement.daily_active_students],
+        ['Average session duration',`${report.engagement.average_session_minutes} min`],
+        ['7-day return rate',report.engagement.seven_day_return_rate!==null?`${report.engagement.seven_day_return_rate}%`:'Not enough cohort data'],
+        ['Returning cohort',`${report.engagement.returning_students} of ${report.engagement.return_cohort} students`]
+      ]){
+        const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));engMetrics.append(card);
+      }
+      root.append(engMetrics);
+    }
     heading(root,'Recent student activity',report.activity_basis+'. '+report.completion_basis+'.');
     root.append(table(['Student','Activity','Lecture','Time'],report.recent_activity.map(e=>[e.name,e.event_type.replaceAll('_',' '),e.title||e.details,date(e.created_at)])));
     heading(root,'Course enrollment funnel');root.append(table(['Course','Enrolled','Started'],report.funnels.map(r=>[r.course,r.enrolled,r.started])));

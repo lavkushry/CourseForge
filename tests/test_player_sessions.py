@@ -65,9 +65,9 @@ def test_player_ownership_requires_csrf_current_login_and_course_access(academy_
 
 def test_player_preferences_are_private_validated_and_durable(academy_env):
     _,_,_,student,_=academy_env;a,_=student();b,_=student('preferences@courseforge.test')
-    default={'speed':1,'autoplay':False,'theater':False}
+    default={'speed':1,'autoplay':True,'theater':False}
     assert a.get('/api/me/player-preferences').json()==default
-    body={'speed':2.5,'autoplay':True,'theater':True}
+    body={'speed':2.5,'autoplay':False,'theater':True}
     assert a.put('/api/me/player-preferences',json=body).json()==body
     assert a.get('/api/me/player-preferences').json()==body
     assert b.get('/api/me/player-preferences').json()==default

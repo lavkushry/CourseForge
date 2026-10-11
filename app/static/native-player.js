@@ -60,9 +60,21 @@
         if(r.resume_saved===false)return;
         const p=state.progress.get(a.lesson)||{};
         const completed=r.completed??p.completed;
-        state.progress.set(a.lesson,{...p,video_id:a.lesson,position:r.position,completed,percent:completed?100:r.coverage_percent});
         window.CourseForgeStudio?.completion(completed);
-        if(completed&&!p.completed){renderLessons();toast('Lesson completed.');}
+        if(completed&&!p.completed){
+          renderLessons();
+          toast('Lesson completed.');
+          window.CourseForgeCompletion?.triggerLessonCheckMoment?.();
+          const currentVid=state.videos.find(v=>v.id===a.lesson);
+          if(currentVid){
+            const courseLessons=state.videos.filter(v=>v.course===currentVid.course);
+            const allDone=courseLessons.every(v=>v.id===a.lesson||state.progress.get(v.id)?.completed);
+            if(allDone){
+              const meta=state.courseMeta.get(currentVid.course)||{};
+              window.CourseForgeCompletion?.showCourseCompletion?.({name:currentVid.course,title:meta.title||currentVid.course,videos:courseLessons});
+            }
+          }
+        }
       };
       if(final){
         a.delivery?.stop();fetch(`/api/player/${a.id}/events`,{method:'POST',keepalive:true,credentials:'same-origin',
@@ -191,7 +203,7 @@
       stage.addEventListener('keydown',event=>{
         if(event.key==='Escape'&&a.locked){event.preventDefault();event.stopPropagation();setLock(false);return;}
         if(a.locked)return;
-        const target=event.composedPath()[0];if(target!==stage&&target!==v)return;
+        const target=event.composedPath()[0];if(target.tagName==='INPUT'||target.tagName==='TEXTAREA'||target.isContentEditable)return;
         if(event.ctrlKey||event.metaKey||event.altKey)return;
         const actions={' ':()=>v.paused?v.play().catch(()=>{}):v.pause(),ArrowLeft:()=>seek(-10),ArrowRight:()=>seek(10),m:()=>v.muted=!v.muted,f:()=>full.click(),l:()=>setLock(true)};
         const action=actions[event.key.length===1?event.key.toLowerCase():event.key];if(action){event.preventDefault();action();}

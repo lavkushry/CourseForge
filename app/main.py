@@ -111,6 +111,8 @@ app.include_router(academy_router)
 app.include_router(task_router)
 from .admin_console import router as admin_console_router
 app.include_router(admin_console_router)
+from .habits import router as habits_router
+app.include_router(habits_router)
 
 static_path = Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=static_path), name='static')
