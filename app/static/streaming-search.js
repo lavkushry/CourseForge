@@ -262,9 +262,13 @@
     panel.innerHTML = html;
     panel.hidden = false;
 
+    // Track search query analytics
+    window.CourseForgeServices?.trackStreamingEvent('search_query', query, { results_count: currentResults.length });
+
     // Attach click recording to results
     panel.querySelectorAll('.search-item, .search-topic-pill').forEach(el => {
       el.addEventListener('click', () => {
+        window.CourseForgeServices?.trackStreamingEvent('search_click', query, { item_url: el.getAttribute('href') });
         saveRecentSearch(query);
         panel.hidden = true;
       });

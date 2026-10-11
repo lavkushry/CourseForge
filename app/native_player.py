@@ -308,6 +308,11 @@ def record_event(sid: str, body: PlaybackEvent, request: Request):
                 percent=CASE WHEN excluded.completed=1 THEN 100 ELSE excluded.percent END,
                 completed=excluded.completed,updated_at=excluded.updated_at''',
                 (user['id'],row['video_id'],100 if completed else coverage,position,int(completed),utcnow()))
+            try:
+                from .streaming import _record_history_touch
+                _record_history_touch(user['id'], row['video_id'], row.get('course', ''), position, duration, int(completed))
+            except Exception:
+                pass
         if body.event not in ('heartbeat','ready'):
             db.execute('INSERT INTO learning_events(user_id,video_id,event_type,details,created_at) VALUES(?,?,?,?,?)',
                 (user['id'],row['video_id'],'player_'+body.event,f'{position:.1f}s',utcnow()))

@@ -2744,6 +2744,205 @@ button:disabled { opacity:.6;cursor:not-allowed; }
   }
 }
 
+/* ==========================================================================
+   Section 12: Watch History Surface Styles (Stage 6)
+   ========================================================================== */
+.history-surface {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-2);
+}
+
+.history-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.history-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.history-heading {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-extrabold);
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.history-subheading {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.history-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  color: var(--text-muted);
+  border-color: var(--line);
+  transition: all 0.15s ease;
+}
+
+.history-clear-btn:hover {
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.4);
+  background: rgba(225, 29, 72, 0.08);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+
+.history-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.history-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.history-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.history-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.history-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+.history-progress-fill {
+  height: 100%;
+  background: var(--brand);
+}
+
+.history-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 3;
+  text-decoration: none;
+}
+
+.history-card:hover .history-play-overlay {
+  opacity: 1;
+}
+
+.history-card-info {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.history-card-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-2xs);
+}
+
+.history-course-badge {
+  font-weight: var(--font-bold);
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-date {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.history-card-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-card-meta-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  margin-top: auto;
+}
+
+.history-resume-pill {
+  color: var(--brand);
+  font-weight: var(--font-medium);
+}
+
+.history-duration {
+  color: var(--text-muted);
+}
+
+.empty-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  gap: var(--space-3);
+  background: var(--surface-1);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+}
+
 
 
 /* academy.css */

@@ -149,6 +149,7 @@
       if (!playBtn.dataset.originalBound) {
         playBtn.dataset.originalBound = 'true';
         playBtn.onclick = () => {
+          window.CourseForgeServices?.trackStreamingEvent('row_click', 'billboard_hero', { item_id: slide.slug || slide.first_video_id });
           if (slide.first_video_id) {
             location.hash = `#/lecture/${slide.first_video_id}`;
           } else if (slide.slug) {
@@ -268,15 +269,20 @@
 
       // Render items according to row style
       row.items.forEach((item, index) => {
+        let card;
         if (row.id === 'continue_watching') {
-          track.appendChild(buildContinueCard(item));
+          card = buildContinueCard(item);
         } else if (row.id === 'trending_top_10') {
-          track.appendChild(buildTop10Card(item, index + 1));
+          card = buildTop10Card(item, index + 1);
         } else if (row.id === 'new_episodes') {
-          track.appendChild(buildNewEpisodeCard(item));
+          card = buildNewEpisodeCard(item);
         } else {
-          track.appendChild(buildPosterCard(item));
+          card = buildPosterCard(item);
         }
+        card.addEventListener('click', () => {
+          window.CourseForgeServices?.trackStreamingEvent('row_click', row.title || row.id, { item_id: item.id || item.slug, position: index + 1 });
+        });
+        track.appendChild(card);
       });
 
       wrapper.appendChild(prevBtn);

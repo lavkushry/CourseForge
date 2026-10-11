@@ -38,7 +38,7 @@ function readLessonRoute(){
   }else if(view==='course'){
     view='library';
     if(id)state.selectedCourse=id;
-  }else if(view==='my-list'){
+  }else if(view==='my-list'||view==='history'){
     view='library';
     state.libraryFilter='active';
   }
@@ -761,6 +761,7 @@ async function openVideo(id,at=null){
     wrap.replaceChildren();await window.CourseForgeNative.open(wrap,video,session,()=>renderFailure('We couldn’t load this lesson. Please retry, or try the alternative player.'));
   };
   const startEmbedded=async()=>{
+    window.CourseForgeServices?.trackStreamingEvent('failover', 'cloud_to_local', { video_id: id });
     const point=window.CourseForgeNative.currentPosition()??start;window.CourseForgeNative.stop();
     let psid=window.CourseForgePlayerSession.current();
     if(!psid)psid=await window.CourseForgePlayerSession.open(video,current,window.CourseForgeStudio.ownershipLost);

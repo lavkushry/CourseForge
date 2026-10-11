@@ -114,12 +114,14 @@
     `;
 
     card.querySelector('#upNextWatchBtn').onclick = async () => {
+      window.CourseForgeServices?.trackStreamingEvent('up_next_accepted', next.id, { source: 'watch_now_button' });
       cancelNext();
       await openVideo(next.id);
       await window.CourseForgeNative.video()?.play();
     };
 
     card.querySelector('#upNextCancelBtn').onclick = () => {
+      window.CourseForgeServices?.trackStreamingEvent('up_next_declined', next.id, { source: 'cancel_button' });
       upNextCancelled = true;
       cancelNext();
     };
@@ -136,6 +138,7 @@
       if (badge) badge.textContent = `${seconds}s`;
 
       if (seconds <= 0) {
+        window.CourseForgeServices?.trackStreamingEvent('up_next_accepted', next.id, { source: 'auto_countdown' });
         cancelNext();
         openVideo(next.id).then(() => window.CourseForgeNative.video()?.play()).catch(error => toast(error.message, true));
       }

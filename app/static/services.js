@@ -79,5 +79,20 @@
   const focusAnalytics = (week,offset) => request(`/api/focus/analytics/${encodeURIComponent(week)}?tz_offset_minutes=${encodeURIComponent(offset)}`);
   const habits = () => request('/api/me/habits');
   const saveHabitPrefs = (body) => request('/api/me/habit-preferences', json('PUT', body));
-  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover, habits, saveHabitPrefs});
+  const trackStreamingEvent = (eventType, eventName, meta = {}) => {
+    try {
+      const payload = JSON.stringify({ event_type: eventType, event_name: eventName, meta });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/streaming/analytics/event', new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch('/api/streaming/analytics/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  };
+  window.CourseForgeServices = Object.freeze({trackStreamingEvent,beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover, habits, saveHabitPrefs});
 })();

@@ -2,12 +2,19 @@
 <html lang="en" data-theme="system" data-resolved-theme="light" data-accent="indigo">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f8f9fd" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CourseForge" />
   <meta name="description" content="CourseForge — organized courses, personal progress, and study tools." />
   <title>CourseForge — Your learning, accelerated</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
   <script>try{const t=JSON.parse(localStorage.getItem('courseforge-theme-v3')||'{}');document.documentElement.dataset.theme=['dark','light','system'].includes(t.mode)?t.mode:'system';document.documentElement.dataset.resolvedTheme=t.mode==='dark'?'dark':t.mode==='light'?'light':(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.accent=['indigo','teal','rose'].includes(t.accent)?t.accent:'indigo'}catch{}</script>
+  <script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script>
   <link rel="stylesheet" href="/static/core.css?v=17" />
   <link rel="preload" href="/static/core.js?v=17" as="script" />
 </head>
@@ -108,6 +115,7 @@
           <button type="button" class="topbar-nav-link" data-nav="library">Courses</button>
           <button type="button" class="topbar-nav-link" data-nav="planner">Today’s Plan</button>
           <a class="topbar-nav-link" href="#/my-list">My List</a>
+          <a class="topbar-nav-link" href="#/history">History</a>
         </nav>
         <label class="global-search"><svg class="icon"><use href="#i-search"/></svg><input id="globalSearch" type="search" placeholder="Search courses, lessons, and materials…" autocomplete="off" aria-label="Search courses, lessons, and materials"/><kbd>/</kbd></label>
         <div class="topbar-actions"><span class="privacy-chip"><span class="local-indicator"></span>Your learning space</span><button id="notifyBtn" class="icon-button" aria-label="Notifications" aria-expanded="false" aria-controls="notifyPopover" title="Notifications"><svg class="icon"><use href="#i-clock"/></svg><span class="notification-dot" id="notificationDot" hidden></span></button><button id="themeBtn" class="icon-button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="themePopover" title="Appearance"><svg class="icon"><use href="#i-settings"/></svg></button><button class="btn btn-primary scan-top" id="scanBtn"><svg class="icon"><use href="#i-refresh"/></svg> Scan courses</button><div class="avatar" aria-label="Your account">CF</div></div>

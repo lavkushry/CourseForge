@@ -50,12 +50,30 @@ def ensure_schema(path: Path | None = None) -> None:
             completed INTEGER NOT NULL DEFAULT 0,
             watched_at TEXT NOT NULL
         )''')
-        conn.execute('CREATE INDEX IF NOT EXISTS watch_history_user_idx ON watch_history(user_id, watched_at DESC)')
+        conn.execute('''CREATE TABLE IF NOT EXISTS history_cleared (
+            user_id TEXT PRIMARY KEY,
+            cleared_at TEXT NOT NULL
+        )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS streaming_analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT NOT NULL,
+            event_name TEXT NOT NULL,
+            meta_json TEXT NOT NULL DEFAULT '{}',
+            user_id TEXT NOT NULL DEFAULT 'anonymous',
+            created_at TEXT NOT NULL
+        )''')
+        conn.execute('CREATE INDEX IF NOT EXISTS streaming_analytics_type_idx ON streaming_analytics(event_type, created_at)')
 
 
 class MyListItem(BaseModel):
     item_type: Literal['course', 'lecture']
     item_id: str = Field(min_length=1, max_length=250)
+
+
+class AnalyticsEventItem(BaseModel):
+    event_type: Literal['row_click', 'search_query', 'search_click', 'failover', 'up_next_accepted', 'up_next_declined']
+    event_name: str = Field(min_length=1, max_length=200)
+    meta: dict = Field(default_factory=dict)
 
 
 def _get_current_user_id(request: Request) -> str:
@@ -238,19 +256,22 @@ def get_watch_history(request: Request, limit: int = 50):
     if user_id == 'anonymous':
         return {'history': []}
 
+    ensure_schema()
     with connect() as conn:
-        # Fallback to lesson_visits / video_progress if watch_history is just being populated
+        cleared_row = conn.execute('SELECT cleared_at FROM history_cleared WHERE user_id=?', (user_id,)).fetchone()
+        cleared_at = cleared_row['cleared_at'] if cleared_row else '1970-01-01T00:00:00Z'
+
         rows = conn.execute('''
             SELECT wh.video_id, wh.course, wh.position, wh.duration, wh.completed, wh.watched_at,
                    v.title
             FROM watch_history wh
             JOIN videos v ON v.id = wh.video_id
-            WHERE wh.user_id = ?
+            WHERE wh.user_id = ? AND wh.watched_at > ?
             ORDER BY wh.watched_at DESC
             LIMIT ?
-        ''', (user_id, limit)).fetchall()
+        ''', (user_id, cleared_at, limit)).fetchall()
         
-        if not rows:
+        if not rows and not cleared_row:
             rows = conn.execute('''
                 SELECT p.video_id, v.course, p.position, v.duration, p.completed, p.updated_at AS watched_at,
                        v.title
@@ -262,18 +283,23 @@ def get_watch_history(request: Request, limit: int = 50):
             ''', (user_id, limit)).fetchall()
 
     history = []
+    seen_videos = set()
     for r in rows:
         r_dict = dict(r)
+        vid = r_dict['video_id']
+        if vid in seen_videos:
+            continue
+        seen_videos.add(vid)
         history.append({
-            'video_id': r_dict['video_id'],
+            'video_id': vid,
             'title': r_dict['title'],
             'course': r_dict['course'],
             'course_slug': slugify(r_dict['course']),
             'position': r_dict['position'],
             'duration': r_dict['duration'] or 0,
             'completed': bool(r_dict['completed']),
-            'thumbnail_url': f"/api/artwork/lectures/{r_dict['video_id']}/thumbnail?size=md",
-            'deep_link': f"#/lecture/{r_dict['video_id']}?t={int(r_dict['position'])}",
+            'thumbnail_url': f"/api/artwork/lectures/{vid}/thumbnail?size=md",
+            'deep_link': f"#/lecture/{vid}?t={int(r_dict['position'])}",
             'watched_at': r_dict['watched_at'],
         })
     return {'history': history}
@@ -285,9 +311,82 @@ def clear_watch_history(request: Request):
     if user_id == 'anonymous':
         raise HTTPException(401, 'Sign in to clear history')
 
+    ensure_schema()
     with connect() as conn:
         conn.execute('DELETE FROM watch_history WHERE user_id=?', (user_id,))
+        conn.execute('''
+            INSERT INTO history_cleared(user_id, cleared_at)
+            VALUES (?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET cleared_at=excluded.cleared_at
+        ''', (user_id, utcnow()))
     return {'ok': True, 'cleared': True}
+
+
+@router.post('/api/streaming/analytics/event')
+def record_analytics_event(body: AnalyticsEventItem, request: Request):
+    user_id = _get_current_user_id(request)
+    ensure_schema()
+    try:
+        with connect() as conn:
+            conn.execute('''
+                INSERT INTO streaming_analytics(event_type, event_name, meta_json, user_id, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (body.event_type, body.event_name, json.dumps(body.meta), user_id, utcnow()))
+    except Exception as e:
+        log.warning('Could not record streaming analytics event: %s', e)
+    return {'ok': True}
+
+
+@router.get('/api/admin/streaming-analytics')
+def get_streaming_analytics(request: Request):
+    auth.require_admin(request)
+    ensure_schema()
+    with connect() as conn:
+        # Row engagement
+        row_rows = conn.execute('''
+            SELECT event_name, COUNT(*) AS count
+            FROM streaming_analytics
+            WHERE event_type = 'row_click'
+            GROUP BY event_name
+            ORDER BY count DESC
+            LIMIT 15
+        ''').fetchall()
+        row_engagement = [{'row': r['event_name'], 'clicks': r['count']} for r in row_rows]
+
+        # Search success rate
+        total_queries = conn.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type = 'search_query'").fetchone()[0]
+        search_clicks = conn.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type = 'search_click'").fetchone()[0]
+        search_success_rate = round((search_clicks / max(1, total_queries)) * 100, 1)
+
+        # Failover counts
+        failover_rows = conn.execute('''
+            SELECT event_name, COUNT(*) AS count
+            FROM streaming_analytics
+            WHERE event_type = 'failover'
+            GROUP BY event_name
+        ''').fetchall()
+        failover_counts = {r['event_name']: r['count'] for r in failover_rows}
+
+        # Up Next metrics
+        up_next_acc = conn.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type = 'up_next_accepted'").fetchone()[0]
+        up_next_dec = conn.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type = 'up_next_declined'").fetchone()[0]
+        total_up_next = up_next_acc + up_next_dec
+        up_next_rate = round((up_next_acc / max(1, total_up_next)) * 100, 1)
+
+    return {
+        'row_engagement': row_engagement,
+        'search': {
+            'total_queries': total_queries,
+            'clicks': search_clicks,
+            'success_rate_percent': search_success_rate
+        },
+        'failovers': failover_counts,
+        'up_next': {
+            'accepted': up_next_acc,
+            'declined': up_next_dec,
+            'acceptance_rate_percent': up_next_rate
+        }
+    }
 
 
 @router.get('/api/streaming/home-feed')

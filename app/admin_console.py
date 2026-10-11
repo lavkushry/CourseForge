@@ -227,12 +227,24 @@ def system_status(request: Request):
         invites = db.execute("SELECT COUNT(*) FROM account_tokens WHERE kind='invite' AND expires_at>?",(utcnow(),)).fetchone()[0]
         audit_rows = [dict(r) for r in db.execute('''SELECT a.action,a.resource,a.created_at,u.name actor
             FROM admin_audit a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 50''')]
+        has_analytics = bool(db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='streaming_analytics'").fetchone())
+        row_rows = db.execute('''SELECT event_name, COUNT(*) AS count FROM streaming_analytics
+            WHERE event_type='row_click' GROUP BY event_name ORDER BY count DESC LIMIT 10''').fetchall() if has_analytics else []
+        streaming_stats = {
+            'row_engagement': [{'row': r['event_name'], 'clicks': r['count']} for r in row_rows],
+            'search_queries': db.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type='search_query'").fetchone()[0] if has_analytics else 0,
+            'search_clicks': db.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type='search_click'").fetchone()[0] if has_analytics else 0,
+            'failovers': {r['event_name']: r['count'] for r in db.execute("SELECT event_name, COUNT(*) AS count FROM streaming_analytics WHERE event_type='failover' GROUP BY event_name").fetchall()} if has_analytics else {},
+            'up_next_accepted': db.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type='up_next_accepted'").fetchone()[0] if has_analytics else 0,
+            'up_next_declined': db.execute("SELECT COUNT(*) FROM streaming_analytics WHERE event_type='up_next_declined'").fetchone()[0] if has_analytics else 0,
+        }
     return {'registration':auth.account_options(),
             'email':{'provider':os.getenv('SMTP_PROVIDER','brevo'), 'configured':auth.mail_configured(),
                      'required_settings':['PUBLIC_BASE_URL','SMTP_HOST','SMTP_FROM','SMTP_USER','SMTP_PASSWORD']},
             'provider_configured':bool(os.getenv('ODYSEE_AUTH_TOKEN') and os.getenv('ODYSEE_CHANNEL_ID')),
             'player':CAPABILITIES,'service_checks':checks,'tasks':counts,'courses':courses,
-            'pending_invitations':invites,'audit':audit_rows, 'retention':{'access_days':30,'session_days':90,'admin_audit_days':90}}
+            'pending_invitations':invites,'audit':audit_rows, 'streaming':streaming_stats,
+            'retention':{'access_days':30,'session_days':90,'admin_audit_days':90}}
 
 
 @router.post('/api/admin/provider-sync')

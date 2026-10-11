@@ -80,7 +80,22 @@
   const focusAnalytics = (week,offset) => request(`/api/focus/analytics/${encodeURIComponent(week)}?tz_offset_minutes=${encodeURIComponent(offset)}`);
   const habits = () => request('/api/me/habits');
   const saveHabitPrefs = (body) => request('/api/me/habit-preferences', json('PUT', body));
-  window.CourseForgeServices = Object.freeze({beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover, habits, saveHabitPrefs});
+  const trackStreamingEvent = (eventType, eventName, meta = {}) => {
+    try {
+      const payload = JSON.stringify({ event_type: eventType, event_name: eventName, meta });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/streaming/analytics/event', new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch('/api/streaming/analytics/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  };
+  window.CourseForgeServices = Object.freeze({trackStreamingEvent,beginFocus,focusAction,activeFocus,focusHistory,focusAnalytics,weekPreferences,saveWeekPreferences,weeklyCalendar,generateWeeklyCalendar,savePlannerActual,plannerPreferences,savePlannerPreferences,plannerDay,generatePlannerDay,setPlannerItem,practiceRecommendations,practiceHistory,startRecommendedPractice,startAssessment,submitAssessment,assessmentHistory,learningPaths,learningPath,createLearningPath,completeLearningStep,request, json, videos, progress, insights, notes, saveNote, deleteNote, courses, updateCourse, uploadCover, resetCover, habits, saveHabitPrefs});
 })();
 
 /* app.js */
@@ -124,7 +139,7 @@ function readLessonRoute(){
   }else if(view==='course'){
     view='library';
     if(id)state.selectedCourse=id;
-  }else if(view==='my-list'){
+  }else if(view==='my-list'||view==='history'){
     view='library';
     state.libraryFilter='active';
   }
@@ -847,6 +862,7 @@ async function openVideo(id,at=null){
     wrap.replaceChildren();await window.CourseForgeNative.open(wrap,video,session,()=>renderFailure('We couldn’t load this lesson. Please retry, or try the alternative player.'));
   };
   const startEmbedded=async()=>{
+    window.CourseForgeServices?.trackStreamingEvent('failover', 'cloud_to_local', { video_id: id });
     const point=window.CourseForgeNative.currentPosition()??start;window.CourseForgeNative.stop();
     let psid=window.CourseForgePlayerSession.current();
     if(!psid)psid=await window.CourseForgePlayerSession.open(video,current,window.CourseForgeStudio.ownershipLost);
@@ -1409,6 +1425,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
       if (!playBtn.dataset.originalBound) {
         playBtn.dataset.originalBound = 'true';
         playBtn.onclick = () => {
+          window.CourseForgeServices?.trackStreamingEvent('row_click', 'billboard_hero', { item_id: slide.slug || slide.first_video_id });
           if (slide.first_video_id) {
             location.hash = `#/lecture/${slide.first_video_id}`;
           } else if (slide.slug) {
@@ -1528,15 +1545,20 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 
       // Render items according to row style
       row.items.forEach((item, index) => {
+        let card;
         if (row.id === 'continue_watching') {
-          track.appendChild(buildContinueCard(item));
+          card = buildContinueCard(item);
         } else if (row.id === 'trending_top_10') {
-          track.appendChild(buildTop10Card(item, index + 1));
+          card = buildTop10Card(item, index + 1);
         } else if (row.id === 'new_episodes') {
-          track.appendChild(buildNewEpisodeCard(item));
+          card = buildNewEpisodeCard(item);
         } else {
-          track.appendChild(buildPosterCard(item));
+          card = buildPosterCard(item);
         }
+        card.addEventListener('click', () => {
+          window.CourseForgeServices?.trackStreamingEvent('row_click', row.title || row.id, { item_id: item.id || item.slug, position: index + 1 });
+        });
+        track.appendChild(card);
       });
 
       wrapper.appendChild(prevBtn);
@@ -1951,9 +1973,13 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
     panel.innerHTML = html;
     panel.hidden = false;
 
+    // Track search query analytics
+    window.CourseForgeServices?.trackStreamingEvent('search_query', query, { results_count: currentResults.length });
+
     // Attach click recording to results
     panel.querySelectorAll('.search-item, .search-topic-pill').forEach(el => {
       el.addEventListener('click', () => {
+        window.CourseForgeServices?.trackStreamingEvent('search_click', query, { item_url: el.getAttribute('href') });
         saveRecentSearch(query);
         panel.hidden = true;
       });
@@ -2095,6 +2121,11 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
         window.navigate('library');
       }
       renderMyListView();
+    } else if (hash === '#/history' || hash === '#history') {
+      if (typeof window.navigate === 'function') {
+        window.navigate('library');
+      }
+      renderHistoryView();
     }
   }
 
@@ -2338,6 +2369,135 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
     }
   }
 
+  // --------------------------------------------------------------------------
+  // Dedicated Watch History View (#/history)
+  // --------------------------------------------------------------------------
+  async function renderHistoryView() {
+    const catalog = document.getElementById('courseCatalog');
+    const libraryCount = document.getElementById('libraryCount');
+    const libraryEmpty = document.getElementById('libraryEmpty');
+    const pillsBar = document.getElementById('categoryFilterPills');
+    if (!catalog) return;
+
+    if (pillsBar) pillsBar.hidden = true;
+    if (libraryEmpty) libraryEmpty.hidden = true;
+    catalog.setAttribute('aria-busy', 'true');
+    catalog.innerHTML = '<div class="skeleton-row"><div class="skeleton-poster"></div><div class="skeleton-poster"></div><div class="skeleton-poster"></div></div>';
+
+    try {
+      const res = await fetch('/api/streaming/history');
+      catalog.setAttribute('aria-busy', 'false');
+      if (!res.ok) throw new Error('Could not load Watch History');
+      const data = await res.json();
+      const items = data.history || [];
+
+      if (libraryCount) {
+        libraryCount.textContent = `Watch History (${items.length} titles)`;
+      }
+
+      catalog.innerHTML = '';
+      const surface = document.createElement('div');
+      surface.className = 'history-surface';
+
+      // Header row with Clear History button
+      const headerRow = document.createElement('div');
+      headerRow.className = 'history-header-row';
+      headerRow.innerHTML = `
+        <div class="history-title-wrap">
+          <h2 class="history-heading">Watch History</h2>
+          <p class="history-subheading">Chronological record of your watched lectures across all devices.</p>
+        </div>
+        ${items.length ? `
+          <button type="button" class="btn btn-outline history-clear-btn" id="clearHistoryBtn">
+            <svg class="icon"><use href="#i-trash"/></svg> Clear watch history
+          </button>
+        ` : ''}
+      `;
+      surface.appendChild(headerRow);
+
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'panel empty-history';
+        empty.innerHTML = `
+          <div class="empty-illustration"><svg class="icon"><use href="#i-clock"/></svg></div>
+          <h3>No watch history yet</h3>
+          <p>Lectures you stream will appear here in chronological order with your resume timestamps.</p>
+          <a href="#/browse" class="btn btn-primary">Start exploring masterclasses</a>
+        `;
+        surface.appendChild(empty);
+        catalog.appendChild(surface);
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'history-grid';
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+
+        const thumbUrl = item.thumbnail_url || `/api/artwork/lectures/${item.video_id}/thumbnail?size=md`;
+        const durMins = item.duration ? Math.ceil(item.duration / 60) + 'm' : '';
+        const posMins = item.position ? Math.floor(item.position / 60) + 'm' : '0m';
+        const percent = item.duration ? Math.min(100, Math.round((item.position / item.duration) * 100)) : 0;
+        const formattedDate = item.watched_at ? new Date(item.watched_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+        card.innerHTML = `
+          <div class="history-thumb-wrap">
+            <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+            <div class="history-progress-bar"><div class="history-progress-fill" style="width: ${percent}%"></div></div>
+            <a href="${item.deep_link}" class="history-play-overlay" title="Resume playback">
+              <div class="card-play-icon"><svg class="icon"><use href="#i-play"/></svg></div>
+            </a>
+          </div>
+          <div class="history-card-info">
+            <div class="history-card-meta-top">
+              <span class="history-course-badge">${escapeHtml(item.course || '')}</span>
+              ${formattedDate ? `<span class="history-date">${formattedDate}</span>` : ''}
+            </div>
+            <strong class="history-card-title">${escapeHtml(item.title)}</strong>
+            <div class="history-card-meta-bottom">
+              <span class="history-resume-pill">${item.completed ? 'Completed' : `Resume at ${posMins}`}</span>
+              ${durMins ? `<span class="history-duration">${durMins}</span>` : ''}
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      surface.appendChild(grid);
+      catalog.appendChild(surface);
+
+      // Wire Clear History button with confirmation dialog
+      const clearBtn = surface.querySelector('#clearHistoryBtn');
+      if (clearBtn) {
+        clearBtn.onclick = async () => {
+          if (!window.confirm('Clear your entire watch history? This cannot be undone.')) {
+            return;
+          }
+          try {
+            const csrf = window.CourseForgeAccount?.csrf || '';
+            const delRes = await fetch('/api/streaming/history', {
+              method: 'DELETE',
+              headers: { 'X-CSRF-Token': csrf }
+            });
+            if (delRes.ok) {
+              if (window.toast) window.toast('Watch history cleared');
+              renderHistoryView();
+            } else {
+              throw new Error('Failed to clear history');
+            }
+          } catch (err) {
+            if (window.toast) window.toast('Could not clear watch history: ' + err.message, true);
+          }
+        };
+      }
+    } catch (err) {
+      catalog.setAttribute('aria-busy', 'false');
+      catalog.innerHTML = `<div class="error-panel">Failed to load Watch History. <button class="btn btn-outline" onclick="CourseForgeBrowse.renderHistoryView()">Retry</button></div>`;
+    }
+  }
+
   function escapeHtml(str) {
     return String(str || '')
       .replace(/&/g, '&amp;')
@@ -2350,7 +2510,8 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
   window.CourseForgeBrowse = {
     initBrowseHub,
     syncCategoryPills,
-    renderMyListView
+    renderMyListView,
+    renderHistoryView
   };
 
   if (document.readyState === 'loading') {
@@ -3573,12 +3734,14 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     `;
 
     card.querySelector('#upNextWatchBtn').onclick = async () => {
+      window.CourseForgeServices?.trackStreamingEvent('up_next_accepted', next.id, { source: 'watch_now_button' });
       cancelNext();
       await openVideo(next.id);
       await window.CourseForgeNative.video()?.play();
     };
 
     card.querySelector('#upNextCancelBtn').onclick = () => {
+      window.CourseForgeServices?.trackStreamingEvent('up_next_declined', next.id, { source: 'cancel_button' });
       upNextCancelled = true;
       cancelNext();
     };
@@ -3595,6 +3758,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       if (badge) badge.textContent = `${seconds}s`;
 
       if (seconds <= 0) {
+        window.CourseForgeServices?.trackStreamingEvent('up_next_accepted', next.id, { source: 'auto_countdown' });
         cancelNext();
         openVideo(next.id).then(() => window.CourseForgeNative.video()?.play()).catch(error => toast(error.message, true));
       }

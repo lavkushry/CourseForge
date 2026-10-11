@@ -128,6 +128,17 @@ def index():
     return FileResponse(static_path / 'index.html')
 
 
+@app.get('/manifest.webmanifest')
+@app.get('/manifest.json')
+def manifest():
+    return FileResponse(static_path / 'manifest.webmanifest', media_type='application/manifest+json')
+
+
+@app.get('/sw.js')
+def service_worker():
+    return FileResponse(static_path / 'sw.js', media_type='application/javascript')
+
+
 @app.get('/api/health')
 def health():
     return {'status': 'ok', 'version':'0.4.0'}
