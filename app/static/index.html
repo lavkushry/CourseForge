@@ -103,6 +103,12 @@
       <header class="topbar">
         <button id="mobileMenu" class="icon-button mobile-only" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg class="icon"><use href="#i-menu"/></svg></button>
         <nav class="topbar-crumb" id="breadcrumbBar" aria-label="Breadcrumb"><button type="button" class="crumb-link" data-nav="dashboard">Dashboard</button><svg class="icon"><use href="#i-chevron"/></svg><strong id="topbarLocation">Home / Continue</strong></nav>
+        <nav class="topbar-nav" aria-label="Streaming navigation">
+          <button type="button" class="topbar-nav-link active" data-nav="dashboard">Home</button>
+          <button type="button" class="topbar-nav-link" data-nav="library">Courses</button>
+          <button type="button" class="topbar-nav-link" data-nav="planner">Today’s Plan</button>
+          <a class="topbar-nav-link" href="#/my-list">My List</a>
+        </nav>
         <label class="global-search"><svg class="icon"><use href="#i-search"/></svg><input id="globalSearch" type="search" placeholder="Search courses, lessons, and materials…" autocomplete="off" aria-label="Search courses, lessons, and materials"/><kbd>/</kbd></label>
         <div class="topbar-actions"><span class="privacy-chip"><span class="local-indicator"></span>Your learning space</span><button id="notifyBtn" class="icon-button" aria-label="Notifications" aria-expanded="false" aria-controls="notifyPopover" title="Notifications"><svg class="icon"><use href="#i-clock"/></svg><span class="notification-dot" id="notificationDot" hidden></span></button><button id="themeBtn" class="icon-button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="themePopover" title="Appearance"><svg class="icon"><use href="#i-settings"/></svg></button><button class="btn btn-primary scan-top" id="scanBtn"><svg class="icon"><use href="#i-refresh"/></svg> Scan courses</button><div class="avatar" aria-label="Your account">CF</div></div>
       </header>
@@ -112,8 +118,39 @@
       <main class="page-content" id="pageContent">
         <section class="view" data-view="dashboard">
           <div class="welcome-meta"><span class="status-spark"></span> YOUR PERSONAL LEARNING SPACE <span class="welcome-date" id="todayLabel"></span></div>
-          <section class="hero"><div class="hero-copy"><div class="hero-overline"><span></span> THE SMARTER WAY TO LEARN</div><h1>Your learning,<br><span>without the overwhelm.</span></h1><p>Every course you own, intelligently organized. Learn what matters, skip what you already know, and build real skills along the way.</p><div class="smart-resume-banner" id="smartResumeBanner" hidden><div class="smart-resume-badge"><svg class="icon"><use href="#i-spark"/></svg> Since last time</div><p id="smartResumeText" class="smart-resume-text"></p></div><div class="hero-actions"><button class="btn btn-white" id="heroLearnBtn">Continue learning <svg class="icon"><use href="#i-arrow"/></svg></button><button class="btn btn-hero-outline" data-nav="library">Browse courses</button><button class="btn btn-hero-outline" data-nav="planner">Plan today</button></div></div><div class="hero-art" aria-hidden="true"><div class="art-orbit orbit-a"></div><div class="art-orbit orbit-b"></div><div class="art-card art-card-one"><div class="art-symbol"></div><span>AI learning plan</span><strong>Made for you</strong><div class="art-bars"><i></i><i></i><i></i></div></div><div class="art-card art-card-two"><div class="art-tiny-icon"></div><span>Learning progress</span><strong>Keep growing</strong><div class="art-progress"><i></i></div></div><div class="art-star star-a"></div><div class="art-star star-b"></div></div></section>
+          <section class="streaming-billboard" id="streamingHero" aria-label="Featured courses billboard" role="region">
+            <div class="billboard-backdrop" id="heroBackdrop"></div>
+            <div class="billboard-vignette"></div>
+            <div class="billboard-content">
+              <div class="billboard-badge" id="heroBadge"><svg class="icon"><use href="#i-spark"/></svg> <span id="heroBadgeText">FEATURED MASTERCLASS</span></div>
+              <h1 class="billboard-title" id="heroTitle">Mission Azure Data Engineer</h1>
+              <div class="billboard-meta" id="heroMeta">
+                <span class="meta-tag badge-category" id="heroCategory">Data Engineering</span>
+                <span class="meta-dot">·</span>
+                <span id="heroEpisodes">148 Episodes</span>
+                <span class="meta-dot">·</span>
+                <span id="heroDuration">60h total</span>
+                <span class="meta-dot">·</span>
+                <span class="meta-badge-hd">HD 1080p</span>
+                <span class="meta-dot">·</span>
+                <span class="meta-badge-cert">Certificate</span>
+              </div>
+              <p class="billboard-synopsis" id="heroSynopsis">Master enterprise data engineering with deep end-to-end architectures, ADLS Gen2, Databricks, Spark, and real production pipelines.</p>
+              <div class="smart-resume-banner" id="smartResumeBanner" hidden><div class="smart-resume-badge"><svg class="icon"><use href="#i-spark"/></svg> Since last time</div><p id="smartResumeText" class="smart-resume-text"></p></div>
+              <div class="billboard-actions">
+                <button class="btn btn-white billboard-play-btn" id="heroLearnBtn"><svg class="icon"><use href="#i-play"/></svg> Continue learning</button>
+                <button class="btn btn-hero-outline billboard-info-btn" id="heroInfoBtn" type="button"><svg class="icon"><use href="#i-help"/></svg> More Info</button>
+                <button class="btn btn-hero-outline billboard-list-btn" id="heroListBtn" type="button"><svg class="icon"><use href="#i-bookmark"/></svg> My List</button>
+                <button class="btn btn-hero-outline" data-nav="library">Browse courses</button>
+                <button class="btn btn-hero-outline" data-nav="planner">Plan today</button>
+              </div>
+            </div>
+            <button class="billboard-arrow billboard-prev" id="heroPrevBtn" aria-label="Previous featured title"><svg class="icon"><use href="#i-chevron"/></svg></button>
+            <button class="billboard-arrow billboard-next" id="heroNextBtn" aria-label="Next featured title"><svg class="icon"><use href="#i-chevron"/></svg></button>
+            <div class="billboard-dots" id="heroDots" role="tablist" aria-label="Featured titles slides"></div>
+          </section>
           <div class="insight-strip" aria-label="Your daily learning insights"><div class="mini-insight"><span>Review due</span><strong id="dashDue">—</strong></div><div class="mini-insight streak-insight"><span>Daily streak</span><strong id="dashStreak">—</strong></div><div class="mini-insight"><span>Self-rated recall</span><strong id="dashMastery">—</strong></div><div class="mini-insight goal-insight"><label for="goalMinutes">Daily habit goal</label><select id="goalMinutes" aria-label="Daily habit goal"><option value="minutes">15 min watch</option><option value="lesson">1 lesson done</option></select></div></div><div class="weekly-recap-banner" id="weeklyRecap" hidden><div class="recap-spark"><svg class="icon"><use href="#i-spark"/></svg></div><div class="recap-body"><strong id="recapTitle">Your week of learning</strong><p id="recapText">You learned 0m across 0 lessons this week.</p></div><div class="recap-action"><button class="btn btn-outline btn-sm" id="recapOptInBtn" type="button">Email recap: Off</button></div></div><div class="metrics" aria-label="Your learning overview"><div class="metric"><span class="metric-icon mint"><svg class="icon"><use href="#i-book"/></svg></span><div><strong id="statCourses">0</strong><span>Courses in library</span></div></div><div class="metric"><span class="metric-icon blue"><svg class="icon"><use href="#i-play"/></svg></span><div><strong id="statVideos">0</strong><span>Video lessons</span></div></div><div class="metric"><span class="metric-icon peach"><svg class="icon"><use href="#i-check"/></svg></span><div><strong id="statIndexed">0</strong><span>AI-ready lessons</span></div></div><div class="metric"><span class="metric-icon purple"><svg class="icon"><use href="#i-clock"/></svg></span><div><strong id="statCompleted">0</strong><span>Lessons completed</span></div></div></div>
+          <div class="streaming-carousels" id="streamingCarousels" aria-live="polite"></div>
           <div class="section-head"><div><span class="eyebrow">RECENTLY VIEWED COURSES</span><h2>Continue learning</h2></div><button class="text-link" data-nav="library">View library <svg class="icon"><use href="#i-arrow"/></svg></button></div><div class="course-grid featured-courses" id="featuredCourses" aria-busy="true"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
           <div class="home-bottom"><div class="panel compact-panel"><div class="panel-heading"><span class="metric-icon purple"><svg class="icon"><use href="#i-spark"/></svg></span><span><span class="eyebrow">YOUR AI STUDY PARTNER</span><h3>Ask anything, learn faster.</h3></span></div><p>Get answers from your actual course material, with timestamps so you can check every explanation.</p><button class="btn btn-outline" data-nav="tutor">Open AI tutor <svg class="icon"><use href="#i-arrow"/></svg></button></div><div class="panel compact-panel"><div class="panel-heading"><span class="metric-icon mint"><svg class="icon"><use href="#i-cards"/></svg></span><span><span class="eyebrow">RETAIN WHAT YOU LEARN</span><h3>A little practice goes a long way.</h3></span></div><p>Stay sharp with smart flashcards, concept reviews, and hands-on challenges.</p><button class="btn btn-outline" data-nav="reviews">Review flashcards <svg class="icon"><use href="#i-arrow"/></svg></button></div></div>
         </section>
@@ -248,8 +285,47 @@
         <section class="view" data-view="reviews" hidden><div class="page-heading"><div><div class="eyebrow">ACTIVE RECALL</div><h1>Make knowledge stick</h1><p>Smart spaced repetition helps you remember more in less time.</p></div></div><div class="review-insights"><div class="panel compact-panel"><span class="eyebrow">REVIEW QUEUE</span><strong id="reviewDueCount">—</strong><p>Flashcards due now</p></div><div class="panel compact-panel"><span class="eyebrow">RECALL QUALITY</span><strong id="reviewRecallRate">—</strong><p>Self-rated Good or Easy</p></div></div><section class="panel review-workspace"><div class="review-top"><div><h2>Your daily review</h2><p class="muted">Study now, remember tomorrow.</p></div><span class="metric-icon peach"><svg class="icon"><use href="#i-cards"/></svg></span></div><div class="study-actions"><label class="field"><span>Topic for new flashcards</span><input id="reviewTopic" class="form-input" placeholder="e.g. Kubernetes networking" maxlength="400"/></label><button id="generateCardsBtn" class="btn btn-primary">Generate 5 cards</button><button id="loadDueBtn" class="btn btn-outline">Review due</button></div><p id="reviewStatus" class="muted">Choose a course in Study paths to create flashcards.</p><div id="reviewCard" class="flip-card" hidden><div class="eyebrow">QUESTION</div><h3 id="reviewQuestion"></h3><p id="reviewAnswer" class="review-answer" hidden></p><button id="revealAnswerBtn" class="btn btn-primary">Reveal answer</button><div id="reviewGrades" class="quality-buttons" hidden><button data-quality="0">Again</button><button data-quality="3">Hard</button><button data-quality="4">Good</button><button data-quality="5">Easy</button></div><button id="reviewSource" class="text-link">Open source lecture <svg class="icon"><use href="#i-arrow"/></svg></button></div></section><div class="review-analytics"><section class="panel"><h3>Recent reviews</h3><div id="reviewHistory" class="review-history muted">Review history appears after you grade cards.</div></section><section class="panel"><h3>Concepts to revisit</h3><div id="weakAreas" class="review-history muted">Areas marked Again appear here.</div></section></div></section>
         <section class="view" data-view="labs" hidden><div class="page-heading"><div><div class="eyebrow">LEARN BY DOING</div><h1>Practice labs</h1><p>Try an exercise and get feedback on your work.</p></div><span class="tag"><svg class="icon"><use href="#i-local"/></svg> Guided practice</span></div><div class="lab-controls"><label for="labCategoryFilter" class="input-label">Subject</label><select id="labCategoryFilter" class="form-input"><option value="all">All subjects</option><option>SQL</option><option>PySpark</option><option>Docker</option><option>Ansible</option><option>Backend</option><option>Python</option><option>Shell</option><option>Kubernetes</option></select><p class="muted">Choose an exercise, write your solution, and run checks to see what to improve.</p></div><section class="panel practice-overview" aria-label="Recommended practice"><div class="panel-top"><div><span class="eyebrow">ADAPTIVE PRACTICE</span><h2>Recommended next labs</h2><p class="muted">Exercises chosen from your recent quiz and practice results.</p></div><button id="practiceRefreshBtn" class="btn btn-outline" type="button">Refresh</button></div><label class="field" for="practicePathSelect"><span>Learning path</span><select id="practicePathSelect" class="form-input"><option value="">Select a learning path</option></select></label><div id="practiceRecommendations" class="practice-list" aria-live="polite"><p class="muted">Build a study path to see targeted practice.</p></div><h3>Recent graded attempts</h3><div id="practiceHistory" class="practice-list"><p class="muted">Linked lab history appears after grading.</p></div></section><div id="labCatalog" class="lab-catalog" aria-busy="true"><div class="skeleton-card"></div></div><div class="panel"><h3>How to practise</h3><p class="muted">Write your solution, check your work, and use the feedback to try again. Configuration checks review your code without deploying it.</p><div id="plannedLabs" class="planned-labs"></div></div><div id="labEditor" class="panel lab-editor" hidden><div class="panel-top"><div><span class="eyebrow">ACTIVE EXERCISE</span><h2 id="labTitle"></h2><p id="labObjective"></p></div><span class="metric-icon purple"><svg class="icon"><use href="#i-code"/></svg></span></div><div id="labFilename" class="editor-filename"></div><textarea id="labCode" class="code-editor" spellcheck="false" aria-label="Lab code editor"></textarea><label class="kind-toggle"><input type="checkbox" id="kindCheck"/> Test the Kubernetes configuration</label><div class="toolbar"><button id="focusLab" class="btn btn-outline" type="button">Focus on this lab</button><button id="saveLabBtn" class="btn btn-outline">Save solution</button><button id="submitLabBtn" class="btn btn-primary">Run checks <svg class="icon"><use href="#i-arrow"/></svg></button></div><div id="labResult" class="lab-result" role="status"></div></div></section>
         <section class="view" data-view="settings" hidden><div class="page-heading"><div><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><p>Make your learning space your own.</p></div></div><div class="settings-grid"><section class="panel"><h2>Appearance</h2><p class="muted">Theme and accent options are saved on this device.</p><div class="setting-label">Display mode</div><div class="theme-options" role="group" aria-label="Settings color mode"><button data-theme-option="light">Light</button><button data-theme-option="dark">Dark</button><button data-theme-option="system">System</button></div><div class="setting-label">Accent color</div><div class="accent-options" role="group" aria-label="Settings accent color"><button data-accent-option="indigo" class="accent-dot indigo" aria-label="Indigo accent"></button><button data-accent-option="teal" class="accent-dot teal" aria-label="Teal accent"></button><button data-accent-option="rose" class="accent-dot rose" aria-label="Rose accent"></button></div></section><section class="panel"><h2>Study preferences</h2><p class="muted">Choose a daily goal that works for you.</p><label class="field" for="settingsGoal"><span>Daily study goal</span><select id="settingsGoal" class="form-input"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></label><p class="small-note">Your daily goal helps you build a regular study routine.</p></section><section class="panel"><h2>Your courses</h2><p>Find your lessons and study materials in your library.</p><div id="settingsPaths" class="muted">Your courses are ready to explore.</div><button class="btn btn-outline" data-nav="library">Open library</button></section><section class="panel"><h2>About CourseForge</h2><p class="muted">CourseForge brings your lectures, study tools, and learning progress into one account.</p><p class="muted">Pick up your next lesson, save notes, and follow your progress.</p></section></div></section>
-      </main>
-      <footer class="app-footer"><span>CourseForge · Your learning companion</span><span id="jobSummary">Ready to learn</span></footer>
+      <footer class="streaming-footer" role="contentinfo">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="footer-logo" href="#dashboard"><span class="brand-name">courseforge<span class="brand-period">.</span></span></a>
+            <p class="footer-tagline">Streamlined Masterclasses and Engineering Academies. Intelligently organized with source-verified explanations and private progress tracking.</p>
+            <div class="footer-status-pill"><span class="local-indicator"></span> Protected Streaming Vault Active · 1080p HD</div>
+          </div>
+          <div class="footer-col">
+            <h4>Navigation</h4>
+            <ul>
+              <li><a href="#dashboard" data-nav="dashboard">Home / Continue</a></li>
+              <li><a href="#library" data-nav="library">Course Library</a></li>
+              <li><a href="#/my-list">My List</a></li>
+              <li><a href="#planner" data-nav="planner">Today’s Study Plan</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Platform &amp; Help</h4>
+            <ul>
+              <li><a href="#tutor" data-nav="tutor">AI Study Partner</a></li>
+              <li><a href="#reviews" data-nav="reviews">Spaced Practice</a></li>
+              <li><a href="#labs" data-nav="labs">Hands-on Labs</a></li>
+              <li><a href="#settings" data-nav="settings">Preferences &amp; Shortcuts</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Security &amp; Policies</h4>
+            <ul>
+              <li><a href="#dashboard">Privacy &amp; DRM Protection</a></li>
+              <li><a href="#dashboard">Terms of Service</a></li>
+              <li><a href="#dashboard">Learner Honor Code</a></li>
+              <li><a href="#dashboard">Support &amp; Troubleshooting</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>© 2026 CourseForge Inc. All rights reserved.</p>
+          <p class="footer-version">Version 2.4.0 (Streaming Edition) · Built for Deep Focus</p>
+        </div>
+        <span id="jobSummary" hidden>Ready to learn</span>
+      </footer>
     </div>
   </div>
   <dialog id="courseEditDialog" class="course-edit-dialog" aria-labelledby="courseEditHeading">

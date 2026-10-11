@@ -3,11 +3,11 @@ from pathlib import Path
 
 static = Path(__file__).resolve().parents[1] / 'app' / 'static'
 groups = {
-    'core.js': ['services.js', 'app.js', 'player-tracking.js', 'player-session.js',
+    'core.js': ['services.js', 'app.js', 'streaming-home.js', 'player-tracking.js', 'player-session.js',
                 'player-recovery.js', 'native-player.js', 'player-studio.js',
                 'loaders.js', 'academy.js', 'mobile.js'],
     'tools.js': ['learning-paths.js', 'assessments.js', 'practice.js', 'planner.js', 'weekly.js', 'focus.js'],
-    'core.css': ['tokens.css', 'style.css', 'academy.css', 'player.css', 'mobile.css'],
+    'core.css': ['tokens.css', 'style.css', 'streaming.css', 'academy.css', 'player.css', 'mobile.css'],
     'tools.css': ['tokens.css', 'learning-paths.css', 'assessments.css', 'practice.css', 'planner.css', 'weekly.css', 'focus.css'],
 }
 for target, sources in groups.items():

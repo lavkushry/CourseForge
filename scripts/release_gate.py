@@ -114,7 +114,7 @@ def tracked_file_audit(paths: list[str]) -> list[str]:
     for path in paths:
         p=path.replace('\\','/')
         lower=p.lower()
-        if p == '.env.example' or p in ('courses/.gitkeep','data/.gitkeep'):
+        if p == '.env.example' or p in ('courses/.gitkeep','data/.gitkeep','data/odysee_manifest.json','data/odysee_docs_manifest.json'):
             continue
         if p == '.env' or lower.endswith(('.sqlite','.sqlite3','.db','.pem','.key','.p12','.pfx')) or \
            lower.startswith(('courses/','data/')) or lower.endswith(('acceptance-report.json','courseforge-acceptance.png')):
