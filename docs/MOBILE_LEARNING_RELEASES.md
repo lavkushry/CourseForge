@@ -166,3 +166,23 @@ running. Asset version 15 invalidates previous page bundles.
 - **Validation**:
   - 5/5 acceptance tests passing in `tests/test_phase5_ai_companion.py`.
   - 178/178 core suite tests passing with 0 regressions.
+
+## UI Excellence Pass — Stage 1: Design Tokens & Icon System
+
+- **Unified Design Tokens (`app/static/tokens.css`)**:
+  - Defined in one place using CSS custom properties on a strict 4/8px grid (`--space-0` through `--space-16`).
+  - Standardized font family (`Inter`, system fallbacks), full typography scale (10px–38px), corner radii (`--radius-xs` 4px to `--radius-full`), and 5-level elevation system (`--shadow-xs` to `--shadow-xl`).
+  - Standardized control heights (`--control-h-sm` 32px to `--control-h-xl` 48px).
+- **Universal Outline SVG Icon System**:
+  - Replaced all emojis and legacy fill-based SVG icons with a unified 58-symbol outline SVG icon set (`stroke-width="1.8"`, `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`).
+  - Aligned to text baselines (`vertical-align: -0.15em; display: inline-block`).
+  - Covers workspace sidebar, top nav, lesson sidebar status indicators, DRM toolbar, player controls, admin views, and study materials.
+  - Zero emojis used as icons across all UI files; zero missing/unmapped icon references.
+- **Automated Icon Audit & Release Gate**:
+  - Created `scripts/audit_icons.py` to scan static templates and JS files for unmapped `#i-...` IDs and emojis.
+  - Added unit tests in `tests/test_icon_audit.py` (3/3 passing).
+  - Integrated `--audit-icons` into `scripts/release_gate.py` to block commits with emoji icons or unknown icon IDs.
+- **Validation**:
+  - 181/181 pytest suite tests passing.
+  - Deployed and live verified on Oracle Cloud VM and Cloudflare tunnel.
+
