@@ -7,12 +7,15 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import logging
 import os
 import re
 import shutil
+import ssl
 import subprocess
 import unicodedata
+import urllib.request
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +34,72 @@ ARTWORK_DIR = Path('data/artwork')
 POSTERS_DIR = ARTWORK_DIR / 'posters'
 BACKDROPS_DIR = ARTWORK_DIR / 'backdrops'
 THUMBNAILS_DIR = ARTWORK_DIR / 'thumbnails'
+CLAIM_THUMBNAILS_PATH = ARTWORK_DIR / 'claim_thumbnails.json'
+
+_claim_thumbnails_cache: dict[str, str] | None = None
+
+
+def _get_claim_thumbnail_url(claim_id: str) -> str | None:
+    global _claim_thumbnails_cache
+    if _claim_thumbnails_cache is None:
+        if CLAIM_THUMBNAILS_PATH.is_file():
+            try:
+                _claim_thumbnails_cache = json.loads(CLAIM_THUMBNAILS_PATH.read_text('utf-8'))
+            except Exception:
+                _claim_thumbnails_cache = {}
+        else:
+            _claim_thumbnails_cache = {}
+
+    url = _claim_thumbnails_cache.get(claim_id)
+    if url:
+        return url
+
+    try:
+        ctx = ssl._create_unverified_context()
+        payload = {
+            'jsonrpc': '2.0',
+            'method': 'claim_search',
+            'params': {'claim_ids': [claim_id], 'page_size': 1},
+            'id': 1,
+        }
+        req = urllib.request.Request(
+            'https://api.na-backend.odysee.com/api/v1/proxy',
+            data=json.dumps(payload).encode(),
+            headers={'Content-Type': 'application/json', 'User-Agent': 'CourseForge/1.0'},
+        )
+        with urllib.request.urlopen(req, context=ctx, timeout=4) as resp:
+            data = json.loads(resp.read().decode())
+            items = data.get('result', {}).get('items', [])
+            if items:
+                resolved_url = items[0].get('value', {}).get('thumbnail', {}).get('url')
+                if resolved_url:
+                    _claim_thumbnails_cache[claim_id] = resolved_url
+                    try:
+                        CLAIM_THUMBNAILS_PATH.write_text(json.dumps(_claim_thumbnails_cache, indent=2))
+                    except Exception:
+                        pass
+                    return resolved_url
+    except Exception as e:
+        log.debug('Failed to resolve claim thumbnail for %s: %s', claim_id, e)
+    return None
+
+
+def _fetch_and_cache_remote_frame(turl: str, dest: Path, w: int, h: int) -> bool:
+    try:
+        ctx = ssl._create_unverified_context()
+        req = urllib.request.Request(turl, headers={'User-Agent': 'Mozilla/5.0 CourseForge/1.0'})
+        with urllib.request.urlopen(req, context=ctx, timeout=6) as resp:
+            raw = resp.read()
+            if len(raw) < 200:
+                return False
+            with Image.open(io.BytesIO(raw)) as im:
+                thumb = ImageOps.fit(im.convert('RGB'), (w, h), method=Image.Resampling.LANCZOS)
+                thumb.save(dest, format='JPEG', quality=85, optimize=True)
+                return True
+    except Exception as e:
+        log.debug('Failed to download frame from %s: %s', turl, e)
+        return False
+
 
 THUMB_SIZES = {
     'sm': (320, 180),
@@ -301,7 +370,15 @@ def get_or_create_lecture_thumbnail(video_id: str, size: Literal['sm', 'md', 'lg
             except Exception:
                 pass
 
-    # 2. Try ffmpeg extract from local file if available
+    # 2. Try Odysee video frame proxying
+    with connect() as conn:
+        lp_row = conn.execute('SELECT claim_id FROM lecture_providers WHERE video_id=?', (video_id,)).fetchone()
+    if lp_row and lp_row['claim_id']:
+        turl = _get_claim_thumbnail_url(lp_row['claim_id'])
+        if turl and _fetch_and_cache_remote_frame(turl, dest, w, h):
+            return dest
+
+    # 3. Try ffmpeg extract from local file if available
     local_source = Path(video.get('path', ''))
     if local_source.is_file() and shutil.which('ffmpeg'):
         dur = float(video.get('duration') or 60.0)
