@@ -96,10 +96,13 @@ running. Asset version 15 invalidates previous page bundles.
   - Opt-in email reminder toggle saved in preferences, wired to automated Sunday weekly digest once SMTP is active.
 - **Admin Engagement Measurement**:
   - Dedicated admin metrics for Daily active students, Average session minutes, and 7-day return rate with explicit denominators. Excludes admin accounts and suspended users.
-- **Validation**:
   - 6/6 acceptance tests passing in `tests/test_phase3_habit_loop.py`.
   - 5/5 backend tests passing in `tests/test_habits.py`.
   - 169/169 core suite tests passing with 0 regressions.
+- **Production Deployment & Odysee Verification**:
+  - Live production environment refreshed and verified on Linux server (`141.148.195.233`).
+  - Active channel signing configured for `@lavkushry` (`3Nj7vMUEayo8PLWgYTLMfpbcbtSzVj9f`), delivering verified HTTP 206 byte-range native playback and direct authenticated material downloads across 511 mapped lectures and 138 documents.
+  - Active demo accounts provisioned: Student (`student@courseforge.demo` / `DemoStudentPass2026!`) and Admin (`admin@courseforge.demo` / `DemoAdminPass2026!`).
 
 ## Phase 4: learning that sticks
 
