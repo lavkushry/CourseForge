@@ -1546,11 +1546,12 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
       // Render items according to row style
       row.items.forEach((item, index) => {
         let card;
-        if (row.id === 'continue_watching') {
+        const kind = (row.kind || row.id || '').replace(/-/g, '_');
+        if (kind === 'continue_watching' || kind === 'lecture_card') {
           card = buildContinueCard(item);
-        } else if (row.id === 'trending_top_10') {
+        } else if (kind === 'trending_top_10' || kind === 'rank_card') {
           card = buildTop10Card(item, index + 1);
-        } else if (row.id === 'new_episodes') {
+        } else if (kind === 'new_episodes' || kind === 'episode_card') {
           card = buildNewEpisodeCard(item);
         } else {
           card = buildPosterCard(item);
@@ -1603,16 +1604,19 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
   function buildTop10Card(item, rank) {
     const card = document.createElement('a');
     card.className = 'stream-card stream-card-top10';
-    card.href = item.deep_link || `#/course/${item.slug}`;
+    card.href = item.deep_link || `#/course/${item.slug || item.course_slug}`;
+
+    const posterUrl = item.poster_url || (item.course_slug ? `/api/artwork/courses/${item.course_slug}/poster` : '') || item.thumbnail_url || '';
+    const fallbackUrl = item.thumbnail_url || (item.course_slug ? `/api/artwork/courses/${item.course_slug}/backdrop` : '') || '';
 
     card.innerHTML = `
       <div class="top10-rank-wrap">
-        <svg class="top10-num-svg" viewBox="0 0 45 80" aria-hidden="true">
-          <text x="50%" y="70" text-anchor="middle" font-size="76" font-weight="900" font-family="sans-serif">${rank}</text>
+        <svg class="top10-num-svg" viewBox="0 0 70 120" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <text x="35" y="105" text-anchor="middle" font-size="96" font-weight="900">${rank}</text>
         </svg>
       </div>
       <div class="top10-poster-wrap">
-        <img src="${escapeHtml(item.poster_url)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+        <img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" ${fallbackUrl ? `onerror="this.onerror=null;this.src='${escapeHtml(fallbackUrl)}';"` : ''} />
       </div>
     `;
     return card;
@@ -1624,9 +1628,12 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
     card.className = 'stream-card stream-card-poster';
     card.href = item.deep_link || `#/course/${item.slug}`;
 
+    const posterUrl = item.poster_url || `/api/artwork/courses/${item.slug}/poster`;
+    const fallbackUrl = item.backdrop_url || `/api/artwork/courses/${item.slug}/backdrop`;
+
     card.innerHTML = `
       <div class="poster-image-wrap">
-        <img src="${escapeHtml(item.poster_url)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+        <img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.onerror=null;this.src='${escapeHtml(fallbackUrl)}';" />
         <span class="poster-badge">${escapeHtml(item.category || 'Masterclass')}</span>
       </div>
       <div class="poster-info">

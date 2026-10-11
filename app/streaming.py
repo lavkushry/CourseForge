@@ -153,13 +153,17 @@ def trending_lectures():
     items = []
     for rank, r in enumerate(top_rows, 1):
         r_dict = dict(r)
+        c_slug = slugify(r_dict['course'])
         items.append({
             'rank': rank,
             'video_id': r_dict['video_id'],
             'title': r_dict['title'],
             'course': r_dict['course'],
-            'course_slug': slugify(r_dict['course']),
+            'course_slug': c_slug,
+            'slug': c_slug,
             'duration': r_dict['duration'] or 0,
+            'poster_url': f"/api/artwork/courses/{c_slug}/poster",
+            'backdrop_url': f"/api/artwork/courses/{c_slug}/backdrop",
             'thumbnail_url': f"/api/artwork/lectures/{r_dict['video_id']}/thumbnail?size=md",
             'deep_link': f"#/lecture/{r_dict['video_id']}",
             'session_count': r_dict['session_count'],

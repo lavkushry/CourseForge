@@ -59,28 +59,30 @@ def _sync_provider_mappings():
                     if isinstance(entry,dict):entries.append(dict(entry,source=source))
             except (OSError,ValueError,AttributeError):
                 log.warning('Cannot read Odysee manifest; keeping existing mappings')
-    token=os.getenv('ODYSEE_AUTH_TOKEN','')
-    if token:
+    accounts = get_odysee_accounts()
+    if accounts:
         try:
             with httpx.Client(timeout=8) as client:
-                for page in range(1,21):
-                    response=client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=stream_list',
-                        headers={'X-Lbry-Auth-Token':token},json={'jsonrpc':'2.0','id':1,'method':'stream_list',
-                        'params':{'page':page,'page_size':250}})
-                    response.raise_for_status()
-                    payload=response.json()
-                    if payload.get('error'):raise ValueError('Provider rejected mapping refresh')
-                    items=(payload.get('result') or {}).get('items',[])
-                    for item in items:
-                        value=item.get('value') or {}
-                        entries.append({'claim_id':item.get('claim_id'),'claim_name':item.get('name'),
-                                        'title':value.get('title',''),'duration':(value.get('video') or value.get('audio') or {}).get('duration')})
-                    if len(items)<250:break
-        except (httpx.HTTPError,ValueError,TypeError):
-            log.warning('Odysee refresh unavailable; keeping existing mappings')
-            error='Odysee could not refresh uploads. Existing mappings have been preserved.'
+                for token, _cid in accounts:
+                    for page in range(1, 21):
+                        response = client.post('https://api.na-backend.odysee.com/api/v1/proxy?m=stream_list',
+                            headers={'X-Lbry-Auth-Token': token}, json={'jsonrpc': '2.0', 'id': 1, 'method': 'stream_list',
+                            'params': {'page': page, 'page_size': 250}})
+                        response.raise_for_status()
+                        payload = response.json()
+                        if payload.get('error'):
+                            raise ValueError('Provider rejected mapping refresh')
+                        items = (payload.get('result') or {}).get('items', [])
+                        for item in items:
+                            value = item.get('value') or {}
+                            entries.append({'claim_id': item.get('claim_id'), 'claim_name': item.get('name'),
+                                            'title': value.get('title', ''), 'duration': (value.get('video') or value.get('audio') or {}).get('duration')})
+                        if len(items) < 250: break
+        except (httpx.HTTPError, ValueError, TypeError) as e:
+            log.warning('Odysee refresh partially unavailable: %s; keeping existing mappings', e)
+            error = 'Odysee could not refresh uploads. Existing mappings have been preserved.'
     else:
-        error='Odysee account credentials are not configured.'
+        error = 'Odysee account credentials are not configured.'
     with connect() as db:
         videos=[dict(r) for r in db.execute('SELECT id,course,title,path FROM videos')]
         for entry in entries:
@@ -142,6 +144,11 @@ def get_odysee_accounts() -> list[tuple[str, str]]:
     c2 = os.getenv('ODYSEE_CHANNEL_ID_2', '027d08f9b8aa21f9530fd44cc6d7f7de4aa57dce')
     if t2 and c2 and (t2, c2) not in accounts:
         accounts.append((t2, c2))
+    # Tertiary channel (vault 3)
+    t3 = os.getenv('ODYSEE_AUTH_TOKEN_3', '9ryTA4sULdxnA3hZZPaPVVQDJvBa4G5u')
+    c3 = os.getenv('ODYSEE_CHANNEL_ID_3', '97af564bce47e5ed942e992d720da25fa173b00c')
+    if t3 and c3 and (t3, c3) not in accounts:
+        accounts.append((t3, c3))
     return accounts
 
 
