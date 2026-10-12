@@ -305,22 +305,26 @@ def get_or_create_course_backdrop(course: str) -> Path:
             with Image.open(src_cover) as im:
                 im = ImageOps.exif_transpose(im).convert('RGB')
                 backdrop = ImageOps.fit(im, (1280, 720), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
-                # Add cinematic left fade and bottom vignette (Netflix style for text contrast)
+                # Cinematic ambient softening: dissolve baked-in cover text into smooth lighting
+                backdrop = backdrop.filter(ImageFilter.GaussianBlur(radius=8))
+
                 overlay = Image.new('RGBA', (1280, 720), (0, 0, 0, 0))
                 odraw = ImageDraw.Draw(overlay)
-                # Left fade (0 to 600px)
-                for x in range(0, 650):
-                    alpha = int(240 * (1.0 - (x / 650.0)) ** 1.4)
+
+                # Smooth ease-out fade from 560px to 1050px
+                for x in range(560, 1050):
+                    progress = (x - 560) / 490.0
+                    alpha = int(255 * ((1.0 - progress) ** 1.6))
                     odraw.line([(x, 0), (x, 720)], fill=(8, 12, 22, alpha))
-                # Bottom vignette (400 to 720px)
-                for y in range(400, 720):
-                    alpha = int(220 * ((y - 400) / 320.0) ** 1.3)
-                    odraw.line([(0, y), (1280, y)], fill=(8, 12, 22, alpha))
-                # Top vignette
-                for y in range(0, 160):
-                    alpha = int(120 * ((160 - y) / 160.0))
-                    odraw.line([(0, y), (1280, y)], fill=(8, 12, 22, alpha))
-                
+
+                # Pure solid blackout for text zone (0 to 560px)
+                odraw.rectangle([(0, 0), (560, 720)], fill=(8, 12, 22, 255))
+
+                # Bottom ambient vignette for track controls
+                for y in range(450, 720):
+                    alpha = int(200 * ((y - 450) / 270.0) ** 1.2)
+                    odraw.line([(560, y), (1280, y)], fill=(8, 12, 22, alpha))
+
                 backdrop = Image.alpha_composite(backdrop.convert('RGBA'), overlay).convert('RGB')
                 backdrop.save(dest, format='JPEG', quality=86, optimize=True)
                 return dest
@@ -331,13 +335,14 @@ def get_or_create_course_backdrop(course: str) -> Path:
     base = _create_gradient(1280, 720, theme['bg_start'], theme['bg_end'])
     draw = ImageDraw.Draw(base)
 
-    # Left vignette
-    for x in range(0, 700):
-        alpha = int(220 * (1.0 - (x / 700.0)))
+    # Left blackout vignette without baked-in text (prevents double text collision)
+    for x in range(0, 950):
+        if x < 520:
+            alpha = 254
+        else:
+            progress = (x - 520) / 430.0
+            alpha = int(254 * ((1.0 - progress) ** 1.6))
         draw.line([(x, 0), (x, 720)], fill=(8, 12, 22))
-
-    draw.text((64, 280), theme['label'].upper(), fill=theme['accent'])
-    draw.text((64, 320), course, fill=(255, 255, 255))
     base.save(dest, format='JPEG', quality=86, optimize=True)
     return dest
 

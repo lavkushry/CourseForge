@@ -46,7 +46,7 @@ def run_stage2_verification():
         page = context.new_page()
 
         print("\n--- 1. Authenticating & Loading Streaming Workspace ---")
-        page.goto(LIVE_URL, wait_until="networkidle")
+        page.goto(LIVE_URL, wait_until="domcontentloaded")
         page.click('#signinNav')
         page.wait_for_selector('input[type="email"]', timeout=5000)
         page.fill('input[type="email"]', 'admin@courseforge.com')
