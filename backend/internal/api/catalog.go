@@ -43,15 +43,20 @@ type CourseCard struct {
 	CoverURL        string  `json:"cover_url"`
 }
 
-const cardColumns = `c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug,stats.lesson_count,stats.duration_seconds,stats.indexed_count,(SELECT count(*) FROM materials m WHERE m.course_id=c.id AND NOT m.removed)`
+const cardColumns = `c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug,stats.lesson_count,stats.duration_seconds,stats.indexed_count,(SELECT count(*) FROM materials m WHERE m.course_id=c.id AND NOT m.removed),COALESCE(c.cover_relative_path, '')`
 const cardJoin = ` LEFT JOIN LATERAL(SELECT count(*) lesson_count,COALESCE(sum(duration_seconds),0) duration_seconds,count(*) FILTER(WHERE status='done') indexed_count FROM lessons l WHERE l.course_id=c.id) stats ON true `
 
 func scanCard(row pgx.Row, c *CourseCard) error {
-	err := row.Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug, &c.LessonCount, &c.DurationSeconds, &c.IndexedCount, &c.MaterialCount)
+	var coverPath string
+	err := row.Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug, &c.LessonCount, &c.DurationSeconds, &c.IndexedCount, &c.MaterialCount, &coverPath)
 	if c.Tags == nil {
 		c.Tags = []string{}
 	}
-	c.CoverURL = "/api/v1/courses/" + url.PathEscape(c.ID) + "/cover?v=" + strconv.FormatInt(c.Version, 10)
+	if coverPath != "" {
+		c.CoverURL = "/api/v1/courses/" + url.PathEscape(c.ID) + "/cover?v=" + strconv.FormatInt(c.Version, 10)
+	} else {
+		c.CoverURL = ""
+	}
 	return err
 }
 func (s *Server) optionalPrincipal(w http.ResponseWriter, r *http.Request) (identity.Principal, bool) {

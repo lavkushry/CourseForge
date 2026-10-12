@@ -9624,5 +9624,135 @@
     "odysee_url": "https://odysee.com/gauravsen-lld-2026-060-what-is-an-event-bus-3-machine-coding-an-event-bus-low:b65b35efcbe49266846c867bf240c15bf9177f7c",
     "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-060-what-is-an-event-bus-3-machine-coding-an-event-bus-low/b65b35efcbe49266846c867bf240c15bf9177f7c",
     "uploaded_at": "2026-10-12T19:55:34+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[061] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Breaking down engineering requirements 3 Machine Codin.mp4": {
+    "video_id": "v_d08bef3ac39c",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[061] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Breaking down engineering requirements 3 Machine Codin",
+    "claim_name": "gauravsen-lld-2026-061-breaking-down-engineering-requirements-3-machine-codin",
+    "claim_id": "82732687878a24c2faae7e4cd2ff2d567173f7b7",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-061-breaking-down-engineering-requirements-3-machine-codin:82732687878a24c2faae7e4cd2ff2d567173f7b7",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-061-breaking-down-engineering-requirements-3-machine-codin/82732687878a24c2faae7e4cd2ff2d567173f7b7",
+    "uploaded_at": "2026-10-12T20:01:58+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[062] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - The mechanics of the bus 3 Machine Coding an Event Bus.mp4": {
+    "video_id": "v_2a3fd10014eb",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[062] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - The mechanics of the bus 3 Machine Coding an Event Bus",
+    "claim_name": "gauravsen-lld-2026-062-the-mechanics-of-the-bus-3-machine-coding-an-event-bus",
+    "claim_id": "6a4fca7daefedb57225235f001a5898094d54ed1",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-062-the-mechanics-of-the-bus-3-machine-coding-an-event-bus:6a4fca7daefedb57225235f001a5898094d54ed1",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-062-the-mechanics-of-the-bus-3-machine-coding-an-event-bus/6a4fca7daefedb57225235f001a5898094d54ed1",
+    "uploaded_at": "2026-10-12T20:03:15+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[063] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Why use threads 3 Machine Coding an Event Bus Low Leve.mp4": {
+    "video_id": "v_88cb5d9eb632",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[063] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Why use threads 3 Machine Coding an Event Bus Low Leve",
+    "claim_name": "gauravsen-lld-2026-063-why-use-threads-3-machine-coding-an-event-bus-low-leve",
+    "claim_id": "5d5b8e96ceb9f629c646b9aded9c1bf08606ce42",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-063-why-use-threads-3-machine-coding-an-event-bus-low-leve:5d5b8e96ceb9f629c646b9aded9c1bf08606ce42",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-063-why-use-threads-3-machine-coding-an-event-bus-low-leve/5d5b8e96ceb9f629c646b9aded9c1bf08606ce42",
+    "uploaded_at": "2026-10-12T20:04:23+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[064] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Code Skeleton and using an extensible Retry Algorithm.mp4": {
+    "video_id": "v_a66133595ae4",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[064] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Code Skeleton and using an extensible Retry Algorithm",
+    "claim_name": "gauravsen-lld-2026-064-code-skeleton-and-using-an-extensible-retry-algorithm",
+    "claim_id": "d285820f3873ed5ca9da926f6ceffa6315ee969a",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-064-code-skeleton-and-using-an-extensible-retry-algorithm:d285820f3873ed5ca9da926f6ceffa6315ee969a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-064-code-skeleton-and-using-an-extensible-retry-algorithm/d285820f3873ed5ca9da926f6ceffa6315ee969a",
+    "uploaded_at": "2026-10-12T20:07:46+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[065] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - The Keyed Executor 3 Machine Coding an Event Bus Low L.mp4": {
+    "video_id": "v_f6c6e0b774c9",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[065] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - The Keyed Executor 3 Machine Coding an Event Bus Low L",
+    "claim_name": "gauravsen-lld-2026-065-the-keyed-executor-3-machine-coding-an-event-bus-low-l",
+    "claim_id": "faf1b8eaee2cd945a28cb6056c24dddc486f35fb",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-065-the-keyed-executor-3-machine-coding-an-event-bus-low-l:faf1b8eaee2cd945a28cb6056c24dddc486f35fb",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-065-the-keyed-executor-3-machine-coding-an-event-bus-low-l/faf1b8eaee2cd945a28cb6056c24dddc486f35fb",
+    "uploaded_at": "2026-10-12T20:08:40+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[066] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Pull and Push Subscribers 3 Machine Coding an Event Bu.mp4": {
+    "video_id": "v_1facb7486aeb",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[066] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Pull and Push Subscribers 3 Machine Coding an Event Bu",
+    "claim_name": "gauravsen-lld-2026-066-pull-and-push-subscribers-3-machine-coding-an-event-bu",
+    "claim_id": "6727770b518aa4f62b736a921e6ba19b27de004e",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-066-pull-and-push-subscribers-3-machine-coding-an-event-bu:6727770b518aa4f62b736a921e6ba19b27de004e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-066-pull-and-push-subscribers-3-machine-coding-an-event-bu/6727770b518aa4f62b736a921e6ba19b27de004e",
+    "uploaded_at": "2026-10-12T20:10:03+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[067] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Defining the data structures in the bus 3 Machine Codi.mp4": {
+    "video_id": "v_b1c3c0526d5a",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[067] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Defining the data structures in the bus 3 Machine Codi",
+    "claim_name": "gauravsen-lld-2026-067-defining-the-data-structures-in-the-bus-3-machine-codi",
+    "claim_id": "20cb0c87f1150a797e554368829975c3e9406b6c",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-067-defining-the-data-structures-in-the-bus-3-machine-codi:20cb0c87f1150a797e554368829975c3e9406b6c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-067-defining-the-data-structures-in-the-bus-3-machine-codi/20cb0c87f1150a797e554368829975c3e9406b6c",
+    "uploaded_at": "2026-10-12T20:10:22+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[068] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Wrapper Classes 3 Machine Coding an Event Bus Low Leve.mp4": {
+    "video_id": "v_400dfa4b61a9",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[068] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Wrapper Classes 3 Machine Coding an Event Bus Low Leve",
+    "claim_name": "gauravsen-lld-2026-068-wrapper-classes-3-machine-coding-an-event-bus-low-leve",
+    "claim_id": "71aba569212fe18681aff714f997d61494f2a426",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-068-wrapper-classes-3-machine-coding-an-event-bus-low-leve:71aba569212fe18681aff714f997d61494f2a426",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-068-wrapper-classes-3-machine-coding-an-event-bus-low-leve/71aba569212fe18681aff714f997d61494f2a426",
+    "uploaded_at": "2026-10-12T20:14:08+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[069] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Coding the tests 3 Machine Coding an Event Bus Low Lev.mp4": {
+    "video_id": "v_40b00b8a720d",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[069] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Coding the tests 3 Machine Coding an Event Bus Low Lev",
+    "claim_name": "gauravsen-lld-2026-069-coding-the-tests-3-machine-coding-an-event-bus-low-lev",
+    "claim_id": "f26d4852b768c372818425a37e0df55271907546",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-069-coding-the-tests-3-machine-coding-an-event-bus-low-lev:f26d4852b768c372818425a37e0df55271907546",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-069-coding-the-tests-3-machine-coding-an-event-bus-low-lev/f26d4852b768c372818425a37e0df55271907546",
+    "uploaded_at": "2026-10-12T20:15:05+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[070] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Conclusion 3 Machine Coding an Event Bus.mp4": {
+    "video_id": "v_cd0f373e9d15",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[070] Module 14 (Case Study 3 \u2014 Machine Coding an Asynchronous Event Bus) - Conclusion 3 Machine Coding an Event Bus",
+    "claim_name": "gauravsen-lld-2026-070-conclusion-3-machine-coding-an-event-bus",
+    "claim_id": "916b086c9e825ae179a05232dd5bbca3f6fb8c67",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-070-conclusion-3-machine-coding-an-event-bus:916b086c9e825ae179a05232dd5bbca3f6fb8c67",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-070-conclusion-3-machine-coding-an-event-bus/916b086c9e825ae179a05232dd5bbca3f6fb8c67",
+    "uploaded_at": "2026-10-12T20:16:25+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[071] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - What will you learn 4 Machine Coding a Rate Limiter L.mp4": {
+    "video_id": "v_46ff1e956818",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[071] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - What will you learn 4 Machine Coding a Rate Limiter Lo",
+    "claim_name": "gauravsen-lld-2026-071-what-will-you-learn-4-machine-coding-a-rate-limiter-lo",
+    "claim_id": "2fa805a0277a45023417cce0dfaac0b2220577ea",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-071-what-will-you-learn-4-machine-coding-a-rate-limiter-lo:2fa805a0277a45023417cce0dfaac0b2220577ea",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-071-what-will-you-learn-4-machine-coding-a-rate-limiter-lo/2fa805a0277a45023417cce0dfaac0b2220577ea",
+    "uploaded_at": "2026-10-12T20:21:39+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[072] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Rate Limiter Overview 4 Machine Coding a Rate Limiter.mp4": {
+    "video_id": "v_c9b94245df68",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[072] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Rate Limiter Overview 4 Machine Coding a Rate Limiter",
+    "claim_name": "gauravsen-lld-2026-072-rate-limiter-overview-4-machine-coding-a-rate-limiter",
+    "claim_id": "7fbd8763d3002673ba99988bbbef9152c65c67c2",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-072-rate-limiter-overview-4-machine-coding-a-rate-limiter:7fbd8763d3002673ba99988bbbef9152c65c67c2",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-072-rate-limiter-overview-4-machine-coding-a-rate-limiter/7fbd8763d3002673ba99988bbbef9152c65c67c2",
+    "uploaded_at": "2026-10-12T20:24:09+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[073] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Implementation Details 4 Machine Coding a Rate Limite.mp4": {
+    "video_id": "v_d4008e0db905",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[073] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Implementation Details 4 Machine Coding a Rate Limiter",
+    "claim_name": "gauravsen-lld-2026-073-implementation-details-4-machine-coding-a-rate-limiter",
+    "claim_id": "51241011d0d25af0ba10fd07db4ddce254466016",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-073-implementation-details-4-machine-coding-a-rate-limiter:51241011d0d25af0ba10fd07db4ddce254466016",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-073-implementation-details-4-machine-coding-a-rate-limiter/51241011d0d25af0ba10fd07db4ddce254466016",
+    "uploaded_at": "2026-10-12T20:28:44+00:00"
   }
 }

@@ -215,18 +215,35 @@
 /* ==========================================================================
    Netflix & 7movies-Style Streaming Carousels & Cinematic Home Feed
    ========================================================================== */
-.carousel-row {
-  display: grid;
-  gap: 0.9rem;
-  margin-bottom: 2.2rem;
+.carousel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
   width: 100%;
+}
+
+.course-grid:has(.carousel-row) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2.5rem !important;
+}
+
+.carousel-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 0;
+  width: 100%;
+  position: relative;
+  isolation: isolate;
 }
 
 .carousel-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 0 0.2rem;
+  padding: 0 0.4rem;
 }
 
 .carousel-title {
@@ -259,6 +276,7 @@
   display: flex;
   align-items: center;
   width: 100%;
+  isolation: isolate;
 }
 
 .carousel-track {
@@ -266,7 +284,7 @@
   gap: 1.1rem;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 0.6rem 0.2rem 1.4rem;
+  padding: 0.6rem 20px 1.4rem;
   scrollbar-width: none;
   width: 100%;
 }
@@ -277,38 +295,44 @@
 
 .carousel-nav-btn {
   position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 10;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(15, 16, 24, 0.88);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(15, 16, 24, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #fff;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  transition: all 0.22s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
   user-select: none;
 }
 
 .carousel-nav-btn:hover {
   background: rgba(124, 58, 237, 0.95);
-  border-color: rgba(167, 139, 250, 0.8);
-  transform: scale(1.12);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+  border-color: rgba(167, 139, 250, 0.9);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.6);
 }
 
 .carousel-nav-btn.prev {
-  left: -18px;
+  left: 6px;
 }
 
 .carousel-nav-btn.next {
-  right: -18px;
+  right: 6px;
+}
+
+.carousel-nav-btn[hidden] {
+  display: none !important;
 }
 
 .carousel-track .course-card {

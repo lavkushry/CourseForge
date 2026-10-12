@@ -13,8 +13,14 @@ interface Options {
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const value = document.createElement(tag); value.className = className; value.textContent = text; return value;
 }
-function action(label: string, click: () => void, className = 'button'): HTMLButtonElement {
-  const value = node('button', className, label); value.type = 'button'; value.addEventListener('click', click); return value;
+function action(label: string, click: (e: MouseEvent) => void, className = 'button'): HTMLButtonElement {
+  const value = node('button', className, label);
+  value.type = 'button';
+  value.addEventListener('click', (e) => {
+    e.stopPropagation();
+    click(e);
+  });
+  return value;
 }
 function required<T extends HTMLElement>(selector: string): T {
   const value = document.querySelector<T>(selector); if (!value) throw new Error(`Missing discovery element: ${selector}`); return value;
@@ -153,10 +159,12 @@ export class DiscoveryView {
     required('#catalog-eyebrow').textContent = this.view === 'saved' ? 'Made for your next chapter' : this.query ? 'Discover something new' : 'The learning collection';
     const list = required('#course-list'); list.replaceChildren();
     if (this.view === 'saved') {
+      list.className = 'course-grid';
       const items = this.query ? this.saved.filter(item => item.title.toLowerCase().includes(this.query.toLowerCase())) : this.saved;
       for (const item of items) list.append(this.savedCard(item));
       if (!items.length && !this.loading) list.append(this.empty(this.query ? 'No saved titles match your search.' : 'Build your next chapter.', this.query ? 'Try a different title.' : 'Save a course with + My List. It will be waiting here.'));
     } else if (home && this.courses.length > 5) {
+      list.className = 'carousel-container';
       const top10 = this.courses.slice(0, 10);
       list.append(this.carouselRow('🔥 Top 10 Masterclasses This Week', top10, true));
 
@@ -171,6 +179,7 @@ export class DiscoveryView {
 
       list.append(this.carouselRow('🚀 All Masterclasses & Deep Dives', this.courses));
     } else {
+      list.className = 'course-grid';
       for (const item of this.courses) list.append(this.courseCard(item));
       if (!this.courses.length && !this.loading) list.append(this.empty(this.query ? 'No courses found.' : 'Your next chapter is on its way.', this.query ? 'Try a title, topic, instructor or category.' : 'Published courses will appear here when they are ready.'));
     }
@@ -274,6 +283,7 @@ export class DiscoveryView {
     const wrapper = node('div', 'carousel-slider-wrapper');
     const prevBtn = node('button', 'carousel-nav-btn prev', '‹');
     prevBtn.type = 'button';
+    prevBtn.hidden = true;
     prevBtn.setAttribute('aria-label', `Previous ${title}`);
 
     const track = node('div', 'carousel-track');
@@ -281,12 +291,22 @@ export class DiscoveryView {
     nextBtn.type = 'button';
     nextBtn.setAttribute('aria-label', `Next ${title}`);
 
-    prevBtn.addEventListener('click', () => {
+    const updateNav = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      prevBtn.hidden = track.scrollLeft <= 10;
+      nextBtn.hidden = maxScroll <= 10 || track.scrollLeft >= maxScroll - 10;
+    };
+
+    prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       track.scrollBy({ left: -track.clientWidth * 0.75, behavior: 'smooth' });
     });
-    nextBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       track.scrollBy({ left: track.clientWidth * 0.75, behavior: 'smooth' });
     });
+
+    track.addEventListener('scroll', updateNav, { passive: true });
 
     items.forEach((course, idx) => {
       const card = this.courseCard(course);
@@ -300,6 +320,8 @@ export class DiscoveryView {
 
     wrapper.append(prevBtn, track, nextBtn);
     section.append(wrapper);
+    requestAnimationFrame(updateNav);
+    window.addEventListener('resize', updateNav, { passive: true });
     return section;
   }
   private empty(title: string, message: string): HTMLElement {
