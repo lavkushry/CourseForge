@@ -4,6 +4,7 @@ Requires Playwright and its Chromium binary; skipped when unavailable. No server
 provider credentials, production records, or generated course data are needed.
 """
 from pathlib import Path
+import os
 import re
 
 import pytest
@@ -23,6 +24,7 @@ def browser(pw_session):
     try:
         instance = pw_session.chromium.launch()
     except playwright.Error as error:
+        if os.environ.get('COURSEFORGE_REQUIRE_BROWSERS'):pytest.fail(f'Chromium required: {error}')
         pytest.skip(f'Chromium unavailable: {str(error).splitlines()[0]}')
     yield instance
     instance.close()
@@ -47,6 +49,7 @@ def test_workspace_controls_fit_their_containers(browser, width):
     page.route('**/*', serve)
     try:
         page.goto('http://courseforge.test/')
+        page.add_script_tag(content=(STATIC / 'components.js').read_text())
         page.evaluate('''() => {
           document.querySelector('#academyContent').hidden=true;
           document.querySelector('#appShell').hidden=false;
@@ -135,7 +138,7 @@ def test_workspace_controls_fit_their_containers(browser, width):
             # Moving focus between speed choices must not dismiss the menu
             # before the pointer click reaches the selected button.
             page.get_by_role('button',name='Playback speed',exact=True).click()
-            assert page.locator('.player-speed-options button').evaluate_all('(buttons)=>buttons.every(b=>b.getBoundingClientRect().width>=44&&b.getBoundingClientRect().height>=44)')
+            assert page.locator('.player-speed-options button').evaluate_all('(buttons)=>buttons.every(b=>b.getBoundingClientRect().width>=44&&b.getBoundingClientRect().height>=44)'), page.locator('.player-speed-options button').evaluate_all('(buttons)=>buttons.map(b=>({w:b.getBoundingClientRect().width,h:b.getBoundingClientRect().height,minWidth:getComputedStyle(b).minWidth,padding:getComputedStyle(b).padding,component:b.dataset.uiComponent}))')
             page.locator('.player-speed-options button[data-rate="1.5"]').click()
             assert page.evaluate('CourseForgeNative.video().playbackRate')==1.5
             assert page.locator('.player-speed-menu').evaluate('(e)=>e.hidden')
@@ -167,6 +170,7 @@ def webkit_browser(pw_session):
     try:
         instance = pw_session.webkit.launch()
     except playwright.Error as error:
+        if os.environ.get('COURSEFORGE_REQUIRE_BROWSERS'):pytest.fail(f'WebKit required: {error}')
         pytest.skip(f'WebKit unavailable: {str(error).splitlines()[0]}')
     yield instance
     instance.close()

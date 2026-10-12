@@ -110,7 +110,7 @@
       const advanced=v.currentTime-a.savedPosition;a.savedPosition=v.currentTime;
       if(!v.paused&&advanced>0&&advanced<2){a.lastAdvance=performance.now();a.recovery.healthy(advanced/Math.max(.25,v.playbackRate));}
       window.CourseForgeStudio?.checkUpNext?.(lesson, v.currentTime, v.duration);
-      // Advance buffer watchdog: if buffer headroom drops below 10s, prefetch next chunk
+      // Buffer headroom monitor
       try {
         if (v.buffered && v.buffered.length > 0 && !v.paused && !a.reloading) {
           let ahead = 0;
@@ -120,11 +120,7 @@
               break;
             }
           }
-          if (ahead < 10 && !a.prebuffering) {
-            a.prebuffering = true;
-            fetch(session.media_url, { headers: { 'Range': 'bytes=0-2097152' }, credentials: 'same-origin' })
-              .catch(() => {}).finally(() => { setTimeout(() => { if (active === a) a.prebuffering = false; }, 5000); });
-          }
+          if (ahead > 0) a.lastAdvance = performance.now();
         }
       } catch (_) {}
     });
@@ -154,8 +150,8 @@
       }
     });
     v.addEventListener('error',()=>{if(active===a&&!a.reloading){a.send('error');a.recovery.fail(v.error?.code===3?{code:'decode'}:new Error('Media unavailable'));}});
-    a.timer=setInterval(()=>{if(active===a&&!a.reloading)a.send(document.hidden?'hidden':'heartbeat');},10000);
-    a.watchdog=setInterval(()=>{if(active===a&&!a.recovery.busy()&&(v.readyState===0||a.wantsPlay&&!v.ended)&&performance.now()-a.lastAdvance>45000){a.lastAdvance=performance.now();a.recovery.fail(new Error('Playback stalled'));}},2000);
+    a.timer=setInterval(()=>{if(active===a&&!a.reloading)a.send('heartbeat');},10000);
+    a.watchdog=setInterval(()=>{if(active===a&&!a.recovery.busy()&&(v.readyState===0||a.wantsPlay&&!v.ended)&&performance.now()-a.lastAdvance>7000){a.lastAdvance=performance.now();a.recovery.fail(new Error('Playback stalled'));}},1500);
     // Media Chrome is locally hosted. Preserve the browser's controls if the
     // component bundle cannot load, rather than leaving an unusable player.
     const ready=await Promise.race([customElements.whenDefined('media-controller').then(()=>true),new Promise(r=>setTimeout(()=>r(false),4000))]);

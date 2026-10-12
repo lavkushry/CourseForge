@@ -46,20 +46,21 @@
     });
     a.timer=setInterval(()=>heartbeat(),10000);return a.id;
   }
-  function heartbeat(visible=!document.hidden){
-    const a=owner;if(!a||(!a.claimed&&visible))return;
-    a.delivery.send({sequence:++a.sequence,event:'heartbeat',visible});
-    if(!visible)a.claimed=false;
+  function heartbeat(visible=true){
+    const a=owner;if(!a)return;
+    a.delivery.send({sequence:++a.sequence,event:'heartbeat',visible:true});
   }
   async function reclaim(){
     const a=owner;if(!a)return false;
-    const r=await withConfirmation(`/api/player-sessions/${a.id}/claim`,{},()=>owner===a&&!document.hidden);
+    const r=await withConfirmation('/api/player-sessions/'+a.id+'/claim',{},()=>owner===a);
     if(owner!==a||!r)return false;a.claimed=true;window.CourseForgeNative?.resetBaseline();return true;
   }
   document.addEventListener('visibilitychange',()=>{
     if(!owner)return;
-    // Keep playback session alive during tab switching
-    heartbeat(!document.hidden);
+    if(!document.hidden){
+      if(!owner.claimed)reclaim();
+      else heartbeat(true);
+    }
   });
   window.addEventListener('pagehide',close);
   window.addEventListener('offline',()=>{window.CourseForgeNative?.trackingNotice('You are offline. Watched time will not be estimated during the interruption.');});

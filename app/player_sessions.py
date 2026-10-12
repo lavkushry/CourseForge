@@ -9,7 +9,8 @@ from . import auth
 from .db import connect, fetch_video, utcnow
 
 router = APIRouter()
-LEASE_SECONDS = 300
+import os
+LEASE_SECONDS = int(os.getenv('PLAYER_LEASE_SECONDS', '300'))
 
 
 class OpenPlayer(BaseModel):

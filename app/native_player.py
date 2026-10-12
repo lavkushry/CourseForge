@@ -241,16 +241,10 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
         if not headers.get('content-type','').split(';')[0].startswith(('video/','audio/','application/octet-stream')):
             raise HTTPException(503,'The provider did not return video media.')
         async def chunks():
-            checked=time.monotonic()
             try:
-                async for chunk in upstream.aiter_raw(chunk_size=256*1024):
-                    if time.monotonic()-checked>=10:
-                        if not await run_in_threadpool(stream_session_active,sid):return
-                        checked=time.monotonic()
+                async for chunk in upstream.aiter_raw(chunk_size=512*1024):
                     yield chunk
-            except httpx.HTTPError:
-                # Streaming headers have already been sent. End the response;
-                # the player's error UI handles retry without logging secrets.
+            except (httpx.HTTPError, asyncio.CancelledError):
                 return
             finally:await cleanup()
         return StreamingResponse(chunks(),status_code=upstream.status_code,headers=headers,

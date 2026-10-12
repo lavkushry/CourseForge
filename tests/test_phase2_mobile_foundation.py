@@ -48,10 +48,10 @@ def get_bootstrap_payload():
     }
 
 
-def create_test_page(browser, width=390, height=844, initial_hash=''):
+def create_test_page(browser, width=390, height=844, initial_hash='', bootstrap_override=None):
     page = browser.new_page(viewport={'width': width, 'height': height})
     html = re.sub(r'<script\b[^>]*>.*?</script>', '', (STATIC / 'index.html').read_text(), flags=re.S)
-    bootstrap = get_bootstrap_payload()
+    bootstrap = bootstrap_override or get_bootstrap_payload()
 
     def serve(route):
         from urllib.parse import urlsplit
