@@ -3101,6 +3101,565 @@ html, body {overflow-x:hidden;max-width:100vw;}
 
 }
 
+/* ==========================================================================
+   CourseForge Admin Redesign — Luxury Dark Console Architecture
+   ========================================================================== */
+
+body.in-admin {
+  background: #070a12 !important;
+  color: #f1f5f9 !important;
+  min-height: 100vh;
+}
+
+body.in-admin .academy-header {
+  background: rgba(11, 15, 25, 0.92) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 32px !important;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+}
+
+body.in-admin .academy-brand {
+  color: #ffffff !important;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.in-admin .academy-brand::after {
+  content: 'ADMIN';
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+body.in-admin .academy-header nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.in-admin .academy-header nav .btn-outline {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  border-radius: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+body.in-admin .academy-header nav .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+body.in-admin #adminNav {
+  background: rgba(99, 102, 241, 0.22) !important;
+  border: 1px solid rgba(99, 102, 241, 0.6) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.25);
+  font-weight: 600;
+}
+
+body.in-admin #accountName {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+/* Admin Container Layout */
+.in-admin .academy-content {
+  max-width: 1400px !important;
+  margin: 0 auto;
+  padding: 24px 32px 80px !important;
+}
+
+/* Admin Topbar & Breadcrumb */
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.admin-breadcrumb a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.admin-breadcrumb a:hover {
+  color: #ffffff;
+}
+
+.admin-breadcrumb .crumb-curr {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.admin-breadcrumb .crumb-sep {
+  color: #475569;
+}
+
+.admin-back-btn {
+  font-size: 12px !important;
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 9999px !important;
+  background: rgba(99, 102, 241, 0.12) !important;
+  border: 1px solid rgba(99, 102, 241, 0.35) !important;
+  color: #a5b4fc !important;
+  transition: all 0.15s ease !important;
+}
+
+.admin-back-btn:hover {
+  background: rgba(99, 102, 241, 0.22) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.admin-page-title {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+  color: #ffffff !important;
+  margin: 0 0 16px !important;
+}
+
+/* Segmented Tab Navigation */
+.in-admin .admin-navigation {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 0 28px !important;
+  padding: 6px !important;
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+.in-admin .admin-navigation button {
+  min-height: 38px !important;
+  padding: 0 18px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.in-admin .admin-navigation button:hover:not(.active) {
+  color: #f1f5f9 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.in-admin .admin-navigation button.active {
+  color: #ffffff !important;
+  background: rgba(99, 102, 241, 0.22) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25) !important;
+  font-weight: 600 !important;
+}
+
+/* KPI Metrics Grid */
+.in-admin .academy-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 14px !important;
+  margin: 16px 0 32px !important;
+}
+
+.in-admin .metric-card {
+  background: rgba(15, 23, 42, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.15s ease, border-color 0.15s ease !important;
+}
+
+.in-admin .metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.8), transparent);
+}
+
+.in-admin .metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.in-admin .metric-card span {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #94a3b8 !important;
+}
+
+.in-admin .metric-card strong {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* High-Contrast Tables */
+.in-admin .academy-table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  overflow: hidden !important;
+  margin: 16px 0 28px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.in-admin .academy-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  text-align: left !important;
+}
+
+.in-admin .academy-table thead {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.in-admin .academy-table th {
+  padding: 12px 16px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #94a3b8 !important;
+  border: 0 !important;
+}
+
+.in-admin .academy-table td {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  vertical-align: middle !important;
+  background: transparent !important;
+}
+
+.in-admin .academy-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.in-admin .academy-table tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+/* Badges & Status Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.badge-danger {
+  background: rgba(244, 63, 94, 0.15) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.mono-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+/* Action Buttons inside Admin */
+.in-admin .btn {
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.in-admin .btn-primary {
+  background: #6366f1 !important;
+  border: 1px solid rgba(99, 102, 241, 0.8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3) !important;
+}
+
+.in-admin .btn-primary:hover {
+  background: #4f46e5 !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45) !important;
+}
+
+.in-admin .btn-outline {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+}
+
+.in-admin .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
+.in-admin .academy-table .btn {
+  min-height: 30px !important;
+  padding: 0 11px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+}
+
+/* Forms & Panels */
+.in-admin .academy-form,
+.in-admin .panel {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  margin: 20px 0 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.in-admin .form-input {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  padding: 8px 14px !important;
+  min-height: 40px !important;
+  font-size: 13px !important;
+}
+
+.in-admin .form-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  outline: none !important;
+}
+
+.in-admin .field span {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+
+/* Toolbars, Search & Filters */
+.in-admin .toolbar {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 16px 0 !important;
+}
+
+.in-admin .admin-course-controls {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin: 20px 0 !important;
+  padding: 14px 18px !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+}
+
+.in-admin .admin-course-controls .form-input {
+  flex: 1 1 240px !important;
+}
+
+.in-admin .admin-course-drill {
+  color: #818cf8 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  text-align: left !important;
+}
+
+.in-admin .admin-course-drill:hover {
+  color: #a5b4fc !important;
+  text-decoration: underline !important;
+}
+
+.in-admin .admin-mat-chip {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  color: #e2e8f0 !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 6px !important;
+}
+
+.in-admin .admin-order-controls button {
+  min-height: 28px !important;
+  width: 28px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 6px !important;
+}
+
+/* Headings in Admin */
+.in-admin h2 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.3px !important;
+  margin: 32px 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.in-admin p.muted,
+.in-admin .academy-lead {
+  font-size: 13px !important;
+  color: #94a3b8 !important;
+  margin: 0 0 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Admin Body Container */
+.in-admin .admin-body {
+  display: block;
+  width: 100%;
+}
+
+.in-admin .academy-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .in-admin .academy-content {
+    padding: 16px 14px 60px !important;
+  }
+  body.in-admin .academy-header {
+    padding: 10px 14px !important;
+  }
+  .admin-page-title {
+    font-size: 20px !important;
+  }
+  .in-admin .academy-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .in-admin .metric-card {
+    padding: 14px !important;
+  }
+  .in-admin .metric-card strong {
+    font-size: 20px !important;
+  }
+  .admin-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .in-admin .academy-metrics {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* player.css */
 @layer base {
 /* Learning studio: the lecture is the visual focus, study tools stay beside it. */

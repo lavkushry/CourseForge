@@ -20,8 +20,28 @@
     const wrap=node('div','academy-table-wrap'),t=node('table','academy-table'),head=node('thead'),hrow=node('tr');
     headers.forEach(h=>hrow.append(node('th','',h)));head.append(hrow);t.append(head);
     const body=node('tbody');
-    rows.forEach(values=>{const tr=node('tr');values.forEach((value,i)=>{const td=node('td');td.dataset.label=headers[i];if(value instanceof Node)td.append(value);else td.textContent=String(value??'—');tr.append(td);});body.append(tr);});
-    if(!rows.length){const tr=node('tr'),td=node('td','muted','No records yet.');td.colSpan=headers.length;tr.append(td);body.append(tr);}
+    rows.forEach(values=>{
+      const tr=node('tr');
+      values.forEach((value,i)=>{
+        const td=node('td');const h=headers[i]||'';td.dataset.label=h;
+        if(value instanceof Node){td.append(value);}
+        else{
+          const s=String(value??'—'),lower=s.toLowerCase();
+          if(s==='Active'||s==='Published'||s==='Playing'||s==='Live lesson page'||s==='Configured'||s==='Reported complete'||s==='100%'){
+            const badge=node('span','badge badge-success',s);td.append(badge);
+          }else if(s==='Suspended'||lower==='access denied'||s==='Inactive'||s==='Incomplete'||s==='Missing credentials'||s==='Failed'){
+            const badge=node('span','badge badge-danger',s);td.append(badge);
+          }else if(s==='Draft'||s==='Pending activation'||s==='Awaiting server credentials'){
+            const badge=node('span','badge badge-warning',s);td.append(badge);
+          }else if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(s)||h.toLowerCase().includes('ip')){
+            const mono=node('span','mono-code',s);td.append(mono);
+          }else{td.textContent=s;}
+        }
+        tr.append(td);
+      });
+      body.append(tr);
+    });
+    if(!rows.length){const tr=node('tr'),td=node('td','muted text-center','No records yet.');td.colSpan=headers.length;tr.append(td);body.append(tr);}
     t.append(body);wrap.append(t);return wrap;
   }
   function heading(root,title,text){root.append(node('h2','',title));if(text)root.append(node('p','muted',text));}
@@ -36,11 +56,27 @@
   }
   function submitButton(f,text){const b=node('button','btn btn-primary',text);b.type='submit';f.append(b);return b;}
   function adminPage(title,section=''){
+    document.body.classList.add('in-admin');
     history.replaceState(null,'',`/#admin${section?'/'+section:''}`);
-    const root=page(title),nav=node('nav','admin-navigation');nav.setAttribute('aria-label','Administration');
-    for(const [label,route,action] of [['Overview','',adminHome],['Students','students',adminUsers],['Courses','courses',adminCourses],['Player activity','player',adminPlayer],['System and audit','system',adminSystem]]){
+    const root=page(title);
+
+    const topBar=node('div','admin-topbar');
+    const breadcrumb=node('div','admin-breadcrumb');
+    breadcrumb.innerHTML=`<a href="#dashboard">Dashboard</a><span class="crumb-sep">/</span><a href="/#admin">Admin</a><span class="crumb-sep">/</span><span class="crumb-curr">${title}</span>`;
+    const backBtn=button('← Back to Academy',()=>{document.body.classList.remove('in-admin');workspace();});
+    backBtn.className='btn btn-outline admin-back-btn';
+    topBar.append(breadcrumb,backBtn);
+
+    const nav=node('nav','admin-navigation');nav.setAttribute('aria-label','Administration');
+    for(const [label,route,action] of [['Overview','',adminHome],['Students','students',adminUsers],['Courses','courses',adminCourses],['Player activity','player',adminPlayer],['System & audit','system',adminSystem]]){
       const b=button(label,()=>action());if(section.split('/')[0]===route){b.classList.add('active');b.setAttribute('aria-current','page');}nav.append(b);
-    }root.append(nav);return root;
+    }
+    const h1=root.querySelector('h1');
+    if(h1){h1.className='admin-page-title';root.insertBefore(topBar,h1);h1.after(nav);}
+    else{root.prepend(topBar,nav);}
+    const body=node('div','admin-body');
+    root.append(body);
+    return body;
   }
   function privateLink(root,url,expires,messageText){
     const box=node('div','panel private-account-link');box.append(node('h2','','Private account link'),node('p','',messageText),node('p','muted','Expires '+date(expires)+'. The link is displayed once and is not stored in reports.'));
@@ -104,6 +140,7 @@
     }).catch(error=>{if(f.isConnected)message(error.message,true);});
   }
   async function workspace(){
+    document.body.classList.remove('in-admin');
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
     el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();const _acH=document.querySelector('.academy-header');if(_acH)_acH.hidden=true;
@@ -131,8 +168,12 @@
     }
   }
   async function adminHome(){
-    const root=adminPage('Administration');root.append(button('Refresh',adminHome));
+    const root=adminPage('Administration');
+    const actionsBar=node('div','toolbar');
+    actionsBar.append(button('↻ Refresh metrics',adminHome));
+    root.append(actionsBar);
     const report=await api('/api/admin/overview');
+    if(!root.isConnected)return;
     const metrics=node('div','academy-metrics');
     for(const [label,value] of [['Students',report.summary.students],['Enrollments',report.summary.enrollments],['Completed lessons',report.summary.completed_lessons],['Lesson activity',minutes(report.summary.activity_seconds)],['Playback time',minutes(report.summary.playing_seconds)],['Available lectures',`${report.summary.available_lectures}/${report.summary.lectures}`],['Recent sessions',report.summary.active_sessions]]){
       const card=node('div','panel metric-card');card.append(node('span','muted',label),node('strong','',String(value)));metrics.append(card);
@@ -159,6 +200,7 @@
 
     try{
       const ti = await api('/api/admin/teacher-insights');
+      if(!root.isConnected)return;
       heading(root,'Teacher insights & AI companion analytics','Aggregated student tutor questions, token tracking, and quiz fail rates');
       const tiMetrics=node('div','academy-metrics');
       for(const [label,val] of [
@@ -184,13 +226,16 @@
     const root=adminPage('Student management','students');
     const searchForm=form(root,'Find a student',data=>adminUsers(data.get('q')));field(searchForm,'Name or email','q','search',false).value=query;submitButton(searchForm,'Search');
     const result=await api(`/api/admin/users?q=${encodeURIComponent(query)}&offset=${offset}`);
+    if(!root.isConnected)return;
     root.append(node('p','muted',`${result.total} accounts`));
     root.append(table(['Student','Email','Status','Courses','Completion','Lesson activity','Details'],result.users.map(u=>[u.name,u.email,u.suspended?'Suspended':u.verified?'Active':'Pending activation',u.enrollments,u.completed_lessons,minutes(u.activity_seconds),button('Inspect',()=>adminStudent(u.id))])));
     const pager=node('div','toolbar');if(offset)pager.append(button('Previous',()=>adminUsers(query,Math.max(0,offset-25))));if(offset+25<result.total)pager.append(button('Next',()=>adminUsers(query,offset+25)));root.append(pager);
     const create=form(root,'Invite a student',async data=>{const payload=Object.fromEntries(data);if(!payload.course)delete payload.course;const r=await api('/api/admin/invitations',json('POST',payload));create.reset();privateLink(root,r.activation_url,r.expires_at,r.message);});
     create.append(node('p','muted','The student chooses their own password using a one-time activation link. No email service is required.'));
     field(create,'Name','name');field(create,'Email','email','email');
-    const courses=await api('/api/admin/courses'),label=node('label','field');label.append(node('span','','Grant a course (optional)'));const select=node('select','form-input');select.name='course';select.add(new Option('No course selected',''));courses.courses.forEach(c=>select.add(new Option(c.title+(c.published?'':' (draft)'),c.id)));label.append(select);create.append(label);submitButton(create,'Create invitation');
+    const courses=await api('/api/admin/courses');
+    if(!root.isConnected)return;
+    const label=node('label','field');label.append(node('span','','Grant a course (optional)'));const select=node('select','form-input');select.name='course';select.add(new Option('No course selected',''));courses.courses.forEach(c=>select.add(new Option(c.title+(c.published?'':' (draft)'),c.id)));label.append(select);create.append(label);submitButton(create,'Create invitation');
   }
   async function adminStudent(uid){
     const r=await api(`/api/admin/users/${uid}`),root=adminPage(r.user.name,'students/'+uid);
@@ -255,6 +300,7 @@
     root.append(controls);
     const tableSlot=node('div','admin-courses-table-slot');root.append(tableSlot);
     const result=await api('/api/admin/courses');
+    if(!root.isConnected)return;
     let courses=result.courses||[];
     const renderTable=()=>{
       const q=searchInput.value.trim().toLowerCase();
@@ -304,7 +350,9 @@
     searchInput.oninput=renderTable;sortSelect.onchange=renderTable;renderTable();
 
     const map=form(root,'Map an Odysee lecture',async data=>{await api(`/api/admin/videos/${encodeURIComponent(data.get('video_id'))}/provider`,json('PUT',{claim_name:data.get('claim_name'),claim_id:data.get('claim_id')}));message('Lecture mapping saved.');await adminCourses();});
-    const videos=await api('/api/videos');const select=node('select','form-input');select.name='video_id';select.required=true;select.setAttribute('aria-label','Lecture to map');videos.videos.forEach(v=>select.add(new Option(`${v.course} / ${v.title}`,v.id)));map.append(select);
+    const videos=await api('/api/videos');
+    if(!root.isConnected)return;
+    const select=node('select','form-input');select.name='video_id';select.required=true;select.setAttribute('aria-label','Lecture to map');videos.videos.forEach(v=>select.add(new Option(`${v.course} / ${v.title}`,v.id)));map.append(select);
     field(map,'Odysee claim name','claim_name');const claim=field(map,'Odysee claim ID','claim_id');claim.pattern='[0-9a-fA-F]{40}';submitButton(map,'Save mapping');
   }
   async function adminCourseDetail(courseId){
@@ -488,6 +536,7 @@
 
     try{
       const qRes = await api(`/api/admin/courses/${encodeURIComponent(courseId)}/quizzes`);
+      if(!root.isConnected)return;
       if(qRes.quizzes && qRes.quizzes.length){
         heading(root,'Lesson mastery quizzes & review flashcards','Admin review, approval, and regeneration of auto-generated quizzes from transcripts.');
         root.append(table(['Lesson','Status','Questions','Attempts','Pass rate','Actions'],qRes.quizzes.map(q=>[
@@ -519,6 +568,7 @@
     root.append(node('p','academy-lead','Inspect lesson sessions, visible activity, devices, and access. Live means a lesson page is sending heartbeats; it does not establish that the video is playing.'));
     const criteria={days:'30',q:'',course:'',status:'all',...filters};
     const playback=await api('/api/admin/playback?'+new URLSearchParams({...criteria,offset}));
+    if(!root.isConnected)return;
     heading(root,'Video playback',playback.basis);
     root.append(table(['Student','Lecture','State','Playback time','Position','Opened','Device and IP'],playback.sessions.map(s=>[button(s.name,()=>adminStudent(s.user_id)),s.title,s.live?'Playing':s.state,minutes(s.playing_seconds),prettyTime(s.position),date(s.created_at),[s.device,s.ip].join(' · ')])));
     const playbackPager=node('div','toolbar');if(offset)playbackPager.append(button('Previous playback sessions',()=>adminPlayer(criteria,Math.max(0,offset-25))));if(offset+25<playback.total)playbackPager.append(button('Next playback sessions',()=>adminPlayer(criteria,offset+25)));root.append(playbackPager);
@@ -527,9 +577,11 @@
     field(f,'Student name, email, or lecture','q','search',false).value=criteria.q;
     selectField(f,'Period','days',[['Last 7 days','7'],['Last 30 days','30'],['Last 90 days','90']],criteria.days);
     const courses=await api('/api/admin/courses');
+    if(!root.isConnected)return;
     selectField(f,'Course','course',[['All courses',''],...courses.courses.map(c=>[c.title,c.id])],criteria.course);
     selectField(f,'Session status','status',[['All sessions','all'],['Live lesson pages','live']],criteria.status);submitButton(f,'Apply filters');
     const query=new URLSearchParams(criteria),report=await api('/api/admin/player-activity?'+query+'&offset='+offset);
+    if(!root.isConnected)return;
     const bar=node('div','toolbar');bar.append(button('Refresh',()=>adminPlayer(criteria,offset)));
     const download=node('a','btn btn-outline','Export CSV');download.href='/api/admin/player-activity/export?'+query;download.download='courseforge-lesson-activity.csv';bar.append(download);root.append(bar);
     root.append(node('p','muted',`${report.total} sessions · ${report.summary.learners} learners · ${minutes(report.summary.activity_seconds)} activity · ${report.period}. Updated ${new Date().toLocaleTimeString()}.`));
@@ -540,7 +592,9 @@
     const pager=node('div','toolbar');if(offset)pager.append(button('Previous',()=>adminPlayer(criteria,Math.max(0,offset-25))));if(offset+25<report.total)pager.append(button('Next',()=>adminPlayer(criteria,offset+25)));root.append(pager);
   }
   async function adminSystem(){
-    const root=adminPage('System and administrator audit','system'),r=await api('/api/admin/system');
+    const root=adminPage('System and administrator audit','system');
+    const r=await api('/api/admin/system');
+    if(!root.isConnected)return;
     heading(root,'Account delivery');
     root.append(node('p','',`${r.email.provider} email: ${r.email.configured?'Configured':'Awaiting server credentials'}. ${r.pending_invitations} pending invitations.`));
     root.append(node('p','',`Public registration: ${r.registration.registration_enabled?(r.registration.registration_mode==='open'?'Immediate student access':'Email verification required'):'Administrator invitations'}.`));
@@ -664,5 +718,14 @@
     }
     else if(account.user?.verified)await workspace();else await catalog();
   }
+  window.addEventListener('hashchange',()=>{
+    const adminRoute=location.hash.match(/^#admin(?:\/(.*))?$/);
+    if(adminRoute&&account.user?.role==='admin'){
+      const route=adminRoute[1]||'';
+      if(route.startsWith('students/'))adminStudent(decodeURIComponent(route.slice(9)));
+      else if(route.startsWith('courses/'))adminCourseDetail(decodeURIComponent(route.slice(8)));
+      else ({students:adminUsers,courses:adminCourses,player:adminPlayer,system:adminSystem}[route]||adminHome)();
+    }
+  });
   boot().catch(error=>{page('CourseForge');message(error.message,true);});
 })();
