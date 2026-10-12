@@ -9,6 +9,8 @@ import {
   quiz,
   result,
   reviewAttempt,
+  tutorResponse,
+  type TutorResponse,
 } from "./contracts";
 const id = encodeURIComponent;
 function query(course: string, cursor = "") {
@@ -145,6 +147,23 @@ export class LearningApi {
         signal,
       })
       .then(completion);
+  }
+  tutor(
+    body: {
+      question: string;
+      mode?: string;
+      lesson_id?: string;
+      course_id?: string;
+    },
+    signal: AbortSignal,
+  ): Promise<TutorResponse> {
+    return this.api
+      .request("/learning/tutor", {
+        method: "POST",
+        body,
+        signal,
+      })
+      .then(tutorResponse);
   }
 }
 

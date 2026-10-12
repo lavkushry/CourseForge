@@ -218,7 +218,12 @@ export class DiscoveryView {
   }
   private courseCard(course: Course): HTMLElement {
     const card = node('article', 'course-card');
-    const cover = action('', () => this.options.open(course.id, !course.enrolled), 'cover-button');
+    const openCourse = () => this.options.open(course.id, !course.enrolled);
+    card.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.list-button, a')) return;
+      openCourse();
+    });
+    const cover = action('', openCourse, 'cover-button');
     cover.setAttribute('aria-label', `Explore ${course.title}`); cover.append(artwork(course), node('span', 'art-play', '▶'));
     card.append(cover);
     const body = node('div', 'course-card-body');
@@ -227,7 +232,7 @@ export class DiscoveryView {
     const metadata = node('p', 'course-meta', `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`} · ${duration(course.duration_seconds)}`);
     body.append(metadata);
     const footer = node('div', 'course-card-footer');
-    footer.append(action('Open course →', () => this.options.open(course.id, !course.enrolled), 'text-button'), this.saveButton(course));
+    footer.append(action('Open course →', openCourse, 'text-button'), this.saveButton(course));
     body.append(footer); card.append(body); return card;
   }
   private continueCard(item: ContinueItem): HTMLElement {
@@ -288,7 +293,7 @@ export class DiscoveryView {
       if (isTop10) {
         card.classList.add('top10-card');
         const badge = node('span', 'rank-numeral', String(idx + 1));
-        card.prepend(badge);
+        card.append(badge);
       }
       track.append(card);
     });

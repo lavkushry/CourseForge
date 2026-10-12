@@ -53,6 +53,7 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 		"PUT /api/v1/lessons/{id}/progress": s.progressPut, "GET /api/v1/lessons/{id}/notes": s.notes, "POST /api/v1/lessons/{id}/notes": s.noteCreate,
 		"PUT /api/v1/lessons/{id}/resume-point":       s.resumePut,
 		"DELETE /api/v1/lessons/{id}/notes/{note_id}": s.noteDelete,
+		"POST /api/v1/learning/tutor":                 s.tutorAsk,
 	} {
 		mux.Handle(route, s.Identity.Require(h))
 	}

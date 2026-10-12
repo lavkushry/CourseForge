@@ -2,7 +2,7 @@ import { ApiError, errorMessage, isAbort } from "../api";
 import type { Lesson } from "../contracts";
 import { formatTime } from "../player/controller";
 import { Commands, LearningApi } from "./api";
-import type { Card, QuizResult, ReviewAttempt } from "./contracts";
+import type { Card, QuizResult, ReviewAttempt, TutorSource } from "./contracts";
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   cls = "",
@@ -40,7 +40,7 @@ function date(value: string) {
   const d = new Date(value);
   return Number.isFinite(d.getTime()) ? d.toLocaleString() : value;
 }
-type Tab = "bookmarks" | "quiz" | "reviews";
+type Tab = "bookmarks" | "quiz" | "reviews" | "tutor";
 interface Context {
   lesson: Lesson;
   signal: AbortSignal;
@@ -65,6 +65,13 @@ export class LearningView {
   private cardCursor = "";
   private due = true;
   private activeCard: Card | null = null;
+  private tutorMode: "explain" | "notes" | "quiz" | "lab" = "explain";
+  private tutorHistory: Array<{
+    question: string;
+    answer: string;
+    sources: TutorSource[];
+    mode: string;
+  }> = [];
   private current(): boolean {
     return this.context !== null && !this.scope.signal.aborted;
   }
@@ -90,6 +97,8 @@ export class LearningView {
     this.tab = null;
     this.bookmarkDraft = null;
     this.cardDraft = null;
+    this.tutorHistory = [];
+    this.tutorMode = "explain";
     this.root.replaceChildren();
     this.root.hidden = true;
   }
@@ -119,6 +128,7 @@ export class LearningView {
       ["bookmarks", "Bookmarks"],
       ["quiz", "Lesson quiz"],
       ["reviews", "Review cards"],
+      ["tutor", "AI Tutor"],
     ] as const) {
       const b = button(title, () => {
         void this.run(async () => {
@@ -213,6 +223,7 @@ export class LearningView {
     if (this.tab === "bookmarks") await this.bookmarks();
     else if (this.tab === "quiz") await this.quiz();
     else if (this.tab === "reviews") await this.reviews();
+    else if (this.tab === "tutor") await this.tutor();
   }
   private async bookmarks(): Promise<void> {
     const ctx = this.context;
@@ -731,5 +742,254 @@ export class LearningView {
       ),
     );
     return row;
+  }
+  private async tutor(): Promise<void> {
+    const ctx = this.context;
+    if (!ctx) return;
+
+    const container = el("div", "learning-tutor");
+
+    const modeBar = el("div", "learning-tutor-modes");
+    modeBar.setAttribute("role", "toolbar");
+    modeBar.setAttribute("aria-label", "AI Tutor modes");
+
+    const modes = [
+      { id: "explain", label: "💡 Explain Concept", desc: "Clear explanation with examples & citations" },
+      { id: "notes", label: "📝 Study Notes", desc: "Structured hierarchical summary" },
+      { id: "quiz", label: "❓ Concept Quiz", desc: "Self-check questions with solutions" },
+      { id: "lab", label: "🛠️ Hands-on Lab", desc: "Practical hands-on terminal exercise" },
+    ] as const;
+
+    for (const m of modes) {
+      const modeBtn = button(
+        m.label,
+        () => {
+          this.tutorMode = m.id;
+          for (const b of modeBar.querySelectorAll("button")) {
+            b.setAttribute("aria-pressed", String(b.dataset.mode === m.id));
+          }
+        },
+        "button quiet tutor-mode-btn",
+      );
+      modeBtn.dataset.mode = m.id;
+      modeBtn.title = m.desc;
+      modeBtn.setAttribute("aria-pressed", String(this.tutorMode === m.id));
+      modeBar.append(modeBtn);
+    }
+    container.append(modeBar);
+
+    const form = el("form", "learning-form tutor-form");
+    form.setAttribute("aria-label", "Ask AI Tutor");
+    const input = field(form, "Question or Topic", "question", 1000, true);
+    input.placeholder = "Ask anything about this lecture (e.g. How does Spark RDD memory management work?)...";
+
+    const suggestions = el("div", "learning-tutor-suggestions");
+    const suggestionsList = [
+      "Explain this lesson's core concept",
+      "What are the key technical takeaways?",
+      "Test my understanding with 3 questions",
+      "Design a hands-on verification lab",
+    ];
+    for (const promptText of suggestionsList) {
+      const pill = button(
+        promptText,
+        () => {
+          input.value = promptText;
+          input.focus();
+        },
+        "button quiet suggestion-pill",
+      );
+      suggestions.append(pill);
+    }
+    container.append(suggestions);
+
+    const askBtn = el("button", "button", "Ask AI Tutor");
+    askBtn.type = "submit";
+    form.append(askBtn);
+    container.append(form);
+
+    const resultsContainer = el("div", "learning-tutor-results");
+    container.append(resultsContainer);
+
+    const renderResults = () => {
+      resultsContainer.replaceChildren();
+      if (this.tutorHistory.length === 0) {
+        const placeholder = el(
+          "p",
+          "muted",
+          "Ask a question above or select a study mode to receive grounded explanations citing exact timestamps in this course.",
+        );
+        resultsContainer.append(placeholder);
+        return;
+      }
+
+      for (const item of this.tutorHistory) {
+        if (!item) continue;
+        const itemBox = el("article", "learning-tutor-item");
+
+        const qHeader = el("div", "learning-tutor-q");
+        qHeader.append(
+          el("span", "tutor-badge", item.mode.toUpperCase()),
+          el("strong", "", item.question),
+        );
+        itemBox.append(qHeader);
+
+        const aBody = el("div", "learning-tutor-a");
+        this.renderTutorContent(aBody, item.answer, ctx.lesson.id);
+        itemBox.append(aBody);
+
+        if (item.sources.length > 0) {
+          const sourcesDetails = el("details", "learning-tutor-sources");
+          const summary = el(
+            "summary",
+            "",
+            `Citations & Transcripts (${item.sources.length})`,
+          );
+          sourcesDetails.append(summary);
+          for (const src of item.sources) {
+            const srcRow = el("div", "source-row");
+            const tsBtn = button(
+              `⏱ ${formatTime(src.start_seconds)} - ${formatTime(src.end_seconds)}: ${src.lesson_title}`,
+              () => {
+                if (src.lesson_id === ctx.lesson.id) {
+                  this.seek(src.start_seconds);
+                } else {
+                  window.location.hash = `#learning/${src.lesson_id}?t=${Math.floor(src.start_seconds)}`;
+                }
+              },
+              "text-button source-time",
+            );
+            srcRow.append(tsBtn, el("p", "source-text", src.text));
+            sourcesDetails.append(srcRow);
+          }
+          itemBox.append(sourcesDetails);
+        }
+
+        resultsContainer.append(itemBox);
+      }
+    };
+
+    renderResults();
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const question = input.value.trim();
+      if (!question) return;
+
+      void this.run(async () => {
+        this.message("Consulting CourseForge AI Tutor...");
+        const resp = await this.api.tutor(
+          {
+            question,
+            mode: this.tutorMode,
+            lesson_id: ctx.lesson.id,
+            course_id: ctx.lesson.course_id,
+          },
+          ctx.signal,
+        );
+        if (!this.valid(ctx)) return;
+
+        this.tutorHistory.unshift({
+          question,
+          answer: resp.answer,
+          sources: resp.sources,
+          mode: resp.mode,
+        });
+        this.message("");
+        input.value = "";
+        renderResults();
+      });
+    });
+
+    this.panel.append(container);
+  }
+
+  private renderTutorContent(
+    container: HTMLElement,
+    markdownText: string,
+    currentLessonId: string,
+  ): void {
+    const lines = markdownText.split("\n");
+    let currentP: HTMLElement | null = null;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) {
+        currentP = null;
+        continue;
+      }
+
+      if (line.startsWith("- ") || line.startsWith("* ")) {
+        const li = el("div", "tutor-list-item");
+        this.renderInlineContent(li, line.slice(2), currentLessonId);
+        container.append(li);
+        currentP = null;
+        continue;
+      }
+
+      if (line.startsWith("> ")) {
+        const blockquote = el("blockquote", "tutor-quote");
+        this.renderInlineContent(blockquote, line.slice(2), currentLessonId);
+        container.append(blockquote);
+        currentP = null;
+        continue;
+      }
+
+      if (!currentP) {
+        currentP = el("p", "tutor-paragraph");
+        container.append(currentP);
+      } else {
+        currentP.append(document.createTextNode(" "));
+      }
+      this.renderInlineContent(currentP, line, currentLessonId);
+    }
+  }
+
+  private renderInlineContent(
+    parent: HTMLElement,
+    text: string,
+    currentLessonId: string,
+  ): void {
+    const linkRegex = /\[([^\]]+)\]\((#[^)]+)\)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      const mIdx = match.index;
+      if (mIdx !== undefined && mIdx > lastIndex) {
+        parent.append(
+          document.createTextNode(text.slice(lastIndex, mIdx)),
+        );
+      }
+      const linkText = String(match[1] || "");
+      const linkHref = String(match[2] || "");
+
+      const timeMatch = /#learning\/([^?]+)\?t=(\d+)/.exec(linkHref);
+      const targetLessonId = timeMatch?.[1];
+      const targetSeconds = parseInt(timeMatch?.[2] ?? "0", 10);
+      if (targetLessonId && !isNaN(targetSeconds)) {
+        const linkBtn = button(
+          linkText,
+          () => {
+            if (targetLessonId === currentLessonId) {
+              this.seek(targetSeconds);
+            } else {
+              window.location.hash = `#learning/${targetLessonId}?t=${targetSeconds}`;
+            }
+          },
+          "button quiet citation-link",
+        );
+        parent.append(linkBtn);
+      } else {
+        const a = el("a", "external-link", linkText);
+        a.setAttribute("href", linkHref);
+        parent.append(a);
+      }
+      lastIndex = linkRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parent.append(document.createTextNode(text.slice(lastIndex)));
+    }
   }
 }

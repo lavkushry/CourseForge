@@ -273,3 +273,43 @@ export function courseStatus(v: unknown): { passed: string[]; cursor: string } {
   }
   return { passed, cursor: r.next_cursor == null ? "" : str(r.next_cursor) };
 }
+
+export interface TutorSource {
+  lesson_id: string;
+  lesson_title: string;
+  course_id: string;
+  start_seconds: number;
+  end_seconds: number;
+  text: string;
+}
+
+export interface TutorResponse {
+  answer: string;
+  sources: TutorSource[];
+  mode: string;
+}
+
+export function tutorResponse(v: unknown): TutorResponse {
+  const r = record(v);
+  const sources: TutorSource[] = [];
+  if (Array.isArray(r.sources)) {
+    for (const item of r.sources) {
+      if (typeof item === "object" && item !== null) {
+        const s = item as Record<string, unknown>;
+        sources.push({
+          lesson_id: typeof s.lesson_id === "string" ? s.lesson_id : "",
+          lesson_title: typeof s.lesson_title === "string" ? s.lesson_title : "",
+          course_id: typeof s.course_id === "string" ? s.course_id : "",
+          start_seconds: typeof s.start_seconds === "number" ? s.start_seconds : 0,
+          end_seconds: typeof s.end_seconds === "number" ? s.end_seconds : 0,
+          text: typeof s.text === "string" ? s.text : "",
+        });
+      }
+    }
+  }
+  return {
+    answer: typeof r.answer === "string" ? r.answer : "",
+    sources,
+    mode: typeof r.mode === "string" ? r.mode : "explain",
+  };
+}

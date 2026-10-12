@@ -9,6 +9,7 @@ import {
   quiz,
   result,
   reviewAttempt,
+  tutorResponse,
 } from "../../src/learning/contracts";
 const definition = {
   state: "ready",
@@ -150,3 +151,72 @@ describe("uncertain learning commands", () => {
     expect(second?.credentials).toBe(first?.credentials);
   });
 });
+describe("ai tutor integration", () => {
+  it("parses tutor response with sources and default mode fallback safely", () => {
+    const raw = {
+      answer: "Spark partitions are distributed across workers.",
+      sources: [
+        {
+          lesson_id: "l1",
+          lesson_title: "Spark RDD",
+          course_id: "spark",
+          start_seconds: 120,
+          end_seconds: 180,
+          text: "Partitions represent logical chunks of data.",
+        },
+      ],
+      mode: "explain",
+    };
+    const parsed = tutorResponse(raw);
+    expect(parsed.answer).toBe(raw.answer);
+    expect(parsed.sources).toHaveLength(1);
+    expect(parsed.sources[0]?.start_seconds).toBe(120);
+    expect(parsed.mode).toBe("explain");
+  });
+
+  it("handles empty sources and missing fields without crashing", () => {
+    const parsed = tutorResponse({ answer: "Grounded response" });
+    expect(parsed.answer).toBe("Grounded response");
+    expect(parsed.sources).toEqual([]);
+    expect(parsed.mode).toBe("explain");
+  });
+
+  it("sends tutor question and returns grounded response", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          answer: "RDD stands for Resilient Distributed Dataset.",
+          sources: [],
+          mode: "explain",
+        }),
+      ),
+    );
+    const client = new ApiClient(fetcher);
+    const api = new LearningApi(client);
+    const signal = new AbortController().signal;
+
+    const res = await api.tutor(
+      {
+        question: "What is RDD?",
+        mode: "explain",
+        lesson_id: "l1",
+        course_id: "c1",
+      },
+      signal,
+    );
+    expect(res.answer).toContain("Resilient Distributed Dataset");
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/v1/learning/tutor",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          question: "What is RDD?",
+          mode: "explain",
+          lesson_id: "l1",
+          course_id: "c1",
+        }),
+      }),
+    );
+  });
+});
+

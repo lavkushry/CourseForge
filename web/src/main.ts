@@ -14,6 +14,19 @@ import { PathsView } from './paths/view';
 import { AdminView } from './admin/view';
 
 const api = new ApiClient();
+
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    for (const r of regs) r.unregister();
+  }).catch(() => {});
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      for (const k of keys) {
+        if (k.startsWith('courseforge')) caches.delete(k);
+      }
+    }).catch(() => {});
+  }
+}
 const learningApi = new LearningApi(api);
 let learnedLessons = new Set<string>();
 let learnedCursor = '';
@@ -212,6 +225,47 @@ function renderLogin(message = ''): void {
       renderApp(auth.user);
     }).catch(error => { submit.disabled = false; feedback(errorMessage(error), true); });
   }, { signal: pageScope.signal });
+
+  const previewGrid = document.querySelector<HTMLElement>('#guest-preview-grid');
+  if (previewGrid) {
+    void api.request<{ courses: Course[] }>('/public/courses?limit=30', { signal: pageScope.signal })
+      .then(res => {
+        if (!res || !Array.isArray(res.courses)) return;
+        previewGrid.replaceChildren();
+        for (const course of res.courses) {
+          const card = element('article', 'guest-card');
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', `Course: ${course.title}`);
+
+          const art = artwork(course);
+          const body = element('div', 'guest-card-body');
+          body.append(
+            element('span', 'eyebrow', course.category || 'Engineering'),
+            element('h3', '', course.title),
+            element('p', 'guest-card-meta', `${course.lesson_count ?? 0} lectures · ${course.instructor || 'CourseForge Faculty'}`),
+          );
+          card.append(art, body);
+
+          const selectCourse = () => {
+            setAuthMode('register');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            feedback(`Create an account to start streaming "${course.title}".`);
+          };
+
+          card.addEventListener('click', selectCourse);
+          card.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectCourse();
+            }
+          });
+
+          previewGrid.append(card);
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 function renderApp(account: User): void {
@@ -252,9 +306,9 @@ function renderApp(account: User): void {
         <section id="course-certificate-section" class="course-certificate-section" hidden></section>
         <div class="classroom-grid">
           <div class="lesson-column">
-            <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. Arrows seek. M mutes. F opens fullscreen. C toggles theater mode.">
+            <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. Arrows seek. M mutes. F opens fullscreen. C toggles theater mode. P toggles picture-in-picture. Shift+N next lesson.">
               <media-controller id="media-controller" autohide="3" nohotkeys gesturesdisabled>
-                <video id="lesson-video" slot="media" controls playsinline preload="auto" disablepictureinpicture disableremoteplayback></video>
+                <video id="lesson-video" slot="media" controls playsinline preload="auto" disableremoteplayback></video>
                 <media-loading-indicator slot="centered-chrome"></media-loading-indicator>
                 <media-control-bar>
                   <media-play-button></media-play-button>
@@ -273,7 +327,7 @@ function renderApp(account: User): void {
             </div>
             <div class="player-tools">
               <div class="player-actions"><button id="play-toggle" class="button">Play</button><button id="restart" class="button quiet">Restart</button><button id="capture" class="button quiet">Capture timestamp</button></div>
-              <div class="player-settings"><label for="speed">Speed</label><select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option><option value="3">3×</option></select><button id="theater" class="button quiet" aria-pressed="false">Theater</button><button id="fullscreen" class="button quiet">Fullscreen</button><button id="lock-controls" class="button quiet" aria-pressed="false">Lock</button></div>
+              <div class="player-settings"><label for="speed">Speed</label><select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option><option value="3">3×</option></select><button id="theater" class="button quiet" aria-pressed="false">Theater</button><button id="pip-toggle" class="button quiet" aria-pressed="false">PiP</button><button id="fullscreen" class="button quiet">Fullscreen</button><button id="lock-controls" class="button quiet" aria-pressed="false">Lock</button></div>
             </div>
             <p id="player-status" class="player-status" role="status" aria-live="polite">Choose a lesson to begin.</p>
             <div class="lesson-progress"><span id="save-status">No unsaved progress</span><span id="coverage"></span></div>
@@ -283,7 +337,7 @@ function renderApp(account: User): void {
             <section id="materials" class="materials" hidden aria-label="Lesson materials"></section>
             <section id="learning-tools" class="learning-tools" hidden aria-label="Learning tools"></section>
             <section id="notes" class="notes" hidden aria-labelledby="notes-heading"><h2 id="notes-heading">Your lesson notes</h2><form id="note-form"><label for="note-content">Add a note at the current timestamp</label><textarea id="note-content" maxlength="3000" rows="3" required></textarea><button class="button" type="submit">Save note</button></form><div id="note-list"></div><button id="more-notes" class="button quiet" hidden>More notes</button></section>
-            <details class="shortcuts"><summary>Keyboard shortcuts</summary><p><kbd>Space</kbd> / <kbd>K</kbd> Play or pause · <kbd>J</kbd> / <kbd>L</kbd> Seek 10s · <kbd>←</kbd> / <kbd>→</kbd> Seek · <kbd>↑</kbd> / <kbd>↓</kbd> Volume · <kbd>M</kbd> Mute · <kbd>F</kbd> Fullscreen · <kbd>C</kbd> Theater · <kbd>0-9</kbd> Seek %</p></details>
+            <details class="shortcuts"><summary>Keyboard shortcuts</summary><p><kbd>Space</kbd> / <kbd>K</kbd> Play or pause · <kbd>J</kbd> / <kbd>L</kbd> Seek 10s · <kbd>←</kbd> / <kbd>→</kbd> Seek · <kbd>↑</kbd> / <kbd>↓</kbd> Volume · <kbd>M</kbd> Mute · <kbd>F</kbd> Fullscreen · <kbd>C</kbd> Theater · <kbd>P</kbd> PiP · <kbd>Shift+N</kbd> Next · <kbd>0-9</kbd> Seek %</p></details>
           </div>
           <aside class="lesson-sidebar" aria-label="Course lessons"><h2>Your lessons</h2><p id="lesson-count" class="muted"></p><ol id="lesson-list"></ol><button id="more-lessons" class="button quiet" hidden>More lessons</button><button id="more-learned" class="button quiet" hidden>More learned badges</button></aside>
         </div>
@@ -425,8 +479,15 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
     if (navigator.clipboard) void navigator.clipboard.writeText(text).then(() => feedback(`Copied timestamp: ${timestamp}`)).catch(() => feedback(text));
   });
   on('#theater', toggleTheater);
+  on('#pip-toggle', () => { void togglePiP(); });
   on('#fullscreen', () => { void fullscreen(); });
   on('#lock-controls', () => setLocked(true));
+  video.addEventListener('enterpictureinpicture', () => {
+    document.querySelector('#pip-toggle')?.setAttribute('aria-pressed', 'true');
+  }, { signal });
+  video.addEventListener('leavepictureinpicture', () => {
+    document.querySelector('#pip-toggle')?.setAttribute('aria-pressed', 'false');
+  }, { signal });
   on('#episodes', () => { required<HTMLDialogElement>('#episode-dialog').showModal(); });
   on('#close-episodes', closeEpisodes);
   required<HTMLDialogElement>('#episode-dialog').addEventListener('close', () => required<HTMLButtonElement>('#episodes').focus(), { signal });
@@ -472,6 +533,19 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
       f: () => { void fullscreen(); },
       c: toggleTheater,
       t: toggleTheater,
+      p: () => { void togglePiP(); },
+      N: () => {
+        const nextBtn = document.querySelector<HTMLButtonElement>('#next-lesson');
+        if (nextBtn && !nextBtn.disabled) nextBtn.click();
+      },
+      P: () => {
+        if (!selectedLesson) return;
+        const index = lessons.findIndex(l => l.id === selectedLesson?.id);
+        if (index > 0) {
+          const prevLesson = lessons[index - 1];
+          if (prevLesson) void loadLesson(prevLesson);
+        }
+      },
       l: () => setLocked(true),
       x: () => setLocked(true),
       '0': () => controller?.seek(0),
@@ -497,7 +571,8 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
         preferences?.update({ speed: next });
       },
     };
-    const selected = action[key.key.length === 1 ? key.key.toLowerCase() : key.key];
+    const keyLookup = key.shiftKey ? key.key : (key.key.length === 1 ? key.key.toLowerCase() : key.key);
+    const selected = action[keyLookup];
     if (selected) { key.preventDefault(); selected(); }
   }, { signal });
   let lastTap = 0;
@@ -867,6 +942,24 @@ async function fullscreen(): Promise<void> {
   } catch {
     try { if (typeof video.webkitEnterFullscreen === 'function') { video.webkitEnterFullscreen(); return; } } catch { /* This browser rejected native fullscreen too. */ }
     feedback('Fullscreen is unavailable in this browser.', true);
+  }
+}
+
+async function togglePiP(): Promise<void> {
+  const video = required<HTMLVideoElement>('#lesson-video');
+  const pipBtn = document.querySelector<HTMLButtonElement>('#pip-toggle');
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      if (pipBtn) pipBtn.setAttribute('aria-pressed', 'false');
+    } else if (document.pictureInPictureEnabled && typeof video.requestPictureInPicture === 'function') {
+      await video.requestPictureInPicture();
+      if (pipBtn) pipBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      feedback('Picture-in-picture is not supported in this browser.', true);
+    }
+  } catch {
+    feedback('Picture-in-picture could not be activated.', true);
   }
 }
 

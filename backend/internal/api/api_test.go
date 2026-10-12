@@ -300,3 +300,29 @@ func TestLoginAccountRateLimit(t *testing.T) {
 		}
 	}
 }
+
+func TestTutorAsk(t *testing.T) {
+	f := setup(t)
+	guest := browser{client: &http.Client{}, base: f.server.URL}
+	status, _ := guest.call(t, "POST", "/api/v1/learning/tutor", map[string]any{"question": "test question"}, nil)
+	if status != 401 {
+		t.Fatalf("guest tutor call status=%d want 401", status)
+	}
+
+	alice := f.login(t, "alice")
+	status, body := alice.call(t, "POST", "/api/v1/learning/tutor", map[string]any{
+		"question":  "test question",
+		"mode":      "explain",
+		"lesson_id": "lesson-z",
+	}, nil)
+	if status != 200 {
+		t.Fatalf("alice tutor call status=%d want 200, body=%s", status, string(body))
+	}
+	var resp map[string]any
+	if err := json.Unmarshal(body, &resp); err != nil {
+		t.Fatalf("failed to decode tutor response: %v", err)
+	}
+	if resp["answer"] == "" {
+		t.Fatalf("expected non-empty tutor answer")
+	}
+}

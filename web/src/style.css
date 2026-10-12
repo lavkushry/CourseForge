@@ -44,6 +44,32 @@
 .learning-tools [hidden] { display: none !important; }
 .learned-badge { color: #8dd7a5; font-size: .76rem; font-weight: 650; }
 
+/* ==========================================================================
+   AI Tutor Experience
+   ========================================================================== */
+.learning-tutor { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1rem; }
+.learning-tutor-modes { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tutor-mode-btn { font-size: .85rem; padding: .4rem .8rem; border-radius: 20px; transition: all 0.2s; }
+.tutor-mode-btn[aria-pressed="true"] { background: #3b2854; border-color: var(--accent, #c7a7ff); color: #fff; font-weight: 600; }
+.learning-tutor-suggestions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.suggestion-pill { font-size: .78rem; padding: .3rem .65rem; border-radius: 14px; opacity: 0.85; border: 1px dashed var(--border, #31313a); }
+.suggestion-pill:hover { opacity: 1; border-color: var(--accent, #c7a7ff); background: #1a1a26; }
+.learning-tutor-results { display: flex; flex-direction: column; gap: 1.2rem; margin-top: .5rem; }
+.learning-tutor-item { background: #12121b; border: 1px solid var(--border, #31313a); border-radius: 12px; padding: 1.2rem; }
+.learning-tutor-q { display: flex; align-items: center; gap: .7rem; margin-bottom: .8rem; }
+.tutor-badge { font-size: .7rem; font-weight: 700; letter-spacing: 0.05em; background: #30233e; color: var(--accent, #c7a7ff); padding: .2rem .5rem; border-radius: 6px; }
+.learning-tutor-a { line-height: 1.6; color: #e2e2ec; font-size: .95rem; }
+.learning-tutor-a p { margin: .5rem 0; }
+.citation-link { display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; color: #a5d4ff; background: #132438; border: 1px solid #1f4268; padding: .2rem .55rem; border-radius: 6px; margin: .2rem .3rem .2rem 0; cursor: pointer; text-decoration: none; font-weight: 600; vertical-align: middle; }
+.citation-link:hover { background: #1e3654; border-color: #3870a8; color: #fff; }
+.learning-tutor-sources { margin-top: 1rem; border-top: 1px solid var(--border, #31313a); padding-top: .8rem; font-size: .85rem; }
+.learning-tutor-sources summary { cursor: pointer; color: #9a9ab0; font-weight: 600; user-select: none; }
+.learning-tutor-sources .source-row { margin-top: .6rem; padding: .6rem; background: #0c0c12; border-radius: 8px; border: 1px solid #23232c; }
+.learning-tutor-sources .source-time { font-size: .8rem; color: #a5d4ff; margin-bottom: .3rem; font-weight: 600; }
+.learning-tutor-sources .source-text { font-size: .82rem; color: #b8b8cc; margin: 0; line-height: 1.4; }
+.tutor-list-item { margin: .3rem 0 .3rem 1rem; position: relative; }
+.tutor-list-item::before { content: "•"; position: absolute; left: -.8rem; color: var(--accent, #c7a7ff); }
+.tutor-quote { border-left: 3px solid var(--accent, #c7a7ff); margin: .6rem 0; padding-left: .8rem; color: #cbcbe0; }
 
 /* ==========================================================================
    Certificates Section & Modal Styles
@@ -305,23 +331,26 @@
 /* Top 10 Styled Numeral Badges */
 .top10-card {
   position: relative;
-  display: flex !important;
-  align-items: flex-end;
 }
 
 .rank-numeral {
-  font-size: 5.5rem;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 3.5rem;
   font-weight: 900;
-  line-height: 0.85;
-  color: #0d0e17;
-  -webkit-text-stroke: 2.5px #7c3aed;
-  margin-right: -28px;
-  margin-bottom: 12px;
-  z-index: 3;
+  line-height: 1;
+  color: rgba(13, 14, 23, 0.95);
+  -webkit-text-stroke: 2.5px #a78bfa;
+  z-index: 4;
   pointer-events: none;
   user-select: none;
   font-family: system-ui, -apple-system, sans-serif;
-  text-shadow: 0 0 24px rgba(124, 58, 237, 0.45);
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.9);
+}
+
+.course-card {
+  cursor: pointer;
 }
 
 /* Guest Curriculum Preview on Login Page */
