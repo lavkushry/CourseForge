@@ -11,15 +11,14 @@
   z-index: var(--z-sticky);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  background: rgba(13, 17, 23, 0.78);
-  border-bottom: 1px solid var(--line);
+  background: var(--topbar-bg, var(--surface));
+  border-bottom: 1px solid var(--topbar-border, var(--line));
   transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .topbar.scrolled {
-  background: rgba(13, 17, 23, 0.96);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: var(--topbar-bg, var(--surface));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .academy-header {
@@ -28,14 +27,14 @@
   z-index: var(--z-sticky);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  background: rgba(13, 17, 23, 0.78);
-  border-bottom: 1px solid var(--line);
+  background: var(--topbar-bg, var(--surface));
+  border-bottom: 1px solid var(--topbar-border, var(--line));
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .academy-header.scrolled {
-  background: rgba(13, 17, 23, 0.96);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
+  background: var(--topbar-bg, var(--surface));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Header Navigation Links */
@@ -310,6 +309,14 @@
   gap: var(--space-3);
   margin-top: var(--space-2);
   flex-wrap: wrap;
+}
+
+.billboard-actions .btn {
+  height: 48px;
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-full);
 }
 
 .billboard-play-btn {

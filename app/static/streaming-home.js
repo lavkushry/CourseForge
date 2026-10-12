@@ -437,4 +437,72 @@
     loadStreamingHome();
   }
 
+
+  // Avatar Profile Dropdown Interaction
+  function initAvatarDropdown() {
+    const avatarBtn = document.getElementById('avatarBtn');
+    const popover = document.getElementById('avatarPopover');
+    if (!avatarBtn || !popover) return;
+
+    function toggleAvatar(open) {
+      const show = open ?? popover.hidden;
+      popover.hidden = !show;
+      avatarBtn.setAttribute('aria-expanded', String(show));
+      if (show) {
+        const first = popover.querySelector('.avatar-menu-item');
+        if (first) first.focus();
+      }
+    }
+
+    avatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAvatar();
+    });
+
+    avatarBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleAvatar();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!popover.hidden && !popover.contains(e.target) && e.target !== avatarBtn) {
+        toggleAvatar(false);
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !popover.hidden) {
+        toggleAvatar(false);
+        avatarBtn.focus();
+      }
+    });
+
+    const acctBtn = document.getElementById('avatarAccountBtn');
+    if (acctBtn) acctBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.myAccount(); });
+
+    const adminBtn = document.getElementById('avatarAdminBtn');
+    if (adminBtn) adminBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.adminCourses(); });
+
+    const catBtn = document.getElementById('avatarCatalogBtn');
+    if (catBtn) catBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.catalog(); });
+
+    const logoutBtn = document.getElementById('avatarLogoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => {
+      toggleAvatar(false);
+      const lNav = document.getElementById('logoutNav');
+      if (lNav) lNav.click();
+      else fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload());
+    });
+  }
+
+  // Initialize on load and ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAvatarDropdown);
+  } else {
+    initAvatarDropdown();
+  }
+  window.addEventListener('courseforge-ready', initAvatarDropdown);
+
 })();

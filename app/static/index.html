@@ -13,10 +13,10 @@
   <title>CourseForge — Your learning, accelerated</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/static/icon-192.png" />
-  <script>try{const t=JSON.parse(localStorage.getItem('courseforge-theme-v3')||'{}');document.documentElement.dataset.theme=['dark','light','system'].includes(t.mode)?t.mode:'system';document.documentElement.dataset.resolvedTheme=t.mode==='dark'?'dark':t.mode==='light'?'light':(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.accent=['indigo','teal','rose'].includes(t.accent)?t.accent:'indigo'}catch{}</script>
+  <script>try{const t=JSON.parse(localStorage.getItem('courseforge-theme-v3')||'{}');const m=['dark','light','system'].includes(t.mode)?t.mode:'dark';document.documentElement.dataset.theme=m;document.documentElement.dataset.resolvedTheme=m==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;document.documentElement.dataset.accent=['indigo','teal','rose'].includes(t.accent)?t.accent:'indigo'}catch{}</script>
   <script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}</script>
-  <link rel="stylesheet" href="/static/core.css?v=17" />
-  <link rel="preload" href="/static/core.js?v=17" as="script" />
+  <link rel="stylesheet" href="/static/core.css?v=24" />
+  <link rel="preload" href="/static/core.js?v=24" as="script" />
 </head>
 <body>
   <a class="skip-link" href="#pageContent">Skip to content</a>
@@ -118,11 +118,21 @@
           <a class="topbar-nav-link" href="#/history">History</a>
         </nav>
         <label class="global-search"><svg class="icon"><use href="#i-search"/></svg><input id="globalSearch" type="search" placeholder="Search courses, lessons, and materials…" autocomplete="off" aria-label="Search courses, lessons, and materials"/><kbd>/</kbd></label>
-        <div class="topbar-actions"><span class="privacy-chip"><span class="local-indicator"></span>Your learning space</span><button id="notifyBtn" class="icon-button" aria-label="Notifications" aria-expanded="false" aria-controls="notifyPopover" title="Notifications"><svg class="icon"><use href="#i-clock"/></svg><span class="notification-dot" id="notificationDot" hidden></span></button><button id="themeBtn" class="icon-button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="themePopover" title="Appearance"><svg class="icon"><use href="#i-settings"/></svg></button><button class="btn btn-primary scan-top" id="scanBtn"><svg class="icon"><use href="#i-refresh"/></svg> Scan courses</button><div class="avatar" aria-label="Your account">CF</div></div>
-      </header>
+        <div class="topbar-actions"><span class="privacy-chip"><span class="local-indicator"></span>Your learning space</span><button id="notifyBtn" class="icon-button" aria-label="Notifications" aria-expanded="false" aria-controls="notifyPopover" title="Notifications"><svg class="icon"><use href="#i-clock"/></svg><span class="notification-dot" id="notificationDot" hidden></span></button><button id="themeBtn" class="icon-button" aria-label="Open appearance settings" aria-expanded="false" aria-controls="themePopover" title="Appearance"><svg class="icon"><use href="#i-settings"/></svg></button><button class="btn btn-primary scan-top" id="scanBtn"><svg class="icon"><use href="#i-refresh"/></svg> Scan courses</button><div class="avatar avatar-menu-trigger" id="avatarBtn" role="button" tabindex="0" aria-label="Your account" aria-haspopup="true" aria-expanded="false">CF</div>
+        <div class="avatar-popover" id="avatarPopover" role="menu" hidden>
+          <div class="avatar-user-info">
+            <span class="avatar-user-name" id="avatarUserName">Account</span>
+            <span class="avatar-user-email" id="avatarUserEmail"></span>
+          </div>
+          <button class="avatar-menu-item" id="avatarAccountBtn" type="button" role="menuitem"><svg class="icon"><use href="#i-user"/></svg> Account settings</button>
+          <button class="avatar-menu-item" id="avatarAdminBtn" type="button" role="menuitem"><svg class="icon"><use href="#i-shield"/></svg> Administration</button>
+          <button class="avatar-menu-item" id="avatarCatalogBtn" type="button" role="menuitem"><svg class="icon"><use href="#i-book"/></svg> Browse catalog</button>
+          <button class="avatar-menu-item" id="avatarLogoutBtn" type="button" role="menuitem"><svg class="icon"><use href="#i-close"/></svg> Sign out</button>
+        </div></div>
       <div class="universal-search-panel" id="universalSearchResults" role="region" aria-label="Universal search results" hidden></div>
       <div class="theme-popover notification-panel" id="notifyPopover" role="dialog" aria-label="Learning notifications" hidden><div class="popover-title">Your activity <button id="closeNotify" class="icon-button" aria-label="Close notifications"><svg class="icon"><use href="#i-close"/></svg></button></div><div id="notificationItems" class="notice-items" role="status"></div><button class="text-link" data-nav="reviews">Open reviews →</button></div>
       <div class="theme-popover" id="themePopover" role="dialog" aria-label="Appearance settings" hidden><div class="popover-title">Appearance <button id="closeTheme" class="icon-button" aria-label="Close appearance"><svg class="icon"><use href="#i-close"/></svg></button></div><p>Make CourseForge feel like your own.</p><div class="setting-label">Color mode</div><div class="theme-options" role="group" aria-label="Color mode"><button data-theme-option="light">Light</button><button data-theme-option="dark">Dark</button><button data-theme-option="system">System</button></div><div class="setting-label">Accent color</div><div class="accent-options" role="group" aria-label="Accent color"><button data-accent-option="indigo" class="accent-dot indigo" aria-label="Indigo accent"></button><button data-accent-option="teal" class="accent-dot teal" aria-label="Teal accent"></button><button data-accent-option="rose" class="accent-dot rose" aria-label="Rose accent"></button></div></div>
+      </header>
       <main class="page-content" id="pageContent">
         <section class="view" data-view="dashboard">
           <div class="welcome-meta"><span class="status-spark"></span> YOUR PERSONAL LEARNING SPACE <span class="welcome-date" id="todayLabel"></span></div>
@@ -366,8 +376,8 @@
           <span>·</span>
           <span id="completionDate">Today</span>
         </div>
-        <div class="completion-verify-box" id="completionVerifyBox" style="margin-top:12px;font-size:0.85rem;color:var(--muted)">
-          <span>Verification: </span><strong id="completionCode" style="color:var(--ink);font-family:monospace"></strong> · <a id="completionVerifyLink" href="#" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">Verify certificate ↗</a>
+        <div class="completion-verify-box" id="completionVerifyBox">
+          <span>Verification: </span><strong id="completionCode"></strong> · <a id="completionVerifyLink" href="#" target="_blank" rel="noopener">Verify certificate ↗</a>
         </div>
       </div>
       <div class="completion-actions">
@@ -422,7 +432,7 @@
       <div id="placementQuizContainer" class="placement-quiz-container"></div>
       <div id="placementResultPanel" class="placement-result-panel" hidden>
         <div class="result-header">
-          <span id="placementScoreBadge" class="tag" style="background:#10b98122;color:#10b981;font-weight:700">Score: 70%</span>
+          <span id="placementScoreBadge" class="tag">Score: 70%</span>
           <h3 id="placementResultHeading">Recommended Starting Point</h3>
         </div>
         <p id="placementResultMessage" class="muted"></p>
@@ -435,6 +445,6 @@
   </dialog>
   <div id="notice" class="toast" role="status" aria-live="polite" hidden></div>
   <div id="mobileScrim" class="mobile-scrim" hidden></div>
-  <script src="/static/core.js?v=20" defer></script>
+  <script src="/static/core.js?v=24" defer></script>
 </body>
 </html>

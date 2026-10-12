@@ -154,6 +154,11 @@ function lessonHash(id,at=null){
 }
 function syncLessonRoute(id,at=null,replace=false){if(applyingRoute)return;const hash=lessonHash(id,at);if(location.hash!==hash)history[replace?'replaceState':'pushState'](null,'',hash);}
 function closeMobileMenu(restoreFocus=false){$('#sidebar').classList.remove('open');$('#mobileScrim').hidden=true;for(const id of ['mobileMenu','studioMenu'])$('#'+id).setAttribute('aria-expanded','false');$('.main-column').inert=false;$('.academy-header').inert=false;if(restoreFocus)$(state.view==='learning'?'#studioMenu':'#mobileMenu').focus();}
+// Both navigation bars reserve their actual height, including wrapped mobile rows.
+const academyHeaderObserver=new ResizeObserver(entries=>{
+  document.documentElement.style.setProperty('--academy-bar-h',entries[0].target.getBoundingClientRect().height+'px');
+});
+academyHeaderObserver.observe($('.academy-header'));
 function openMobileMenu(){const open=!$('#sidebar').classList.contains('open');if(!open){closeMobileMenu(true);return;}$('#sidebar').classList.add('open');$('#mobileScrim').hidden=false;for(const id of ['mobileMenu','studioMenu'])$('#'+id).setAttribute('aria-expanded','true');$('.main-column').inert=true;$('.academy-header').inert=true;$('#sidebar .nav-item').focus();}
 for(const id of ['mobileMenu','studioMenu'])$('#'+id).addEventListener('click',openMobileMenu);
 $('#mobileScrim').addEventListener('click',()=>closeMobileMenu(true));
@@ -173,7 +178,7 @@ document.addEventListener('click',event=>{if(!$('#themePopover').hidden&&!$('#th
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!$('#universalSearchResults').hidden)$('#universalSearchResults').hidden=true;if(!$('#themePopover').hidden){closeTheme();$('#themeBtn').focus();}if(!$('#notifyPopover').hidden){closeNotify();$('#notifyBtn').focus();}closeMobileMenu(true);}if(event.key==='/'&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)&&!event.ctrlKey&&!event.metaKey){event.preventDefault();$('#globalSearch').focus();}});
 loadTheme();
 $('#todayLabel').textContent=new Intl.DateTimeFormat(undefined,{month:'long',day:'numeric',year:'numeric'}).format(new Date());
-const colorways=[['#493eb8','#9285ed','{ }','ENGINEERING'],['#06685f','#4bd4ac','<>','DEVELOPMENT'],['#d66c39','#f7c68a','01','DATA'],['#305b92','#72aff8','>_','TECHNOLOGY'],['#903b81','#e39ad2','','CREATIVE'],['#414c70','#8797cc','//','COURSE']];
+const colorways=[['var(--cover-493eb8)','var(--cover-9285ed)','{ }','ENGINEERING'],['var(--cover-06685f)','var(--cover-4bd4ac)','<>','DEVELOPMENT'],['var(--cover-d66c39)','var(--cover-f7c68a)','01','DATA'],['var(--cover-305b92)','var(--cover-72aff8)','>_','TECHNOLOGY'],['var(--cover-903b81)','var(--cover-e39ad2)','','CREATIVE'],['var(--cover-414c70)','var(--cover-8797cc)','//','COURSE']];
 function coverFor(course){let hash=0;for(const c of course)hash=((hash*31)+c.charCodeAt(0))>>>0;const lower=course.toLowerCase();let index=hash%colorways.length;if(/kubernetes|ansible|docker|devops|cloud|linux/i.test(lower))index=0;if(/java|python|javascript|backend|go\b|program/i.test(lower))index=1;if(/data|sql|spark|databricks|analytics|machine learning/i.test(lower))index=2;return colorways[index];}
 function nextUpLesson(course){
   const lessons=course?.videos||[];
@@ -332,7 +337,7 @@ window.CourseForgeCompletion={triggerLessonCheckMoment,showCourseCompletion,trig
 
 function buildCourseCard(course){
   const tile=make('div','course-tile');
-  const button=make('button','course-card');button.type='button';button.style.cssText='border:1px solid var(--line);padding:0;text-align:left;color:inherit';
+  const button=make('button','course-card');button.type='button';
   const [a,b,symbol,category]=coverFor(course.name);const cover=make('div','course-cover');
   cover.style.setProperty('--cover-a',a);cover.style.setProperty('--cover-b',b);
   const posterUrl = `/api/artwork/courses/${encodeURIComponent(course.name)}/poster`;
@@ -366,7 +371,7 @@ function buildCourseCard(course){
     bottom.append(icon('arrow'));
     button.addEventListener('click',()=>openCourse(course));
   }
-  button.append(body);
+  button.append(cover,body);
   tile.append(button);
   if(course.cover_url&&window.CourseForgeAccount?.user?.role==='admin'){const edit=make('button','course-edit-btn','Edit details');edit.type='button';edit.setAttribute('aria-label',`Edit details for ${course.title||course.name}`);edit.addEventListener('click',()=>openCourseEditor(course));tile.append(edit);}
   return tile;
@@ -426,8 +431,11 @@ function renderCatalog(){if(location.hash.startsWith('#/my-list')||location.hash
   for(const [cat,coursesInCat] of byCategory){
     const header=make('div','catalog-category-header');
     header.append(make('h2','',cat),make('span','tag',`${coursesInCat.length} ${coursesInCat.length===1?'course':'courses'}`));
-    catalog.append(header);
-    for(const course of coursesInCat)catalog.append(buildCourseCard(course));
+    for(const course of coursesInCat){
+      const tile=buildCourseCard(course);
+      tile.prepend(header.cloneNode(true));
+      catalog.append(tile);
+    }
   }
   if(!visible.length&&all.length){const hint=make('p','muted',state.search?'No courses match your search. Try a different keyword.':'No courses match this filter yet.');catalog.append(hint);}
 }
@@ -441,7 +449,7 @@ function previewMaterialInline(mat){
   if(!preview)return openMaterial(mat);
   preview.hidden=false;preview.replaceChildren();
   const bar=make('div','material-preview-bar');
-  const titleWrap=make('strong','');titleWrap.style.cssText='display:inline-flex;align-items:center;gap:8px';
+  const titleWrap=make('strong','inline-title');
   titleWrap.append(materialSvgIcon(mat.ext),make('span','',mat.friendly_name||mat.name));
   bar.append(titleWrap,make('span','tag',`${mat.material_type||'File'} · ${formatFileSize(mat.size_kb)}`));
   const actions=make('div','material-preview-actions');
@@ -513,7 +521,7 @@ function renderLessons(){
       details.open=true;
       const summary=make('summary','lesson-section-summary');
       const doneInSec=secVids.filter(v=>state.progress.get(v.id)?.completed).length;
-      const titleSpan=make('span','lesson-section-title');titleSpan.style.cssText='display:inline-flex;align-items:center;gap:6px';
+      const titleSpan=make('span','lesson-section-title');
       titleSpan.append(icon('folder'),make('span','',secTitle));
       summary.append(titleSpan,make('span','lesson-section-count',`${doneInSec}/${secVids.length}`));
       details.append(summary);
@@ -605,6 +613,7 @@ function renderUniversalSearch(rawQuery){
   if(matchedMaterials.length){
     const col=make('div','search-group');col.append(make('h4','','Lesson materials'));
     for(const m of matchedMaterials){
+      const item=make('button','search-result-item');item.type='button';
       const strongEl=make('strong');strongEl.append(materialSvgIcon(m.ext),document.createTextNode(' '+(m.friendly_name||m.name)));
       item.append(strongEl,make('small','',`${m.material_type||'File'} · ${formatFileSize(m.size_kb)} · ${m.course}`));
       item.onclick=async()=>{
@@ -664,7 +673,7 @@ async function openMaterial(item){
   let wrap=document.getElementById('lecturePlayerWrap');if(!wrap){wrap=make('div','lecture-player-wrap');wrap.id='lecturePlayerWrap';player.parentElement.append(wrap);}
   wrap.replaceChildren();
   const iframe=make('iframe');iframe.title=item.friendly_name||item.name;iframe.src=item.url;
-  iframe.style.cssText='width:100%;min-height:560px;border:0;background:#0f1420';
+  iframe.className='material-viewer material-viewer-expanded';
   iframe.allowFullscreen=true;
   const tools=make('div','embedded-actions');
   const badge=make('span','muted');
@@ -952,7 +961,7 @@ function renderTutorAnswer(text){
   el.append(wrap);
 }
 
-async function askTutor(){const question=$('#question').value.trim();if(!question)return toast('Enter a question first.',true);const btn=$('#askBtn');btn.disabled=true;btn.textContent='Searching your lessons…';try{const result=await request('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,mode:state.mode,...currentScope()})});state.lastAnswer=result.answer;renderTutorAnswer(result.answer);$('#answerPanel').hidden=false;
+async function askTutor(){const question=$('#question').value.trim();if(!question)return toast('Enter a question first.',true);const btn=$('#askBtn');btn.disabled=true;btn.textContent='Searching your lessons…';try{let result=await request('/api/ask?sync=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,mode:state.mode,...currentScope()})});if(result&&result.task_id&&!result.answer){btn.textContent='Thinking with AI…';for(let i=0;i<90;i++){await new Promise(r=>setTimeout(r,800));const task=await request('/api/tasks/'+result.task_id);if(task.status==='done'){result=task.result;break;}if(task.status==='failed'){throw new Error(task.error||'AI Tutor task failed');}}}state.lastAnswer=result.answer;renderTutorAnswer(result.answer);$('#answerPanel').hidden=false;
     const turn=make('div','chat-turn');turn.append(make('strong','','You asked'));turn.append(make('p','',question));$('#tutorHistory').prepend(turn);
     const follow=$('#followUps');follow.replaceChildren();for(const prompt of ['Show me a practical example with a timestamp.','Give me one question to check my understanding.','Compare this concept with a related one.']){const suggestion=make('button','btn btn-outline',prompt);suggestion.addEventListener('click',()=>{$('#question').value=prompt+' Context: '+question;$('#question').focus()});follow.append(suggestion)}
 const sources=$('#sources');sources.replaceChildren();for(const source of result.sources||[]){const button=make('button','source');button.append(make('strong','',`${source.label} · ${source.title}`));button.append(make('small','',`${source.course} · ${prettyTime(source.start)} · ${source.kind}`));button.append(make('p','',(source.text||'Extracted frame').slice(0,185)));if(source.frame_path){const image=make('img');image.src=`/api/chunks/${encodeURIComponent(source.chunk_id)}/frame`;image.loading='lazy';image.alt='Extracted source screen';button.append(image);}button.addEventListener('click',()=>openVideo(source.video_id,source.start).catch(err=>toast(err.message,true)));sources.append(button);}toast(`${(result.sources||[]).length} lecture sources retrieved. Check the original video for critical details.`);}catch(err){toast(err.message,true)}finally{btn.disabled=false;btn.replaceChildren(document.createTextNode('Ask tutor '),icon('arrow'));}}
@@ -965,7 +974,7 @@ $('#loadSyllabusBtn').addEventListener('click',()=>loadSyllabus().catch(err=>toa
 $('#buildSyllabusBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course first.',true);const btn=$('#buildSyllabusBtn');btn.disabled=true;$('#syllabusSummary').textContent='Creating your study path…';try{await request('/api/syllabus/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course})});await loadSyllabus();}catch(err){$('#syllabusSummary').textContent=err.message}finally{btn.disabled=false}});
 async function loadDue(){let url='/api/reviews/adaptive';if(selectedStudyCourse())url+='?course='+encodeURIComponent(selectedStudyCourse());const {cards}=await request(url).catch(()=>request('/api/reviews/due'+(selectedStudyCourse()?'?course='+encodeURIComponent(selectedStudyCourse()):'')));state.dueCards=cards||[];showReview();}
 function showReview(){state.activeCard=state.dueCards.shift()||null;$('#reviewCard').hidden=!state.activeCard;const badge=state.activeCard?.adaptive_tag?` [${state.activeCard.adaptive_tag}]`:'';$('#reviewStatus').textContent=state.activeCard?`${state.dueCards.length+1} cards in this review session${badge}`:'You’re all caught up. Create flashcards from your lessons to keep practising.';if(!state.activeCard)return;$('#reviewQuestion').textContent=state.activeCard.question;$('#reviewAnswer').textContent=state.activeCard.answer;$('#reviewAnswer').hidden=true;$('#reviewGrades').hidden=true;$('#revealAnswerBtn').hidden=false;}
-$('#generateCardsBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course in Study paths first.',true);const btn=$('#generateCardsBtn');btn.disabled=true;$('#reviewStatus').textContent='Creating your flashcards…';try{const result=await request('/api/reviews/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course,topic:$('#reviewTopic').value.trim()||'key concepts',count:5})});await loadDue();toast(`${result.created} flashcards created.`)}catch(err){$('#reviewStatus').textContent=err.message}finally{btn.disabled=false}});
+$('#generateCardsBtn').addEventListener('click',async()=>{const course=selectedStudyCourse();if(!course)return toast('Choose a course in Study paths first.',true);const btn=$('#generateCardsBtn');btn.disabled=true;$('#reviewStatus').textContent='Creating your flashcards…';try{let result=await request('/api/reviews/generate?sync=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({course,topic:$('#reviewTopic').value.trim()||'key concepts',count:5})});if(result&&result.task_id&&result.created===undefined){for(let i=0;i<90;i++){await new Promise(r=>setTimeout(r,800));const task=await request('/api/tasks/'+result.task_id);if(task.status==='done'){result=task.result;break;}if(task.status==='failed'){throw new Error(task.error||'Cards failed');}}}await loadDue();toast(`${result.created||result.count||0} flashcards created.`)}catch(err){$('#reviewStatus').textContent=err.message}finally{btn.disabled=false}});
 $('#loadDueBtn').addEventListener('click',()=>loadDue().catch(err=>toast(err.message,true)));
 $('#revealAnswerBtn').addEventListener('click',()=>{$('#reviewAnswer').hidden=false;$('#revealAnswerBtn').hidden=true;$('#reviewGrades').hidden=false});
 $$('[data-quality]').forEach(button=>button.addEventListener('click',async()=>{if(!state.activeCard)return;button.disabled=true;try{const curCourse=state.activeCard.course;await request(`/api/reviews/${state.activeCard.id}/grade`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quality:Number(button.dataset.quality)})});await request('/api/reviews/complete',services.json('POST',{course:curCourse,cards_count:1})).catch(()=>{});await loadHabits().catch(()=>{});showReview();loadInsights().catch(()=>{});}catch(err){toast(err.message,true)}finally{button.disabled=false}}));
@@ -1095,7 +1104,7 @@ $('#nextLessonBtn').addEventListener('click',()=>{
   if(next)openVideo(next.id).catch(error=>toast(error.message,true));
   else toast('You have reached the last lesson in this course.');
 });
-$('#generateSummaryBtn').addEventListener('click',async()=>{if(!state.currentVideoId)return toast('Choose a lesson first.',true);const btn=$('#generateSummaryBtn');btn.disabled=true;$('#lessonSummary').textContent='Creating your lesson summary…';try{const data=await request('/api/ask',services.json('POST',{question:'Summarize the learning objectives, key concepts, code or commands, and next steps from this lecture. Cite sources and timestamps.',mode:'notes',video_id:state.currentVideoId}));$('#lessonSummary').textContent=data.answer;}catch(err){$('#lessonSummary').textContent=err.message;}finally{btn.disabled=false}});
+$('#generateSummaryBtn').addEventListener('click',async()=>{if(!state.currentVideoId)return toast('Choose a lesson first.',true);const btn=$('#generateSummaryBtn');btn.disabled=true;$('#lessonSummary').textContent='Creating your lesson summary…';try{let data=await request('/api/ask?sync=1',services.json('POST',{question:'Summarize the learning objectives, key concepts, code or commands, and next steps from this lecture. Cite sources and timestamps.',mode:'notes',video_id:state.currentVideoId}));if(data&&data.task_id&&!data.answer){for(let i=0;i<90;i++){await new Promise(r=>setTimeout(r,800));const task=await request('/api/tasks/'+data.task_id);if(task.status==='done'){data=task.result;break;}if(task.status==='failed'){throw new Error(task.error||'Summary failed');}}}$('#lessonSummary').textContent=data.answer;}catch(err){$('#lessonSummary').textContent=err.message;}finally{btn.disabled=false}});
 $('#guidedTutorBtn').addEventListener('click',()=>{state.mode='explain';$$('.mode').forEach(m=>m.classList.toggle('active',m.dataset.mode==='explain'));$('#question').value='Teach me a core concept from the selected course step by step. Start with intuition, then a worked example, then one question to check understanding. Include source timestamps.';navigate('tutor');$('#question').focus()});
 $('#conceptCheckBtn').addEventListener('click',()=>{state.mode='quiz';$$('.mode').forEach(m=>m.classList.toggle('active',m.dataset.mode==='quiz'));$('#question').value='Give me one question to assess my understanding of the selected course, then explain the correct answer with a video citation. Do not claim to grade my knowledge without my response.';$('#question').focus()});
 function recordConceptSignal(signal){const answer=state.lastAnswer;if(!answer)return;try{const history=JSON.parse(localStorage.getItem('courseforge-concept-feedback:'+window.CourseForgeAccount.user.id)||'[]');history.unshift({feedback:signal,summary:answer.slice(0,120),date:new Date().toISOString()});localStorage.setItem('courseforge-concept-feedback:'+window.CourseForgeAccount.user.id,JSON.stringify(history.slice(0,60)));}catch{}toast(signal==='confident'?'Confidence recorded on this device.':'Marked for extra practice on this device. Review the cited lecture next.');}
@@ -1712,6 +1721,74 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
   } else {
     loadStreamingHome();
   }
+
+
+  // Avatar Profile Dropdown Interaction
+  function initAvatarDropdown() {
+    const avatarBtn = document.getElementById('avatarBtn');
+    const popover = document.getElementById('avatarPopover');
+    if (!avatarBtn || !popover) return;
+
+    function toggleAvatar(open) {
+      const show = open ?? popover.hidden;
+      popover.hidden = !show;
+      avatarBtn.setAttribute('aria-expanded', String(show));
+      if (show) {
+        const first = popover.querySelector('.avatar-menu-item');
+        if (first) first.focus();
+      }
+    }
+
+    avatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAvatar();
+    });
+
+    avatarBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleAvatar();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!popover.hidden && !popover.contains(e.target) && e.target !== avatarBtn) {
+        toggleAvatar(false);
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !popover.hidden) {
+        toggleAvatar(false);
+        avatarBtn.focus();
+      }
+    });
+
+    const acctBtn = document.getElementById('avatarAccountBtn');
+    if (acctBtn) acctBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.myAccount(); });
+
+    const adminBtn = document.getElementById('avatarAdminBtn');
+    if (adminBtn) adminBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.adminCourses(); });
+
+    const catBtn = document.getElementById('avatarCatalogBtn');
+    if (catBtn) catBtn.addEventListener('click', () => { toggleAvatar(false); window.CourseForgeAcademy?.catalog(); });
+
+    const logoutBtn = document.getElementById('avatarLogoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => {
+      toggleAvatar(false);
+      const lNav = document.getElementById('logoutNav');
+      if (lNav) lNav.click();
+      else fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload());
+    });
+  }
+
+  // Initialize on load and ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAvatarDropdown);
+  } else {
+    initAvatarDropdown();
+  }
+  window.addEventListener('courseforge-ready', initAvatarDropdown);
 
 })();
 
@@ -2626,8 +2703,8 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
         <div class="skeleton-hero title-skeleton-hero"></div>
         <div class="title-dialog-body">
           <div class="skeleton-row">
-            <div class="skeleton-poster" style="height: 40px; width: 140px;"></div>
-            <div class="skeleton-poster" style="height: 40px; width: 140px;"></div>
+            <div class="skeleton-poster title-skeleton-action"></div>
+            <div class="skeleton-poster title-skeleton-action"></div>
           </div>
         </div>
       </div>
@@ -2685,7 +2762,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
         </button>
 
         <!-- Billboard Backdrop & Title Treatment -->
-        <div class="title-billboard" style="background-image: linear-gradient(180deg, rgba(13,17,23,0.1) 0%, rgba(13,17,23,0.95) 100%), url('${escapeHtml(backdropUrl)}')">
+        <div class="title-billboard" style="--title-artwork: url('${escapeHtml(backdropUrl)}')">
           <div class="title-billboard-overlay">
             <span class="title-badge-eyebrow"><svg class="icon"><use href="#i-spark"/></svg> COURSEFORGE ORIGINAL MASTERCLASS</span>
             <h1 class="title-main-heading">${escapeHtml(course.title)}</h1>
@@ -3182,8 +3259,8 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
   }
   document.addEventListener('visibilitychange',()=>{
     if(!owner)return;
-    if(document.hidden){window.CourseForgeNative?.suspend();owner.onLost('Your lesson is paused. Resume when you’re ready.');heartbeat(false);}
-    // Visible players reclaim only after a deliberate user action.
+    // Keep playback session alive during tab switching
+    heartbeat(!document.hidden);
   });
   window.addEventListener('pagehide',close);
   window.addEventListener('offline',()=>{window.CourseForgeNative?.trackingNotice('You are offline. Watched time will not be estimated during the interruption.');});
@@ -3205,7 +3282,7 @@ setInterval(()=>{if(window.CourseForgeAccount?.user?.verified&&!document.hidden&
 window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure,
   delays=[800,2500],setTimer=setTimeout,clearTimer=clearTimeout}) {
   let attempts=0,timer=null,request=null,pending=false,stopped=false,fatal=false,healthySeconds=0,lastError=null;
-  function terminal(error){return [401,403,404,409].includes(error?.status)||error?.code==='decode';}
+  function terminal(error){return [401,404,409].includes(error?.status)||error?.code==='decode';}
   function failed(error){pending=false;fatal=true;onState('failed');onFailure(error);}
   function schedule(){
     if(stopped||!pending||timer!==null||request)return;
@@ -3348,6 +3425,23 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       const advanced=v.currentTime-a.savedPosition;a.savedPosition=v.currentTime;
       if(!v.paused&&advanced>0&&advanced<2){a.lastAdvance=performance.now();a.recovery.healthy(advanced/Math.max(.25,v.playbackRate));}
       window.CourseForgeStudio?.checkUpNext?.(lesson, v.currentTime, v.duration);
+      // Advance buffer watchdog: if buffer headroom drops below 10s, prefetch next chunk
+      try {
+        if (v.buffered && v.buffered.length > 0 && !v.paused && !a.reloading) {
+          let ahead = 0;
+          for (let i = 0; i < v.buffered.length; i++) {
+            if (v.buffered.start(i) <= v.currentTime && v.buffered.end(i) >= v.currentTime) {
+              ahead = v.buffered.end(i) - v.currentTime;
+              break;
+            }
+          }
+          if (ahead < 10 && !a.prebuffering) {
+            a.prebuffering = true;
+            fetch(session.media_url, { headers: { 'Range': 'bytes=0-2097152' }, credentials: 'same-origin' })
+              .catch(() => {}).finally(() => { setTimeout(() => { if (active === a) a.prebuffering = false; }, 5000); });
+          }
+        }
+      } catch (_) {}
     });
     v.addEventListener('play',()=>{if(!a.reloading){a.wantsPlay=true;a.lastAdvance=performance.now();}});
     a.recovery=window.CourseForgePlayerRecovery({
@@ -3891,8 +3985,8 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
   let tools,player;
   window.CourseForgeLoadPlayer=()=>player||(player=import('/static/vendor/media-chrome-4.19.3.js').catch(()=>{}));
   window.CourseForgeLoadTools=()=>tools||(tools=new Promise((resolve,reject)=>{
-    const css=document.createElement('link');css.rel='stylesheet';css.href='/static/tools.css?v=14';document.head.append(css);
-    const script=document.createElement('script');script.src='/static/tools.js?v=14';script.onload=()=>{if(window.CourseForgeReady)window.dispatchEvent(new Event('courseforge-ready'));resolve();};script.onerror=()=>{tools=null;reject(new Error('Study tools could not load. Please refresh.'));};document.head.append(script);
+    const css=document.createElement('link');css.rel='stylesheet';css.href='/static/tools.css?v=18';document.head.append(css);
+    const script=document.createElement('script');script.src='/static/tools.js?v=18';script.onload=()=>{if(window.CourseForgeReady)window.dispatchEvent(new Event('courseforge-ready'));resolve();};script.onerror=()=>{tools=null;reject(new Error('Study tools could not load. Please refresh.'));};document.head.append(script);
   }));
   window.addEventListener('courseforge-navigate',()=>{if(['planner','syllabus','labs','reviews'].includes(state.view))window.CourseForgeLoadTools().catch(e=>toast(e.message,true));});
 })();
@@ -3913,6 +4007,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
   const resetBrowser=()=>{history.replaceState(null,'','/');location.reload();};
   function page(title){
     leaveLesson();document.body.classList.remove('in-learning');el('appShell').hidden=true;el('academyContent').hidden=false;
+    const _acH=document.querySelector('.academy-header');if(_acH)_acH.hidden=false;
     const root=el('academyContent');root.replaceChildren(node('h1','',title));clearMessage();return root;
   }
   function table(headers,rows){
@@ -4005,7 +4100,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
   async function workspace(){
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
-    el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();
+    el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();const _acH=document.querySelector('.academy-header');if(_acH)_acH.hidden=true;
     const initial=account.bootstrap;account.bootstrap=null;
     const learning=initial?.learning||await api('/api/me/learning');account.lastLessons=Object.fromEntries(learning.courses.map(c=>[c.course,c.last_video_id]));
     await window.CourseForgeBoot(initial);window.CourseForgeReady=true;window.dispatchEvent(new Event('courseforge-ready'));
@@ -4243,7 +4338,7 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
       const close=button('Close preview',()=>{previewBox.hidden=true;previewBox.replaceChildren();});
       head.append(dl,close);
       const frame=node('iframe','admin-preview-iframe');frame.title=mat.friendly_name||mat.name;frame.src=mat.url;
-      frame.style.cssText='width:100%;min-height:460px;border:1px solid var(--line);border-radius:8px;margin-top:12px;background:#0f1420';
+      frame.className='material-viewer';
       previewBox.append(head,frame);
       previewBox.scrollIntoView({behavior:'smooth',block:'nearest'});
     };
@@ -4531,6 +4626,11 @@ window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure
     el('jobSummary').hidden=account.user?.role!=='admin';el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
     const options=account.bootstrap?.options||await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
     el('accountName').textContent=account.user?.name||'';
+    if(account.user){
+      const aName=document.getElementById('avatarUserName');if(aName)aName.textContent=account.user.name||'Student';
+      const aEmail=document.getElementById('avatarUserEmail');if(aEmail)aEmail.textContent=account.user.email||'';
+      const aAdmin=document.getElementById('avatarAdminBtn');if(aAdmin)aAdmin.hidden=account.user.role!=='admin';
+    }
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');
     const fragment=location.hash.slice(1).split('?'),params=new URLSearchParams(location.search);
     const fragmentParams=new URLSearchParams(fragment[1]||''),action=fragmentParams.has('token')?fragment[0]:params.get('action'),token=fragmentParams.get('token')||params.get('token');

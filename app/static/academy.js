@@ -13,6 +13,7 @@
   const resetBrowser=()=>{history.replaceState(null,'','/');location.reload();};
   function page(title){
     leaveLesson();document.body.classList.remove('in-learning');el('appShell').hidden=true;el('academyContent').hidden=false;
+    const _acH=document.querySelector('.academy-header');if(_acH)_acH.hidden=false;
     const root=el('academyContent');root.replaceChildren(node('h1','',title));clearMessage();return root;
   }
   function table(headers,rows){
@@ -105,7 +106,7 @@
   async function workspace(){
     if(!account.user)return signIn();
     if(!account.user.verified){signIn('resend');message('Verify your email before enrolling or opening lessons.');return;}
-    el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();
+    el('academyContent').hidden=true;el('appShell').hidden=false;clearMessage();const _acH=document.querySelector('.academy-header');if(_acH)_acH.hidden=true;
     const initial=account.bootstrap;account.bootstrap=null;
     const learning=initial?.learning||await api('/api/me/learning');account.lastLessons=Object.fromEntries(learning.courses.map(c=>[c.course,c.last_video_id]));
     await window.CourseForgeBoot(initial);window.CourseForgeReady=true;window.dispatchEvent(new Event('courseforge-ready'));
@@ -343,7 +344,7 @@
       const close=button('Close preview',()=>{previewBox.hidden=true;previewBox.replaceChildren();});
       head.append(dl,close);
       const frame=node('iframe','admin-preview-iframe');frame.title=mat.friendly_name||mat.name;frame.src=mat.url;
-      frame.style.cssText='width:100%;min-height:460px;border:1px solid var(--line);border-radius:8px;margin-top:12px;background:#0f1420';
+      frame.className='material-viewer';
       previewBox.append(head,frame);
       previewBox.scrollIntoView({behavior:'smooth',block:'nearest'});
     };
@@ -631,6 +632,11 @@
     el('jobSummary').hidden=account.user?.role!=='admin';el('signinNav').hidden=Boolean(account.user);el('adminNav').hidden=account.user?.role!=='admin';
     const options=account.bootstrap?.options||await api('/api/public/account-options');el('registerNav').hidden=Boolean(account.user)||!options.registration_enabled;
     el('accountName').textContent=account.user?.name||'';
+    if(account.user){
+      const aName=document.getElementById('avatarUserName');if(aName)aName.textContent=account.user.name||'Student';
+      const aEmail=document.getElementById('avatarUserEmail');if(aEmail)aEmail.textContent=account.user.email||'';
+      const aAdmin=document.getElementById('avatarAdminBtn');if(aAdmin)aAdmin.hidden=account.user.role!=='admin';
+    }
     document.querySelectorAll('#scanBtn,#scanBtnSide,#scanBtnLibrary,#emptyScanBtn,#reindexBtn,#buildSyllabusBtn,.sidebar-import,[data-action="edit-course"]').forEach(n=>n.hidden=account.user?.role!=='admin');
     const fragment=location.hash.slice(1).split('?'),params=new URLSearchParams(location.search);
     const fragmentParams=new URLSearchParams(fragment[1]||''),action=fragmentParams.has('token')?fragment[0]:params.get('action'),token=fragmentParams.get('token')||params.get('token');

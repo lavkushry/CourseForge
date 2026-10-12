@@ -110,6 +110,23 @@
       const advanced=v.currentTime-a.savedPosition;a.savedPosition=v.currentTime;
       if(!v.paused&&advanced>0&&advanced<2){a.lastAdvance=performance.now();a.recovery.healthy(advanced/Math.max(.25,v.playbackRate));}
       window.CourseForgeStudio?.checkUpNext?.(lesson, v.currentTime, v.duration);
+      // Advance buffer watchdog: if buffer headroom drops below 10s, prefetch next chunk
+      try {
+        if (v.buffered && v.buffered.length > 0 && !v.paused && !a.reloading) {
+          let ahead = 0;
+          for (let i = 0; i < v.buffered.length; i++) {
+            if (v.buffered.start(i) <= v.currentTime && v.buffered.end(i) >= v.currentTime) {
+              ahead = v.buffered.end(i) - v.currentTime;
+              break;
+            }
+          }
+          if (ahead < 10 && !a.prebuffering) {
+            a.prebuffering = true;
+            fetch(session.media_url, { headers: { 'Range': 'bytes=0-2097152' }, credentials: 'same-origin' })
+              .catch(() => {}).finally(() => { setTimeout(() => { if (active === a) a.prebuffering = false; }, 5000); });
+          }
+        }
+      } catch (_) {}
     });
     v.addEventListener('play',()=>{if(!a.reloading){a.wantsPlay=true;a.lastAdvance=performance.now();}});
     a.recovery=window.CourseForgePlayerRecovery({

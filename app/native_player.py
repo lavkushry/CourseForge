@@ -43,7 +43,7 @@ def get_media_client():
     cur_pid = os.getpid()
     if _MEDIA_CLIENT is None or _MEDIA_CLIENT.is_closed or _MEDIA_CLIENT_PID != cur_pid:
         limits = httpx.Limits(max_keepalive_connections=50, max_connections=200, keepalive_expiry=120.0)
-        _MEDIA_CLIENT = httpx.AsyncClient(limits=limits, timeout=httpx.Timeout(30.0, connect=8.0), trust_env=False)
+        _MEDIA_CLIENT = httpx.AsyncClient(limits=limits, timeout=httpx.Timeout(connect=15.0, read=300.0, write=60.0, pool=30.0), trust_env=False)
         _MEDIA_CLIENT_PID = cur_pid
     return _MEDIA_CLIENT
 
@@ -230,6 +230,7 @@ async def media_bytes(video_id: str, sid: str, request: Request, t: str=Query(ma
         if upstream is None or upstream.status_code not in (200,206,416):
             raise HTTPException(503, 'Odysee media is temporarily unavailable. Retry or use the embedded player.',headers={'Retry-After':'30'})
         headers = {k:upstream.headers[k] for k in ('content-length','content-range','accept-ranges','content-type') if k in upstream.headers}
+        headers['accept-ranges'] = 'bytes'
         headers.update({'Cache-Control':'private, no-transform, max-age=14400','Referrer-Policy':'no-referrer'})
         if request.method=='HEAD' or upstream.status_code==416:
             status=upstream.status_code

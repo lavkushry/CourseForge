@@ -58,8 +58,8 @@
   }
   document.addEventListener('visibilitychange',()=>{
     if(!owner)return;
-    if(document.hidden){window.CourseForgeNative?.suspend();owner.onLost('Your lesson is paused. Resume when you’re ready.');heartbeat(false);}
-    // Visible players reclaim only after a deliberate user action.
+    // Keep playback session alive during tab switching
+    heartbeat(!document.hidden);
   });
   window.addEventListener('pagehide',close);
   window.addEventListener('offline',()=>{window.CourseForgeNative?.trackingNotice('You are offline. Watched time will not be estimated during the interruption.');});
