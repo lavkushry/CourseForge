@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-10-12",
+  "scope": "sanitized summaries and inspected synthetic-fixture UI screenshots only; raw traces/source/error dumps excluded",
+  "files": [
+    {
+      "name": "build-unit-results.json",
+      "sha256": "9ee968a12590af4052ae8f3e7aa868d9aeb53536221247962363c44236694b49",
+      "bytes": 386
+    },
+    {
+      "name": "certificate-routing-results.json",
+      "sha256": "b2a852580e80e5d89574f30447e0192e8c9015d177abc38877974ea51b21bd55",
+      "bytes": 508
+    },
+    {
+      "name": "chromium-decoded-player.png",
+      "sha256": "866820d11215497b4942d305306dd4185391fca6831c67af298c265e0cd1923b",
+      "bytes": 155843
+    },
+    {
+      "name": "classroom-1366.png",
+      "sha256": "d8c2017dd4561537885efeb448f17f0e5ce4f180edd73573f29a55c98f7d81aa",
+      "bytes": 178509
+    },
+    {
+      "name": "classroom-1920.png",
+      "sha256": "c0e9524e3775d0bb016d9e42aaf17c55c337e6a5e1398f8402b002facb7b2b74",
+      "bytes": 190565
+    },
+    {
+      "name": "classroom-390.png",
+      "sha256": "ffad3ccd67a51e110f427a0af9df8d69eb287082a20ae5d1bb6cb22d2215c361",
+      "bytes": 72308
+    },
+    {
+      "name": "classroom-768.png",
+      "sha256": "f15ca602ad5f2ec12d39a856d88ce36c95d6c49aadd0fc882d30da887472a3d8",
+      "bytes": 115596
+    },
+    {
+      "name": "discovery-1366.png",
+      "sha256": "80f0cf1bafcb99fc78f9afc08a33870540a775dccc5060f0c20a12ade92f8365",
+      "bytes": 802074
+    },
+    {
+      "name": "discovery-1920.png",
+      "sha256": "ed1b89352bd8cfd109a082728b2e5fa4dd44668a3e12d1e1fa7a2cb3ca4e4ab7",
+      "bytes": 814457
+    },
+    {
+      "name": "discovery-390.png",
+      "sha256": "a429c76f4f614c11596abcfafc80615bf24e8abdcc8d5f5ca6c524cbdc1fd59c",
+      "bytes": 319978
+    },
+    {
+      "name": "discovery-768.png",
+      "sha256": "ec37145c994565c13eabd19d1c9ff72a83f8cbd4163da258b21727c09b486848",
+      "bytes": 411946
+    },
+    {
+      "name": "firefox-decoded-player.png",
+      "sha256": "1afb8a8e485e4325219fd5779b4ec8260ecdcbea3b2d9eccc4a2db4eac56ee2f",
+      "bytes": 188586
+    },
+    {
+      "name": "fixture-ui-results.json",
+      "sha256": "2bf24c894f9868c932169303905e33b90bf40d895ccdd936bda98130a6551cd3",
+      "bytes": 15089
+    },
+    {
+      "name": "mobile-chromium-decoded-player.png",
+      "sha256": "831a4f132d3f4d4d25f5dc17b5a0b8b2e3f593548e2ef9e7c58ca44579099178",
+      "bytes": 245681
+    },
+    {
+      "name": "mobile-webkit-decoded-player.png",
+      "sha256": "f4a80ace861562be7571d95175c47f36ed7fbe56abff3b8b17e9fc1e7cf86c17",
+      "bytes": 308577
+    },
+    {
+      "name": "ownership-confirmed.json",
+      "sha256": "bfb6c12e6359f81cd3533960b3156149f03183356ac0f687cc3540592301d624",
+      "bytes": 642
+    },
+    {
+      "name": "ownership-diagnostic.json",
+      "sha256": "bfa3ccd433a20905917beaaa76be7765a5c94acdccfb5d2e631009be31066e63",
+      "bytes": 633
+    },
+    {
+      "name": "real-go-final-results.json",
+      "sha256": "d0eccefea2afd018436181830cf14aa8eb960a2362842b797668816331ef326c",
+      "bytes": 10927
+    },
+    {
+      "name": "recovery-actions-final.json",
+      "sha256": "6135c632eebf3623ef9fab138f026a62e07eb0817667eb3b12e5cf26dae19d70",
+      "bytes": 2655
+    },
+    {
+      "name": "recovery-results.json",
+      "sha256": "5497595af3202e51a63c235441c578643f3290ec8de66855e6750cc9b6ab988e",
+      "bytes": 978
+    },
+    {
+      "name": "routing-results.json",
+      "sha256": "dded46654e4b0d2bce0ad2819b3667ea4f015a6d6871a2a640e708b7b0c2144c",
+      "bytes": 537
+    },
+    {
+      "name": "webkit-decoded-player.png",
+      "sha256": "5efcb5196be9479558483809b024ee70738e63b76ee12d782cff112beb6d59b9",
+      "bytes": 439829
+    }
+  ]
+}

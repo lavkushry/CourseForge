@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-10-12T11:15:38.101Z",
+  "status": "passed",
+  "durationMs": 88613.38100000001,
+  "results": [
+    {
+      "project": "chromium",
+      "title": "permanent provider failure stops after three retries and deliberate Retry lesson opens a new session",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 12696,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "expired media authorization prompts sign-in without provider retries",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1213,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "permanent provider failure stops after three retries and deliberate Retry lesson opens a new session",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 11589,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "expired media authorization prompts sign-in without provider retries",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1147,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "permanent provider failure stops after three retries and deliberate Retry lesson opens a new session",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 12663,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "expired media authorization prompts sign-in without provider retries",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2173,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "permanent provider failure stops after three retries and deliberate Retry lesson opens a new session",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 17218,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "expired media authorization prompts sign-in without provider retries",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3828,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "permanent provider failure stops after three retries and deliberate Retry lesson opens a new session",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 16091,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "expired media authorization prompts sign-in without provider retries",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5079,
+      "samples": []
+    }
+  ]
+}

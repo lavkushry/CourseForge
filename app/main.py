@@ -17,6 +17,7 @@ from .config import settings
 from .db import (init_db, fetch_videos, fetch_video, fetch_jobs, queue_video,
                  transcript_for_video, frame_for_chunk, keyword_search)
 from .library import scan_courses
+from . import tutor
 from .tutor import ask, retrieve
 from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus, retention, companion
 from . import auth
@@ -784,7 +785,9 @@ class QueryBody(BaseModel):
 
 
 @app.post('/api/ask',status_code=202)
-def ask_tutor(body: QueryBody):
+def ask_tutor(body: QueryBody, request: Request):
+    if request.query_params.get('sync') == '1' or request.headers.get('x-sync') == '1':
+        return JSONResponse(tutor.ask(question=body.question, mode=body.mode, course=body.course, video_id=body.video_id), status_code=200)
     try:
         return enqueue('ask',body.model_dump())
     except HTTPException:
@@ -941,7 +944,9 @@ class CardCreateBody(CourseBody):
 
 
 @app.post('/api/reviews/generate',status_code=202)
-def create_review_cards(body: CardCreateBody):
+def create_review_cards(body: CardCreateBody, request: Request):
+    if request.query_params.get('sync') == '1' or request.headers.get('x-sync') == '1':
+        return JSONResponse(reviews.generate_cards(course=body.course, topic=body.topic, count=body.count), status_code=200)
     try:
         return enqueue('reviews',body.model_dump())
     except ValueError as exc:

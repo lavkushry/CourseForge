@@ -134,15 +134,39 @@ def main(argv=None) -> int:
     parser.add_argument('--max-age-hours',type=int,default=72)
     parser.add_argument('--audit-tree',action='store_true',help='Also check tracked paths for personal/secret assets')
     parser.add_argument('--audit-icons',action='store_true',help='Scan HTML/JS for emoji UI icons and unknown icon references')
+    parser.add_argument('--audit-ui',action='store_true',help='Check tokens, components, bundle parity and browser geometry')
+    parser.add_argument('--ui-evidence',type=Path,help='Require the full before/after view and width matrix to pass')
     parser.add_argument('--repo-root',type=Path,default=Path(__file__).resolve().parents[1])
     args=parser.parse_args(argv)
-    if not args.report and not args.audit_tree and not args.audit_icons:
-        parser.error('Specify --report, --audit-tree, --audit-icons, or a combination')
+    if not args.report and not args.audit_tree and not args.audit_icons and not args.audit_ui and not args.ui_evidence:
+        parser.error('Specify --report, --audit-tree, --audit-icons, --audit-ui, --ui-evidence, or a combination')
     if args.report and not args.expected_commit:
         parser.error('--expected-commit is required for release report evaluation')
     if not 1 <= args.max_age_hours <= 168:
         parser.error('--max-age-hours must be 1–168')
     issues=[]
+    if args.ui_evidence:
+        import sys
+        sys.path.insert(0,str(args.repo_root))
+        from scripts.audit_ui import evaluate_evidence
+        findings=evaluate_evidence(args.ui_evidence,args.repo_root/'docs/ui-evidence/stage-1/manifest.json')
+        issues+=findings
+        if not findings:print('PASS: all populated views at all five widths, with PNG evidence')
+    if args.audit_ui:
+        import sys
+        sys.path.insert(0,str(args.repo_root))
+        from scripts.audit_ui import audit
+        issues += audit(args.repo_root)
+        try:
+            import playwright.sync_api
+        except ImportError:
+            issues.append('UI browser gate requires Playwright; install it before running --audit-ui')
+        if not issues:
+            result=subprocess.run([sys.executable,'-m','pytest','-q','tests/test_ui_contract.py',
+                                   'tests/test_responsive_layout.py'],cwd=args.repo_root,
+                                  env={**__import__('os').environ,'COURSEFORGE_REQUIRE_BROWSERS':'1'},timeout=180)
+            if result.returncode:issues.append('UI browser geometry gate failed')
+            else:print('PASS: UI source and browser geometry guards')
     if args.audit_icons:
         try:
             import sys

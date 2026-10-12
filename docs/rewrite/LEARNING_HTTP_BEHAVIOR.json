@@ -1,0 +1,1941 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-12T06:35:48.194995+00:00",
+  "contract": "docs/rewrite/LEARNING_CONTRACT.md",
+  "targets": [
+    "http://127.0.0.1:18090",
+    "http://127.0.0.1:18091"
+  ],
+  "origin": "http://127.0.0.1:5173",
+  "source_blind": true,
+  "public_contract_sources": [
+    "GET /api/v1/openapi.json",
+    "approved generated OpenAPI artifact supplied by orchestrator"
+  ],
+  "fixture_guard": {
+    "course": "fixture-course",
+    "synthetic_description_confirmed": true,
+    "known_lesson_duration_seconds": 30,
+    "fixture_lesson_ids": [
+      "fixture-lesson-1",
+      "fixture-lesson-2",
+      "fixture-lesson-3"
+    ],
+    "isolated_unique_synthetic_learners": 2,
+    "curation_restored": "fixture-lesson-3 approved"
+  },
+  "status": "blocked",
+  "clause_counts": {
+    "pass": 6,
+    "fail": 0,
+    "blocked": 1,
+    "out_of_scope": 0
+  },
+  "probe_counts": {
+    "pass": 164,
+    "fail": 0,
+    "blocked": 1,
+    "out_of_scope": 5
+  },
+  "clauses": [
+    {
+      "clause": 1,
+      "name": "Authentication, enrollment, CSRF and private ownership",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 58,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 2,
+      "name": "Bookmarks and duplicate-safe commands",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 14,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 3,
+      "name": "Private review cards, grading and schedule revision",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 12,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 4,
+      "name": "Private review session credits and anchored timezone",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 8,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 5,
+      "name": "Administrator quiz curation and private grading",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 28,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 6,
+      "name": "Generation source readiness and input validation",
+      "status": "blocked",
+      "probe_counts": {
+        "pass": 37,
+        "fail": 0,
+        "blocked": 1,
+        "out_of_scope": 0
+      }
+    },
+    {
+      "clause": 7,
+      "name": "Fresh client and API replica persistence",
+      "status": "pass",
+      "probe_counts": {
+        "pass": 7,
+        "fail": 0,
+        "blocked": 0,
+        "out_of_scope": 5
+      }
+    }
+  ],
+  "accepted_findings": [
+    {
+      "id": "learning-generation-zero-count",
+      "clause": 6,
+      "status": "resolved",
+      "title": "Explicit zero generation count follows default/source-pending handling instead of documented minimum validation",
+      "steps": [
+        "Authenticate an enrolled synthetic learner on the isolated fixture stack.",
+        "POST /api/v1/reviews/generate with lesson_id fixture-lesson-1, count 0, a fresh Idempotency-Key and valid Origin/CSRF.",
+        "As the approved synthetic administrator, POST /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate with current expected_revision, count 0, fresh key and valid Origin/CSRF.",
+        "Compare with count 21 on the same routes."
+      ],
+      "expected": "The generated public OpenAPI declares count minimum 1; explicit out-of-range values should be rejected as invalid input.",
+      "observed": "Both count 0 requests return sources_pending409. Both count 21 requests return422. No generated content was returned.",
+      "evidence": {
+        "review_count0_status": 409,
+        "quiz_count0_status": 409,
+        "review_count21_status": 422,
+        "quiz_count21_status": 422
+      },
+      "resolution_evidence": [
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": -1,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": 0,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": null,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": 21,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": "omitted",
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "review",
+          "submitted_count": 2,
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": -1,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": 0,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": null,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": 21,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": "omitted",
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18090,
+          "endpoint_kind": "quiz",
+          "submitted_count": 2,
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": -1,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": 0,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": null,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": 21,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": "omitted",
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "review",
+          "submitted_count": 2,
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": -1,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": 0,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": null,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": 21,
+          "http_status": 422,
+          "error_code": "invalid_record"
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": "omitted",
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        },
+        {
+          "port": 18091,
+          "endpoint_kind": "quiz",
+          "submitted_count": 2,
+          "http_status": 409,
+          "error_code": "sources_pending",
+          "generated_payload_present": false
+        }
+      ],
+      "resolution": "Affected-clause rerun after orchestrator fix rejects explicit zero/null/negative/oversized counts with422 on both API replicas; omitted and valid counts preserve sources_pending409 without generated content."
+    }
+  ],
+  "probes": [
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/reviews/due",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/reviews/history",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/me/learning-credits",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/lessons/fixture-lesson-1/quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest /api/v1/lessons/fixture-lesson-1/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled mutation /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled mutation /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled mutation /api/v1/lessons/fixture-lesson-1/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled read /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled read /api/v1/lessons/fixture-lesson-1/quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "unenrolled read /api/v1/lessons/fixture-lesson-1/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "create bookmark",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "exact duplicate bookmark",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201,
+        "same_resource": true
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "changed payload with reused key",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "required idempotency key",
+      "status": "pass",
+      "evidence": {
+        "http_status": 400
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "invalid bookmark input",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "invalid bookmark input",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "invalid bookmark input",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "invalid bookmark input",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "bounded stable bookmark ordering",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200,
+          200
+        ],
+        "bounded_count": 1,
+        "total_count": 3
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "other learner delete before enrollment",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "other learner delete after enrollment",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "same-course bookmarks private",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "visible_count": 0
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "authorized deletion persists",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "remaining_count": 2
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "initialize authoritative timezone",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "timezone_anchored": true
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "later timezone stays anchored",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "original_timezone_retained": true
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "invalid timezone without mutation",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          422,
+          200
+        ],
+        "original_timezone_retained": true
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "private source-linked card creation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "duplicate-safe card creation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201,
+        "same_resource": true
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "invalid review citation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "invalid review citation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "invalid review citation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "grade input bounds",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "grade input bounds",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "grade input bounds",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "grade key required",
+      "status": "pass",
+      "evidence": {
+        "http_status": 400
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "grade accepted and revision advanced",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "exact grade retry",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "identical_result": true
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "stale grading revision",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "other learner grading denied",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "private single grading history",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "owner_count": 1,
+        "other_count": 0
+      }
+    },
+    {
+      "clause": 3,
+      "probe": "schedule persisted and cards private",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "revision_advanced": true,
+        "schedule_changed": true,
+        "other_count": 0
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "review session completes",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "completion exact retry",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201,
+        "identical_result": true
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "other learner cannot claim attempt",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "completion retry has one credit on anchored day",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "credit_count": 1,
+        "authoritative_day_matches": true
+      }
+    },
+    {
+      "clause": 4,
+      "probe": "credits remain private",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "other_count": 0
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "students cannot curate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "quiz source position bounds",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "quiz source position bounds",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "invalid quiz source citation",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "administrator curated quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "approved detail excludes solutions",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "question_count": 2,
+        "solution_fields_present": false
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "invalid attempt rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "invalid attempt rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "invalid attempt rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "invalid attempt rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "quiz attempt key required",
+      "status": "pass",
+      "evidence": {
+        "http_status": 400
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "quiz attempt graded",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "exact quiz attempt retry",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201,
+        "identical_result": true
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "changed attempt retry conflicts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "one private graded attempt",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "owner_count": 1,
+        "other_count": 0
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "unsuccessful graded quiz leaves completion credits unchanged",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "quiz_credit_count": 0
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "administrator revision advances",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "revision_advanced": true
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "obsolete quiz revision rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "stale administrator revision rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "draft quiz cannot be attempted",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "draft detail hides questions",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "questions_visible": false
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "withdrawn quiz cannot be attempted",
+      "status": "pass",
+      "evidence": {
+        "http_status": 404
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "withdrawn detail hides questions",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "questions_visible": false
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "approved fixture curation restored",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "approved_restored": true
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "mixed quiz answers graded accurately",
+      "status": "pass",
+      "evidence": {
+        "score_matches_fixture": true,
+        "correct_count_matches_fixture": true,
+        "feedback_count": 2
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "passing quiz graded accurately",
+      "status": "pass",
+      "evidence": {
+        "http_status": 201,
+        "score_matches_fixture": true,
+        "correct_count_matches_fixture": true,
+        "passed": true
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "passing quiz retry has one additional attempt and credit",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          201,
+          200,
+          200
+        ],
+        "retry_result_identical": true,
+        "attempt_count_after_two_distinct_commands": 2,
+        "quiz_credit_count": 1
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "unindexed review generation pending fixture-lesson-1",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "unindexed review generation pending fixture-lesson-2",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "review generation count rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422,
+        "submitted_count": 0,
+        "error_code": "invalid_record",
+        "initial_http_status": 409,
+        "rerun_after_fix": true
+      },
+      "steps": [
+        "Authenticate an enrolled synthetic learner on the isolated fixture stack.",
+        "POST /api/v1/reviews/generate with lesson_id fixture-lesson-1, count 0, a fresh Idempotency-Key and valid Origin/CSRF.",
+        "As the approved synthetic administrator, POST /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate with current expected_revision, count 0, fresh key and valid Origin/CSRF.",
+        "Compare with count 21 on the same routes."
+      ]
+    },
+    {
+      "clause": 6,
+      "probe": "review generation count rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422,
+        "submitted_count": 21
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "unindexed quiz generation pending",
+      "status": "pass",
+      "evidence": {
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "quiz generation count rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422,
+        "submitted_count": 0,
+        "error_code": "invalid_record",
+        "initial_http_status": 409,
+        "rerun_after_fix": true
+      },
+      "steps": [
+        "Authenticate an enrolled synthetic learner on the isolated fixture stack.",
+        "POST /api/v1/reviews/generate with lesson_id fixture-lesson-1, count 0, a fresh Idempotency-Key and valid Origin/CSRF.",
+        "As the approved synthetic administrator, POST /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate with current expected_revision, count 0, fresh key and valid Origin/CSRF.",
+        "Compare with count 21 on the same routes."
+      ]
+    },
+    {
+      "clause": 6,
+      "probe": "quiz generation count rejected",
+      "status": "pass",
+      "evidence": {
+        "http_status": 422,
+        "submitted_count": 21
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "configured generation durable202 queue",
+      "status": "blocked",
+      "evidence": {
+        "reason": "Approved isolated fixture has no indexed sources; valid requests stop at sources_pending409. Configured model execution and provider throughput are outside this run."
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh authentication",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/reviews/history",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/me/learning-credits",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "fresh and replica reread /api/v1/lessons/fixture-lesson-3/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200,
+          200
+        ],
+        "identical_state": true
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "Crash/restart recovery",
+      "status": "out_of_scope",
+      "evidence": {
+        "reason": "Excluded by the prewritten contract; API correctness and replica rereads provide no proof of this behavior."
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "Media delivery capacity",
+      "status": "out_of_scope",
+      "evidence": {
+        "reason": "Excluded by the prewritten contract; API correctness and replica rereads provide no proof of this behavior."
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "AI provider execution and throughput",
+      "status": "out_of_scope",
+      "evidence": {
+        "reason": "Excluded by the prewritten contract; API correctness and replica rereads provide no proof of this behavior."
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "Full learning parity",
+      "status": "out_of_scope",
+      "evidence": {
+        "reason": "Excluded by the prewritten contract; API correctness and replica rereads provide no proof of this behavior."
+      }
+    },
+    {
+      "clause": 7,
+      "probe": "10000-concurrent-learner capacity",
+      "status": "out_of_scope",
+      "evidence": {
+        "reason": "Excluded by the prewritten contract; API correctness and replica rereads provide no proof of this behavior."
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/bookmarks/{owned_bookmark}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/bookmarks/{owned_bookmark}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/bookmarks/{owned_bookmark}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/reviews/{owned_card}/grade",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/reviews/{owned_card}/grade",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/reviews/{owned_card}/grade",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/reviews/complete",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/reviews/complete",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/reviews/complete",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/reviews/generate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/reviews/generate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/reviews/generate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/lessons/fixture-lesson-3/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/lessons/fixture-lesson-3/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/lessons/fixture-lesson-3/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/admin/lessons/fixture-lesson-3/quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/admin/lessons/fixture-lesson-3/quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/admin/lessons/fixture-lesson-3/quiz",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/admin/quizzes/{fixture_quiz}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/admin/quizzes/{fixture_quiz}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/admin/quizzes/{fixture_quiz}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "missing CSRF mutation /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "wrong CSRF mutation /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "hostile Origin mutation /api/v1/admin/lessons/fixture-lesson-3/quiz/regenerate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 403
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/lessons/fixture-lesson-1/bookmarks",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/bookmarks/{owned_bookmark}",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/reviews/cards",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/reviews/{owned_card}/grade",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/reviews/complete",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/reviews/generate",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/me/learning-preferences",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 1,
+      "probe": "guest mutation /api/v1/lessons/fixture-lesson-3/quiz/attempts",
+      "status": "pass",
+      "evidence": {
+        "http_status": 401
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "other learner quiz status private",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "other_attempt_count": 0,
+        "other_score_empty": true
+      }
+    },
+    {
+      "clause": 2,
+      "probe": "bounded cursor traversal has no duplicates",
+      "status": "pass",
+      "evidence": {
+        "http_statuses": [
+          200,
+          200
+        ],
+        "page_counts": [
+          1,
+          1
+        ],
+        "distinct_records": 2
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun synthetic fixture guard replica18090",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "synthetic_description_confirmed": true
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": -1,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": 0,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": null,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": 21,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": "omitted",
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default review count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "review",
+        "submitted_count": 2,
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": -1,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": 0,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": null,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": 21,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": "omitted",
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default quiz count replica18090",
+      "status": "pass",
+      "evidence": {
+        "port": 18090,
+        "endpoint_kind": "quiz",
+        "submitted_count": 2,
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun synthetic fixture guard replica18091",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "synthetic_description_confirmed": true
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": -1,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": 0,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": null,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": 21,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": "omitted",
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default review count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "review",
+        "submitted_count": 2,
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": -1,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": 0,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": null,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun invalid quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": 21,
+        "http_status": 422,
+        "error_code": "invalid_record"
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": "omitted",
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 6,
+      "probe": "rerun valid/default quiz count replica18091",
+      "status": "pass",
+      "evidence": {
+        "port": 18091,
+        "endpoint_kind": "quiz",
+        "submitted_count": 2,
+        "http_status": 409,
+        "error_code": "sources_pending",
+        "generated_payload_present": false
+      }
+    },
+    {
+      "clause": 5,
+      "probe": "approved fixture remains restored after affected-clause rerun",
+      "status": "pass",
+      "evidence": {
+        "http_status": 200,
+        "question_count": 2,
+        "approved_state": true
+      }
+    }
+  ],
+  "remaining_blockers": [
+    "Configured202 queue cannot be exercised with approved fixtures lacking indexed sources."
+  ],
+  "scope_notes": [
+    "Replica rereads prove shared visible state with fresh authentication, not crash/restart recovery.",
+    "API correctness does not measure API learner capacity, media delivery capacity, model execution or AI job throughput.",
+    "Failed quiz attempts receive no completion credit; the successful100-percent attempt and its exact retry produced one additional attempt and one quiz credit."
+  ],
+  "anti_cheat_probes": [
+    "Missing/wrong CSRF and hostile Origin on all11 exercised learning mutation routes; guest checks and unenrolled access.",
+    "Exact retries, altered payload under one key, fresh idempotency keys and stale revisions.",
+    "Negative/out-of-lesson source positions, absent citations, invalid quality, invalid counts and invalid timezones.",
+    "Three distinct bookmark positions, bounded pages, stable repeated reads, cursor traversal and authorized deletion.",
+    "Mixed-score and full-score quiz attempts, immutable revisions, draft/withdrawn denial and approved restoration.",
+    "Cross-learner ownership before and after shared-course enrollment; no cross-learner records or credits.",
+    "Fresh login and six private state rereads through either API replica."
+  ],
+  "current_failure_count": 0,
+  "resolved_finding_count": 1
+}

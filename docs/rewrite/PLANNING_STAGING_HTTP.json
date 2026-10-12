@@ -1,0 +1,217 @@
+{
+  "observed_at": "2026-10-12T19:56:33.523806+00:00",
+  "command": "python3 scripts/rewrite_planning_smoke.py --isolated-staging",
+  "contract": "docs/rewrite/PLANNING_CONTRACT.md",
+  "scope": "Two fixed isolated staging replicas; one synthetic disposable account; no production/provider/media/AI/load calls",
+  "checks": [
+    {
+      "name": "synthetic registration",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "synthetic sign-in with rotated cookie",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "private preference defaults",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "reject missing CSRF",
+      "passed": true,
+      "expected_status": 403,
+      "actual_status": 403,
+      "replica": 1
+    },
+    {
+      "name": "require command key",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "save daily preference",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "durable command replay on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "replay equals committed snapshot",
+      "passed": true
+    },
+    {
+      "name": "same key changed command denied",
+      "passed": true,
+      "expected_status": 409,
+      "actual_status": 409,
+      "replica": 1
+    },
+    {
+      "name": "stale planner revision denied",
+      "passed": true,
+      "expected_status": 409,
+      "actual_status": 409,
+      "replica": 2
+    },
+    {
+      "name": "concurrent edits have one winner across replicas",
+      "passed": true,
+      "actual_statuses": [
+        200,
+        409
+      ]
+    },
+    {
+      "name": "save week budgets",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "read week budgets on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "create day snapshot",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "read day snapshot on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "create weekly snapshot",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "read weekly snapshot on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "start server focus timer",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "read active focus on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "replica reads same focus identifier",
+      "passed": true
+    },
+    {
+      "name": "second active timer conflicts",
+      "passed": true,
+      "expected_status": 409,
+      "actual_status": 409,
+      "replica": 2
+    },
+    {
+      "name": "hidden pauses server timer",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "hidden state is paused",
+      "passed": true
+    },
+    {
+      "name": "client cannot submit elapsed time",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "cancel focus timer",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "cancel is terminal",
+      "passed": true
+    },
+    {
+      "name": "private read /focus/history",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "private read /focus/analytics/2026-10-12",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "private read /me/habits",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "private read /studio/insights",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "remove synthetic smoke account",
+      "passed": true,
+      "actual_status": 200
+    }
+  ],
+  "passed": 31,
+  "failed": 0,
+  "harness_error": null,
+  "capacity_proven": false,
+  "restart_proven": false
+}

@@ -1,0 +1,56 @@
+{
+  "production_backend_commit": "883252f2888febf403ed77e92d5b0c7b0acac47d",
+  "frontend_commit": "93aa9ad931b24db308a6afa617e4990602dbb5be",
+  "files": [
+    {
+      "path": "app/auth.py",
+      "sha256": "257f98720eb2c61f175b7fd54292310779b1ee7d5d3fa2be7128cab57164dc5f",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/media.py",
+      "sha256": "4c04cee0efe70e6dfb0a04987c07a17a342391082ff57e49ce9400b3d7a2d413",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/native_player.py",
+      "sha256": "c5b7809d0168fd007e6f1c88a35daef02237f969387f01f69f74906773f58589",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/player_sessions.py",
+      "sha256": "185fbf4fdb653c9b00fbc54bc42e47ac302882f3cf69356039f25ee2f93286ce",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/admin_console.py",
+      "sha256": "6a023cdea45bd72ca54becdc2db0fb43b4b43fe5ea98a34afb242d6e795ba810",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/static/native-player.js",
+      "sha256": "9549c9df26b198bab42b95bd4f0cdb36a6677e914a6a604824d787391b4a56da",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/static/player-session.js",
+      "sha256": "f66e97ef8926972e5d0fa09f244f281ff39dd3c2f5fc297debf29776b4004ce0",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/static/player-tracking.js",
+      "sha256": "b9f084e6467ddb947d31b099178a84a1e0264f47c80dba537279cefa5fd485f9",
+      "unchanged_from_production": true
+    },
+    {
+      "path": "app/static/player-recovery.js",
+      "sha256": "2342016a944cbcd4483c7d5bcb75632f9ee89605a19d9b3523c8d1cf932acadf",
+      "unchanged_from_production": true
+    }
+  ],
+  "external_backend_changes_preserved": [
+    "e6b7bd0",
+    "7d491e7"
+  ],
+  "verified_at": "2026-10-11T08:11:18.914381+00:00"
+}

@@ -1,0 +1,265 @@
+// Package media forwards authenticated media ranges without exposing provider URLs.
+package media
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
+	"sync"
+	"time"
+
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/playback"
+)
+
+var ErrProvider = errors.New("media provider unavailable")
+
+type Target struct{ URL, Referer string }
+type Resolver interface {
+	Resolve(context.Context, playback.Source) (Target, error)
+}
+type SourceInvalidator interface {
+	Invalidate(playback.Source, Target)
+}
+type Authority interface {
+	AuthorizeMedia(context.Context, identity.Principal, string, string) (playback.Source, error)
+	Active(context.Context, string) (bool, error)
+}
+type Config struct {
+	MaxTransfers    int
+	RevalidateEvery time.Duration
+	SimulatorOrigin string
+}
+type Gateway struct {
+	authority Authority
+	resolver  Resolver
+	client    *http.Client
+	slots     chan struct{}
+	config    Config
+}
+
+var byteRange = regexp.MustCompile(`^bytes=(?:[0-9]{1,16}-[0-9]{0,16}|-[0-9]{1,16})$`)
+
+func New(authority Authority, resolver Resolver, c Config) *Gateway {
+	if c.MaxTransfers < 1 {
+		c.MaxTransfers = 64
+	}
+	if c.RevalidateEvery <= 0 {
+		c.RevalidateEvery = 8 * time.Second
+	}
+	g := &Gateway{authority: authority, resolver: resolver, slots: make(chan struct{}, c.MaxTransfers), config: c}
+	g.client = &http.Client{Transport: &http.Transport{Proxy: nil, MaxIdleConns: c.MaxTransfers, MaxIdleConnsPerHost: c.MaxTransfers, MaxConnsPerHost: c.MaxTransfers, IdleConnTimeout: 90 * time.Second, ResponseHeaderTimeout: 20 * time.Second}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	return g
+}
+func (g *Gateway) Close() { g.client.CloseIdleConnections() }
+func (g *Gateway) Register(mux *http.ServeMux, id *identity.Service) {
+	mux.Handle("GET /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
+	mux.Handle("HEAD /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
+}
+func (g *Gateway) valid(raw string) bool {
+	u, err := url.Parse(raw)
+	if err != nil || u.User != nil || u.Fragment != "" || u.Host == "" {
+		return false
+	}
+	if g.config.SimulatorOrigin != "" {
+		sim, e := url.Parse(g.config.SimulatorOrigin)
+		return e == nil && u.Scheme == sim.Scheme && u.Host == sim.Host
+	}
+	return u.Scheme == "https" && (u.Port() == "" || u.Port() == "443") && (u.Hostname() == "secure.odycdn.com" || u.Hostname() == "player.odycdn.com")
+}
+func busy(w http.ResponseWriter) {
+	w.Header().Set("Retry-After", "5")
+	http.Error(w, "Media is temporarily unavailable. Retry shortly.", 503)
+}
+func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "private, no-store, no-transform")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	p, ok := identity.FromContext(r.Context())
+	if !ok {
+		http.Error(w, "Sign in required.", 401)
+		return
+	}
+	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
+	if err != nil {
+		if errors.Is(err, playback.ErrDenied) {
+			http.Error(w, "Playback access ended.", 403)
+		} else {
+			busy(w)
+		}
+		return
+	}
+	rangeValue := r.Header.Get("Range")
+	if rangeValue == "" {
+		rangeValue = "bytes=0-"
+	}
+	if !byteRange.MatchString(rangeValue) {
+		w.Header().Set("Accept-Ranges", "bytes")
+		http.Error(w, "One byte range is supported.", 416)
+		return
+	}
+	select {
+	case g.slots <- struct{}{}:
+		defer func() { <-g.slots }()
+	default:
+		busy(w)
+		return
+	}
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+	controller := http.NewResponseController(w)
+	var deadlineMu sync.Mutex
+	interruptWrite := func() {
+		deadlineMu.Lock()
+		defer deadlineMu.Unlock()
+		_ = controller.SetWriteDeadline(time.Now())
+	}
+	// Revalidation starts before provider resolution. Cancellation interrupts stalled
+	// upstream headers/bodies and never waits for another media chunk to arrive.
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		tick := time.NewTicker(g.config.RevalidateEvery)
+		defer tick.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				interruptWrite()
+				return
+			case <-tick.C:
+				checkCtx, stop := context.WithTimeout(ctx, time.Second)
+				active, e := g.authority.Active(checkCtx, r.PathValue("id"))
+				stop()
+				if e != nil || !active {
+					cancel()
+					interruptWrite()
+					return
+				}
+			}
+		}
+	}()
+	defer func() {
+		cancel()
+		<-done
+		_ = controller.SetWriteDeadline(time.Time{})
+	}()
+	target, err := g.resolver.Resolve(ctx, source)
+	if err != nil || !g.valid(target.URL) {
+		busy(w)
+		return
+	}
+	resolvedTarget := target
+	invalidate := func() {
+		if resolver, ok := g.resolver.(SourceInvalidator); ok {
+			resolver.Invalidate(source, resolvedTarget)
+		}
+	}
+	var response *http.Response
+	for hop := 0; hop < 4; hop++ {
+		if !g.valid(target.URL) {
+			busy(w)
+			return
+		}
+		req, e := http.NewRequestWithContext(ctx, r.Method, target.URL, nil)
+		if e != nil {
+			busy(w)
+			return
+		}
+		req.Header.Set("Range", rangeValue)
+		req.Header.Set("Accept-Encoding", "identity")
+		req.Header.Set("User-Agent", "CourseForge-Go/1")
+		req.Header.Set("Origin", "https://odysee.com")
+		if target.Referer != "" {
+			req.Header.Set("Referer", target.Referer)
+		}
+		response, err = g.client.Do(req)
+		if err != nil {
+			busy(w)
+			return
+		}
+		if response.StatusCode != 301 && response.StatusCode != 302 && response.StatusCode != 303 && response.StatusCode != 307 && response.StatusCode != 308 {
+			break
+		}
+		next, e := response.Location()
+		response.Body.Close()
+		response = nil
+		if e != nil {
+			busy(w)
+			return
+		}
+		target.URL = next.String()
+	}
+	if response == nil {
+		busy(w)
+		return
+	}
+	defer response.Body.Close()
+	// A cached signed source may expire before its local TTL. The next authorized
+	// request resolves it again; temporary overload must not trigger a stampede.
+	if response.StatusCode == 401 || response.StatusCode == 403 || response.StatusCode == 404 || response.StatusCode == 410 {
+		invalidate()
+	}
+	if response.StatusCode != 200 && response.StatusCode != 206 && response.StatusCode != 416 {
+		busy(w)
+		return
+	}
+	if response.StatusCode != 416 && !mediaType(response.Header.Get("Content-Type")) {
+		invalidate()
+		busy(w)
+		return
+	}
+	for _, key := range []string{"Content-Type", "Content-Range", "Accept-Ranges", "Content-Length"} {
+		if v := response.Header.Get(key); v != "" {
+			w.Header().Set(key, v)
+		}
+	}
+	if response.StatusCode == 416 {
+		w.Header().Del("Content-Length")
+		w.WriteHeader(416)
+		return
+	}
+	w.WriteHeader(response.StatusCode)
+	if r.Method == "HEAD" {
+		return
+	}
+	// Flush each bounded read so slow learners cannot monopolize the gateway.
+	buf := make([]byte, 128<<10)
+	for {
+		n, e := response.Body.Read(buf)
+		if n > 0 {
+			if ctx.Err() != nil {
+				return
+			}
+			deadlineMu.Lock()
+			if ctx.Err() != nil {
+				deadlineMu.Unlock()
+				return
+			}
+			_ = controller.SetWriteDeadline(time.Now().Add(20 * time.Second))
+			deadlineMu.Unlock()
+			if _, e = w.Write(buf[:n]); e != nil {
+				return
+			}
+			if e = controller.Flush(); e != nil {
+				return
+			}
+		}
+		if e != nil {
+			return
+		}
+	}
+}
+func mediaType(v string) bool {
+	v = strings.ToLower(strings.Split(v, ";")[0])
+	return strings.HasPrefix(v, "video/") || strings.HasPrefix(v, "audio/") || v == "application/octet-stream"
+}
+
+// FixedResolver is configured only by the explicitly enabled development simulator.
+type FixedResolver struct{ Target Target }
+
+func (r FixedResolver) Resolve(context.Context, playback.Source) (Target, error) {
+	return r.Target, nil
+}

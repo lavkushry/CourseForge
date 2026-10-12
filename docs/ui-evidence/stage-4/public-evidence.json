@@ -1,0 +1,77 @@
+{
+  "base": "https://acrobat-shopzilla-classified-webmasters.trycloudflare.com/static/ui-audit/",
+  "checks": [
+    {
+      "path": "UI_AUDIT.md",
+      "status": 200,
+      "sha256": "74117dd8315f9ca5e26d352032427d22810e499ee15ea509e67b916769521ed9",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "UI_VALIDATION.md",
+      "status": 200,
+      "sha256": "6d29e53f8021e0b3c75985a44974bf4843d89617763a65b8a443a9270a4748b5",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/index.html",
+      "status": 200,
+      "sha256": "4e947bc8b5639ae8cc4d6a3eee817a2b57f4bcd32459cdcc8669473f8ded7073",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/index.html",
+      "status": 200,
+      "sha256": "f102f0022353eefc81ab0fa1dce02667bbd678563378d9709959d6bbc514e47e",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-4/validation.json",
+      "status": 200,
+      "sha256": "9de0391c3c3b2a2edb787c3c9078f60178c27bf77bbbcec8633024aedd9fa37c",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/admin-accounts-invitations-320.png",
+      "status": 200,
+      "sha256": "f4be0abbdfd4a64c433f1b6562c979c7ccb7e7e240b29437944a9b3cdb955a21",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/admin-accounts-invitations-390.png",
+      "status": 200,
+      "sha256": "5c65412fa9bb462ebe2808cbe328d31b679bf4fb35d761714943c48983bc7313",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/admin-accounts-invitations-768.png",
+      "status": 200,
+      "sha256": "18049de020330c7bf7347356e99cc7f24680e16d397a15882988477d777554a3",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/admin-accounts-invitations-1366.png",
+      "status": 200,
+      "sha256": "fdace374f6b37b72570e7d6fdcbdbc01cc3857dc0e7a39a2d7ac4fdbd5100495",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/admin-accounts-invitations-1920.png",
+      "status": 200,
+      "sha256": "8f21c0cb794845c581f64b4120daf2801c49c87187a02cd0bd8ff6d37dd6f819",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-1/screenshots/library-grid-1366.png",
+      "status": 200,
+      "sha256": "f809e950f9b833ad1028f6d41f0ed433aa4551b322b961c758bea78809df6b0e",
+      "matches_reviewed_source": true
+    },
+    {
+      "path": "ui-evidence/stage-3/screenshots/library-grid-1366.png",
+      "status": 200,
+      "sha256": "17ed3cf2c1cffee03b094272e3398fbc84f92ee6d269652e2b75a1b12a76f327",
+      "matches_reviewed_source": true
+    }
+  ]
+}

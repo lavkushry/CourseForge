@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-10-12",
+  "status": "passed",
+  "scope": "actual isolated Go public verification miss through Vite; no certificate issuance claim",
+  "checks": [
+    {
+      "route": "GET /verify/:code",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "response_matches_actual_api": true
+    },
+    {
+      "route": "GET /api/v1/certificates/verify/:code",
+      "status": 404,
+      "contentType": "application/json",
+      "response_matches_actual_api": true
+    }
+  ]
+}

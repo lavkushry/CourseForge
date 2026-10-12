@@ -1,0 +1,183 @@
+{
+  "observed_at": "2026-10-12T16:30:41.871296+00:00",
+  "contract": "docs/rewrite/LEARNING_UI_CONTRACT.md",
+  "build": "passed",
+  "unit_tests": {
+    "passed": 44,
+    "failed": 0,
+    "new_learning_tests": 7
+  },
+  "learning_fixture_browser": {
+    "passed": 30,
+    "failed": 0,
+    "profiles": [
+      "chromium",
+      "mobile-chromium",
+      "firefox",
+      "webkit",
+      "mobile-webkit"
+    ],
+    "final_uninterrupted_run": true
+  },
+  "learning_real_go_browser": {
+    "passed": 5,
+    "failed": 0,
+    "behavior_checks_per_profile": 10,
+    "removed_synthetic_accounts": 5,
+    "api_replicas": [
+      18090,
+      18091
+    ],
+    "media_gateway": 18094,
+    "duration_seconds": 36.8,
+    "full_browser_reload_proven": false,
+    "crash_or_capacity_proven": false
+  },
+  "proxy_routing": {
+    "passed": 6,
+    "failed": 0
+  },
+  "screenshots": [
+    {
+      "file": "desktop-bookmarks-shell.png",
+      "sha256": "1dd3e39b2bb9dec0112ea647685f41f60ebcb298fed866ed2d21f983b8c59867",
+      "width": 1366,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "desktop-bookmarks.png",
+      "sha256": "a6e3f55ca8dd1d32e7fea6fd742aa00f33c5f18bb178090398959f4bd42f39d9",
+      "width": 964,
+      "height": 524,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    },
+    {
+      "file": "desktop-quiz-shell.png",
+      "sha256": "d90f4a79c29696d97cf072bc35f8867a184012e1432f6b3958535fd4d54e1cf1",
+      "width": 1366,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "desktop-quiz.png",
+      "sha256": "65634729df13e62cc6b6687848965a3d8a1cc85aac0457da5f96586b5a164fbe",
+      "width": 964,
+      "height": 835,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    },
+    {
+      "file": "desktop-reviews-shell.png",
+      "sha256": "620bd0a9310bbd45bcc6142f5e51e5009c3b4d068c8c03775511a3e5e28a5c96",
+      "width": 1366,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "desktop-reviews.png",
+      "sha256": "b2634661ba3f67d50d7ec105225afc15c3917bf6ba0aa3dac7e13c68a15bb0cf",
+      "width": 964,
+      "height": 1282,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    },
+    {
+      "file": "mobile-bookmarks-shell.png",
+      "sha256": "d5aa875592993ca677f8ce4dda55cd997e81d589fd66f97ef3ef673b0dd3ba4f",
+      "width": 390,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "mobile-bookmarks.png",
+      "sha256": "f16808d785252b096fdfdc2658fe24038f4323c16145cf6d738117852f85a00b",
+      "width": 358,
+      "height": 613,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    },
+    {
+      "file": "mobile-quiz-shell.png",
+      "sha256": "2d70aa9449819053f3224a92d0f24f1d1b751c96b52e3f39d97adf67c0f4607b",
+      "width": 390,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "mobile-quiz.png",
+      "sha256": "4572dc6989be3dabc86000d9f22ee659427e25396d36a17b159febfd6ca02f46",
+      "width": 358,
+      "height": 939,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    },
+    {
+      "file": "mobile-reviews-shell.png",
+      "sha256": "9223b748c4e31abd6c2618da09a88389dc89ffafe1edd6d7acc50a604ff09ff8",
+      "width": 390,
+      "height": 900,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": true
+    },
+    {
+      "file": "mobile-reviews.png",
+      "sha256": "23bf7bd1d8cd2f4d62db6bde1c8455fbfdc48684e7c462a3f2aa4d33f3050685",
+      "width": 358,
+      "height": 1604,
+      "inspected": true,
+      "synthetic_only": true,
+      "header_present": false
+    }
+  ],
+  "screenshot_treatment": "Six normal full-shell viewports with header present; six component captures hide the sticky site header only during screenshot",
+  "visual_account_removed": true,
+  "horizontal_overflow_observed": false,
+  "production_changed": false,
+  "live_odysee_or_capacity_proven": false,
+  "earlier_run_provenance": [
+    "One mobile fixture case interrupted by source hot reload; complete final30 passed",
+    "Initial real-Go preflight502 from missing Vite staging upstream env; no accounts created",
+    "Second real-Go player waits failed with absent simulator; accounts removed; final5 passed after root restored isolated simulator"
+  ],
+  "player_discovery_fixture_regression": {
+    "passed": 60,
+    "failed": 0,
+    "profiles": [
+      "chromium",
+      "mobile-chromium",
+      "firefox",
+      "webkit",
+      "mobile-webkit"
+    ],
+    "duration_minutes": 6.5
+  },
+  "normal_scroll_title_and_tool_actions_below_header": true,
+  "backend_dependent_work_complete": true,
+  "staging_launch": {
+    "command": "npm run dev:staging",
+    "guard_only_command": "npm run dev:staging -- --check",
+    "api": 18090,
+    "media": 18094,
+    "simulator": 18092,
+    "read_only_guard": "API/media readiness, simulator healthz and HEAD fixture, known public synthetic course",
+    "synthetic_browser_auto_launch": true
+  }
+}

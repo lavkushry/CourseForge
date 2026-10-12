@@ -30,7 +30,7 @@ def retrieve(query: str, course: str | None = None, video_id: str | None = None,
         semantic = semantic_search(query, course=course, video_id=video_id, limit=limit)
     except Exception:
         semantic = []  # Keyword fallback if Qdrant or embeddings is temporarily unavailable.
-    keywords = keyword_search(query, course=course, video_id=video_id, limit=4)
+    keywords = keyword_search(query, course=course, video_id=video_id, limit=limit)
     seen: set[str] = set()
     combined: list[dict] = []
     for hit in semantic + keywords:
@@ -48,6 +48,36 @@ def retrieve(query: str, course: str | None = None, video_id: str | None = None,
         })
         if len(combined) >= limit:
             break
+
+    # Robust multi-level fallback if query phrasing was broad or unique
+    if not combined:
+        with connect() as conn:
+            if video_id:
+                for r in conn.execute('SELECT c.*, v.title, v.course FROM chunks c JOIN videos v ON v.id=c.video_id WHERE c.video_id=? ORDER BY c.start LIMIT ?', (video_id, limit)).fetchall():
+                    cid = r['id']
+                    if cid not in seen:
+                        seen.add(cid)
+                        combined.append(dict(r, chunk_id=cid))
+            elif course:
+                for r in conn.execute('SELECT c.*, v.title, v.course FROM chunks c JOIN videos v ON v.id=c.video_id WHERE v.course=? ORDER BY c.start LIMIT ?', (course, limit)).fetchall():
+                    cid = r['id']
+                    if cid not in seen:
+                        seen.add(cid)
+                        combined.append(dict(r, chunk_id=cid))
+            if not combined:
+                terms = [w.lower() for w in re.findall(r'\b[A-Za-z0-9_-]{3,}\b', query)
+                         if w.lower() not in {'what', 'when', 'where', 'which', 'explain', 'tell', 'show', 'give', 'about', 'from', 'course', 'lesson', 'lecture', 'core', 'concept', 'step'}]
+                for term in terms[:3]:
+                    for r in conn.execute('''SELECT c.*, v.title, v.course FROM chunks c JOIN videos v ON v.id=c.video_id
+                                            WHERE (v.title LIKE ? OR c.text LIKE ?) AND cf_course_allowed(v.course)
+                                            ORDER BY c.start LIMIT ?''', (f'%{term}%', f'%{term}%', limit - len(combined))).fetchall():
+                        cid = r['id']
+                        if cid not in seen:
+                            seen.add(cid)
+                            combined.append(dict(r, chunk_id=cid))
+                    if len(combined) >= limit:
+                        break
+
     return combined
 
 
@@ -66,8 +96,22 @@ def ask(question: str, mode: Mode = 'explain', course: str | None = None,
         video_id: str | None = None) -> dict:
     evidence = retrieve(question, course=course, video_id=video_id)
     if not evidence:
-        return {'answer': 'I could not find relevant indexed course material for this topic in your enrolled courses. This concept is not covered in your current course content.',
-                'sources': []}
+        system_fallback = (
+            'You are CourseForge, a practical, personal AI tutor for engineering students. '
+            'Explain the requested concept clearly from fundamentals with a concrete example. '
+            'Note gently that this is supplementary guidance as this specific term was not found in enrolled lecture titles.'
+        )
+        try:
+            with httpx.Client(timeout=75) as http:
+                response = http.post(settings.ollama_url + '/api/chat', json={
+                    'model': settings.chat_model, 'stream': False,
+                    'messages': [{'role': 'system', 'content': system_fallback}, {'role': 'user', 'content': f'{prompt_for(mode)}\n\n{question}'}],
+                    'options': {'temperature': 0.2, 'num_ctx': 1536, 'num_predict': 180},
+                })
+                response.raise_for_status()
+                return {'answer': response.json()['message']['content'].strip(), 'sources': []}
+        except Exception:
+            return {'answer': 'I could not find matching lectures for this query in your enrolled courses. Try asking about specific course topics like System Design, Big Data, Spark, Kafka, SQL, or Agentic AI.', 'sources': []}
 
     # Detect Hinglish language preference
     is_hinglish = any(re.search(r'\b' + w + r'\b', question, re.IGNORECASE)
@@ -76,12 +120,12 @@ def ask(question: str, mode: Mode = 'explain', course: str | None = None,
 
     # Build context with lesson title and timestamp links
     context_lines = []
-    for i, s in enumerate(evidence, 1):
+    for i, s in enumerate(evidence[:4], 1):
         t_label = _format_time(s['start'])
         c_title = _clean_title(s['title'])
         context_lines.append(
             f'[S{i}] {s["course"]} / {c_title} (ID: {s["video_id"]}, Time: {t_label}, Seconds: {int(s["start"])}):\n'
-            + s['text'][:1500]
+            + s['text'][:320]
         )
     context = '\n\n'.join(context_lines)
 
@@ -108,11 +152,11 @@ def ask(question: str, mode: Mode = 'explain', course: str | None = None,
     completion_tokens = 0
 
     try:
-        with httpx.Client(timeout=45) as http:
+        with httpx.Client(timeout=75) as http:
             response = http.post(settings.ollama_url + '/api/chat', json={
                 'model': settings.chat_model, 'stream': False,
                 'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
-                'options': {'temperature': 0.2, 'num_ctx': 8192},
+                'options': {'temperature': 0.2, 'num_ctx': 1536, 'num_predict': 180},
             })
             response.raise_for_status()
             res_json = response.json()

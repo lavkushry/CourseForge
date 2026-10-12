@@ -23,7 +23,7 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 def client() -> 'QdrantClient':
     from qdrant_client import QdrantClient
-    return QdrantClient(url=settings.qdrant_url, timeout=30)
+    return QdrantClient(url=settings.qdrant_url, timeout=30, check_compatibility=False)
 
 
 def ensure_collection(qdrant: 'QdrantClient', dimension: int) -> None:

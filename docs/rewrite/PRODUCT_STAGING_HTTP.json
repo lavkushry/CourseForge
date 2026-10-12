@@ -1,0 +1,280 @@
+{
+  "observed_at": "2026-10-12T19:56:11.620765+00:00",
+  "command": "python3 scripts/rewrite_product_smoke.py --isolated-staging",
+  "contracts": [
+    "docs/rewrite/PATHS_CONTRACT.md",
+    "docs/rewrite/ACTIVITY_CONTRACT.md"
+  ],
+  "scope": "Two fixed isolated Go replicas; disposable synthetic learners; manual paths and activity/playback lifecycle; no media/provider/model/load calls",
+  "checks": [
+    {
+      "name": "register disposable synthetic learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "enroll synthetic learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "register disposable synthetic learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "enroll synthetic learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "create explicitly manual path",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "replay path creation on replica",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 2
+    },
+    {
+      "name": "creation replay is immutable snapshot",
+      "passed": true
+    },
+    {
+      "name": "deny another learner path read",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 2
+    },
+    {
+      "name": "other learner path list is private",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "another learner cannot list the path",
+      "passed": true
+    },
+    {
+      "name": "reject missing path CSRF",
+      "passed": true,
+      "expected_status": 403,
+      "actual_status": 403,
+      "replica": 1
+    },
+    {
+      "name": "reject locked prerequisite completion",
+      "passed": true,
+      "expected_status": 409,
+      "actual_status": 409,
+      "replica": 1
+    },
+    {
+      "name": "complete private checklist step",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "checklist grants no assessed mastery",
+      "passed": true
+    },
+    {
+      "name": "read separate lesson completion",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "path checklist does not complete lesson",
+      "passed": true
+    },
+    {
+      "name": "require real executor for generated path",
+      "passed": true,
+      "expected_status": 503,
+      "actual_status": 503,
+      "replica": 1
+    },
+    {
+      "name": "connect authorized path to planner",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "build source-backed plan with path adapter",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 2
+    },
+    {
+      "name": "open independent visible page activity",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "page open grants no time",
+      "passed": true
+    },
+    {
+      "name": "deny other learner activity heartbeat",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 1
+    },
+    {
+      "name": "credit server-bounded visible interval",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "client cannot invent twenty seconds",
+      "passed": true
+    },
+    {
+      "name": "retry activity sequence on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "duplicate interval grants no second credit",
+      "passed": true
+    },
+    {
+      "name": "read private lifetime learning summary",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "visible, watched and focus totals remain distinct",
+      "passed": true
+    },
+    {
+      "name": "end page activity permanently",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "open native playback owner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "bind activity to exact playback session",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 2
+    },
+    {
+      "name": "release native playback ownership",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "released player cannot own activity",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "released bound activity gets zero credit",
+      "passed": true
+    },
+    {
+      "name": "explicitly reclaim native owner",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "deliberate takeover creates fresh native session",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 2
+    },
+    {
+      "name": "takeover closes previous bound activity",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "taken-over activity is permanently closed",
+      "passed": true
+    },
+    {
+      "name": "remove private path at current revision",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "deleted path unavailable on replica",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 2
+    },
+    {
+      "name": "remove disposable smoke account",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "remove disposable smoke account",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    }
+  ],
+  "passed": 42,
+  "failed": 0,
+  "harness_error": null,
+  "capacity_proven": false,
+  "restart_proven": false
+}

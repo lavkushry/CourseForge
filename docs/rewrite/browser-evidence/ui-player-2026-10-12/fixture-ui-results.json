@@ -1,0 +1,487 @@
+{
+  "timestamp": "2026-10-12T11:14:16.790Z",
+  "status": "passed",
+  "durationMs": 456166.87,
+  "results": [
+    {
+      "project": "chromium",
+      "title": "metadata-only cinematic discovery, responsive geometry and debounced actual catalog search",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1911,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "My List saves to the server, survives navigation, removes and shows a useful empty state",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1137,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "continue learning opens the actual learner lesson; catalog navigation releases playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3463,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "keyboard navigation, action focus and reduced motion remain usable",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1269,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "decodes real media, seeks, preserves speed, toggles theater and captures timestamps",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3445,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "published preview permits enrollment before protected lesson playback, including mobile",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2101,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "native controls remain usable if the optional Media Chrome asset fails",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2826,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "offline pauses, releases and reconnect requires explicit reclaim",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3111,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "autoplay disabled stays on ended media; enabling waits until ended and countdown",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 12549,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "canceling next countdown preserves the current lesson and drawer focus returns",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 9046,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2548,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "second window needs explicit takeover and stale first window loses its lease",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5056,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "metadata-only cinematic discovery, responsive geometry and debounced actual catalog search",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2055,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "My List saves to the server, survives navigation, removes and shows a useful empty state",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1526,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "continue learning opens the actual learner lesson; catalog navigation releases playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3940,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "keyboard navigation, action focus and reduced motion remain usable",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1427,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "decodes real media, seeks, preserves speed, toggles theater and captures timestamps",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3740,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "published preview permits enrollment before protected lesson playback, including mobile",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2595,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "native controls remain usable if the optional Media Chrome asset fails",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2918,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "offline pauses, releases and reconnect requires explicit reclaim",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3418,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "autoplay disabled stays on ended media; enabling waits until ended and countdown",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 17039,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "canceling next countdown preserves the current lesson and drawer focus returns",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 13184,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5207,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "second window needs explicit takeover and stale first window loses its lease",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 7803,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "metadata-only cinematic discovery, responsive geometry and debounced actual catalog search",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3244,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "My List saves to the server, survives navigation, removes and shows a useful empty state",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1825,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "continue learning opens the actual learner lesson; catalog navigation releases playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4009,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "keyboard navigation, action focus and reduced motion remain usable",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2764,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "decodes real media, seeks, preserves speed, toggles theater and captures timestamps",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4232,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "published preview permits enrollment before protected lesson playback, including mobile",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2848,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "native controls remain usable if the optional Media Chrome asset fails",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2969,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "offline pauses, releases and reconnect requires explicit reclaim",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4570,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "autoplay disabled stays on ended media; enabling waits until ended and countdown",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 12517,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "canceling next countdown preserves the current lesson and drawer focus returns",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 10619,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3459,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "second window needs explicit takeover and stale first window loses its lease",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5755,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "metadata-only cinematic discovery, responsive geometry and debounced actual catalog search",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3033,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "My List saves to the server, survives navigation, removes and shows a useful empty state",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4975,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "continue learning opens the actual learner lesson; catalog navigation releases playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 10959,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "keyboard navigation, action focus and reduced motion remain usable",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3442,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "decodes real media, seeks, preserves speed, toggles theater and captures timestamps",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 10399,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "published preview permits enrollment before protected lesson playback, including mobile",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6796,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "native controls remain usable if the optional Media Chrome asset fails",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6518,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "offline pauses, releases and reconnect requires explicit reclaim",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 8591,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "autoplay disabled stays on ended media; enabling waits until ended and countdown",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 22579,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "canceling next countdown preserves the current lesson and drawer focus returns",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 25048,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 11882,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "second window needs explicit takeover and stale first window loses its lease",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 17052,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "metadata-only cinematic discovery, responsive geometry and debounced actual catalog search",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2817,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "My List saves to the server, survives navigation, removes and shows a useful empty state",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4098,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "continue learning opens the actual learner lesson; catalog navigation releases playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 9575,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "keyboard navigation, action focus and reduced motion remain usable",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3721,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "decodes real media, seeks, preserves speed, toggles theater and captures timestamps",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 11008,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "published preview permits enrollment before protected lesson playback, including mobile",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 8225,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "native controls remain usable if the optional Media Chrome asset fails",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 8474,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "offline pauses, releases and reconnect requires explicit reclaim",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 10400,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "autoplay disabled stays on ended media; enabling waits until ended and countdown",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 25139,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "canceling next countdown preserves the current lesson and drawer focus returns",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 19334,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 14073,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "second window needs explicit takeover and stale first window loses its lease",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 28567,
+      "samples": []
+    }
+  ]
+}

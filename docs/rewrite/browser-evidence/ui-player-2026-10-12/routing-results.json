@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-12",
+  "status": "passed",
+  "vite": {
+    "command": "node scripts/verify_vite.mjs",
+    "cases": 6,
+    "scope": "actual config, isolated upstreams, API/media/public HTML and JSON certificate routes, HEAD, Range/cookie/CSRF forwarding"
+  },
+  "nginx": {
+    "command": "python3 scripts/verify_nginx.py",
+    "cases": 8,
+    "scope": "pinned image syntax and actual routing, API/media/public HTML and JSON certificate routes, HEAD, Range/cookie/CSRF forwarding, synthetic media token excluded from logs"
+  }
+}

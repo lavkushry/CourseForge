@@ -1,0 +1,4586 @@
+{
+  "declared_method_path_count": 164,
+  "features": {
+    "administration": {
+      "declared_method_path_count": 30,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ]
+    },
+    "ai_import": {
+      "declared_method_path_count": 6,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ]
+    },
+    "catalog_discovery": {
+      "declared_method_path_count": 27,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ]
+    },
+    "delivery_operations": {
+      "declared_method_path_count": 6,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ]
+    },
+    "identity_access": {
+      "declared_method_path_count": 16,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ]
+    },
+    "labs": {
+      "declared_method_path_count": 6,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ]
+    },
+    "learning_records": {
+      "declared_method_path_count": 40,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ]
+    },
+    "planning_habits": {
+      "declared_method_path_count": 17,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ]
+    },
+    "player": {
+      "declared_method_path_count": 16,
+      "evidence_status": "candidate legacy tests; rewritten behavior coverage not yet verified",
+      "invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ]
+    }
+  },
+  "framework_routes": [
+    {
+      "method": "GET/HEAD",
+      "path": "/api/docs",
+      "source": "FastAPI constructor"
+    },
+    {
+      "method": "GET/HEAD",
+      "path": "/docs/oauth2-redirect",
+      "source": "FastAPI constructor"
+    },
+    {
+      "method": "GET/HEAD",
+      "path": "/api/openapi.json",
+      "source": "FastAPI constructor"
+    }
+  ],
+  "included_modules": [
+    "academy",
+    "admin_console",
+    "artwork",
+    "auth",
+    "habits",
+    "main",
+    "media",
+    "native_player",
+    "player_sessions",
+    "streaming",
+    "tasks"
+  ],
+  "limitations": [
+    "Static mount and framework routes are listed separately from declared handlers.",
+    "Tests are candidate parity owners, not a claim that every endpoint or invariant is exercised.",
+    "Browser-only behaviors, stored-record migrations, vector/artifact recovery and capacity require separate gates."
+  ],
+  "method": "offline AST of app.main decorators and directly included routers; application not imported",
+  "mounts": [
+    {
+      "kind": "static_mount",
+      "line": 124,
+      "path": "/static",
+      "source": "app/main.py"
+    }
+  ],
+  "revision": "1c34a046c096f963f8bd9c9a13ea8f9ae79bfd03",
+  "routes": [
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "index",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 127,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "heartbeat",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 135,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/activity/{sid}/heartbeat",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "admin_courses",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 365,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "admin_course_detail",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 401,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/detail",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "administration",
+      "handler": "attach_or_replace_material",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 490,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/materials",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "delete_material_assignment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 574,
+      "method": "DELETE",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/materials/{filename}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "update_material_assignment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 546,
+      "method": "PATCH",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/materials/{filename}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "update_course_organization",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 447,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/organization",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "publish_course",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 594,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course_id}/publication",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "get_admin_course_quizzes",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 1474,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/courses/{course}/quizzes",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "administration",
+      "handler": "invite_student",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 75,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/invitations",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "overview",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 221,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/overview",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "playback_report",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 396,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/playback",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "export_playback",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 421,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/playback/export",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "player_activity",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 184,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/player-activity",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "export_activity",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 198,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/player-activity/export",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "provider_sync",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 250,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/provider-sync",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "get_admin_quiz",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 1482,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/quizzes/{quiz_id}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "update_admin_quiz",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 1493,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/quizzes/{quiz_id}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "get_streaming_analytics",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 344,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/streaming-analytics",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "system_status",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 216,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/system",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "get_admin_teacher_insights",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 1466,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/teacher-insights",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "users",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 250,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "administration",
+      "handler": "create_user",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 307,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "user_detail",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 266,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "set_user_status",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 327,
+      "method": "PATCH",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "issue_account_link",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 104,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}/account-link",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "manage_enrollment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 353,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}/enrollments",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "change_role",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 262,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}/role",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "revoke_user_sessions",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 340,
+      "method": "DELETE",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/users/{uid}/sessions",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "map_provider",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 611,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/videos/{video_id}/provider",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "administration",
+      "handler": "regenerate_admin_quiz",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_native_player.py",
+        "tests/test_phase1_navigation_materials_admin.py"
+      ],
+      "line": 1501,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.administration",
+      "path": "/api/admin/videos/{video_id}/quiz/regenerate",
+      "required_invariants": [
+        "admin-only reads/writes",
+        "last-admin protection",
+        "account/enrollment/session revocation",
+        "audit and CSV protections",
+        "bounded exports/deletion and retained aggregates"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "course_backdrop",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 449,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/artwork/courses/{course_id_or_slug}/backdrop",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/artwork.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "course_poster",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 441,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/artwork/courses/{course_id_or_slug}/poster",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/artwork.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "lecture_thumbnail",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 457,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/artwork/lectures/{video_id}/thumbnail",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/artwork.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "ai_import",
+      "handler": "ask_tutor",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 787,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/ask",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_topic_assessment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 911,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/assessments/{assessment_id}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "submit_topic_assessment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 919,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/assessments/{assessment_id}/attempts",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "activate_account",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 130,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/activate",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "request_email",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 409,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/forgot",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "login",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 369,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/login",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "logout",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 389,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/logout",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "identity_access",
+      "handler": "register",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 322,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/register",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "request_email",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 410,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/resend",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "reset",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 428,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/reset",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "sessions",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 442,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/sessions",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "revoke",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 450,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/sessions/{sid}",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "verify",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 398,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/auth/verify",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "delete_bookmark",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 212,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/bookmarks/{bid}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "verify_certificate_api",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1310,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/certificates/verify/{code}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "frame",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 769,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/chunks/{chunk_id}/frame",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "courses_catalog",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 217,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/courses",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "edit_course",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 250,
+      "method": "PATCH",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/courses/{course_id}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "remove_course_cover",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 289,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/courses/{course_id}/cover",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "course_cover",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 258,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/courses/{course_id}/cover",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": true,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "upload_course_cover",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 269,
+      "method": "PUT",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/courses/{course_id}/cover",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "identity_access",
+      "handler": "enroll",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 75,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/courses/{course_id}/enroll",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "course_certificate",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1304,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/courses/{course}/certificate",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_placement_test",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1455,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/courses/{course}/placement-test",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "submit_placement_test",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1460,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/courses/{course}/placement-test/submit",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_course_quizzes_status",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1292,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/courses/{course}/quizzes/status",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "focus_active",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1209,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/focus/active",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "focus_analytics",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1219,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/focus/analytics/{week_start}",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "focus_history",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1214,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/focus/history",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "planning_habits",
+      "handler": "focus_start",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1185,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/focus/sessions",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "focus_action",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1197,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/focus/sessions/{session_id}/actions",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "health",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 143,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/api/health",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "evaluate_interview_prep",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1446,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/interview-prep/evaluate",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "start_interview_prep",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1440,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/interview-prep/start",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_interview_topics_api",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1434,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/interview-prep/topics",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "ai_import",
+      "handler": "jobs",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 298,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/jobs",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "labs",
+      "handler": "get_lab_session",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 1016,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/lab-sessions/{session_id}",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "labs",
+      "handler": "update_lab_file",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 1028,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/lab-sessions/{session_id}/file",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "labs",
+      "handler": "submit_lab",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 1042,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/lab-sessions/{session_id}/submit",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "labs",
+      "handler": "lab_catalog",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 1003,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/labs",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "labs",
+      "handler": "start_lab",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 1008,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/labs/{slug}/start",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "list_learning_paths",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 852,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "learning_records",
+      "handler": "create_learning_path",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 857,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_learning_path",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 868,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "topic_assessment_history",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 931,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}/assessment-history",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "practice_history",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 985,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}/practice-history",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "practice_recommendations",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 977,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}/practice-recommendations",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "update_learning_path_step",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 876,
+      "method": "PUT",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}/steps/{step_id}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "learning_records",
+      "handler": "create_topic_assessment",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 894,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/learning-paths/{path_id}/steps/{step_id}/assessments",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "labs",
+      "handler": "start_recommended_practice",
+      "legacy_candidate_tests": [
+        "tests/test_labs.py",
+        "tests/test_lab_tracks.py",
+        "tests/test_academy.py"
+      ],
+      "line": 993,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs/labs",
+      "path": "/api/learning-paths/{path_id}/steps/{step_id}/practice/{slug}/start",
+      "required_invariants": [
+        "curated isolated execution",
+        "learner-bound results",
+        "resource limits and cancellation",
+        "fenced duplicate-safe publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "list_course_materials",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 399,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/materials",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_course_material",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 509,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/materials/{course}/{filename}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "delete_account",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 485,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/me",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "me",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 383,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/me",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "update_profile",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 466,
+      "method": "PATCH",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/me",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/auth.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "learner_bootstrap",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 222,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/me/bootstrap",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "save_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 91,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/me/habit-preferences",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/habits.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "my_habits",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 86,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/me/habits",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/habits.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "my_learning",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 85,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/me/learning",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "my_playback",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 383,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/me/playback",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "get_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 149,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/me/player-preferences",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/player_sessions.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "save_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 157,
+      "method": "PUT",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/me/player-preferences",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/player_sessions.py"
+    },
+    {
+      "async": false,
+      "default_status": 204,
+      "feature": "learning_records",
+      "handler": "remove_video_note",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1254,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/notes/{note_id}",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "planning_habits",
+      "handler": "generate_planner_day",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1094,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/days",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "planner_day",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1083,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/days/{study_date}",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "update_planner_item",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1104,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/items/{item_id}",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "record_planner_time",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1118,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/items/{item_id}/actual",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "planner_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1068,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/preferences",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "update_planner_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1073,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/preferences",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "weekly_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1138,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/week-preferences",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "save_weekly_preferences",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1143,
+      "method": "PUT",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/week-preferences",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "planning_habits",
+      "handler": "build_weekly_plan",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1162,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/weeks",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "planning_habits",
+      "handler": "weekly_plan",
+      "legacy_candidate_tests": [
+        "tests/test_daily_planner.py",
+        "tests/test_weekly_calendar.py",
+        "tests/test_focus_timer.py",
+        "tests/test_habits.py",
+        "tests/test_phase3_habit_loop.py",
+        "tests/test_phase4_learning_retention.py"
+      ],
+      "line": 1151,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.learning",
+      "path": "/api/planner/weeks/{week_start}",
+      "required_invariants": [
+        "learner isolation",
+        "timezone/day boundaries",
+        "pause lifecycle",
+        "distinct planning/focus/activity/watch metrics"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "claim_player",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 110,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/player-sessions/{sid}/claim",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/player_sessions.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "heartbeat",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 120,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/player-sessions/{sid}/heartbeat",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/player_sessions.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "record_event",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 281,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/player/{sid}/events",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_progress",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 808,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/progress",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "identity_access",
+      "handler": "account_options",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_registration.py"
+      ],
+      "line": 125,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.identity/access",
+      "path": "/api/public/account-options",
+      "required_invariants": [
+        "cookie sessions and CSRF",
+        "verified account and role",
+        "shared session revocation",
+        "course enrollment and publication"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/admin_console.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "public_catalog",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 59,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/public/courses",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "public_course",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 70,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/public/courses/{course_id}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_adaptive_reviews",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1428,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/reviews/adaptive",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "complete_review",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1298,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/reviews/complete",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "review_due",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 960,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/reviews/due",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "learning_records",
+      "handler": "create_review_cards",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 946,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/reviews/generate",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "grade_review",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 969,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/reviews/{card_id}/grade",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "ai_import",
+      "handler": "scan",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 148,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/scan",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "universal_search",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 673,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/search",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_learner_smart_resume",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1422,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/smart-resume",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "record_analytics_event",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 329,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/analytics/event",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "continue_watching",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 103,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/continue-watching",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_course_detail",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 585,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/courses/{course_slug_or_id}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "clear_watch_history",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 312,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/history",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_watch_history",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 257,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/history",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_home_feed",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 396,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/home-feed",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_my_list",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 174,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/my-list",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "catalog_discovery",
+      "handler": "add_to_my_list",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 221,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/my-list",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "remove_from_my_list",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 239,
+      "method": "DELETE",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/my-list/{item_type}/{item_id}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "trending_lectures",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 138,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/streaming/trending",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/streaming.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "studio_insights",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1227,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/studio/insights",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "course_syllabus",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 821,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/syllabus",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 202,
+      "feature": "ai_import",
+      "handler": "build_syllabus",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 830,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/syllabus/generate",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "ai_import",
+      "handler": "task_status",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 33,
+      "method": "GET",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/tasks/{tid}",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/tasks.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "videos",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 190,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/videos",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "catalog_discovery",
+      "handler": "get_video",
+      "legacy_candidate_tests": [
+        "tests/test_course_metadata.py",
+        "tests/test_library.py",
+        "tests/test_stage1_streaming_foundations.py",
+        "tests/test_stage4_title_and_episodes.py"
+      ],
+      "line": 311,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.catalog",
+      "path": "/api/videos/{video_id}",
+      "required_invariants": [
+        "stable course/lesson/provider IDs",
+        "publication and enrollment filtering",
+        "safe materials and artwork access",
+        "stable ordering and bounded pagination"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "open_activity",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 105,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/activity-session",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "bookmarks",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 194,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/bookmarks",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "add_bookmark",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 202,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/bookmarks",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_video_brief",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1417,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/brief",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": true,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "media_bytes",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 196,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/media/{sid}",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": true,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "media_bytes",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 196,
+      "method": "HEAD",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/media/{sid}",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "player",
+      "handler": "create_native",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 135,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/native-session",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/native_player.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "video_notes",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1237,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/notes",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "create_video_note",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1244,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/notes",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "create_playback",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 244,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/playback-session",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/media.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "capabilities",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 236,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/player-capabilities",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/media.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "player",
+      "handler": "open_player",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 104,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/player-session",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/player_sessions.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "save_progress",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 813,
+      "method": "PUT",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/progress",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "get_video_quiz",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1272,
+      "method": "GET",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/quiz",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 201,
+      "feature": "learning_records",
+      "handler": "submit_video_quiz",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 1281,
+      "method": "POST",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/quiz/attempts",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "ai_import",
+      "handler": "reindex",
+      "legacy_candidate_tests": [
+        "tests/test_tutor.py",
+        "tests/test_syllabus.py",
+        "tests/test_vision.py",
+        "tests/test_worker_integration.py",
+        "tests/test_phase5_ai_companion.py"
+      ],
+      "line": 303,
+      "method": "POST",
+      "milestone": "M3",
+      "owner": "backend.jobs + isolated Python adapters",
+      "path": "/api/videos/{video_id}/reindex",
+      "required_invariants": [
+        "durable user-bound job state",
+        "bounded retries and resource concurrency",
+        "idempotent fenced publication",
+        "source citations/timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "learning_records",
+      "handler": "resume_point",
+      "legacy_candidate_tests": [
+        "tests/test_academy.py",
+        "tests/test_study.py",
+        "tests/test_assessments.py",
+        "tests/test_adaptive_practice.py",
+        "tests/test_learning_paths.py"
+      ],
+      "line": 179,
+      "method": "PUT",
+      "milestone": "M1/M3",
+      "owner": "backend.learning",
+      "path": "/api/videos/{video_id}/resume-point",
+      "required_invariants": [
+        "explicit learner isolation",
+        "private notes/bookmarks/results",
+        "duplicate-safe writes",
+        "stable source citations and timestamps"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/academy.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "stream",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 757,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/stream",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "stream",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 757,
+      "method": "HEAD",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/stream",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "playback_frame",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 278,
+      "method": "GET",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/vault-frame",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/media.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "player",
+      "handler": "create_playback",
+      "legacy_candidate_tests": [
+        "tests/test_native_player.py",
+        "tests/test_player_sessions.py",
+        "tests/test_player_delivery.py",
+        "tests/test_player_recovery.py",
+        "tests/test_stage5_playback_experience.py"
+      ],
+      "line": 243,
+      "method": "POST",
+      "milestone": "M2",
+      "owner": "backend.playback/media + web.player",
+      "path": "/api/videos/{video_id}/vault-session",
+      "required_invariants": [
+        "account/login/lesson bound playback",
+        "atomic ownership and takeover",
+        "position/coverage/activity remain distinct",
+        "durable duplicate-safe credit",
+        "restricted provider redirects",
+        "no credential leakage"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/media.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "manifest",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 133,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/manifest.json",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "manifest",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 132,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/manifest.webmanifest",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "service_worker",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 138,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/sw.js",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    },
+    {
+      "async": false,
+      "default_status": 200,
+      "feature": "delivery_operations",
+      "handler": "verify_certificate_page",
+      "legacy_candidate_tests": [
+        "tests/test_release_gate.py",
+        "tests/test_mobile_foundation.py",
+        "tests/test_responsive_layout.py",
+        "tests/test_ui_contract.py"
+      ],
+      "line": 1318,
+      "method": "GET",
+      "milestone": "M1/M5",
+      "owner": "coordinator.operations + web.delivery",
+      "path": "/verify/{code}",
+      "required_invariants": [
+        "static cache refresh",
+        "private API/media cache exclusions",
+        "health/readiness",
+        "backup/restore and safe release"
+      ],
+      "rewrite_gate": "public-interface behavior test; migration semantic comparison where persistent",
+      "rewrite_status": "pending",
+      "source": "app/main.py"
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": {
+    "app/academy.py": "9ae429fd72c9cfaac2dc37c03400fc5f06ec0f2a02b5ebf32524416083d39659",
+    "app/admin_console.py": "6a023cdea45bd72ca54becdc2db0fb43b4b43fe5ea98a34afb242d6e795ba810",
+    "app/artwork.py": "9268f8dbad19275fc79966e8771aecfcd670e246d0249a0223fa6e32e55498af",
+    "app/auth.py": "a14b8c99d5c8c5179b2e5f0bb27ecbd4cfcaeabbd79b13502c5e39ebb63b09f2",
+    "app/habits.py": "fb56a15a883a963919c1d54f20be3ee3dcd4f8bef27693285ee0c042628ab328",
+    "app/main.py": "6ac5ff953b3a9ac5d2b8985d6817ae180551bc3eedf043e6e35d2fb204360d68",
+    "app/media.py": "c97a57eff81767a74e1d661b8a8e2ab3b438a7f1331fad118aa10c65c0ae7937",
+    "app/native_player.py": "2b321538751128e74dbf8edac62dabf3669fa609135e6932ddfeeff29c3ccc96",
+    "app/player_sessions.py": "d5fc309678973e51159d503740ff18e5b6302685c2af5d29b64f8d5d57d889a0",
+    "app/streaming.py": "a6d396bd73128cd7227aff3d36e50468bdf4eb624f26211572558a8ecfbfa567",
+    "app/tasks.py": "e67e63f356d1e30fa8360d24ba320470a7cf1448fc5567f5ca6e3aecfad76fb6"
+  }
+}

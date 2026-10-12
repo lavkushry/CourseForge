@@ -1,0 +1,107 @@
+{
+  "stage": 3,
+  "deployed_at": "2026-10-11T08:11:19.035102+00:00",
+  "source_commit": "93aa9ad931b24db308a6afa617e4990602dbb5be",
+  "files": [
+    {
+      "path": "app/static/academy.css",
+      "sha256": "6eb44c2c0ba56cdd648c9f0194fbda5f9bf1b1982dbf57d1bf54b28d41f2504c"
+    },
+    {
+      "path": "app/static/academy.js",
+      "sha256": "73136a0726cbef3f4129f8a5a19664e509bac47ae34a8b68bb1c5cda7f53a0bd"
+    },
+    {
+      "path": "app/static/app.js",
+      "sha256": "95dbc7efc04342dc970f6571208d1bc55cc9e1747fb89477c6b00406081d2272"
+    },
+    {
+      "path": "app/static/assessments.css",
+      "sha256": "d37277edb089f08ddc727913f46174594224625e23c80a960c8d6e66c27c4d60"
+    },
+    {
+      "path": "app/static/components.css",
+      "sha256": "26073a07087ba2fea032086c57ce7ab0c19b2e593ad60eb75b778a1bc47eede7"
+    },
+    {
+      "path": "app/static/components.js",
+      "sha256": "a61e5986d27c6723662d5a0b210caf42a4f700d8978d49ded5f277637361da4f"
+    },
+    {
+      "path": "app/static/core.css",
+      "sha256": "12db576a49c2eef0c182f0d9e992e2f1d9b970ee74b9346d6a5aa0abfb2dff1a"
+    },
+    {
+      "path": "app/static/core.js",
+      "sha256": "5230790552c2dc6e2ba05b978d148d3a830506aa9b65c201ed2921927b6a07f7"
+    },
+    {
+      "path": "app/static/focus.css",
+      "sha256": "2f9f4296a6ee89c084afae15d26dff201111f2838642f861853527d74a3e961d"
+    },
+    {
+      "path": "app/static/layout.css",
+      "sha256": "9fd8fdc6f40353cf70b58db5ddf4a0facae8166ba2569f933639c6253f04ab32"
+    },
+    {
+      "path": "app/static/learning-paths.css",
+      "sha256": "b427fa8f7d4ed22820264660db53b0422ab4d2dcb4a871278a2c46fb6073085f"
+    },
+    {
+      "path": "app/static/loaders.js",
+      "sha256": "24ba58740a0564987b93058ddf3c73525f4fefab5f1d10fcb833c613467cf953"
+    },
+    {
+      "path": "app/static/mobile.css",
+      "sha256": "8936580c857786143e18bc5fcabb6d5e45899e6e606f19276215ca313b9148d7"
+    },
+    {
+      "path": "app/static/planner.css",
+      "sha256": "9444f22b97a20b5d84a411a101d49ad10622c48cd88bc4bec534745498b63078"
+    },
+    {
+      "path": "app/static/player.css",
+      "sha256": "0b56035030ce11751edee62af7799565f92265f18d98d29e29497ea5626ec714"
+    },
+    {
+      "path": "app/static/practice.css",
+      "sha256": "9324343e689a0ed2c85c7a80992d15770017c6032b2745c9fc5dfbe4f376006f"
+    },
+    {
+      "path": "app/static/streaming-home.js",
+      "sha256": "49c54e53a16990c835d593ce138a7f19be8a8a96f965f272cc3a23b31e672b7d"
+    },
+    {
+      "path": "app/static/streaming-title.js",
+      "sha256": "643fa7090c7e72e38e58552425ac17598e4d58f75c2f1203a6519600ce98ffa3"
+    },
+    {
+      "path": "app/static/streaming.css",
+      "sha256": "be566fb08ec49b406098a58cf576e0bbecbc8f1b9947ff1a5776e180494225ab"
+    },
+    {
+      "path": "app/static/style.css",
+      "sha256": "dac6d88897a6d4eab54d17f56a63784ba765568c1fdf539bf50280c151ad6181"
+    },
+    {
+      "path": "app/static/sw.js",
+      "sha256": "aa567528589358842b82daa94d8e118323a4bb379c5cc6201ee4aa3c5584f406"
+    },
+    {
+      "path": "app/static/tokens.css",
+      "sha256": "296204f90158eba6238de148e6080324956c539bd96cd1901c29cf741e16fbce"
+    },
+    {
+      "path": "app/static/tools.css",
+      "sha256": "b55d1c093d132ecc335e4fb008fd3e51ec5f84078fb4cd62bdf1af8b4651862e"
+    },
+    {
+      "path": "app/static/weekly.css",
+      "sha256": "7320daa02c520d7b838273acf1ecd82f6093c4a11c6e85703b42af63d321778a"
+    },
+    {
+      "path": "app/static/index.html",
+      "sha256": "70026a275d4263edc2b939bd4f550358f5327168e38bc73b81a57af499cf5d9a"
+    }
+  ]
+}

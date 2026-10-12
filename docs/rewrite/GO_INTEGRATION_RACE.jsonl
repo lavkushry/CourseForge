@@ -1,0 +1,303 @@
+{"Time":"2026-10-12T01:20:34.167490932Z","Action":"start","Package":"courseforge/backend/cmd/api"}
+{"Time":"2026-10-12T01:20:34.167727332Z","Action":"output","Package":"courseforge/backend/cmd/api","Output":"?   \tcourseforge/backend/cmd/api\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.167825852Z","Action":"skip","Package":"courseforge/backend/cmd/api","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.167913172Z","Action":"start","Package":"courseforge/backend/cmd/mediasim"}
+{"Time":"2026-10-12T01:20:34.167985132Z","Action":"output","Package":"courseforge/backend/cmd/mediasim","Output":"?   \tcourseforge/backend/cmd/mediasim\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.168058412Z","Action":"skip","Package":"courseforge/backend/cmd/mediasim","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.168119692Z","Action":"start","Package":"courseforge/backend/cmd/seed"}
+{"Time":"2026-10-12T01:20:34.168186052Z","Action":"output","Package":"courseforge/backend/cmd/seed","Output":"?   \tcourseforge/backend/cmd/seed\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.168241571Z","Action":"skip","Package":"courseforge/backend/cmd/seed","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.168311451Z","Action":"start","Package":"courseforge/backend/cmd/worker"}
+{"Time":"2026-10-12T01:20:34.168369611Z","Action":"output","Package":"courseforge/backend/cmd/worker","Output":"?   \tcourseforge/backend/cmd/worker\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.168434451Z","Action":"skip","Package":"courseforge/backend/cmd/worker","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.168505171Z","Action":"start","Package":"courseforge/backend/internal/access"}
+{"Time":"2026-10-12T01:20:34.168562931Z","Action":"output","Package":"courseforge/backend/internal/access","Output":"?   \tcourseforge/backend/internal/access\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.168631131Z","Action":"skip","Package":"courseforge/backend/internal/access","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.168701571Z","Action":"start","Package":"courseforge/backend/internal/api"}
+{"Time":"2026-10-12T01:20:34.196285637Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestLearnerSliceIsolationAndDurability"}
+{"Time":"2026-10-12T01:20:34.196337197Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestLearnerSliceIsolationAndDurability","Output":"=== RUN   TestLearnerSliceIsolationAndDurability\n"}
+{"Time":"2026-10-12T01:20:34.393878017Z","Action":"start","Package":"courseforge/backend/internal/config"}
+{"Time":"2026-10-12T01:20:34.410835568Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestSafeDefaultsAndExplicitRegistration"}
+{"Time":"2026-10-12T01:20:34.410883648Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestSafeDefaultsAndExplicitRegistration","Output":"=== RUN   TestSafeDefaultsAndExplicitRegistration\n"}
+{"Time":"2026-10-12T01:20:34.411592408Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestSafeDefaultsAndExplicitRegistration","Output":"--- PASS: TestSafeDefaultsAndExplicitRegistration (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.411705927Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestSafeDefaultsAndExplicitRegistration","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.411723607Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes"}
+{"Time":"2026-10-12T01:20:34.411729407Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes\n"}
+{"Time":"2026-10-12T01:20:34.411867087Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path"}
+{"Time":"2026-10-12T01:20:34.411895567Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path\n"}
+{"Time":"2026-10-12T01:20:34.414253286Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416589165Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://academy.example/path","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416627005Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example"}
+{"Time":"2026-10-12T01:20:34.416634125Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example\n"}
+{"Time":"2026-10-12T01:20:34.416648005Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416653125Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PUBLIC_ORIGINhttps://user:secret@academy.example","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416657245Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000"}
+{"Time":"2026-10-12T01:20:34.416660765Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000\n"}
+{"Time":"2026-10-12T01:20:34.416665165Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000 (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416669725Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_DB_MAX_CONNS10000","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416673565Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000"}
+{"Time":"2026-10-12T01:20:34.416677325Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000\n"}
+{"Time":"2026-10-12T01:20:34.416682365Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000 (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416686605Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_PASSWORD_CONCURRENCY10000","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416690285Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value"}
+{"Time":"2026-10-12T01:20:34.416693605Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value\n"}
+{"Time":"2026-10-12T01:20:34.416697645Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416711965Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_REGISTRATION_MODEmistyped-value","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416717485Z","Action":"run","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse"}
+{"Time":"2026-10-12T01:20:34.416721365Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse","Output":"=== RUN   TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse\n"}
+{"Time":"2026-10-12T01:20:34.416725605Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416729245Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes/CF_COOKIE_SECUREfalse","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416733245Z","Action":"output","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes","Output":"--- PASS: TestInvalidOriginsResourceBudgetsAndModes (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.416738845Z","Action":"pass","Package":"courseforge/backend/internal/config","Test":"TestInvalidOriginsResourceBudgetsAndModes","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.416742485Z","Action":"output","Package":"courseforge/backend/internal/config","Output":"PASS\n"}
+{"Time":"2026-10-12T01:20:34.501451402Z","Action":"start","Package":"courseforge/backend/internal/contract"}
+{"Time":"2026-10-12T01:20:34.501508362Z","Action":"output","Package":"courseforge/backend/internal/contract","Output":"?   \tcourseforge/backend/internal/contract\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.501519002Z","Action":"skip","Package":"courseforge/backend/internal/contract","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.501531322Z","Action":"start","Package":"courseforge/backend/internal/httpx"}
+{"Time":"2026-10-12T01:20:34.501536562Z","Action":"output","Package":"courseforge/backend/internal/httpx","Output":"?   \tcourseforge/backend/internal/httpx\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:34.501540322Z","Action":"skip","Package":"courseforge/backend/internal/httpx","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.501548042Z","Action":"start","Package":"courseforge/backend/internal/identity"}
+{"Time":"2026-10-12T01:20:34.520600032Z","Action":"run","Package":"courseforge/backend/internal/identity","Test":"TestPasswordAdmissionHasNoWaitingQueue"}
+{"Time":"2026-10-12T01:20:34.520736272Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestPasswordAdmissionHasNoWaitingQueue","Output":"=== RUN   TestPasswordAdmissionHasNoWaitingQueue\n"}
+{"Time":"2026-10-12T01:20:34.521259152Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestPasswordAdmissionHasNoWaitingQueue","Output":"--- PASS: TestPasswordAdmissionHasNoWaitingQueue (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.521438112Z","Action":"pass","Package":"courseforge/backend/internal/identity","Test":"TestPasswordAdmissionHasNoWaitingQueue","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.521565311Z","Action":"run","Package":"courseforge/backend/internal/identity","Test":"TestPythonArgon2Compatibility"}
+{"Time":"2026-10-12T01:20:34.521758791Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestPythonArgon2Compatibility","Output":"=== RUN   TestPythonArgon2Compatibility\n"}
+{"Time":"2026-10-12T01:20:34.673360594Z","Action":"start","Package":"courseforge/backend/internal/jobs"}
+{"Time":"2026-10-12T01:20:34.70058786Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorProtocolAndRedirectBoundary"}
+{"Time":"2026-10-12T01:20:34.7007609Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorProtocolAndRedirectBoundary","Output":"=== RUN   TestExecutorProtocolAndRedirectBoundary\n"}
+{"Time":"2026-10-12T01:20:34.712081134Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorProtocolAndRedirectBoundary","Output":"--- PASS: TestExecutorProtocolAndRedirectBoundary (0.01s)\n"}
+{"Time":"2026-10-12T01:20:34.712135854Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorProtocolAndRedirectBoundary","Elapsed":0.01}
+{"Time":"2026-10-12T01:20:34.712145454Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses"}
+{"Time":"2026-10-12T01:20:34.712150094Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses","Output":"=== RUN   TestExecutorRejectsOversizedOrNonObjectResponses\n"}
+{"Time":"2026-10-12T01:20:34.712646094Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/[]"}
+{"Time":"2026-10-12T01:20:34.712741294Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/[]","Output":"=== RUN   TestExecutorRejectsOversizedOrNonObjectResponses/[]\n"}
+{"Time":"2026-10-12T01:20:34.714349373Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/[]","Output":"--- PASS: TestExecutorRejectsOversizedOrNonObjectResponses/[] (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.714491333Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/[]","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.714655853Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/null"}
+{"Time":"2026-10-12T01:20:34.714739613Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/null","Output":"=== RUN   TestExecutorRejectsOversizedOrNonObjectResponses/null\n"}
+{"Time":"2026-10-12T01:20:34.717171092Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/null","Output":"--- PASS: TestExecutorRejectsOversizedOrNonObjectResponses/null (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.717280572Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/null","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.717340332Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u"}
+{"Time":"2026-10-12T01:20:34.717417172Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u","Output":"=== RUN   TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u\n"}
+{"Time":"2026-10-12T01:20:34.719269371Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u","Output":"--- PASS: TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.719373931Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/{\"secret\":\"u","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.719437211Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/____________"}
+{"Time":"2026-10-12T01:20:34.719500131Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/____________","Output":"=== RUN   TestExecutorRejectsOversizedOrNonObjectResponses/____________\n"}
+{"Time":"2026-10-12T01:20:34.742912919Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/____________","Output":"--- PASS: TestExecutorRejectsOversizedOrNonObjectResponses/____________ (0.02s)\n"}
+{"Time":"2026-10-12T01:20:34.743237319Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses/____________","Elapsed":0.02}
+{"Time":"2026-10-12T01:20:34.743395758Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses","Output":"--- PASS: TestExecutorRejectsOversizedOrNonObjectResponses (0.03s)\n"}
+{"Time":"2026-10-12T01:20:34.743577358Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorRejectsOversizedOrNonObjectResponses","Elapsed":0.03}
+{"Time":"2026-10-12T01:20:34.743688158Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorCancellationInterruptsStalledResponse"}
+{"Time":"2026-10-12T01:20:34.743768158Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorCancellationInterruptsStalledResponse","Output":"=== RUN   TestExecutorCancellationInterruptsStalledResponse\n"}
+{"Time":"2026-10-12T01:20:34.746147437Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorCancellationInterruptsStalledResponse","Output":"--- PASS: TestExecutorCancellationInterruptsStalledResponse (0.00s)\n"}
+{"Time":"2026-10-12T01:20:34.746249557Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExecutorCancellationInterruptsStalledResponse","Elapsed":0}
+{"Time":"2026-10-12T01:20:34.746311117Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestPrivateHTTPJobLifecycleAndCSRF"}
+{"Time":"2026-10-12T01:20:34.746371557Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestPrivateHTTPJobLifecycleAndCSRF","Output":"=== RUN   TestPrivateHTTPJobLifecycleAndCSRF\n"}
+{"Time":"2026-10-12T01:20:35.426096531Z","Action":"output","Package":"courseforge/backend/internal/config","Output":"ok  \tcourseforge/backend/internal/config\t1.032s\n"}
+{"Time":"2026-10-12T01:20:35.42663645Z","Action":"pass","Package":"courseforge/backend/internal/config","Elapsed":1.033}
+{"Time":"2026-10-12T01:20:36.031194342Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestPrivateHTTPJobLifecycleAndCSRF","Output":"--- PASS: TestPrivateHTTPJobLifecycleAndCSRF (1.28s)\n"}
+{"Time":"2026-10-12T01:20:36.031535822Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestPrivateHTTPJobLifecycleAndCSRF","Elapsed":1.28}
+{"Time":"2026-10-12T01:20:36.031620622Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestConcurrentSubmissionDeduplicatesAndStaysPrivate"}
+{"Time":"2026-10-12T01:20:36.031684302Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestConcurrentSubmissionDeduplicatesAndStaysPrivate","Output":"=== RUN   TestConcurrentSubmissionDeduplicatesAndStaysPrivate\n"}
+{"Time":"2026-10-12T01:20:36.822253819Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestConcurrentSubmissionDeduplicatesAndStaysPrivate","Output":"--- PASS: TestConcurrentSubmissionDeduplicatesAndStaysPrivate (0.79s)\n"}
+{"Time":"2026-10-12T01:20:36.822431779Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestConcurrentSubmissionDeduplicatesAndStaysPrivate","Elapsed":0.79}
+{"Time":"2026-10-12T01:20:36.822536659Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestSharedAdmissionAndResourceBudgets"}
+{"Time":"2026-10-12T01:20:36.822598459Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestSharedAdmissionAndResourceBudgets","Output":"=== RUN   TestSharedAdmissionAndResourceBudgets\n"}
+{"Time":"2026-10-12T01:20:36.91946633Z","Action":"start","Package":"courseforge/backend/internal/media"}
+{"Time":"2026-10-12T01:20:36.986070776Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestRangeAndCredentialBoundary"}
+{"Time":"2026-10-12T01:20:36.986125056Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRangeAndCredentialBoundary","Output":"=== RUN   TestRangeAndCredentialBoundary\n"}
+{"Time":"2026-10-12T01:20:36.99806641Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRangeAndCredentialBoundary","Output":"--- PASS: TestRangeAndCredentialBoundary (0.01s)\n"}
+{"Time":"2026-10-12T01:20:36.99813625Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestRangeAndCredentialBoundary","Elapsed":0.01}
+{"Time":"2026-10-12T01:20:36.99815669Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestDeniedAndMalformedRangesNeverReachProvider"}
+{"Time":"2026-10-12T01:20:36.99816253Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestDeniedAndMalformedRangesNeverReachProvider","Output":"=== RUN   TestDeniedAndMalformedRangesNeverReachProvider\n"}
+{"Time":"2026-10-12T01:20:36.999031249Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestDeniedAndMalformedRangesNeverReachProvider","Output":"--- PASS: TestDeniedAndMalformedRangesNeverReachProvider (0.00s)\n"}
+{"Time":"2026-10-12T01:20:36.999056849Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestDeniedAndMalformedRangesNeverReachProvider","Elapsed":0}
+{"Time":"2026-10-12T01:20:36.999062569Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestRedirectCannotEscapeConfiguredProvider"}
+{"Time":"2026-10-12T01:20:36.999065969Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRedirectCannotEscapeConfiguredProvider","Output":"=== RUN   TestRedirectCannotEscapeConfiguredProvider\n"}
+{"Time":"2026-10-12T01:20:37.007374085Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRedirectCannotEscapeConfiguredProvider","Output":"--- PASS: TestRedirectCannotEscapeConfiguredProvider (0.01s)\n"}
+{"Time":"2026-10-12T01:20:37.007421485Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestRedirectCannotEscapeConfiguredProvider","Elapsed":0.01}
+{"Time":"2026-10-12T01:20:37.007430285Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestRevocationCancelsSilentUpstreamAndReleasesSlot"}
+{"Time":"2026-10-12T01:20:37.007434485Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRevocationCancelsSilentUpstreamAndReleasesSlot","Output":"=== RUN   TestRevocationCancelsSilentUpstreamAndReleasesSlot\n"}
+{"Time":"2026-10-12T01:20:37.028338994Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRevocationCancelsSilentUpstreamAndReleasesSlot","Output":"--- PASS: TestRevocationCancelsSilentUpstreamAndReleasesSlot (0.02s)\n"}
+{"Time":"2026-10-12T01:20:37.028460954Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestRevocationCancelsSilentUpstreamAndReleasesSlot","Elapsed":0.02}
+{"Time":"2026-10-12T01:20:37.028562914Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestAdmissionRejectsWithoutUnboundedQueue"}
+{"Time":"2026-10-12T01:20:37.028575354Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestAdmissionRejectsWithoutUnboundedQueue","Output":"=== RUN   TestAdmissionRejectsWithoutUnboundedQueue\n"}
+{"Time":"2026-10-12T01:20:37.033545952Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestAdmissionRejectsWithoutUnboundedQueue","Output":"--- PASS: TestAdmissionRejectsWithoutUnboundedQueue (0.00s)\n"}
+{"Time":"2026-10-12T01:20:37.033589992Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestAdmissionRejectsWithoutUnboundedQueue","Elapsed":0}
+{"Time":"2026-10-12T01:20:37.033598032Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestRevocationInterruptsBlockedDownstreamWrite"}
+{"Time":"2026-10-12T01:20:37.033606272Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRevocationInterruptsBlockedDownstreamWrite","Output":"=== RUN   TestRevocationInterruptsBlockedDownstreamWrite\n"}
+{"Time":"2026-10-12T01:20:37.19321431Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestRevocationInterruptsBlockedDownstreamWrite","Output":"--- PASS: TestRevocationInterruptsBlockedDownstreamWrite (0.16s)\n"}
+{"Time":"2026-10-12T01:20:37.19325747Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestRevocationInterruptsBlockedDownstreamWrite","Elapsed":0.16}
+{"Time":"2026-10-12T01:20:37.19326999Z","Action":"run","Package":"courseforge/backend/internal/media","Test":"TestDefaultURLRestrictions"}
+{"Time":"2026-10-12T01:20:37.19327523Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestDefaultURLRestrictions","Output":"=== RUN   TestDefaultURLRestrictions\n"}
+{"Time":"2026-10-12T01:20:37.19328007Z","Action":"output","Package":"courseforge/backend/internal/media","Test":"TestDefaultURLRestrictions","Output":"--- PASS: TestDefaultURLRestrictions (0.00s)\n"}
+{"Time":"2026-10-12T01:20:37.19328407Z","Action":"pass","Package":"courseforge/backend/internal/media","Test":"TestDefaultURLRestrictions","Elapsed":0}
+{"Time":"2026-10-12T01:20:37.19328787Z","Action":"output","Package":"courseforge/backend/internal/media","Output":"PASS\n"}
+{"Time":"2026-10-12T01:20:37.550171009Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestPythonArgon2Compatibility","Output":"--- PASS: TestPythonArgon2Compatibility (3.03s)\n"}
+{"Time":"2026-10-12T01:20:37.550326128Z","Action":"pass","Package":"courseforge/backend/internal/identity","Test":"TestPythonArgon2Compatibility","Elapsed":3.03}
+{"Time":"2026-10-12T01:20:37.550724688Z","Action":"run","Package":"courseforge/backend/internal/identity","Test":"TestMalformedHashResourceBounds"}
+{"Time":"2026-10-12T01:20:37.550742808Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestMalformedHashResourceBounds","Output":"=== RUN   TestMalformedHashResourceBounds\n"}
+{"Time":"2026-10-12T01:20:37.550751448Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestMalformedHashResourceBounds","Output":"--- PASS: TestMalformedHashResourceBounds (0.00s)\n"}
+{"Time":"2026-10-12T01:20:37.550756208Z","Action":"pass","Package":"courseforge/backend/internal/identity","Test":"TestMalformedHashResourceBounds","Elapsed":0}
+{"Time":"2026-10-12T01:20:37.550763408Z","Action":"run","Package":"courseforge/backend/internal/identity","Test":"TestLegacyUnicodePasswordsAndEmailNormalization"}
+{"Time":"2026-10-12T01:20:37.550766608Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestLegacyUnicodePasswordsAndEmailNormalization","Output":"=== RUN   TestLegacyUnicodePasswordsAndEmailNormalization\n"}
+{"Time":"2026-10-12T01:20:37.747923788Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestSharedAdmissionAndResourceBudgets","Output":"--- PASS: TestSharedAdmissionAndResourceBudgets (0.93s)\n"}
+{"Time":"2026-10-12T01:20:37.748084468Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestSharedAdmissionAndResourceBudgets","Elapsed":0.93}
+{"Time":"2026-10-12T01:20:37.748165828Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestExpiredFenceCannotPublishOrRenew"}
+{"Time":"2026-10-12T01:20:37.748175468Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExpiredFenceCannotPublishOrRenew","Output":"=== RUN   TestExpiredFenceCannotPublishOrRenew\n"}
+{"Time":"2026-10-12T01:20:37.82292799Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestLearnerSliceIsolationAndDurability","Output":"--- PASS: TestLearnerSliceIsolationAndDurability (3.63s)\n"}
+{"Time":"2026-10-12T01:20:37.823307749Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestLearnerSliceIsolationAndDurability","Elapsed":3.63}
+{"Time":"2026-10-12T01:20:37.824713509Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestCatalogPaginationAndAccessRevocation"}
+{"Time":"2026-10-12T01:20:37.824758589Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestCatalogPaginationAndAccessRevocation","Output":"=== RUN   TestCatalogPaginationAndAccessRevocation\n"}
+{"Time":"2026-10-12T01:20:38.092574052Z","Action":"output","Package":"courseforge/backend/internal/identity","Test":"TestLegacyUnicodePasswordsAndEmailNormalization","Output":"--- PASS: TestLegacyUnicodePasswordsAndEmailNormalization (0.54s)\n"}
+{"Time":"2026-10-12T01:20:38.092635732Z","Action":"pass","Package":"courseforge/backend/internal/identity","Test":"TestLegacyUnicodePasswordsAndEmailNormalization","Elapsed":0.54}
+{"Time":"2026-10-12T01:20:38.092646572Z","Action":"output","Package":"courseforge/backend/internal/identity","Output":"PASS\n"}
+{"Time":"2026-10-12T01:20:38.199578918Z","Action":"output","Package":"courseforge/backend/internal/media","Output":"ok  \tcourseforge/backend/internal/media\t1.280s\n"}
+{"Time":"2026-10-12T01:20:38.199907238Z","Action":"pass","Package":"courseforge/backend/internal/media","Elapsed":1.28}
+{"Time":"2026-10-12T01:20:38.310413061Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestExpiredFenceCannotPublishOrRenew","Output":"--- PASS: TestExpiredFenceCannotPublishOrRenew (0.56s)\n"}
+{"Time":"2026-10-12T01:20:38.310481301Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestExpiredFenceCannotPublishOrRenew","Elapsed":0.56}
+{"Time":"2026-10-12T01:20:38.310490981Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestCancellationAndRevocationPreventPublication"}
+{"Time":"2026-10-12T01:20:38.310519261Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestCancellationAndRevocationPreventPublication","Output":"=== RUN   TestCancellationAndRevocationPreventPublication\n"}
+{"Time":"2026-10-12T01:20:38.791908336Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestCancellationAndRevocationPreventPublication","Output":"--- PASS: TestCancellationAndRevocationPreventPublication (0.49s)\n"}
+{"Time":"2026-10-12T01:20:38.792070416Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestCancellationAndRevocationPreventPublication","Elapsed":0.49}
+{"Time":"2026-10-12T01:20:38.792138856Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestDeadLastAttemptBecomesTerminalWithoutAnotherJob"}
+{"Time":"2026-10-12T01:20:38.792198256Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestDeadLastAttemptBecomesTerminalWithoutAnotherJob","Output":"=== RUN   TestDeadLastAttemptBecomesTerminalWithoutAnotherJob\n"}
+{"Time":"2026-10-12T01:20:39.116436211Z","Action":"output","Package":"courseforge/backend/internal/identity","Output":"ok  \tcourseforge/backend/internal/identity\t4.615s\n"}
+{"Time":"2026-10-12T01:20:39.11674929Z","Action":"pass","Package":"courseforge/backend/internal/identity","Elapsed":4.615}
+{"Time":"2026-10-12T01:20:39.362094645Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestDeadLastAttemptBecomesTerminalWithoutAnotherJob","Output":"--- PASS: TestDeadLastAttemptBecomesTerminalWithoutAnotherJob (0.57s)\n"}
+{"Time":"2026-10-12T01:20:39.362140565Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestDeadLastAttemptBecomesTerminalWithoutAnotherJob","Elapsed":0.57}
+{"Time":"2026-10-12T01:20:39.362149525Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestRetryDelayAndPublicationRollback"}
+{"Time":"2026-10-12T01:20:39.362153445Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestRetryDelayAndPublicationRollback","Output":"=== RUN   TestRetryDelayAndPublicationRollback\n"}
+{"Time":"2026-10-12T01:20:39.618871035Z","Action":"start","Package":"courseforge/backend/internal/playback"}
+{"Time":"2026-10-12T01:20:39.619037515Z","Action":"start","Package":"courseforge/backend/internal/store"}
+{"Time":"2026-10-12T01:20:39.619172634Z","Action":"output","Package":"courseforge/backend/internal/store","Output":"?   \tcourseforge/backend/internal/store\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:39.619274954Z","Action":"skip","Package":"courseforge/backend/internal/store","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.619362674Z","Action":"start","Package":"courseforge/backend/internal/testutil"}
+{"Time":"2026-10-12T01:20:39.619445594Z","Action":"output","Package":"courseforge/backend/internal/testutil","Output":"?   \tcourseforge/backend/internal/testutil\t[no test files]\n"}
+{"Time":"2026-10-12T01:20:39.619499394Z","Action":"skip","Package":"courseforge/backend/internal/testutil","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.641457983Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities"}
+{"Time":"2026-10-12T01:20:39.641538743Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities","Output":"=== RUN   TestCreditDiscontinuities\n"}
+{"Time":"2026-10-12T01:20:39.641706423Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/ordinary"}
+{"Time":"2026-10-12T01:20:39.641721063Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/ordinary","Output":"=== RUN   TestCreditDiscontinuities/ordinary\n"}
+{"Time":"2026-10-12T01:20:39.641911903Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/ordinary","Output":"--- PASS: TestCreditDiscontinuities/ordinary (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.642064863Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/ordinary","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.642329623Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/seek_event"}
+{"Time":"2026-10-12T01:20:39.642440263Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/seek_event","Output":"=== RUN   TestCreditDiscontinuities/seek_event\n"}
+{"Time":"2026-10-12T01:20:39.642552743Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/seek_event","Output":"--- PASS: TestCreditDiscontinuities/seek_event (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.642614863Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/seek_event","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.642675502Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/unannounced_jump"}
+{"Time":"2026-10-12T01:20:39.642735862Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/unannounced_jump","Output":"=== RUN   TestCreditDiscontinuities/unannounced_jump\n"}
+{"Time":"2026-10-12T01:20:39.642824542Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/unannounced_jump","Output":"--- PASS: TestCreditDiscontinuities/unannounced_jump (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.642884862Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/unannounced_jump","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.642948062Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/paused_baseline"}
+{"Time":"2026-10-12T01:20:39.643016222Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/paused_baseline","Output":"=== RUN   TestCreditDiscontinuities/paused_baseline\n"}
+{"Time":"2026-10-12T01:20:39.643073942Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/paused_baseline","Output":"--- PASS: TestCreditDiscontinuities/paused_baseline (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.643132782Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/paused_baseline","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.643227822Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/hidden_baseline"}
+{"Time":"2026-10-12T01:20:39.643292222Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/hidden_baseline","Output":"=== RUN   TestCreditDiscontinuities/hidden_baseline\n"}
+{"Time":"2026-10-12T01:20:39.643351982Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/hidden_baseline","Output":"--- PASS: TestCreditDiscontinuities/hidden_baseline (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.643411782Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/hidden_baseline","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.643471782Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/offline_gap"}
+{"Time":"2026-10-12T01:20:39.643528942Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/offline_gap","Output":"=== RUN   TestCreditDiscontinuities/offline_gap\n"}
+{"Time":"2026-10-12T01:20:39.643589342Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/offline_gap","Output":"--- PASS: TestCreditDiscontinuities/offline_gap (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.643652422Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/offline_gap","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.643710262Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/client_inflated_elapsed"}
+{"Time":"2026-10-12T01:20:39.643771702Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/client_inflated_elapsed","Output":"=== RUN   TestCreditDiscontinuities/client_inflated_elapsed\n"}
+{"Time":"2026-10-12T01:20:39.643831342Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/client_inflated_elapsed","Output":"--- PASS: TestCreditDiscontinuities/client_inflated_elapsed (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.643891462Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities/client_inflated_elapsed","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.643960982Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities","Output":"--- PASS: TestCreditDiscontinuities (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.644040982Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestCreditDiscontinuities","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.644100022Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestOverlapDoesNotDoubleCoverage"}
+{"Time":"2026-10-12T01:20:39.644157222Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestOverlapDoesNotDoubleCoverage","Output":"=== RUN   TestOverlapDoesNotDoubleCoverage\n"}
+{"Time":"2026-10-12T01:20:39.644215862Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestOverlapDoesNotDoubleCoverage","Output":"--- PASS: TestOverlapDoesNotDoubleCoverage (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.644277062Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestOverlapDoesNotDoubleCoverage","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.644337822Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestGapsAreNotInvented"}
+{"Time":"2026-10-12T01:20:39.644395502Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestGapsAreNotInvented","Output":"=== RUN   TestGapsAreNotInvented\n"}
+{"Time":"2026-10-12T01:20:39.644455462Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestGapsAreNotInvented","Output":"--- PASS: TestGapsAreNotInvented (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.644513142Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestGapsAreNotInvented","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.644583382Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestFragmentStorageIsBounded"}
+{"Time":"2026-10-12T01:20:39.644645901Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestFragmentStorageIsBounded","Output":"=== RUN   TestFragmentStorageIsBounded\n"}
+{"Time":"2026-10-12T01:20:39.645062581Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestFragmentStorageIsBounded","Output":"--- PASS: TestFragmentStorageIsBounded (0.00s)\n"}
+{"Time":"2026-10-12T01:20:39.645151941Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestFragmentStorageIsBounded","Elapsed":0}
+{"Time":"2026-10-12T01:20:39.645215301Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestDuplicateConcurrentPulseCreditsOnce"}
+{"Time":"2026-10-12T01:20:39.645275861Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestDuplicateConcurrentPulseCreditsOnce","Output":"=== RUN   TestDuplicateConcurrentPulseCreditsOnce\n"}
+{"Time":"2026-10-12T01:20:39.84370304Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestRetryDelayAndPublicationRollback","Output":"--- PASS: TestRetryDelayAndPublicationRollback (0.48s)\n"}
+{"Time":"2026-10-12T01:20:39.843751Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestRetryDelayAndPublicationRollback","Elapsed":0.48}
+{"Time":"2026-10-12T01:20:39.84376068Z","Action":"run","Package":"courseforge/backend/internal/jobs","Test":"TestLeaseExpiryDuringPublicationRollsBackEffects"}
+{"Time":"2026-10-12T01:20:39.84376476Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestLeaseExpiryDuringPublicationRollsBackEffects","Output":"=== RUN   TestLeaseExpiryDuringPublicationRollsBackEffects\n"}
+{"Time":"2026-10-12T01:20:40.449532971Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestCatalogPaginationAndAccessRevocation","Output":"--- PASS: TestCatalogPaginationAndAccessRevocation (2.63s)\n"}
+{"Time":"2026-10-12T01:20:40.449793851Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestCatalogPaginationAndAccessRevocation","Elapsed":2.63}
+{"Time":"2026-10-12T01:20:40.449858691Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestCSRFOriginLogoutRegistrationAndLastAdmin"}
+{"Time":"2026-10-12T01:20:40.449869011Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestCSRFOriginLogoutRegistrationAndLastAdmin","Output":"=== RUN   TestCSRFOriginLogoutRegistrationAndLastAdmin\n"}
+{"Time":"2026-10-12T01:20:40.477037997Z","Action":"output","Package":"courseforge/backend/internal/jobs","Test":"TestLeaseExpiryDuringPublicationRollsBackEffects","Output":"--- PASS: TestLeaseExpiryDuringPublicationRollsBackEffects (0.63s)\n"}
+{"Time":"2026-10-12T01:20:40.477203677Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Test":"TestLeaseExpiryDuringPublicationRollsBackEffects","Elapsed":0.63}
+{"Time":"2026-10-12T01:20:40.477297397Z","Action":"output","Package":"courseforge/backend/internal/jobs","Output":"PASS\n"}
+{"Time":"2026-10-12T01:20:40.846445929Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestDuplicateConcurrentPulseCreditsOnce","Output":"--- PASS: TestDuplicateConcurrentPulseCreditsOnce (1.20s)\n"}
+{"Time":"2026-10-12T01:20:40.846530569Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestDuplicateConcurrentPulseCreditsOnce","Elapsed":1.2}
+{"Time":"2026-10-12T01:20:40.846540849Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestTakeoverAndRevokeDenyMedia"}
+{"Time":"2026-10-12T01:20:40.846546089Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestTakeoverAndRevokeDenyMedia","Output":"=== RUN   TestTakeoverAndRevokeDenyMedia\n"}
+{"Time":"2026-10-12T01:20:41.485131124Z","Action":"output","Package":"courseforge/backend/internal/jobs","Output":"ok  \tcourseforge/backend/internal/jobs\t6.812s\n"}
+{"Time":"2026-10-12T01:20:41.486967563Z","Action":"pass","Package":"courseforge/backend/internal/jobs","Elapsed":6.814}
+{"Time":"2026-10-12T01:20:41.812184437Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestTakeoverAndRevokeDenyMedia","Output":"--- PASS: TestTakeoverAndRevokeDenyMedia (0.96s)\n"}
+{"Time":"2026-10-12T01:20:41.812322077Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestTakeoverAndRevokeDenyMedia","Elapsed":0.96}
+{"Time":"2026-10-12T01:20:41.812338317Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestHiddenNeedsDeliberateClaimAndFreshBaseline"}
+{"Time":"2026-10-12T01:20:41.812343677Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestHiddenNeedsDeliberateClaimAndFreshBaseline","Output":"=== RUN   TestHiddenNeedsDeliberateClaimAndFreshBaseline\n"}
+{"Time":"2026-10-12T01:20:42.766655031Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestHiddenNeedsDeliberateClaimAndFreshBaseline","Output":"--- PASS: TestHiddenNeedsDeliberateClaimAndFreshBaseline (0.95s)\n"}
+{"Time":"2026-10-12T01:20:42.766706071Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestHiddenNeedsDeliberateClaimAndFreshBaseline","Elapsed":0.95}
+{"Time":"2026-10-12T01:20:42.766715231Z","Action":"run","Package":"courseforge/backend/internal/playback","Test":"TestSeekingAndCrossSessionCoverage"}
+{"Time":"2026-10-12T01:20:42.766718911Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestSeekingAndCrossSessionCoverage","Output":"=== RUN   TestSeekingAndCrossSessionCoverage\n"}
+{"Time":"2026-10-12T01:20:43.724534903Z","Action":"output","Package":"courseforge/backend/internal/playback","Test":"TestSeekingAndCrossSessionCoverage","Output":"--- PASS: TestSeekingAndCrossSessionCoverage (0.96s)\n"}
+{"Time":"2026-10-12T01:20:43.724597543Z","Action":"pass","Package":"courseforge/backend/internal/playback","Test":"TestSeekingAndCrossSessionCoverage","Elapsed":0.96}
+{"Time":"2026-10-12T01:20:43.724606383Z","Action":"output","Package":"courseforge/backend/internal/playback","Output":"PASS\n"}
+{"Time":"2026-10-12T01:20:44.736134468Z","Action":"output","Package":"courseforge/backend/internal/playback","Output":"ok  \tcourseforge/backend/internal/playback\t5.117s\n"}
+{"Time":"2026-10-12T01:20:44.737096387Z","Action":"pass","Package":"courseforge/backend/internal/playback","Elapsed":5.118}
+{"Time":"2026-10-12T01:20:45.072975616Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestCSRFOriginLogoutRegistrationAndLastAdmin","Output":"--- PASS: TestCSRFOriginLogoutRegistrationAndLastAdmin (4.62s)\n"}
+{"Time":"2026-10-12T01:20:45.073678536Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestCSRFOriginLogoutRegistrationAndLastAdmin","Elapsed":4.62}
+{"Time":"2026-10-12T01:20:45.073705296Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestConcurrentProgressAndNoteWrites"}
+{"Time":"2026-10-12T01:20:45.073712936Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestConcurrentProgressAndNoteWrites","Output":"=== RUN   TestConcurrentProgressAndNoteWrites\n"}
+{"Time":"2026-10-12T01:20:47.150421878Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestConcurrentProgressAndNoteWrites","Output":"--- PASS: TestConcurrentProgressAndNoteWrites (2.08s)\n"}
+{"Time":"2026-10-12T01:20:47.150478518Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestConcurrentProgressAndNoteWrites","Elapsed":2.08}
+{"Time":"2026-10-12T01:20:47.150511278Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestLoginAccountRateLimit"}
+{"Time":"2026-10-12T01:20:47.150517278Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestLoginAccountRateLimit","Output":"=== RUN   TestLoginAccountRateLimit\n"}
+{"Time":"2026-10-12T01:20:54.568157699Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestLoginAccountRateLimit","Output":"--- PASS: TestLoginAccountRateLimit (7.42s)\n"}
+{"Time":"2026-10-12T01:20:54.568219458Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestLoginAccountRateLimit","Elapsed":7.42}
+{"Time":"2026-10-12T01:20:54.568231978Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder"}
+{"Time":"2026-10-12T01:20:54.568242578Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder","Output":"=== RUN   TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder\n"}
+{"Time":"2026-10-12T01:20:57.366390593Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder","Output":"--- PASS: TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder (2.80s)\n"}
+{"Time":"2026-10-12T01:20:57.366441513Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestPublishedDiscoveryPrivateCatalogMetadataAndFractionalOrder","Elapsed":2.8}
+{"Time":"2026-10-12T01:20:57.366451953Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestAuthorizedMaterialsDownloadRangesAndTraversal"}
+{"Time":"2026-10-12T01:20:57.366457473Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestAuthorizedMaterialsDownloadRangesAndTraversal","Output":"=== RUN   TestAuthorizedMaterialsDownloadRangesAndTraversal\n"}
+{"Time":"2026-10-12T01:21:00.59183775Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestAuthorizedMaterialsDownloadRangesAndTraversal","Output":"--- PASS: TestAuthorizedMaterialsDownloadRangesAndTraversal (3.23s)\n"}
+{"Time":"2026-10-12T01:21:00.59190131Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestAuthorizedMaterialsDownloadRangesAndTraversal","Elapsed":3.23}
+{"Time":"2026-10-12T01:21:00.59191111Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate"}
+{"Time":"2026-10-12T01:21:00.59191491Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate","Output":"=== RUN   TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate\n"}
+{"Time":"2026-10-12T01:21:03.984242901Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate","Output":"--- PASS: TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate (3.39s)\n"}
+{"Time":"2026-10-12T01:21:03.984398901Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestSearchSavedListHistoryAndBoundedAnalyticsArePrivate","Elapsed":3.39}
+{"Time":"2026-10-12T01:21:03.984463861Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestInvitationReissueActivationAndPasswordRecovery"}
+{"Time":"2026-10-12T01:21:03.984528581Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestInvitationReissueActivationAndPasswordRecovery","Output":"=== RUN   TestInvitationReissueActivationAndPasswordRecovery\n"}
+{"Time":"2026-10-12T01:21:12.070361102Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestInvitationReissueActivationAndPasswordRecovery","Output":"--- PASS: TestInvitationReissueActivationAndPasswordRecovery (8.09s)\n"}
+{"Time":"2026-10-12T01:21:12.070415462Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestInvitationReissueActivationAndPasswordRecovery","Elapsed":8.09}
+{"Time":"2026-10-12T01:21:12.070426702Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestEmailRegistrationVerificationAndNonEnumeration"}
+{"Time":"2026-10-12T01:21:12.070431222Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestEmailRegistrationVerificationAndNonEnumeration","Output":"=== RUN   TestEmailRegistrationVerificationAndNonEnumeration\n"}
+{"Time":"2026-10-12T01:21:17.161080028Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestEmailRegistrationVerificationAndNonEnumeration","Output":"--- PASS: TestEmailRegistrationVerificationAndNonEnumeration (5.09s)\n"}
+{"Time":"2026-10-12T01:21:17.161234388Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestEmailRegistrationVerificationAndNonEnumeration","Elapsed":5.09}
+{"Time":"2026-10-12T01:21:17.161327628Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestExpiredSuspendedAndConcurrentAccountLinks"}
+{"Time":"2026-10-12T01:21:17.161412388Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestExpiredSuspendedAndConcurrentAccountLinks","Output":"=== RUN   TestExpiredSuspendedAndConcurrentAccountLinks\n"}
+{"Time":"2026-10-12T01:21:21.844599362Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestExpiredSuspendedAndConcurrentAccountLinks","Output":"--- PASS: TestExpiredSuspendedAndConcurrentAccountLinks (4.68s)\n"}
+{"Time":"2026-10-12T01:21:21.844749002Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestExpiredSuspendedAndConcurrentAccountLinks","Elapsed":4.68}
+{"Time":"2026-10-12T01:21:21.844832242Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestProfileSessionsDeletionAndEnrollmentRevocation"}
+{"Time":"2026-10-12T01:21:21.844896682Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestProfileSessionsDeletionAndEnrollmentRevocation","Output":"=== RUN   TestProfileSessionsDeletionAndEnrollmentRevocation\n"}
+{"Time":"2026-10-12T01:21:29.332081268Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestProfileSessionsDeletionAndEnrollmentRevocation","Output":"--- PASS: TestProfileSessionsDeletionAndEnrollmentRevocation (7.49s)\n"}
+{"Time":"2026-10-12T01:21:29.332147828Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestProfileSessionsDeletionAndEnrollmentRevocation","Elapsed":7.49}
+{"Time":"2026-10-12T01:21:29.332159588Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestRoleChangePasswordAndLastAdministrator"}
+{"Time":"2026-10-12T01:21:29.332163828Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestRoleChangePasswordAndLastAdministrator","Output":"=== RUN   TestRoleChangePasswordAndLastAdministrator\n"}
+{"Time":"2026-10-12T01:21:33.869458716Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestRoleChangePasswordAndLastAdministrator","Output":"--- PASS: TestRoleChangePasswordAndLastAdministrator (4.54s)\n"}
+{"Time":"2026-10-12T01:21:33.869514396Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestRoleChangePasswordAndLastAdministrator","Elapsed":4.54}
+{"Time":"2026-10-12T01:21:33.869526116Z","Action":"run","Package":"courseforge/backend/internal/api","Test":"TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion"}
+{"Time":"2026-10-12T01:21:33.869530156Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion","Output":"=== RUN   TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion\n"}
+{"Time":"2026-10-12T01:21:35.935241624Z","Action":"output","Package":"courseforge/backend/internal/api","Test":"TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion","Output":"--- PASS: TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion (2.07s)\n"}
+{"Time":"2026-10-12T01:21:35.935296584Z","Action":"pass","Package":"courseforge/backend/internal/api","Test":"TestKnownDurationValidationAndManualResumePreserveAcknowledgedCompletion","Elapsed":2.07}
+{"Time":"2026-10-12T01:21:35.935308384Z","Action":"output","Package":"courseforge/backend/internal/api","Output":"PASS\n"}
+{"Time":"2026-10-12T01:21:36.967333018Z","Action":"output","Package":"courseforge/backend/internal/api","Output":"ok  \tcourseforge/backend/internal/api\t62.798s\n"}
+{"Time":"2026-10-12T01:21:36.970070176Z","Action":"pass","Package":"courseforge/backend/internal/api","Elapsed":62.801}

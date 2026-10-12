@@ -1,0 +1,138 @@
+{
+  "observed_at": "2026-10-12T11:24:28.726270+00:00",
+  "scope": "Two isolated staging API replicas and migration009; synthetic account removed; wiring/ineligible/replay/privacy checks only",
+  "contract": "docs/rewrite/CERTIFICATE_CONTRACT.md",
+  "checks": [
+    {
+      "name": "guest private certificate denied",
+      "passed": true,
+      "expected_status": 401,
+      "actual_status": 401,
+      "replica": 1
+    },
+    {
+      "name": "unknown public JSON code returns404",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 1
+    },
+    {
+      "name": "unknown public HTML code returns404",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 1
+    },
+    {
+      "name": "synthetic account registration",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "enroll synthetic fixture course",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "read-only readiness",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "all three lessons required; no invented completion or passes",
+      "passed": true
+    },
+    {
+      "name": "issuance rejects missingCSRF",
+      "passed": true,
+      "expected_status": 403,
+      "actual_status": 403,
+      "replica": 1
+    },
+    {
+      "name": "issuance requires idempotency",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "issuance rejects caller-supplied eligibility",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "ineligible issuance never creates credential",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "explicit completion is private",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "resume endpoint rejects completion change",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "read acknowledged progress",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "rejected resume write preserves acknowledged record",
+      "passed": true
+    },
+    {
+      "name": "immutable ineligible command replay onreplica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "command retains original readiness snapshot",
+      "passed": true
+    },
+    {
+      "name": "new command evaluates current requirements",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "completion alone cannot issue certificate",
+      "passed": true
+    },
+    {
+      "name": "remove synthetic fixture account",
+      "passed": true,
+      "actual_status": 200
+    }
+  ],
+  "passed": 20,
+  "failed": 0,
+  "production_probed": false,
+  "capacity_proven": false,
+  "positive_issuance_scope": "Covered by ten disposable-PG HTTP/race tests; this smoke did not mint an issued credential"
+}

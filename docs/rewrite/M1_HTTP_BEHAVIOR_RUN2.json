@@ -1,0 +1,1086 @@
+{
+  "api_prefix": "/api/v1",
+  "cases": [
+    {
+      "case": "liveness",
+      "clause": "M1-10",
+      "elapsed_ms": 3.289,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/health/live",
+      "response_keys": [
+        "status"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "readiness",
+      "clause": "M1-10",
+      "elapsed_ms": 1.361,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/health/ready",
+      "response_keys": [
+        "status"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "guest denied /me",
+      "clause": "M1-02",
+      "elapsed_ms": 0.637,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/me",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "guest denied /progress",
+      "clause": "M1-02",
+      "elapsed_ms": 0.648,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/progress",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "guest denied /lessons/fixture-lesson-1",
+      "clause": "M1-02",
+      "elapsed_ms": 0.69,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "hostile login origin",
+      "clause": "M1-03",
+      "elapsed_ms": 0.813,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "alice registration",
+      "clause": "M1-02",
+      "elapsed_ms": 48.59,
+      "expected_status": [
+        201
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/register",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "fail"
+    },
+    {
+      "case": "alice login",
+      "clause": "M1-01",
+      "elapsed_ms": 48.494,
+      "expected_status": [
+        200
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "bob registration",
+      "clause": "M1-02",
+      "elapsed_ms": 49.533,
+      "expected_status": [
+        201
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/register",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "fail"
+    },
+    {
+      "case": "bob login",
+      "clause": "M1-01",
+      "elapsed_ms": 50.678,
+      "expected_status": [
+        200
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "wrong password rejected",
+      "clause": "M1-01",
+      "elapsed_ms": 44.114,
+      "expected_status": [
+        401
+      ],
+      "method": "POST",
+      "observed_status": 401,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "unknown email rejected",
+      "clause": "M1-01",
+      "elapsed_ms": 45.148,
+      "expected_status": [
+        401
+      ],
+      "method": "POST",
+      "observed_status": 401,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "unenrolled lesson denied",
+      "clause": "M1-04",
+      "elapsed_ms": 2.534,
+      "expected_status": [
+        403,
+        404
+      ],
+      "method": "GET",
+      "observed_status": 404,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "missing CSRF enrollment denied",
+      "clause": "M1-03",
+      "elapsed_ms": 1.357,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "wrong CSRF enrollment denied",
+      "clause": "M1-03",
+      "elapsed_ms": 1.931,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "hostile origin CSRF enrollment denied",
+      "clause": "M1-03",
+      "elapsed_ms": 1.281,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "rejected enrollment unchanged",
+      "clause": "M1-03",
+      "elapsed_ms": 1.402,
+      "expected_status": [
+        403,
+        404
+      ],
+      "method": "GET",
+      "observed_status": 404,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "alice enrollment",
+      "clause": "M1-04",
+      "elapsed_ms": 4.63,
+      "expected_status": [
+        200,
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "enrolled"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "alice duplicate enrollment",
+      "clause": "M1-04",
+      "elapsed_ms": 3.064,
+      "expected_status": [
+        200,
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "enrolled"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "alice permitted lesson",
+      "clause": "M1-04",
+      "elapsed_ms": 3.493,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "bob enrollment",
+      "clause": "M1-04",
+      "elapsed_ms": 3.319,
+      "expected_status": [
+        200,
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "enrolled"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "bob duplicate enrollment",
+      "clause": "M1-04",
+      "elapsed_ms": 3.066,
+      "expected_status": [
+        200,
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/courses/fixture-course/enroll",
+      "response_keys": [
+        "enrolled"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "bob permitted lesson",
+      "clause": "M1-04",
+      "elapsed_ms": 1.997,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "course has stable lessons",
+      "clause": "M1-04",
+      "elapsed_ms": 2.95,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/courses/fixture-course",
+      "response_keys": [
+        "course",
+        "lessons",
+        "next_cursor"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "catalog bounded page",
+      "clause": "M1-08",
+      "elapsed_ms": 1.742,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/courses?limit=1",
+      "response_keys": [
+        "courses",
+        "items",
+        "next_cursor"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "excessive catalog page rejected",
+      "clause": "M1-08",
+      "elapsed_ms": 1.216,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "GET",
+      "observed_status": 400,
+      "path": "/api/v1/courses?limit=1000000",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "missing progress CSRF",
+      "clause": "M1-03",
+      "elapsed_ms": 1.239,
+      "expected_status": [
+        403
+      ],
+      "method": "PUT",
+      "observed_status": 403,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "save Alice private progress",
+      "clause": "M1-05",
+      "elapsed_ms": 5.144,
+      "expected_status": [
+        200
+      ],
+      "method": "PUT",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "completed",
+        "explicit_completed",
+        "lesson_id",
+        "percent",
+        "position",
+        "revision",
+        "updated_at"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Alice progress persisted",
+      "clause": "M1-05",
+      "elapsed_ms": 1.997,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Bob progress separate",
+      "clause": "M1-05",
+      "elapsed_ms": 1.886,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "percent above range",
+      "clause": "M1-08",
+      "elapsed_ms": 1.203,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "PUT",
+      "observed_status": 422,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "negative position",
+      "clause": "M1-08",
+      "elapsed_ms": 1.314,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "PUT",
+      "observed_status": 422,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "beyond known duration",
+      "clause": "M1-08",
+      "elapsed_ms": 4.737,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "PUT",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "completed",
+        "explicit_completed",
+        "lesson_id",
+        "percent",
+        "position",
+        "revision",
+        "updated_at"
+      ],
+      "status": "fail"
+    },
+    {
+      "case": "nonfinite progress rejected",
+      "clause": "M1-08",
+      "elapsed_ms": 1.173,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "PUT",
+      "observed_status": 400,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "invalid progress unchanged",
+      "clause": "M1-05",
+      "elapsed_ms": 2.043,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "fail"
+    },
+    {
+      "case": "missing note CSRF denied",
+      "clause": "M1-03",
+      "elapsed_ms": 1.227,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Alice note created",
+      "clause": "M1-06",
+      "elapsed_ms": 5.045,
+      "expected_status": [
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "content",
+        "created_at",
+        "id",
+        "lesson_id",
+        "position"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "same note retry is idempotent",
+      "clause": "M1-06",
+      "elapsed_ms": 3.432,
+      "expected_status": [
+        200,
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "content",
+        "created_at",
+        "id",
+        "lesson_id",
+        "position"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Alice note persisted once",
+      "clause": "M1-06",
+      "elapsed_ms": 2.175,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Bob cannot read Alice note",
+      "clause": "M1-06",
+      "elapsed_ms": 1.686,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Bob cannot delete Alice note",
+      "clause": "M1-06",
+      "elapsed_ms": 2.48,
+      "expected_status": [
+        404
+      ],
+      "method": "DELETE",
+      "observed_status": 404,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes/note_-MwH_JfeJ-mz1Rn4qivx9bkPD4DvzF7JVfJ95MTPr1U",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "blank note rejected",
+      "clause": "M1-08",
+      "elapsed_ms": 1.261,
+      "expected_status": [
+        400,
+        422
+      ],
+      "method": "POST",
+      "observed_status": 422,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "oversized body rejected",
+      "clause": "M1-08",
+      "elapsed_ms": 16.12,
+      "expected_status": [
+        400,
+        413,
+        422
+      ],
+      "method": "POST",
+      "observed_status": 400,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "fresh Alice session login",
+      "clause": "M1-01",
+      "elapsed_ms": 46.496,
+      "expected_status": [
+        200
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "fresh session reads durable progress",
+      "clause": "M1-09",
+      "elapsed_ms": 2.281,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "fresh session reads durable note",
+      "clause": "M1-09",
+      "elapsed_ms": 1.895,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "authenticated session cookie captured for replay",
+      "clause": "M1-01",
+      "cookie_count": 1,
+      "status": "pass"
+    },
+    {
+      "case": "logout wrong CSRF denied",
+      "clause": "M1-03",
+      "elapsed_ms": 1.206,
+      "expected_status": [
+        403
+      ],
+      "method": "POST",
+      "observed_status": 403,
+      "path": "/api/v1/auth/logout",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "correct logout",
+      "clause": "M1-07",
+      "elapsed_ms": 2.317,
+      "expected_status": [
+        200,
+        204
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/logout",
+      "response_keys": [
+        "ok"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "revoked cookie denied",
+      "clause": "M1-07",
+      "elapsed_ms": 1.042,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/me",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "revoked cookie denied replica http://127.0.0.1:18091",
+      "clause": "M1-07",
+      "elapsed_ms": 1.899,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/me",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Alice deletes own note",
+      "clause": "M1-06",
+      "elapsed_ms": 3.353,
+      "expected_status": [
+        200,
+        204
+      ],
+      "method": "DELETE",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes/note_-MwH_JfeJ-mz1Rn4qivx9bkPD4DvzF7JVfJ95MTPr1U",
+      "response_keys": [
+        "ok"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "note deletion durable",
+      "clause": "M1-06",
+      "elapsed_ms": 1.76,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "fixture administrator login",
+      "clause": "M1-01",
+      "elapsed_ms": 46.981,
+      "expected_status": [
+        200
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "student cannot revoke another user",
+      "clause": "M1-02",
+      "elapsed_ms": 1.369,
+      "expected_status": [
+        403
+      ],
+      "method": "DELETE",
+      "observed_status": 403,
+      "path": "/api/v1/admin/users/usr_bet5V_VPWwoh30olRUUPYS9tVibkTBLjMiFMrScDEnI/sessions",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "admin revokes Alice sessions",
+      "clause": "M1-07",
+      "elapsed_ms": 3.485,
+      "expected_status": [
+        200,
+        204
+      ],
+      "method": "DELETE",
+      "observed_status": 200,
+      "path": "/api/v1/admin/users/usr_bet5V_VPWwoh30olRUUPYS9tVibkTBLjMiFMrScDEnI/sessions",
+      "response_keys": [
+        "ok"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "Alice session revoked by admin",
+      "clause": "M1-07",
+      "elapsed_ms": 1.132,
+      "expected_status": [
+        401
+      ],
+      "method": "GET",
+      "observed_status": 401,
+      "path": "/api/v1/me",
+      "response_keys": [
+        "error"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "save Bob restart checkpoint progress",
+      "clause": "M1-09",
+      "elapsed_ms": 3.189,
+      "expected_status": [
+        200
+      ],
+      "method": "PUT",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/progress",
+      "response_keys": [
+        "completed",
+        "explicit_completed",
+        "lesson_id",
+        "percent",
+        "position",
+        "revision",
+        "updated_at"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "save Bob restart checkpoint note",
+      "clause": "M1-09",
+      "elapsed_ms": 3.339,
+      "expected_status": [
+        201
+      ],
+      "method": "POST",
+      "observed_status": 201,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "content",
+        "created_at",
+        "id",
+        "lesson_id",
+        "position"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "read committed restart checkpoint",
+      "clause": "M1-09",
+      "elapsed_ms": 1.765,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    }
+  ],
+  "clauses": {
+    "M1-01": {
+      "failed_cases": 0,
+      "passed_cases": 7,
+      "status": "pending",
+      "unverified_requirements": [
+        "Secure cookie in production HTTPS configuration; migrated legacy password hashes"
+      ]
+    },
+    "M1-02": {
+      "failed_cases": 2,
+      "passed_cases": 4,
+      "status": "fail",
+      "unverified_requirements": [
+        "unverified and suspended fixture behavior; last-admin/role control"
+      ]
+    },
+    "M1-03": {
+      "failed_cases": 0,
+      "passed_cases": 8,
+      "status": "pass",
+      "unverified_requirements": []
+    },
+    "M1-04": {
+      "failed_cases": 0,
+      "passed_cases": 8,
+      "status": "pending",
+      "unverified_requirements": [
+        "second published/unpublished fixture visibility; authoritative enrollment revoke"
+      ]
+    },
+    "M1-05": {
+      "failed_cases": 1,
+      "passed_cases": 3,
+      "status": "fail",
+      "unverified_requirements": [
+        "manual resume preserving completion; duplicate completion credit; stale revision conflicts"
+      ]
+    },
+    "M1-06": {
+      "failed_cases": 0,
+      "passed_cases": 7,
+      "status": "pass",
+      "unverified_requirements": []
+    },
+    "M1-07": {
+      "failed_cases": 0,
+      "passed_cases": 5,
+      "status": "pending",
+      "unverified_requirements": [
+        "account/enrollment/role revocation and last-admin protection"
+      ]
+    },
+    "M1-08": {
+      "failed_cases": 1,
+      "passed_cases": 7,
+      "status": "fail",
+      "unverified_requirements": [
+        "dependency deadline and overload admission/recovery; real password-hash resource budget"
+      ]
+    },
+    "M1-09": {
+      "failed_cases": 0,
+      "passed_cases": 5,
+      "status": "pending",
+      "unverified_requirements": [
+        "actual API/PostgreSQL restart/crash and acknowledged-state comparison; concurrent HTTP writes"
+      ]
+    },
+    "M1-10": {
+      "failed_cases": 0,
+      "passed_cases": 2,
+      "status": "pending",
+      "unverified_requirements": [
+        "dependency readiness failure, graceful shutdown and redacted operator metrics/logs"
+      ]
+    }
+  },
+  "contract": "docs/rewrite/M1_CONTRACT.md",
+  "fixture": {
+    "course_id": "fixture-course",
+    "lesson_id": "fixture-lesson-1",
+    "new_synthetic_accounts": 2,
+    "seed": "coordinator cmd/seed in isolated courseforge_rewrite PostgreSQL",
+    "unique_namespace": "a249c7646076"
+  },
+  "measured_at_utc": "2026-10-12T01:05:55+00:00",
+  "method": "HTTP behavior checks against prewritten contract; Go implementation source not inspected",
+  "origin": "http://127.0.0.1:5173",
+  "remaining": [
+    "M2 playback/browser/media clauses independently pending",
+    "Full M3\u2013M5 feature parity/migration/recovery/capacity/release remain required"
+  ],
+  "replicas": [
+    "http://127.0.0.1:18091"
+  ],
+  "restart_checkpoint": {
+    "note_id": "note_HccKynjbsJpCvLe71q_RqD-SC0uD4pb1PugZ1Hv_SVk",
+    "percent": 61,
+    "position": 30,
+    "user": "bob",
+    "writes_acknowledged": true
+  },
+  "schema_version": 1,
+  "scope": "Finite correctness probes; no browser/media/AI throughput or 10k capacity conclusion",
+  "summary": {
+    "fail": 4,
+    "pass": 56
+  },
+  "target": "http://127.0.0.1:18090"
+}

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-12",
+  "scope": "isolated deterministic API fixtures with decodable synthetic MP4; no production or live Odysee traffic",
+  "status": "passed",
+  "tests": 35,
+  "profiles": [
+    "chromium",
+    "mobile-chromium",
+    "firefox",
+    "webkit",
+    "mobile-webkit"
+  ],
+  "faults": [
+    "HEAD503 then decode",
+    "GET503 after successful HEAD then decode",
+    "initial failure plus three bounded retries, deliberate fresh-session retry",
+    "media401 without provider retries, sign-in action",
+    "lesson-switch cancellation and stale-response isolation",
+    "truncated bytes followed by authorized replacement media and decoded frames",
+    "24-second stalled transfer followed by bounded timeout and decoded recovery"
+  ],
+  "command": "npx playwright test tests/browser/recovery.spec.ts --output=../output/playwright/courseforge/recovery-finish --reporter=list",
+  "duration": "5.6 minutes",
+  "local_result": "recovery-finish/.last-run.json"
+}

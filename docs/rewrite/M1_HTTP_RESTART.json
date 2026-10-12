@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "case": "checkpoint owner after operator restart login",
+      "clause": "M1-01",
+      "elapsed_ms": 94.12,
+      "expected_status": [
+        200
+      ],
+      "method": "POST",
+      "observed_status": 200,
+      "path": "/api/v1/auth/login",
+      "response_keys": [
+        "csrf_token",
+        "session_id",
+        "user"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "progress survives operator restart",
+      "clause": "M1-09",
+      "elapsed_ms": 11.485,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "note survives operator restart",
+      "clause": "M1-09",
+      "elapsed_ms": 4.097,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "progress survives restart on replica http://127.0.0.1:18091",
+      "clause": "M1-09",
+      "elapsed_ms": 30.538,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1",
+      "response_keys": [
+        "lesson",
+        "progress"
+      ],
+      "status": "pass"
+    },
+    {
+      "case": "note survives restart on replica http://127.0.0.1:18091",
+      "clause": "M1-09",
+      "elapsed_ms": 3.872,
+      "expected_status": [
+        200
+      ],
+      "method": "GET",
+      "observed_status": 200,
+      "path": "/api/v1/lessons/fixture-lesson-1/notes",
+      "response_keys": [
+        "items",
+        "next_cursor",
+        "notes"
+      ],
+      "status": "pass"
+    }
+  ],
+  "checkpoint_report": "docs/rewrite/M1_HTTP_BEHAVIOR_RUN3.json",
+  "contract": "docs/rewrite/M1_CONTRACT.md",
+  "measured_at_utc": "2026-10-12T01:18:18+00:00",
+  "phase": "checkpoint readback after sign-in and operator restart",
+  "remaining": [
+    "storage-loss durability/failover remains outside this checkpoint",
+    "concurrent-write and broader parity/capacity gates remain separate"
+  ],
+  "replicas": [
+    "http://127.0.0.1:18091"
+  ],
+  "schema_version": 1,
+  "scope": "This phase reads previously acknowledged state. Coordinator must separately record the actual API/database restart event; this script does not stop shared services.",
+  "summary": {
+    "fail": 0,
+    "pass": 5
+  },
+  "target": "http://127.0.0.1:18090"
+}

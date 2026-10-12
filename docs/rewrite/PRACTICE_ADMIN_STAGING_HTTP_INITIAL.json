@@ -1,0 +1,151 @@
+{
+  "timestamp": "2026-10-12T16:34:56.315532+00:00",
+  "scope": "isolated staging practice/admin HTTP",
+  "checks": [
+    {
+      "name": "register disposable learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "enroll synthetic course",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "register disposable learner",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "enroll synthetic course",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "create manual SQL path",
+      "passed": true,
+      "expected_status": 201,
+      "actual_status": 201,
+      "replica": 1
+    },
+    {
+      "name": "read practice recommendations on replica",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "SQL lab match has truthful unavailable adapter",
+      "passed": true
+    },
+    {
+      "name": "source suggestions grant no mastery",
+      "passed": true
+    },
+    {
+      "name": "deny other learner practice-recommendations",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 2
+    },
+    {
+      "name": "deny other learner practice-history",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 2
+    },
+    {
+      "name": "deny other learner practice-status",
+      "passed": true,
+      "expected_status": 404,
+      "actual_status": 404,
+      "replica": 2
+    },
+    {
+      "name": "read empty immutable practice history",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "no fabricated verified attempts",
+      "passed": true
+    },
+    {
+      "name": "read private practice status",
+      "passed": true,
+      "expected_status": 200,
+      "actual_status": 200,
+      "replica": 2
+    },
+    {
+      "name": "status contains no invented passes",
+      "passed": true
+    },
+    {
+      "name": "reject missing practice CSRF",
+      "passed": true,
+      "expected_status": 403,
+      "actual_status": 403,
+      "replica": 1
+    },
+    {
+      "name": "require actual lab adapter",
+      "passed": true,
+      "expected_status": 503,
+      "actual_status": 503,
+      "replica": 1
+    },
+    {
+      "name": "reject client-provided grading fields",
+      "passed": true,
+      "expected_status": 400,
+      "actual_status": 400,
+      "replica": 1
+    },
+    {
+      "name": "bound recommendation query",
+      "passed": false,
+      "expected_status": 400,
+      "actual_status": 422,
+      "replica": 1
+    },
+    {
+      "name": "delete disposable synthetic learner",
+      "passed": false,
+      "expected_status": 204,
+      "actual_status": 200,
+      "replica": 1
+    },
+    {
+      "name": "delete disposable synthetic learner",
+      "passed": false,
+      "expected_status": 204,
+      "actual_status": 200,
+      "replica": 1
+    }
+  ],
+  "passed": 18,
+  "failed": 3,
+  "error": "bound recommendation query",
+  "excluded": [
+    "real runner/grading",
+    "browser admin flow",
+    "production",
+    "capacity",
+    "legacy semantic import"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "commit": "fef6598b4ab47095114e51ef7bc5a6b03445fd93",
+  "sha256": {
+    "app/auth.py": "257f98720eb2c61f175b7fd54292310779b1ee7d5d3fa2be7128cab57164dc5f",
+    "app/media.py": "2ad0d31960a2286dc6a021917a2bdc92319b9a82fea543b0dbc922be5fef6a26",
+    "app/native_player.py": "38bd16eb6c5336b07c4836ab99a83dd793b3b52604979940dfc7ed1824380980",
+    "app/player_sessions.py": "185fbf4fdb653c9b00fbc54bc42e47ac302882f3cf69356039f25ee2f93286ce",
+    "app/admin_console.py": "6a023cdea45bd72ca54becdc2db0fb43b4b43fe5ea98a34afb242d6e795ba810",
+    "app/static/native-player.js": "9549c9df26b198bab42b95bd4f0cdb36a6677e914a6a604824d787391b4a56da",
+    "app/static/player-tracking.js": "b9f084e6467ddb947d31b099178a84a1e0264f47c80dba537279cefa5fd485f9",
+    "app/static/player-session.js": "f66e97ef8926972e5d0fa09f244f281ff39dd3c2f5fc297debf29776b4004ce0",
+    "app/static/player-recovery.js": "2342016a944cbcd4483c7d5bcb75632f9ee89605a19d9b3523c8d1cf932acadf"
+  }
+}

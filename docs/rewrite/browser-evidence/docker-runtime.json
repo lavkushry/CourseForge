@@ -1,0 +1,50 @@
+{
+  "recorded_utc": "2026-10-12T01:25:13.078684+00:00",
+  "image": "sha256:0a11c53e587d4900fcfe7c6fe974149dc0b07cdfd048c5c87bdd1f6a6a5fe34f",
+  "scope": "isolated local build and routing, no production deploy",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "headers": {
+        "Content-Type": "text/html",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+        "Cache-Control": "no-cache",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "same-origin"
+      },
+      "expected_status": 200,
+      "passed": true
+    },
+    {
+      "path": "/health",
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/octet-stream",
+        "Content-Security-Policy": null,
+        "Cache-Control": null,
+        "X-Content-Type-Options": null,
+        "Referrer-Policy": null
+      },
+      "expected_status": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": 401,
+      "headers": {
+        "Content-Type": "application/json",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "same-origin"
+      },
+      "expected_status": 401,
+      "passed": true
+    }
+  ],
+  "container": "f04358dda9a9aa86ca2e6343fc0334ca0a50f3078464b04bc08dbeb2c89ead0d",
+  "nginx_config_valid": true,
+  "nginx_validation": "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful",
+  "proof_container_removed": true
+}

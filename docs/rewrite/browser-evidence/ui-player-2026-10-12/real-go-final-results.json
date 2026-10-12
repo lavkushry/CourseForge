@@ -1,0 +1,343 @@
+{
+  "timestamp": "2026-10-12T11:19:15.988Z",
+  "status": "passed",
+  "scope": "isolated Go API18090, PostgreSQL and separately configured authenticated media18094; deterministic decodable MP4; no interception or production/provider traffic",
+  "results": [
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: sign in, decoded authorized media, durable note and progress",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4651,
+      "samples": [
+        {
+          "name": "decoded-media-sample",
+          "project": "chromium",
+          "source": "isolated Go API and separate authenticated media gateway",
+          "sampleElapsedMs": 2180,
+          "droppedFrames": 9,
+          "width": 640,
+          "height": 360,
+          "currentTime": 2.043419,
+          "duration": 30,
+          "readyState": 4,
+          "totalVideoFrames": 65,
+          "presentedFrames": 56
+        }
+      ]
+    },
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: newly registered synthetic learner previews, enrolls and gets private playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2895,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6704,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "chromium",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 409,
+          "code": "playback_conflict",
+          "owner": null
+        }
+      ]
+    },
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: discovery search, durable My List and keyboard navigation",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3794,
+      "samples": []
+    },
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: revoked sign-in stops playback and opens sign-in recovery",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 1893,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "isolated Go stack: sign in, decoded authorized media, durable note and progress",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5004,
+      "samples": [
+        {
+          "name": "decoded-media-sample",
+          "project": "mobile-chromium",
+          "source": "isolated Go API and separate authenticated media gateway",
+          "sampleElapsedMs": 2159,
+          "droppedFrames": 0,
+          "width": 640,
+          "height": 360,
+          "currentTime": 2.031501,
+          "duration": 30,
+          "readyState": 4,
+          "totalVideoFrames": 66,
+          "presentedFrames": 66
+        }
+      ]
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "isolated Go stack: newly registered synthetic learner previews, enrolls and gets private playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3503,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 7581,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "mobile-chromium",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 409,
+          "code": "playback_conflict",
+          "owner": null
+        }
+      ]
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "isolated Go stack: discovery search, durable My List and keyboard navigation",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5097,
+      "samples": []
+    },
+    {
+      "project": "mobile-chromium",
+      "title": "isolated Go stack: revoked sign-in stops playback and opens sign-in recovery",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4046,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "isolated Go stack: sign in, decoded authorized media, durable note and progress",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 9653,
+      "samples": [
+        {
+          "name": "decoded-media-sample",
+          "project": "firefox",
+          "source": "isolated Go API and separate authenticated media gateway",
+          "sampleElapsedMs": 1708,
+          "droppedFrames": 7,
+          "width": 640,
+          "height": 360,
+          "currentTime": 1.484622,
+          "duration": 30,
+          "readyState": 4,
+          "totalVideoFrames": 45,
+          "presentedFrames": 38
+        }
+      ]
+    },
+    {
+      "project": "firefox",
+      "title": "isolated Go stack: newly registered synthetic learner previews, enrolls and gets private playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 4832,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 8188,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "firefox",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 409,
+          "code": "playback_conflict",
+          "owner": null
+        }
+      ]
+    },
+    {
+      "project": "firefox",
+      "title": "isolated Go stack: discovery search, durable My List and keyboard navigation",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 3890,
+      "samples": []
+    },
+    {
+      "project": "firefox",
+      "title": "isolated Go stack: revoked sign-in stops playback and opens sign-in recovery",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 2697,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "isolated Go stack: sign in, decoded authorized media, durable note and progress",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 20334,
+      "samples": [
+        {
+          "name": "decoded-media-sample",
+          "project": "webkit",
+          "source": "isolated Go API and separate authenticated media gateway",
+          "sampleElapsedMs": 1702,
+          "droppedFrames": 0,
+          "width": 640,
+          "height": 360,
+          "currentTime": 1.148797188,
+          "duration": 30,
+          "readyState": 4,
+          "totalVideoFrames": 35,
+          "presentedFrames": 35
+        }
+      ]
+    },
+    {
+      "project": "webkit",
+      "title": "isolated Go stack: newly registered synthetic learner previews, enrolls and gets private playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 8468,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 17831,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "webkit",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 409,
+          "code": "playback_conflict",
+          "owner": null
+        }
+      ]
+    },
+    {
+      "project": "webkit",
+      "title": "isolated Go stack: discovery search, durable My List and keyboard navigation",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6681,
+      "samples": []
+    },
+    {
+      "project": "webkit",
+      "title": "isolated Go stack: revoked sign-in stops playback and opens sign-in recovery",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 5964,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "isolated Go stack: sign in, decoded authorized media, durable note and progress",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 12811,
+      "samples": [
+        {
+          "name": "decoded-media-sample",
+          "project": "mobile-webkit",
+          "source": "isolated Go API and separate authenticated media gateway",
+          "sampleElapsedMs": 1924,
+          "droppedFrames": 0,
+          "width": 640,
+          "height": 360,
+          "currentTime": 1.531313291,
+          "duration": 30,
+          "readyState": 4,
+          "totalVideoFrames": 46,
+          "presentedFrames": 46
+        }
+      ]
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "isolated Go stack: newly registered synthetic learner previews, enrolls and gets private playback",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6013,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 18635,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "mobile-webkit",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 409,
+          "code": "playback_conflict",
+          "owner": null
+        }
+      ]
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "isolated Go stack: discovery search, durable My List and keyboard navigation",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 7864,
+      "samples": []
+    },
+    {
+      "project": "mobile-webkit",
+      "title": "isolated Go stack: revoked sign-in stops playback and opens sign-in recovery",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "durationMs": 6504,
+      "samples": []
+    }
+  ],
+  "source_runs": [
+    {
+      "file": "real-go-results.json",
+      "passed": 23,
+      "failed": 2,
+      "failure_scope": "shared seeded account sign-in429 before classroom; backend rate limit retained"
+    },
+    {
+      "file": "real-go-fresh-signin.json",
+      "passed": 5,
+      "failed": 0,
+      "change": "per-run synthetic account registration, explicit logout and UI sign-in/enrollment"
+    }
+  ],
+  "capacity_scope": "browser correctness samples only; no API, media bandwidth or AI throughput capacity measurement",
+  "frame_counter_definition": "totalVideoFrames comes from getVideoPlaybackQuality(); presentedFrames is totalVideoFrames minus droppedFrames. Natural position advancement and inspected media renders accompany these observations."
+}

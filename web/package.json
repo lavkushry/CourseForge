@@ -1,0 +1,27 @@
+{
+  "name": "courseforge-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:browser": "playwright test",
+    "dev:staging": "node scripts/dev_staging.mjs"
+  },
+  "dependencies": {
+    "media-chrome": "4.19.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}

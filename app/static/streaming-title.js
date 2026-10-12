@@ -93,8 +93,8 @@
         <div class="skeleton-hero title-skeleton-hero"></div>
         <div class="title-dialog-body">
           <div class="skeleton-row">
-            <div class="skeleton-poster" style="height: 40px; width: 140px;"></div>
-            <div class="skeleton-poster" style="height: 40px; width: 140px;"></div>
+            <div class="skeleton-poster title-skeleton-action"></div>
+            <div class="skeleton-poster title-skeleton-action"></div>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@
         </button>
 
         <!-- Billboard Backdrop & Title Treatment -->
-        <div class="title-billboard" style="background-image: linear-gradient(180deg, rgba(13,17,23,0.1) 0%, rgba(13,17,23,0.95) 100%), url('${escapeHtml(backdropUrl)}')">
+        <div class="title-billboard" style="--title-artwork: url('${escapeHtml(backdropUrl)}')">
           <div class="title-billboard-overlay">
             <span class="title-badge-eyebrow"><svg class="icon"><use href="#i-spark"/></svg> COURSEFORGE ORIGINAL MASTERCLASS</span>
             <h1 class="title-main-heading">${escapeHtml(course.title)}</h1>

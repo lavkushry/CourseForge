@@ -1,0 +1,32 @@
+{
+  "scope": "isolated synthetic development stack only",
+  "phase": "restarted_ready",
+  "started_utc": "2026-10-12T01:17:21.887696+00:00",
+  "container_name": "/courseforge-rewrite-postgres-1",
+  "container_id": "0c06e8396857634f1822e4087896010588ad8e7552c488ce3e20a67326cfd1b0",
+  "postgres_started_before": "2026-10-11T18:25:32.805578136Z",
+  "retained_volumes": [
+    "courseforge-rewrite_rewrite_pg"
+  ],
+  "api_old_pids": [
+    3614186,
+    3614286
+  ],
+  "checkpoint": "docs/rewrite/M1_HTTP_BEHAVIOR_RUN3.json",
+  "new_binary_sha256": "49ae219ceba5965065e1081810cd12272d8db0b3442326b579f0477c4e01116c",
+  "production_services_modified": false,
+  "proof_limit": "Graceful isolated restart with durable volume; excludes crash/storage-loss/failover.",
+  "ready_utc": "2026-10-12T01:17:40.671527+00:00",
+  "postgres_started_after": "2026-10-12T01:17:22.657095419Z",
+  "retained_volumes_after": [
+    "courseforge-rewrite_rewrite_pg"
+  ],
+  "container_id_after": "0c06e8396857634f1822e4087896010588ad8e7552c488ce3e20a67326cfd1b0",
+  "api_ready_ports": [
+    18090,
+    18091
+  ],
+  "same_container": true,
+  "same_volume": true,
+  "postgres_restart_observed": true
+}

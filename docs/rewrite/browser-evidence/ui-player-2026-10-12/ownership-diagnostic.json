@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-10-12T11:02:27.157Z",
+  "status": "failed",
+  "durationMs": 14891.834,
+  "results": [
+    {
+      "project": "chromium",
+      "title": "isolated Go stack: explicit second-window takeover and offline suspension keep ownership safe",
+      "status": "failed",
+      "expectedStatus": "passed",
+      "durationMs": 13715,
+      "samples": [
+        {
+          "name": "displaced-playback-response",
+          "project": "chromium",
+          "route": "POST /api/v1/playback/sessions/:id/pulse",
+          "status": 403,
+          "code": "playback_denied",
+          "owner": null
+        }
+      ]
+    }
+  ]
+}

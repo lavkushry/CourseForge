@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "learner decode, seek, watermark and control shielding",
+      "status": "PASS",
+      "detail": "Real authenticated video decoded and sought; watermark visible; controls locked and unlocked"
+    },
+    {
+      "name": "learner notes and bookmarks",
+      "status": "PASS",
+      "detail": "Timestamped note and bookmark created, read and deleted through the UI"
+    },
+    {
+      "name": "learner focus lifecycle",
+      "status": "PASS",
+      "detail": "Focus session started, paused, resumed, finished and appeared in persisted history"
+    },
+    {
+      "name": "admin invitation and learner activation",
+      "status": "PASS",
+      "detail": "Invitation, activation, real sign-in, granted library and administrator tracking clicked end to end"
+    },
+    {
+      "name": "authenticated player and learning event persistence",
+      "status": "PASS",
+      "detail": {
+        "native_sessions": 3,
+        "highest_event_sequence": 6,
+        "learning_events": 30
+      }
+    }
+  ],
+  "isolation": "Disposable anonymized database; production unchanged; activation URLs are never retained",
+  "source_commit": "93aa9ad931b24db308a6afa617e4990602dbb5be"
+}

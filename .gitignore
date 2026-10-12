@@ -48,3 +48,18 @@ __pycache__/
 *.mp3
 *.wav
 *.flac
+
+# Published sanitized UI evidence; canonical artifacts are in docs.
+/app/static/ui-audit/
+
+# Scratch screenshots, session files and playwright artifacts
+*.png
+*.jpg
+*.jpeg
+.playwright-cli/
+.tg_downloader.session*
+/output/
+/temp_videos/
+tree.txt
+._*
+/odysee_manifest.json

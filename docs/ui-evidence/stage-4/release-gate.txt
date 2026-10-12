@@ -1,0 +1,12 @@
+....................................                                     [100%]
+36 passed in 28.88s
+PASS: all populated views at all five widths, with PNG evidence
+PASS: UI source and browser geometry guards
+Auditing CourseForge icon system and UI emoji integrity...
+Found 59 outline SVG symbols defined in sprite:
+  i-archive, i-arrow, i-arrow-down, i-arrow-left, i-arrow-up, i-bell, i-book, i-bookmark, i-cards, i-certificate, i-check, i-check-circle, i-chevron, i-clock, i-close, i-cloud, i-code, i-dataset, i-download, i-edit, i-eye, i-eye-off, i-file, i-filter, i-flame, i-folder, i-forward-10, i-fullscreen, i-grid, i-help, i-local, i-lock, i-menu, i-monitor, i-moon, i-notebook, i-paperclip, i-pause, i-pdf, i-play, i-play-circle, i-refresh, i-replay-10, i-search, i-settings, i-shield, i-slides, i-spark, i-speed, i-sun, i-theater, i-trash, i-trophy, i-unlock, i-upload, i-user, i-users, i-volume, i-volume-mute
+
+SUCCESS: All 59 SVG icons valid and mapped. 0 emojis in UI.
+PASS: Icon system consistent and zero emojis in UI
+PASS: no forbidden paths in tracked Git tree
+RELEASE GATE: SOURCE AUDIT PASS

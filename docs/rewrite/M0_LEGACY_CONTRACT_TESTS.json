@@ -1,0 +1,243 @@
+{
+  "command": ".venv/bin/python -m pytest -q tests/test_academy.py tests/test_registration.py tests/test_native_player.py tests/test_player_sessions.py tests/test_player_delivery.py tests/test_player_recovery.py --junitxml=docs/rewrite/M0_LEGACY_CONTRACT_TESTS.xml",
+  "elapsed_seconds": 13.548,
+  "errors": 0,
+  "failures": 0,
+  "isolation": "Disposable academy_env tmp_path SQLite fixtures and mocked provider HTTP. JS delivery/recovery execute in Node injected harnesses. No live provider/media or production accounts.",
+  "schema_version": 1,
+  "scope": "Selected existing legacy regression suite; not a Go parity/browser/capacity pass",
+  "skipped": 0,
+  "test_cases": [
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.348,
+      "name": "test_accounts_verification_reset_csrf_sessions"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.207,
+      "name": "test_cookie_and_unauthenticated_boundary"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.124,
+      "name": "test_missing_mail_configuration_is_reported_without_creating_an_account"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.308,
+      "name": "test_student_admin_and_course_boundaries"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.411,
+      "name": "test_progress_notes_bookmarks_are_independent"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.633,
+      "name": "test_every_learning_subsystem_is_owned"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.331,
+      "name": "test_activity_is_bounded_idempotent_and_not_playback"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.403,
+      "name": "test_playback_tokens_are_bound_and_single_use"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.322,
+      "name": "test_suspension_and_revocation_take_effect"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.279,
+      "name": "test_account_deletion_cleans_owned_records"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.363,
+      "name": "test_tasks_are_owned_bounded_and_persist_results"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.229,
+      "name": "test_material_escape_is_rejected"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.072,
+      "name": "test_upgrade_preserves_pre_account_data"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.293,
+      "name": "test_admin_invitation_works_without_email_and_is_single_use"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.428,
+      "name": "test_reissued_invitation_and_admin_recovery_revoke_old_links_and_sessions"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.189,
+      "name": "test_invitation_expiry_and_bad_configuration_do_not_activate"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.426,
+      "name": "test_manual_resume_preserves_completion_and_is_private"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.368,
+      "name": "test_player_reports_close_sessions_safely_and_preserve_lifetime_totals"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.077,
+      "name": "test_console_upgrade_preserves_existing_session_totals_and_device"
+    },
+    {
+      "class": "tests.test_academy",
+      "elapsed_seconds": 0.14,
+      "name": "test_provider_sync_imports_real_duration_and_reports_failures"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.282,
+      "name": "test_immediate_registration_session_enrollment_and_audit"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.256,
+      "name": "test_registration_does_not_replace_existing_or_activate_invited_accounts"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.125,
+      "name": "test_registration_validates_input_and_rejects_cross_origin"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.284,
+      "name": "test_registration_remains_rate_limited"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.131,
+      "name": "test_modes_require_explicit_open_access"
+    },
+    {
+      "class": "tests.test_registration",
+      "elapsed_seconds": 0.404,
+      "name": "test_registration_rotates_session_and_admin_recovery_works_without_mail"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.403,
+      "name": "test_media_requires_account_login_and_enrollment"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.245,
+      "name": "test_proxy_rejects_non_provider_redirects"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.513,
+      "name": "test_tracking_separates_pauses_seeks_duplicates_and_tabs"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.482,
+      "name": "test_completion_requires_watched_content_at_the_end_and_can_be_undone"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.428,
+      "name": "test_role_changes_require_admin_password_and_revoke_access"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.296,
+      "name": "test_last_admin_and_pending_account_role_guard"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.002,
+      "name": "test_cold_stream_is_prepared_before_range_delivery"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.446,
+      "name": "test_tab_takeover_does_not_credit_the_previous_tabs_interval"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.273,
+      "name": "test_live_playback_report_excludes_revoked_course_access"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.299,
+      "name": "test_heartbeat_recovers_a_lost_pause_event"
+    },
+    {
+      "class": "tests.test_native_player",
+      "elapsed_seconds": 0.002,
+      "name": "test_provider_authorization_recovers_a_sleeping_wallet_once"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.498,
+      "name": "test_confirmed_takeover_is_shared_by_native_and_embedded"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.316,
+      "name": "test_visible_paused_ownership_release_expiry_and_reclaim"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.28,
+      "name": "test_player_ownership_requires_csrf_current_login_and_course_access"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.341,
+      "name": "test_player_preferences_are_private_validated_and_durable"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.341,
+      "name": "test_shared_activity_stops_counting_after_takeover_and_revocation"
+    },
+    {
+      "class": "tests.test_player_sessions",
+      "elapsed_seconds": 0.289,
+      "name": "test_reloading_native_or_switching_embed_invalidates_previous_media"
+    },
+    {
+      "class": "tests.test_player_delivery",
+      "elapsed_seconds": 0.041,
+      "name": "test_playback_delivery_recovers_without_duplicate_or_unbounded_events"
+    },
+    {
+      "class": "tests.test_player_recovery",
+      "elapsed_seconds": 0.035,
+      "name": "test_retry_reopens_errored_media_and_healthy_timestamp_links_seek"
+    },
+    {
+      "class": "tests.test_player_recovery",
+      "elapsed_seconds": 0.033,
+      "name": "test_recovery_is_bounded_offline_safe_and_cancelled_on_leave"
+    }
+  ],
+  "tests": 46
+}

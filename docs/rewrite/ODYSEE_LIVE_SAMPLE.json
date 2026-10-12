@@ -1,0 +1,8 @@
+{
+  "scope": "one live Odysee source/range sample; no browser decoding or capacity proof",
+  "source_prepared": true,
+  "range_status": 206,
+  "sample_bytes": 32,
+  "passed": true,
+  "process_exit_code": 0
+}

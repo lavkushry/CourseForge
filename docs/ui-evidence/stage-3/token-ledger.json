@@ -1,0 +1,51 @@
+{
+  "css_literals": [
+    {
+      "file": "app/static/player.css",
+      "line": 42,
+      "selector": ".in-learning .lesson-list",
+      "property": "margin",
+      "value": "var(--space-4) -12px 0"
+    },
+    {
+      "file": "app/static/streaming.css",
+      "line": 205,
+      "selector": ".stream-card-top10 .top10-poster-wrap",
+      "property": "margin-left",
+      "value": "-20px"
+    }
+  ],
+  "inline_style_candidates": [
+    {
+      "file": "app/static/streaming-browse.js",
+      "line": 382,
+      "source": "<div class=\"history-progress-bar\"><div class=\"history-progress-fill\" style=\"width: ${percent}%\"></div></div>"
+    },
+    {
+      "file": "app/static/streaming-home.js",
+      "line": 122,
+      "source": "backdrop.style.backgroundImage = `url(\"${slide.backdrop_url}\")`;"
+    },
+    {
+      "file": "app/static/streaming-home.js",
+      "line": 316,
+      "source": "<div class=\"card-progress-fill\" style=\"width: ${percent}%;\"></div>"
+    },
+    {
+      "file": "app/static/streaming-title.js",
+      "line": 155,
+      "source": "<div class=\"title-billboard\" style=\"--title-artwork: url('${escapeHtml(backdropUrl)}')\">"
+    },
+    {
+      "file": "app/static/streaming-title.js",
+      "line": 195,
+      "source": "<div class=\"progress-track\"><span style=\"width: ${course.progress_percent}%\"></span></div>"
+    },
+    {
+      "file": "app/static/streaming-title.js",
+      "line": 263,
+      "source": "<div class=\"episode-thumb-progress\"><span style=\"width: ${ep.progress_percent}%\"></span></div>"
+    }
+  ],
+  "note": "Candidates require classification. Geometry, artwork coordinates, progress percentages, and protected player overlays can have legitimate dynamic values."
+}

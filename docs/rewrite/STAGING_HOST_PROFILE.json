@@ -1,0 +1,40 @@
+{
+  "observed_at": "2026-10-12T16:23:24.521668+00:00",
+  "scope": "Current shared development/staging host only; no production capacity claim",
+  "cpu": {
+    "Architecture": "aarch64",
+    "CPU(s)": "4",
+    "Vendor ID": "ARM",
+    "Model name": "Neoverse-N1"
+  },
+  "logical_cpu_count": 4,
+  "memory_bytes": {
+    "MemTotal": 25136467968,
+    "MemAvailable": 17709617152
+  },
+  "kernel": "7.0.0-1009-oracle",
+  "toolchain": {
+    "go": "go version go1.26.0 linux/arm64",
+    "node": "v22.23.3"
+  },
+  "separate_load_generator": false,
+  "hosting_region": "unresolved",
+  "monthly_budget": "unresolved",
+  "network_capacity": "unmeasured",
+  "api_capacity": "unmeasured",
+  "media_capacity": "unmeasured",
+  "ai_throughput": "unmeasured",
+  "target_concurrent_learners": 10000,
+  "target_proven": false,
+  "excluded": [
+    "hostname/IP",
+    "cloud metadata/credentials",
+    "provider mappings",
+    "learner data",
+    "environment values"
+  ],
+  "cgroup_limits": {
+    "cpu.max": "unavailable",
+    "memory.max": "unavailable"
+  }
+}

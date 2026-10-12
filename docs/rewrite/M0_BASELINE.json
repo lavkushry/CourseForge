@@ -1,0 +1,319 @@
+{
+  "ai_jobs": {
+    "reason": "No inference, indexing or lab execution in this API baseline",
+    "verdict": "not measured"
+  },
+  "api": {
+    "authenticated_sessions": 50,
+    "completed_requests_per_second": 69.378,
+    "elapsed_seconds": 12.252,
+    "expected_authorization_denials": 100,
+    "expected_requests": 850,
+    "failure_samples": [],
+    "load_model": "closed sessions, sequential requests per learner, no think time, one same-host load generator",
+    "p50_ms": 618.624,
+    "p95_ms": 1587.024,
+    "p99_ms": 2694.524,
+    "requests_attempted": 850,
+    "rounds_per_session": 2,
+    "routes": {
+      "GET /api/admin/overview": {
+        "max_ms": 383.378,
+        "p50_ms": 246.405,
+        "p95_ms": 344.578,
+        "p99_ms": 383.378,
+        "requests": 50,
+        "status_counts": {
+          "403": 50
+        }
+      },
+      "GET /api/me/learning": {
+        "max_ms": 1361.125,
+        "p50_ms": 729.365,
+        "p95_ms": 1341.597,
+        "p99_ms": 1354.138,
+        "requests": 100,
+        "status_counts": {
+          "200": 100
+        }
+      },
+      "GET /api/progress": {
+        "max_ms": 1287.814,
+        "p50_ms": 509.493,
+        "p95_ms": 899.946,
+        "p99_ms": 1172.659,
+        "requests": 150,
+        "status_counts": {
+          "200": 150
+        }
+      },
+      "GET /api/search": {
+        "max_ms": 1799.597,
+        "p50_ms": 1144.03,
+        "p95_ms": 1634.073,
+        "p99_ms": 1778.918,
+        "requests": 100,
+        "status_counts": {
+          "200": 100
+        }
+      },
+      "GET /api/videos": {
+        "max_ms": 1171.157,
+        "p50_ms": 521.552,
+        "p95_ms": 888.475,
+        "p99_ms": 1165.549,
+        "requests": 100,
+        "status_counts": {
+          "200": 100
+        }
+      },
+      "GET /api/videos/{video_id}": {
+        "max_ms": 391.36,
+        "p50_ms": 193.793,
+        "p95_ms": 334.192,
+        "p99_ms": 391.36,
+        "requests": 50,
+        "status_counts": {
+          "403": 50
+        }
+      },
+      "GET /api/videos/{video_id}/notes": {
+        "max_ms": 515.285,
+        "p50_ms": 383.15,
+        "p95_ms": 456.671,
+        "p99_ms": 515.285,
+        "requests": 50,
+        "status_counts": {
+          "200": 50
+        }
+      },
+      "POST /api/activity/{sid}/heartbeat": {
+        "max_ms": 3969.4,
+        "p50_ms": 787.459,
+        "p95_ms": 2971.519,
+        "p99_ms": 3685.385,
+        "requests": 100,
+        "status_counts": {
+          "200": 100
+        }
+      },
+      "POST /api/videos/{video_id}/activity-session": {
+        "max_ms": 2068.271,
+        "p50_ms": 687.386,
+        "p95_ms": 2056.813,
+        "p99_ms": 2068.271,
+        "requests": 50,
+        "status_counts": {
+          "201": 50
+        }
+      },
+      "POST /api/videos/{video_id}/notes": {
+        "max_ms": 902.251,
+        "p50_ms": 619.304,
+        "p95_ms": 810.86,
+        "p99_ms": 902.251,
+        "requests": 50,
+        "status_counts": {
+          "201": 50
+        }
+      },
+      "PUT /api/videos/{video_id}/progress": {
+        "max_ms": 1702.195,
+        "p50_ms": 739.609,
+        "p95_ms": 1430.886,
+        "p99_ms": 1702.195,
+        "requests": 50,
+        "status_counts": {
+          "200": 50
+        }
+      }
+    },
+    "server_resource_observations": {
+      "after": {
+        "cpu_seconds": 31.12,
+        "high_water_rss_kib": 151756,
+        "read_bytes": 0,
+        "rss_kib": 151756,
+        "threads": 46,
+        "write_bytes": 0
+      },
+      "before": {
+        "cpu_seconds": 0.62,
+        "high_water_rss_kib": 78380,
+        "read_bytes": 0,
+        "rss_kib": 78380,
+        "threads": 7,
+        "write_bytes": 0
+      },
+      "peak_sampled_rss_kib": 151788,
+      "peak_sampled_threads": 46,
+      "sample_interval_seconds": 0.1,
+      "samples": 119
+    },
+    "unexpected_failures": 0
+  },
+  "application_source_sha256": {
+    "app/__init__.py": "7b850e3c69506e17ec13b27de28c039df84ea67faa43813e08be0b61e8986870",
+    "app/academy.py": "9ae429fd72c9cfaac2dc37c03400fc5f06ec0f2a02b5ebf32524416083d39659",
+    "app/academy_worker.py": "8be1fe11401ff0d1fc45572531064dd1d8911b2e7e90df1551e0e01ddcbc9efd",
+    "app/admin_console.py": "6a023cdea45bd72ca54becdc2db0fb43b4b43fe5ea98a34afb242d6e795ba810",
+    "app/artwork.py": "b36a6fa24fe93fa9bb43ca02acbb567f757143f5d20f143d2c2ab99bfd8b5e41",
+    "app/assessments.py": "e45a387ab508a64eefcd097ba1f08e99292d86360d79f4d5116064bc61c9102c",
+    "app/auth.py": "257f98720eb2c61f175b7fd54292310779b1ee7d5d3fa2be7128cab57164dc5f",
+    "app/chunking.py": "4f5164dc59e02f8ff499529ac9ee310669f0906b864bb3de96ebc7a60f9b2778",
+    "app/companion.py": "2e12ec97f601c6fa72abc7d8afc28570cd505111436120090f49a23023344eec",
+    "app/config.py": "4f0d0e3c66bfdd735e302c4da00f0752124619e33f5555b0640fe630c163c2a0",
+    "app/course_metadata.py": "bb908e71c94077e19c7eb1460156c8b83deb4b9050c024d63283c731da09346b",
+    "app/db.py": "ac304e7f94c61a74be2c27bea59df5dbb1bf414da4d7cdaf8d1e14696a9e0f2b",
+    "app/engagement.py": "9de637c44f38244cbbf248d7004d2e36fe4d757870286d9628a851426b23aef9",
+    "app/extractor.py": "4e2e17bb5d89ba44cbd37249c39a16450f5428ade22947f6c2d0b8befa2e90b9",
+    "app/focus.py": "8ea9f8d9fcbecbccef06704675aee894d5684f1ce30699779c63d6ab5ed5a982",
+    "app/habits.py": "fb56a15a883a963919c1d54f20be3ee3dcd4f8bef27693285ee0c042628ab328",
+    "app/lab_tracks.py": "1e86d196c279a2a97c0896af8ddeee18af596aaa1065504e8002a6a02cc1bf2d",
+    "app/labs.py": "f31d74d04b7d7893e6afc38367a139c702ee99498d15cdee4ae7d6494df14625",
+    "app/learning_paths.py": "1dde7ca0256b19d1bf48d622ea50010bf39e5618ae72474ef5d95a54756dc23d",
+    "app/library.py": "92cfc5bc9d54a328ae29e94cf9d8bdd9fb3f54abcbdda70670c558bb765c5c01",
+    "app/main.py": "d2180435f192921c85bc6e9165bdfbfc1c25f7e513fd0d586f4f2972944c0ce0",
+    "app/media.py": "c97a57eff81767a74e1d661b8a8e2ab3b438a7f1331fad118aa10c65c0ae7937",
+    "app/migrations.py": "39dee18ce3d0178cc63021260f09a4822432600a75bc9d60a57f68ccd0e77ea5",
+    "app/native_player.py": "a09ab80bff1c1def21a59e41475e9fb5deea6d07f15fe05b0a53a35721263425",
+    "app/planner.py": "5f51a8325a6e9cd52d02277269035946f813838248fac43b90bfab8815b62b9c",
+    "app/player_sessions.py": "185fbf4fdb653c9b00fbc54bc42e47ac302882f3cf69356039f25ee2f93286ce",
+    "app/practice.py": "83cf28729141e042d8bd59ac9d3ddc06e97a33492aae5fe2ba7187f6bb637de1",
+    "app/retention.py": "79df0d829a4f6d7cd051d4f1add3dee332e5dddb9d15a75584b8d58a1dfa4ab4",
+    "app/reviews.py": "cfd30b2d3fb8a42dd4f70131a550ff683b4d71430aa33d02a3c09985be3e2b08",
+    "app/streaming.py": "a6d396bd73128cd7227aff3d36e50468bdf4eb624f26211572558a8ecfbfa567",
+    "app/studio.py": "35eeb8bae05a28c5763dc8a779c76fd0c4bb7edfcae50f53a78f4894963bb442",
+    "app/study.py": "23037e841accb846b1c5556390bedd1c47b6772fdedcd404205a9fe8f5384dd5",
+    "app/syllabus.py": "6bf94523978fc2ac37d520cd52687482853aa136c765f6308aecde4998d459a2",
+    "app/tasks.py": "e67e63f356d1e30fa8360d24ba320470a7cf1448fc5567f5ca6e3aecfad76fb6",
+    "app/tutor.py": "0783770e489c9bc1d5f89a224dc2ca52cac0b77f3ec83354ef369ebf41479f7f",
+    "app/vectorstore.py": "2821f425cb9b1627a38b9b4116cc416ca8bd0aa0ddd58171946a1a81c37c6afc",
+    "app/vision.py": "41edf3fc05e83ca1e5339852bf94f9ac18683b1a19a5684b3126da3b0dc7d19e",
+    "app/web_delivery.py": "5167f9d68947a31a12f825959ba6afab0380f5a69f26b7fcf1f23a76e0d5beb3",
+    "app/weekly.py": "e23982449e89cbb53c86061dc700932246131a6a682a7fdcdfd5c8bf36c5d857",
+    "app/worker.py": "7553f6cb9677522d048120cb420fe92ed90fec17e147b418ca9664b37de78432"
+  },
+  "dependencies": {
+    "argon2-cffi": "25.1.0",
+    "fastapi": "0.143.0",
+    "httpx": "0.28.1",
+    "starlette": "1.7.0",
+    "uvicorn": "0.54.0"
+  },
+  "dirty_paths_before_run": [
+    " M .github/workflows/tests.yml",
+    " M .gitignore",
+    " M app/static/academy.css",
+    " M app/static/academy.js",
+    " M app/static/app.js",
+    " M app/static/assessments.css",
+    " M app/static/core.css",
+    " M app/static/focus.css",
+    " M app/static/index.html",
+    " M app/static/learning-paths.css",
+    " M app/static/loaders.js",
+    " M app/static/mobile.css",
+    " M app/static/planner.css",
+    " M app/static/player.css",
+    " M app/static/practice.css",
+    " M app/static/streaming-title.js",
+    " M app/static/style.css",
+    " M app/static/sw.js",
+    " M app/static/tokens.css",
+    " M app/static/tools.css",
+    " M app/static/weekly.css",
+    " M data/odysee_manifest.json",
+    " M scripts/release_gate.py",
+    " M tests/conftest.py",
+    " M tests/test_phase2_mobile_foundation.py",
+    " M tests/test_responsive_layout.py",
+    "?? AGENTS.md",
+    "?? app/._artwork.py",
+    "?? app/static/components.css",
+    "?? app/static/components.js",
+    "?? app/static/habits.css",
+    "?? app/static/habits.js",
+    "?? app/static/layout.css",
+    "?? backend/",
+    "?? build_paid_curriculum.py",
+    "?? compose.rewrite.yaml",
+    "?? docs/GO_TYPESCRIPT_AGENTS.md",
+    "?? docs/GO_TYPESCRIPT_CAPACITY.md",
+    "?? docs/GO_TYPESCRIPT_REWRITE_PLAN.md",
+    "?? docs/UI_AUDIT.md",
+    "?? docs/UI_COMPONENTS.md",
+    "?? docs/UI_LAYOUT.md",
+    "?? docs/UI_VALIDATION.md",
+    "?? docs/rewrite/",
+    "?? docs/ui-evidence/",
+    "?? paid_curriculum.json",
+    "?? scripts/audit_ui.py",
+    "?? scripts/build_ui_evidence_gallery.py",
+    "?? scripts/capture_ui_audit.py",
+    "?? scripts/rewrite_baseline.py",
+    "?? scripts/rewrite_inventory.py",
+    "?? scripts/ui_clickthrough.py",
+    "?? scripts/ui_geometry.js",
+    "?? sync_paid_course_to_db.py",
+    "?? tests/test_ui_contract.py",
+    "?? web/"
+  ],
+  "dirty_tree": true,
+  "fixture": {
+    "lessons_visible_to_each_learner": 210,
+    "login": "preseeded synthetic sessions; password login intentionally excluded",
+    "published_courses": 7,
+    "record_counts_after_run": {
+      "activity_sessions": 50,
+      "auth_sessions": 50,
+      "chunks": 633,
+      "enrollments": 350,
+      "users": 50,
+      "video_notes": 50,
+      "video_progress": 50,
+      "videos": 211
+    },
+    "source": "fresh generated database; no configured library/database read",
+    "sqlite_default_connection_config": {
+      "journal_mode": "wal",
+      "synchronous": 2
+    },
+    "sqlite_foreign_key_violations": [],
+    "sqlite_integrity": "ok",
+    "unpublished_courses": 1
+  },
+  "hardware": {
+    "affinity_cpus": 4,
+    "cgroup_cpu_max": "unavailable",
+    "cgroup_memory_max": "unavailable",
+    "cpu_model": "unknown",
+    "logical_cpus": 4,
+    "physical_memory_bytes": 25136467968,
+    "platform": "Linux-7.0.0-1009-oracle-aarch64-with-glibc2.43",
+    "python": "3.14.4"
+  },
+  "limitations": [
+    "Shared host and load generator; other agents/processes can affect timing.",
+    "Closed finite workload is not sustained/open-arrival capacity evidence.",
+    "Plain loopback HTTP excludes TLS and network geography.",
+    "No sign-in/hash burst, media, browser, mail, AI, labs, failover, or growth-fixture measurement.",
+    "No SQL query timing/lock-wait profile or browser first-frame metrics; these remain M0/M4 work.",
+    "Linux /proc resource counters can be virtualized or omit IO under this execution environment; they are observational only.",
+    "No extrapolation to 10,000 learners or language-only speed attribution."
+  ],
+  "measured_at_utc": "2026-10-11T18:31:45+00:00",
+  "media": {
+    "reason": "No bytes, decoding or Odysee requests in this API baseline",
+    "verdict": "not measured"
+  },
+  "reproduction": ".venv/bin/python scripts/rewrite_baseline.py --users 50 --rounds 2 --output docs/rewrite/M0_BASELINE.json",
+  "revision": "5c134026e6db0f4d45f07a31c1073a92095267dd",
+  "schema_version": 1,
+  "server": {
+    "entrypoint": "uvicorn app.main:app",
+    "keepalive": "uvicorn default",
+    "transport": "plain loopback HTTP",
+    "workers": 1
+  }
+}

@@ -1,10 +1,10 @@
 /* CourseForge Streaming PWA Service Worker */
-const CACHE_NAME = 'courseforge-pwa-v1';
+const CACHE_NAME = 'courseforge-pwa-v4';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
-  '/static/core.css?v=17',
-  '/static/core.js?v=17',
+  '/static/core.css?v=23',
+  '/static/core.js?v=23',
   '/static/icon-192.png',
   '/static/icon-512.png'
 ];

@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "verified_at": "2026-10-11T08:18:31.725151+00:00",
+  "frontend_commit": "93aa9ad931b24db308a6afa617e4990602dbb5be",
+  "capture": {
+    "views": 83,
+    "widths": [
+      320,
+      390,
+      768,
+      1366,
+      1920
+    ],
+    "screenshots": 415,
+    "capture_failures": 0,
+    "overflow": 0,
+    "clipped_controls": 0,
+    "grid_failures": 0,
+    "unmapped_controls": 0,
+    "invalid_icon_sizes": 0,
+    "page_errors": 0
+  },
+  "full_suite": {
+    "passed": 239,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 146.97,
+    "log": "full-tests.txt"
+  },
+  "release_gate": {
+    "passed": true,
+    "browser_tests_passed": 36,
+    "svg_symbols": 59,
+    "emoji_icons": 0,
+    "log": "release-gate.txt"
+  },
+  "clickthrough": {
+    "checks_passed": 5,
+    "failed": 0,
+    "report": "clickthrough.json"
+  },
+  "security": {
+    "protected_implementations_unchanged": 9,
+    "report": "security-unchanged.json"
+  },
+  "syntax": {
+    "javascript_bundles": "PASS",
+    "python_compileall": "PASS"
+  },
+  "gallery": {
+    "controls_and_images": "PASS",
+    "widths": [
+      320,
+      390,
+      768,
+      1366,
+      1920
+    ]
+  },
+  "isolation": "Real public catalog with anonymized disposable accounts and runtime records; no production QA writes"
+}

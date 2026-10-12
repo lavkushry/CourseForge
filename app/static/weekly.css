@@ -1,24 +1,26 @@
-.weekly-calendar {margin-bottom:22px}
-.week-form {display:grid;gap:15px}
-.week-fieldset {min-width:0;border:0;padding:0;margin:0}
-.week-fieldset legend {margin-bottom:10px;font-weight:600;font-size:0.92rem}
-.week-days-input {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
-.week-budget-day {display:grid;gap:6px;color:var(--text-secondary,var(--muted));font-size:0.8rem;font-weight:600}
-.week-budget-day .form-input {width:100%;min-width:0;padding:9px 6px;font-variant-numeric:tabular-nums}
-.week-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.week-actions input {max-width:185px}
-.week-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;margin-top:14px}
-.week-card {display:flex;flex-direction:column;gap:9px;border:1px solid var(--border,rgba(128,128,128,.2));border-radius:var(--radius-md,12px);padding:12px 10px;min-width:0;min-height:182px;background:var(--surface,#fff)}
-.week-card.rest {opacity:.7;background:var(--surface-2,transparent)}
-.week-date {font-size:.78rem;font-weight:700;letter-spacing:.01em}
-.week-number {font-size:.96rem;line-height:1.35}
-.week-actual,.week-review,.week-count {font-size:.75rem;color:var(--text-secondary,var(--muted));line-height:1.4}
-.week-card button {margin-top:auto;width:100%;white-space:normal}
-.planner-actual {margin-top:12px;display:flex;gap:12px;align-items:end;flex-wrap:wrap}
-.planner-actual-label {font-size:.78rem;display:grid;gap:5px}
-.planner-actual-input {width:125px}
-.weekly-calendar button:focus-visible,.planner-actual button:focus-visible,.week-budget-day input:focus-visible {outline:2px solid var(--accent,#6659e8);outline-offset:2px}
-@media(max-width:1150px){.week-grid {grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:700px){.week-grid {grid-template-columns:repeat(2,minmax(0,1fr))}.week-days-input{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:400px){.week-days-input{grid-template-columns:repeat(3,minmax(0,1fr))}.week-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(prefers-reduced-motion:reduce){.week-card,.week-card button{transition:none!important}}
+@layer base {
+.weekly-calendar {margin-bottom:var(--space-6);}
+.week-form {display:grid;gap:var(--space-4);}
+.week-fieldset {min-width:0;border:0;padding:0;margin:0;}
+.week-fieldset legend {margin-bottom:var(--space-3);font-weight:var(--font-semibold);font-size:var(--text-md);}
+.week-days-input {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-2);}
+.week-budget-day {display:grid;gap:var(--space-2);color:var(--text-secondary,var(--muted));font-size:var(--text-sm);font-weight:var(--font-semibold);}
+.week-budget-day .form-input {width:100%;min-width:0;font-variant-numeric:tabular-nums;}
+.week-actions {display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;}
+.week-actions input {max-width:var(--size-184);}
+.week-grid {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:var(--space-2);margin-top:var(--space-4);}
+.week-card {display:flex;flex-direction:column;gap:var(--space-2);border:var(--border-width) solid var(--border,color-mix(in srgb, var(--muted) 20.0%, transparent));border-radius:var(--radius-md,var(--space-3));padding:var(--space-3) var(--space-3);min-width:0;min-height:var(--size-184);background:var(--surface,var(--white));}
+.week-card.rest {opacity:.7;background:var(--surface-2,transparent);}
+.week-date {font-size:var(--text-sm);font-weight:var(--font-bold);letter-spacing:.01em;}
+.week-number {font-size:var(--text-md);line-height:var(--leading-normal);}
+.week-actual,.week-review,.week-count {font-size:var(--text-sm);color:var(--text-secondary,var(--muted));line-height:var(--leading-normal);}
+.week-card button {margin-top:auto;width:100%;white-space:normal;}
+.planner-actual {margin-top:var(--space-3);display:flex;gap:var(--space-3);align-items:end;flex-wrap:wrap;}
+.planner-actual-label {font-size:var(--text-sm);display:grid;gap:var(--space-1);}
+.planner-actual-input {width:var(--size-124);}
+@media(max-width:1150px){.week-grid {grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:700px){.week-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.week-days-input{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:400px){.week-days-input{grid-template-columns:repeat(3,minmax(0,1fr));}.week-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(prefers-reduced-motion:reduce){.week-card,.week-card button{transition:none!important;}}
+
+}

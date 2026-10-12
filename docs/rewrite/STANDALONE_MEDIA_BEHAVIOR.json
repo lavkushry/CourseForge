@@ -1,0 +1,72 @@
+{
+  "target": "isolated Go API18090 and standalone gateway18094",
+  "scope": "synthetic single-session correctness; no capacity or live Odysee claim",
+  "cases": [
+    {
+      "case": "synthetic fixture guard",
+      "status": "pass",
+      "expected_status": 200,
+      "observed_status": 200
+    },
+    {
+      "case": "synthetic registration",
+      "status": "pass",
+      "expected_status": 201,
+      "observed_status": 201
+    },
+    {
+      "case": "enrollment",
+      "status": "pass",
+      "expected_status": 201,
+      "observed_status": 201
+    },
+    {
+      "case": "API-issued playback session",
+      "status": "pass",
+      "expected_status": 201,
+      "observed_status": 201
+    },
+    {
+      "case": "standalone gateway authorized range",
+      "status": "pass",
+      "expected_status": 206,
+      "observed_status": 206
+    },
+    {
+      "case": "actual media range bytes",
+      "status": "pass"
+    },
+    {
+      "case": "standalone gateway authorized HEAD",
+      "status": "pass",
+      "expected_status": 206,
+      "observed_status": 206
+    },
+    {
+      "case": "gateway exposes no catalog routes",
+      "status": "pass",
+      "expected_status": 404,
+      "observed_status": 404
+    },
+    {
+      "case": "guest gateway denial",
+      "status": "pass",
+      "expected_status": 401,
+      "observed_status": 401
+    },
+    {
+      "case": "release via API",
+      "status": "pass",
+      "expected_status": 200,
+      "observed_status": 200
+    },
+    {
+      "case": "separate gateway observes revoked lease",
+      "status": "pass",
+      "expected_status": 403,
+      "observed_status": 403
+    }
+  ],
+  "passed": 11,
+  "failed": 0
+}
