@@ -1361,9 +1361,8 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
       certSec.hidden = true;
       certSec.replaceChildren();
     }
-    if (response.lessons && response.lessons.length > 0) {
-      const contId = targetLessonId || discovery?.getContinuation(id)?.id || response.resume_lesson_id;
-      const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
+    if (targetLessonId && response.lessons && response.lessons.length > 0) {
+      const targetLesson = response.lessons.find(l => l.id === targetLessonId);
       if (targetLesson) {
         await loadLesson(targetLesson, autoplay, true);
         return;
