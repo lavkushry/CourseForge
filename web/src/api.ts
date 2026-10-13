@@ -437,6 +437,53 @@ export class ApiClient implements PlaybackTransport {
     return this.request(`/ai/lessons/${encodeURIComponent(lessonId)}/summary`, signal ? { signal } : {});
   }
 
+  getLessonTranscripts(lessonId: string, signal?: AbortSignal): Promise<{
+    lesson_id: string;
+    title: string;
+    count: number;
+    chunks: Array<{
+      id: string;
+      start_seconds: number;
+      end_seconds: number;
+      text: string;
+      kind: string;
+    }>;
+  }> {
+    return this.request(`/ai/lessons/${encodeURIComponent(lessonId)}/transcripts`, signal ? { signal } : {});
+  }
+
+  getLessonChapters(lessonId: string, signal?: AbortSignal): Promise<{
+    lesson_id: string;
+    title: string;
+    duration: number;
+    chapters: Array<{
+      index: number;
+      title: string;
+      start_seconds: number;
+      end_seconds: number;
+      summary: string;
+    }>;
+  }> {
+    return this.request(`/ai/lessons/${encodeURIComponent(lessonId)}/chapters`, signal ? { signal } : {});
+  }
+
+  classifyVideoSplit(lessonId: string, signal?: AbortSignal): Promise<{
+    lesson_id: string;
+    title: string;
+    chapters: Array<{
+      index: number;
+      title: string;
+      start_seconds: number;
+      end_seconds: number;
+      summary: string;
+    }>;
+  }> {
+    return this.request(`/ai/lessons/${encodeURIComponent(lessonId)}/classify-split`, {
+      method: 'POST',
+      ...(signal ? { signal } : {}),
+    });
+  }
+
   generateAiRoadmap(goal: string, role?: string, signal?: AbortSignal): Promise<{
     id: string;
     goal: string;

@@ -86,7 +86,15 @@ func (g *Gateway) valid(raw string) bool {
 			return true
 		}
 	}
-	return u.Scheme == "https" && (u.Port() == "" || u.Port() == "443") && (u.Hostname() == "secure.odycdn.com" || u.Hostname() == "player.odycdn.com")
+	h := strings.ToLower(u.Hostname())
+	return u.Scheme == "https" && (u.Port() == "" || u.Port() == "443") &&
+		(h == "secure.odycdn.com" || h == "player.odycdn.com" ||
+			strings.HasSuffix(h, ".odycdn.com") || h == "odycdn.com" ||
+			strings.HasSuffix(h, ".odysee.com") || h == "odysee.com" ||
+			strings.HasSuffix(h, ".odysee.live") || h == "odysee.live" ||
+			strings.HasSuffix(h, ".lbry.com") || h == "lbry.com" ||
+			strings.HasSuffix(h, ".cdn77.org") || strings.HasSuffix(h, ".cdn77.com") ||
+			h == "spee.ch")
 }
 func busy(w http.ResponseWriter) {
 	w.Header().Set("Retry-After", "5")
@@ -211,22 +219,37 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			busy(w)
 			return
 		}
-		req, e := http.NewRequestWithContext(ctx, r.Method, target.URL, nil)
+		// Use GET with Range for both GET and HEAD requests so upstream CDN does not redirect to HLS
+		reqMethod := "GET"
+		upstreamRange := rangeValue
+		if r.Method == "HEAD" && upstreamRange == "bytes=0-" {
+			upstreamRange = "bytes=0-0"
+		}
+		req, e := http.NewRequestWithContext(ctx, reqMethod, target.URL, nil)
 		if e != nil {
 			busy(w)
 			return
 		}
-		req.Header.Set("Range", rangeValue)
+		req.Header.Set("Range", upstreamRange)
 		req.Header.Set("Accept-Encoding", "identity")
-		req.Header.Set("User-Agent", "CourseForge-Go/1")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 		req.Header.Set("Origin", "https://odysee.com")
 		if target.Referer != "" {
 			req.Header.Set("Referer", target.Referer)
 		}
 		response, err = g.client.Do(req)
 		if err != nil {
-			busy(w)
-			return
+			select {
+			case <-time.After(150 * time.Millisecond):
+				response, err = g.client.Do(req)
+			case <-ctx.Done():
+				busy(w)
+				return
+			}
+			if err != nil {
+				busy(w)
+				return
+			}
 		}
 		if response.StatusCode != 301 && response.StatusCode != 302 && response.StatusCode != 303 && response.StatusCode != 307 && response.StatusCode != 308 {
 			break
@@ -238,7 +261,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			busy(w)
 			return
 		}
-		target.URL = next.String()
+		target.URL = req.URL.ResolveReference(next).String()
 	}
 	if response == nil {
 		busy(w)
@@ -304,7 +327,10 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func mediaType(v string) bool {
 	v = strings.ToLower(strings.Split(v, ";")[0])
-	return strings.HasPrefix(v, "video/") || strings.HasPrefix(v, "audio/") || v == "application/octet-stream"
+	return strings.HasPrefix(v, "video/") || strings.HasPrefix(v, "audio/") ||
+		v == "application/octet-stream" ||
+		v == "application/x-mpegurl" ||
+		v == "application/vnd.apple.mpegurl"
 }
 
 // FixedResolver is configured only by the explicitly enabled development simulator.

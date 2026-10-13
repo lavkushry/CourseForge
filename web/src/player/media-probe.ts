@@ -7,12 +7,40 @@ export async function probeMedia(path: string, signal: AbortSignal, fetcher: typ
   const scope = new AbortController();
   const abort = () => scope.abort();
   signal.addEventListener('abort', abort, { once: true });
-  const timer = setTimeout(() => scope.abort(), 20_000);
+  const timer = setTimeout(() => scope.abort(), 25_000);
   if (signal.aborted) scope.abort();
+
+  const maxAttempts = 3;
+  let lastResponse: Response | null = null;
+
   try {
-    const response = await fetcher(path, { method: 'HEAD', credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: scope.signal });
-    if (scope.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
-    if (response.ok) return;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (scope.signal.aborted || signal.aborted) throw new DOMException('Cancelled', 'AbortError');
+      try {
+        const response = await fetcher(path, { method: 'HEAD', credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: scope.signal });
+        if (response.ok) return;
+        lastResponse = response;
+        if (response.status === 502 || response.status === 503 || response.status === 504 || response.status === 429) {
+          if (attempt < maxAttempts) {
+            const backoffMs = attempt * 600;
+            await new Promise(r => setTimeout(r, backoffMs));
+            continue;
+          }
+        } else {
+          break;
+        }
+      } catch (err) {
+        if (isAbort(err)) throw err;
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, attempt * 600));
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    if (!lastResponse) throw new ApiError('The video source could not be reached. Retry this lesson.', 503, 'media_unavailable');
+
     const messages: Record<number, string> = {
       401: 'Your sign-in expired. Sign in again to continue this lesson.',
       403: 'Your access to this lesson changed. Return to the course to check your enrollment.',
@@ -24,8 +52,8 @@ export async function probeMedia(path: string, signal: AbortSignal, fetcher: typ
       503: 'The video source is temporarily unavailable. Your saved progress is safe.',
       504: 'The video source took too long to respond. Your saved progress is safe.',
     };
-    const retry = Number(response.headers.get('Retry-After'));
-    throw new ApiError(messages[response.status] || 'This video could not open. Retry the lesson or return to the course.', response.status, response.status === 409 ? 'playback_conflict' : 'media_unavailable', Number.isFinite(retry) ? Math.max(0, Math.min(30_000, retry * 1000)) : 0);
+    const retry = Number(lastResponse.headers.get('Retry-After'));
+    throw new ApiError(messages[lastResponse.status] || 'This video could not open. Retry the lesson or return to the course.', lastResponse.status, lastResponse.status === 409 ? 'playback_conflict' : 'media_unavailable', Number.isFinite(retry) ? Math.max(0, Math.min(30_000, retry * 1000)) : 0);
   } catch (error) {
     if (isAbort(error) && !signal.aborted) throw new ApiError('The video source took too long to respond. Retry this lesson.', 504, 'media_timeout');
     throw error;

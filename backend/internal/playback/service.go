@@ -379,7 +379,7 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 		v.Visible += math.Min(b.ElapsedSeconds, math.Min(gap, 20))
 	}
 	ack = Ack{Sequence: b.Sequence, Position: b.Position, WatchedSeconds: v.Watched, VisibleSeconds: v.Visible, Coverage: coverage(v.Ranges, v.Duration), Owner: true, Completed: completed}
-	if ack.Coverage >= 90 || (b.Kind == "ended" && v.Duration > 0 && b.Position >= v.Duration-2) {
+	if b.Kind == "ended" && v.Duration > 0 && b.Position >= v.Duration-2 && ack.Coverage >= 90 {
 		ack.Completed = true
 	}
 	raw, _ := json.Marshal(v.Ranges)

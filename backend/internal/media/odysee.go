@@ -23,16 +23,18 @@ type cached struct {
 	Expires time.Time
 }
 type Odysee struct {
-	Accounts []Account
-	client   *http.Client
-	cache    map[string]cached
-	mu       sync.Mutex
-	flights  singleflight.Group
-	slots    chan struct{}
-	now      func() time.Time
-	ctx      context.Context
-	cancel   context.CancelFunc
-	wg       sync.WaitGroup
+	Accounts     []Account
+	byChannel    map[string]Account
+	client       *http.Client
+	cache        map[string]cached
+	channelCache map[string]string
+	mu           sync.Mutex
+	flights      singleflight.Group
+	slots        chan struct{}
+	now          func() time.Time
+	ctx          context.Context
+	cancel       context.CancelFunc
+	wg           sync.WaitGroup
 }
 
 var claimName = regexp.MustCompile(`^[A-Za-z0-9_-]{1,300}$`)
@@ -40,30 +42,37 @@ var claimID = regexp.MustCompile(`^[0-9a-fA-F]{40}$`)
 
 func NewOdysee(accounts []Account) *Odysee {
 	ctx, cancel := context.WithCancel(context.Background())
+	byChannel := make(map[string]Account, len(accounts))
+	for _, a := range accounts {
+		if a.Channel != "" {
+			byChannel[a.Channel] = a
+		}
+	}
 	return &Odysee{
-		Accounts: accounts,
+		Accounts:     accounts,
+		byChannel:    byChannel,
 		client: &http.Client{
-			Timeout: 25 * time.Second,
+			Timeout: 12 * time.Second,
 			Transport: &http.Transport{
 				Proxy:               nil,
-				MaxIdleConns:        64,
-				MaxIdleConnsPerHost: 32,
-				MaxConnsPerHost:     32,
+				MaxIdleConns:        128,
+				MaxIdleConnsPerHost: 64,
+				MaxConnsPerHost:     64,
 				IdleConnTimeout:     90 * time.Second,
 			},
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
-		cache:  make(map[string]cached),
-		slots:  make(chan struct{}, 32),
-		now:    time.Now,
-		ctx:    ctx,
-		cancel: cancel,
+		cache:        make(map[string]cached),
+		channelCache: make(map[string]string),
+		slots:        make(chan struct{}, 64),
+		now:          time.Now,
+		ctx:          ctx,
+		cancel:       cancel,
 	}
 }
+
 func (o *Odysee) Close() { o.cancel(); o.client.CloseIdleConnections() }
 
-// Invalidate removes only the failed generation. An older request cannot discard
-// a newer source that another caller has already prepared.
 func (o *Odysee) Invalidate(source playback.Source, target Target) {
 	key := source.ClaimName + ":" + source.ClaimID
 	o.mu.Lock()
@@ -72,6 +81,7 @@ func (o *Odysee) Invalidate(source playback.Source, target Target) {
 		delete(o.cache, key)
 	}
 }
+
 func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, error) {
 	if !claimName.MatchString(source.ClaimName) || !claimID.MatchString(source.ClaimID) || len(o.Accounts) == 0 {
 		return Target{}, ErrProvider
@@ -84,45 +94,90 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 		return v.Target, nil
 	}
 	result := o.flights.DoChan(key, func() (any, error) {
-		// Independent bounded resolution survives cancellation by one range caller.
-		resolveCtx, stop := context.WithTimeout(o.ctx, 60*time.Second)
+		resolveCtx, stop := context.WithTimeout(o.ctx, 45*time.Second)
 		defer stop()
 		select {
 		case o.slots <- struct{}{}:
 			defer func() { <-o.slots }()
-		case <-time.After(3 * time.Second):
+		case <-time.After(5 * time.Second):
 			return Target{}, ErrProvider
 		case <-resolveCtx.Done():
 			return Target{}, ErrProvider
 		}
-		for _, account := range o.Accounts {
-			if account.Token == "" || account.Channel == "" {
-				continue
-			}
-			target, err := o.resolveAccount(resolveCtx, source, account)
-			if err == nil {
+
+		// Step 1: Check known channel from cache or claim_search
+		var targetChannel string
+		o.mu.Lock()
+		targetChannel = o.channelCache[source.ClaimID]
+		o.mu.Unlock()
+
+		if targetChannel == "" {
+			searchCtx, cancelSearch := context.WithTimeout(resolveCtx, 3*time.Second)
+			targetChannel = o.discoverChannel(searchCtx, source.ClaimID)
+			cancelSearch()
+			if targetChannel != "" {
 				o.mu.Lock()
-				if len(o.cache) >= 2048 {
-					for k, c := range o.cache {
-						if !o.now().Before(c.Expires) {
-							delete(o.cache, k)
-						}
-					}
-					if len(o.cache) >= 2048 {
-						for k := range o.cache {
-							delete(o.cache, k)
-							break
-						}
-					}
-				}
-				o.cache[key] = cached{target, o.now().Add(30 * time.Minute)}
+				o.channelCache[source.ClaimID] = targetChannel
 				o.mu.Unlock()
-				return target, nil
-			}
-			if resolveCtx.Err() != nil {
-				break
 			}
 		}
+
+		// Step 2: If we have an exact matching account for the uploading channel, try it first
+		if targetChannel != "" {
+			o.mu.Lock()
+			acc, found := o.byChannel[targetChannel]
+			o.mu.Unlock()
+			if found && acc.Token != "" {
+				target, err := o.resolveAccount(resolveCtx, source, acc)
+				if err == nil && target.URL != "" {
+					o.saveCache(key, target)
+					return target, nil
+				}
+			}
+		}
+
+		// Step 3: Fast concurrent fan-out across all configured accounts
+		fanCtx, cancelFan := context.WithCancel(resolveCtx)
+		defer cancelFan()
+
+		type res struct {
+			target  Target
+			account Account
+		}
+		ch := make(chan res, len(o.Accounts))
+		var wg sync.WaitGroup
+
+		for _, acc := range o.Accounts {
+			if acc.Token == "" || acc.Channel == "" || acc.Channel == targetChannel {
+				continue
+			}
+			wg.Add(1)
+			go func(a Account) {
+				defer wg.Done()
+				t, err := o.resolveAccount(fanCtx, source, a)
+				if err == nil && t.URL != "" {
+					select {
+					case ch <- res{target: t, account: a}:
+						cancelFan()
+					default:
+					}
+				}
+			}(acc)
+		}
+
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+
+		for r := range ch {
+			o.mu.Lock()
+			o.channelCache[source.ClaimID] = r.account.Channel
+			o.mu.Unlock()
+			o.saveCache(key, r.target)
+			return r.target, nil
+		}
+
 		return Target{}, ErrProvider
 	})
 	select {
@@ -135,11 +190,68 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 		return r.Val.(Target), nil
 	}
 }
+
+func (o *Odysee) discoverChannel(ctx context.Context, id string) string {
+	body, _ := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "claim_search",
+		"params": map[string]any{
+			"claim_ids": []string{id},
+		},
+	})
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.na-backend.odysee.com/api/v1/proxy?m=claim_search", strings.NewReader(string(body)))
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := o.client.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var searchResp struct {
+		Result struct {
+			Items []struct {
+				SigningChannel struct {
+					ClaimID string `json:"claim_id"`
+				} `json:"signing_channel"`
+			} `json:"items"`
+		} `json:"result"`
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&searchResp); err != nil {
+		return ""
+	}
+	if len(searchResp.Result.Items) > 0 {
+		return searchResp.Result.Items[0].SigningChannel.ClaimID
+	}
+	return ""
+}
+
+func (o *Odysee) saveCache(key string, target Target) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	if len(o.cache) >= 4096 {
+		for k, c := range o.cache {
+			if !o.now().Before(c.Expires) {
+				delete(o.cache, k)
+			}
+		}
+		if len(o.cache) >= 4096 {
+			for k := range o.cache {
+				delete(o.cache, k)
+				break
+			}
+		}
+	}
+	o.cache[key] = cached{Target: target, Expires: o.now().Add(45 * time.Minute)}
+}
+
 func (o *Odysee) rpc(ctx context.Context, account Account, method string, params map[string]any) (map[string]any, error) {
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := 0; attempt < 2; attempt++ {
 		if attempt > 0 {
 			select {
-			case <-time.After(time.Duration(100*attempt) * time.Millisecond):
+			case <-time.After(150 * time.Millisecond):
 			case <-ctx.Done():
 				return nil, ErrProvider
 			}
@@ -153,7 +265,7 @@ func (o *Odysee) rpc(ctx context.Context, account Account, method string, params
 		req.Header.Set("Content-Type", "application/json")
 		response, err := o.client.Do(req)
 		if err != nil {
-			if attempt < 2 {
+			if attempt == 0 {
 				continue
 			}
 			return nil, ErrProvider
@@ -169,7 +281,7 @@ func (o *Odysee) rpc(ctx context.Context, account Account, method string, params
 		err = d.Decode(&data)
 		response.Body.Close()
 		if response.StatusCode != 200 || err != nil {
-			if attempt < 2 {
+			if attempt == 0 {
 				continue
 			}
 			return nil, ErrProvider
@@ -186,6 +298,7 @@ func (o *Odysee) rpc(ctx context.Context, account Account, method string, params
 	}
 	return nil, ErrProvider
 }
+
 func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, account Account) (Target, error) {
 	signed, err := o.rpc(ctx, account, "channel_sign", map[string]any{"channel_id": account.Channel, "hexdata": hex.EncodeToString([]byte(source.ClaimID))})
 	if err != nil {
@@ -202,6 +315,9 @@ func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, acc
 		return Target{}, err
 	}
 	raw, _ := resolved["streaming_url"].(string)
+	if raw == "" {
+		return Target{}, ErrProvider
+	}
 	ref := "https://odysee.com/$/embed/" + url.PathEscape(source.ClaimName) + "/" + url.PathEscape(source.ClaimID) + "?" + url.Values{"signature": {sig}, "signature_ts": {ts}}.Encode()
 	target := Target{URL: raw, Referer: ref}
 	validator := &Gateway{}

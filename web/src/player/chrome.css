@@ -1,4 +1,4 @@
-/* World-Class Cinematic Video Player Overlay */
+/* World-Class Modern Video Player Overlay (Exact Style Match to Screenshot) */
 .player-enhanced {
   position: relative;
   background: #000;
@@ -11,9 +11,9 @@
 }
 
 .player-enhanced media-controller {
-  --media-control-height: 44px;
+  --media-control-height: 48px;
   --media-font-family: inherit;
-  --media-focus-ring-color: #8b5cf6;
+  --media-focus-ring-color: #38bdf8;
   width: 100%;
   height: 100%;
 }
@@ -79,27 +79,29 @@
   gap: 6px;
 }
 
-/* BUTTONS BASE */
+/* BASE BUTTONS */
 .player-enhanced .cinema-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 50%;
   background: transparent;
-  color: #f1f2f6;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
 }
 
 .player-enhanced .cinema-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.16);
   color: #fff;
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .player-enhanced .cinema-button:active:not(:disabled) {
@@ -107,19 +109,19 @@
 }
 
 .player-enhanced .cinema-button:focus-visible {
-  outline: 2px solid #8b5cf6;
+  outline: 2px solid #38bdf8;
   outline-offset: 2px;
 }
 
 .player-enhanced .cinema-button[aria-pressed="true"],
 .player-enhanced .cinema-button.active {
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.18);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
 }
 
 .player-enhanced .cinema-button .svg-icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 /* CENTER CHROME */
@@ -142,7 +144,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: #fff;
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.45), 0 12px 36px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 40px rgba(56, 189, 248, 0.45), 0 12px 36px rgba(0, 0, 0, 0.7);
   pointer-events: auto;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 4;
@@ -155,9 +157,9 @@
 
 .player-enhanced .cinema-center-play:hover {
   transform: scale(1.15);
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(56, 189, 248, 0.3);
   border-color: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 60px rgba(139, 92, 246, 0.75), 0 16px 48px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 60px rgba(56, 189, 248, 0.75), 0 16px 48px rgba(0, 0, 0, 0.8);
 }
 
 .player-enhanced .cinema-center-actions.is-playing .cinema-center-play {
@@ -176,7 +178,7 @@
   opacity: 1;
 }
 
-/* Ripple Badge */
+/* Double-tap Ripples */
 .player-enhanced .cinema-ripple {
   position: absolute;
   top: 50%;
@@ -196,14 +198,8 @@
   z-index: 4;
 }
 
-.player-enhanced .ripple-left {
-  left: 20%;
-}
-
-.player-enhanced .ripple-right {
-  right: 20%;
-}
-
+.player-enhanced .ripple-left { left: 20%; }
+.player-enhanced .ripple-right { right: 20%; }
 .player-enhanced .ripple-text {
   font-size: 0.8rem;
   font-weight: 700;
@@ -212,18 +208,9 @@
 }
 
 @keyframes ripplePulse {
-  0% {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.65);
-  }
-  40% {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50%) scale(1.35);
-  }
+  0% { opacity: 0; transform: translateY(-50%) scale(0.65); }
+  40% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-50%) scale(1.35); }
 }
 
 .player-enhanced .cinema-ripple.is-animating {
@@ -231,7 +218,6 @@
 }
 
 /* Centered HUD Visual Feedback Pill */
-.player-enhanced .player-hud-pill,
 .player-enhanced .cinema-seek-feedback {
   position: absolute;
   top: 50%;
@@ -249,96 +235,29 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 30px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 30px rgba(56, 189, 248, 0.25);
   pointer-events: none;
   z-index: 15;
 }
 
-.player-enhanced .hud-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b5cf6;
-}
-
-.player-enhanced .hud-icon .svg-icon {
-  width: 22px;
-  height: 22px;
-}
-
-/* TIMELINE SCRUBBER */
-.player-enhanced .cinema-timeline {
-  margin-top: auto;
-  display: block;
-  width: 100%;
-  min-width: 0;
-  height: 22px;
-  padding: 0 10px;
-  cursor: pointer;
-  position: relative;
-  z-index: 6;
-  --media-range-track-height: 4px;
-  --media-range-track-background: rgba(255, 255, 255, 0.22);
-  --media-range-bar-color: #8b5cf6;
-  --media-range-thumb-background: #ffffff;
-  --media-range-thumb-box-shadow: 0 0 12px #8b5cf6, 0 0 4px rgba(0, 0, 0, 0.5);
-  --media-range-thumb-width: 12px;
-  --media-range-thumb-height: 12px;
-  background: linear-gradient(transparent, rgba(8, 9, 11, 0.8));
-  transition: all 0.2s ease;
-  pointer-events: auto;
-}
-
-.player-enhanced .cinema-timeline:hover {
-  --media-range-track-height: 7px;
-  --media-range-thumb-width: 16px;
-  --media-range-thumb-height: 16px;
-}
-
-.player-enhanced .timeline-tooltip {
-  position: absolute;
-  bottom: 28px;
-  transform: translateX(-50%);
-  background: rgba(12, 14, 20, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  pointer-events: none;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  z-index: 10;
-}
-
-.player-enhanced .timeline-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: rgba(12, 14, 20, 0.94);
-}
-
-/* BOTTOM CONTROLS ROW - Dribbble DAY 057 Floating Glassmorphic Dock */
+/* ==============================================================================
+   BOTTOM CONTROL BAR - EXACT STYLE FROM SCREENSHOT
+   Frosted Glass Floating Pill Bar with Inline Segmented Chapter Scrubber
+   ============================================================================== */
 .player-enhanced .cinema-control-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: calc(100% - 32px);
   margin: 0 16px 14px 16px;
   min-height: 48px;
-  padding: 4px 14px;
-  background: rgba(14, 16, 23, 0.90);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  height: 48px;
+  padding: 0 16px;
+  gap: 12px;
+  background: rgba(22, 24, 30, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
+  border-radius: 9999px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85);
   z-index: 5;
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -350,27 +269,44 @@
   transform: translateY(8px);
 }
 
-.player-enhanced.user-inactive:not(:hover) .cinema-timeline {
-  opacity: 0.35;
-}
-
-.player-enhanced .cinema-left-group,
-.player-enhanced .cinema-right-group {
+/* Play/Pause Button - Circular Translucent Pill Button */
+.player-enhanced .cinema-play-circle-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.player-enhanced .cinema-spacer {
-  flex: 1 1 0;
-  min-width: 0;
+.player-enhanced .cinema-play-circle-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.08);
 }
 
-/* Volume Slider */
+.player-enhanced .cinema-play-circle-btn .svg-icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* Volume Control */
 .player-enhanced .cinema-volume-group {
   display: flex;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
+}
+
+.player-enhanced .cinema-volume-btn {
+  width: 34px;
+  height: 34px;
+  color: #ffffff;
 }
 
 .player-enhanced .cinema-volume-slider {
@@ -379,7 +315,7 @@
   pointer-events: none;
   transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), margin 0.25s;
   margin: 0;
-  accent-color: #8b5cf6;
+  accent-color: #ffffff;
   height: 4px;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.25);
@@ -388,626 +324,318 @@
 
 .player-enhanced .cinema-volume-group:hover .cinema-volume-slider,
 .player-enhanced .cinema-volume-group:focus-within .cinema-volume-slider {
-  width: 76px;
+  width: 72px;
   opacity: 1;
   pointer-events: auto;
-  margin-left: 6px;
+  margin-left: 4px;
   margin-right: 6px;
 }
 
-/* Time Button */
-.player-enhanced .cinema-time-btn {
+/* Time Display Text (e.g. "17:29 / 0:58:42") */
+.player-enhanced .cinema-time-text {
   background: transparent;
   border: 0;
-  color: #e2e4ec;
-  font-size: 0.8rem;
+  color: #ffffff;
+  font-size: 0.83rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  padding: 6px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  padding: 4px 6px;
   cursor: pointer;
   border-radius: 6px;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
   transition: all 0.15s;
 }
 
-.player-enhanced .cinema-time-btn:hover {
-  color: #fff;
+.player-enhanced .cinema-time-text:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Autoplay Button */
-.player-enhanced .cinema-autoplay-btn {
-  width: auto;
-  padding: 4px 10px;
+/* ==============================================================================
+   INLINE SEGMENTED CHAPTER TIMELINE (CORE VISUAL FEATURE)
+   ============================================================================== */
+.player-enhanced .cinema-segmented-timeline {
+  flex: 1 1 0%;
+  min-width: 80px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.player-enhanced .cinema-segmented-track {
+  display: flex;
+  width: 100%;
+  height: 4px;
+  gap: 3.5px;
+  align-items: center;
+  transition: height 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.player-enhanced .cinema-segmented-timeline:hover .cinema-segmented-track,
+.player-enhanced.scrubbing .cinema-segmented-track {
+  height: 7px;
+}
+
+.player-enhanced .cinema-seg-pill {
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.28);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.15s ease;
+}
+
+.player-enhanced .cinema-segmented-timeline:hover .cinema-seg-pill {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.player-enhanced .cinema-seg-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+  width: 0%;
+  pointer-events: none;
+  transition: width 0.06s linear;
+}
+
+/* Scrubber Thumb: Outer White Circle with Inner Dark Dot (Exact match to screenshot ◉) */
+.player-enhanced .cinema-segmented-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s;
+}
+
+.player-enhanced .cinema-thumb-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #16181f;
+}
+
+.player-enhanced .cinema-segmented-timeline:hover .cinema-segmented-thumb,
+.player-enhanced.scrubbing .cinema-segmented-thumb {
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+/* Floating Chapter Hover Tooltip Card */
+.player-enhanced .cinema-hover-card {
+  position: absolute;
+  bottom: 34px;
+  transform: translateX(-50%);
+  background: rgba(14, 16, 23, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 6px 12px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+  z-index: 25;
+  text-align: center;
+}
+
+.player-enhanced .cinema-hover-card::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(14, 16, 23, 0.94);
+}
+
+.player-enhanced .cinema-hover-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-enhanced .cinema-hover-time {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* RIGHT CONTROLS GROUP */
+.player-enhanced .cinema-right-group {
+  display: flex;
+  align-items: center;
   gap: 6px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
 }
 
-.player-enhanced .cinema-autoplay-btn .autoplay-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.player-enhanced .cinema-autoplay-btn.active {
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.4);
-  background: rgba(16, 185, 129, 0.12);
-}
-
-/* Popover Groups */
+/* Settings Popover */
 .player-enhanced .cinema-popover-group {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.player-enhanced .speed-badge,
-.player-enhanced .quality-badge {
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: all 0.15s;
-}
-
-.player-enhanced .cinema-button:hover .speed-badge,
-.player-enhanced .cinema-button:hover .quality-badge {
-  background: rgba(139, 92, 246, 0.35);
-  border-color: #8b5cf6;
-}
-
 .player-enhanced .cinema-frosted-popover {
   position: absolute;
-  bottom: 52px;
+  bottom: calc(100% + 12px);
   right: 0;
-  min-width: 150px;
-  background: rgba(14, 16, 23, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(16, 18, 26, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
-  padding: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(139, 92, 246, 0.15);
-  z-index: 20;
+  padding: 12px 14px;
+  min-width: 220px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  animation: popoverDrop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes popoverDrop {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  gap: 10px;
 }
 
 .player-enhanced .popover-heading {
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 6px 10px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 4px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2px;
 }
 
-.player-enhanced .popover-item {
+.player-enhanced .popover-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.player-enhanced .popover-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #e2e4ec;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.player-enhanced .popover-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.player-enhanced .popover-chip.active {
+  background: #38bdf8;
+  color: #0c1017;
+  border-color: #38bdf8;
+  font-weight: 700;
+}
+
+.player-enhanced .popover-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #cfd2dc;
-  font-size: 0.82rem;
+  padding: 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.player-enhanced .toggle-label {
+  font-size: 0.8rem;
   font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.12s;
+  color: #d1d5db;
 }
 
-.player-enhanced .popover-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
-.player-enhanced .popover-item.active {
-  background: rgba(139, 92, 246, 0.22);
-  color: #fff;
+.player-enhanced .popover-toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
   font-weight: 700;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.player-enhanced .popover-item.active::after {
-  content: '✓';
-  color: #8b5cf6;
-  font-weight: 800;
+.player-enhanced .popover-toggle-btn.active {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
-/* Actionable Hidden Select for automated tests */
-.player-enhanced .sr-only-actionable {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-  opacity: 0.001;
-  pointer-events: auto;
-}
-
-/* Shortcuts Cheatsheet Popover */
+/* Shortcuts Popover */
 .player-enhanced .player-shortcuts-popover {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  min-width: 360px;
-  max-width: 90vw;
-  background: rgba(12, 14, 20, 0.95);
+  background: rgba(14, 16, 23, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(139, 92, 246, 0.2);
-  z-index: 25;
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  padding: 16px 20px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+  z-index: 40;
 }
 
 .player-enhanced .shortcuts-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #fff;
 }
 
 .player-enhanced .shortcuts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 16px;
-  font-size: 0.8rem;
+  gap: 8px;
 }
 
 .player-enhanced .shortcut-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
 }
 
 .player-enhanced .shortcut-keys kbd {
-  font-family: inherit;
-  font-size: 0.72rem;
-  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
   margin-right: 4px;
+  font-size: 0.75rem;
+  font-family: inherit;
   color: #fff;
 }
 
-.player-enhanced.controls-locked .cinema-top-actions,
-.player-enhanced.controls-locked .cinema-timeline,
-.player-enhanced.controls-locked .cinema-center-actions,
-.player-enhanced.controls-locked .cinema-control-row {
-  visibility: hidden;
-}
-
-@media (max-width: 768px) {
-  .player-enhanced .cinema-breadcrumb { max-width: 45%; font-size: 0.8rem; }
-  .player-enhanced .cinema-volume-slider { display: none; }
-  .player-enhanced .cinema-center-play { width: 60px; height: 60px; }
-  .player-enhanced .cinema-center-play .svg-icon { width: 28px; height: 28px; }
-  .player-enhanced .cinema-button { width: 34px; height: 34px; }
-  .player-enhanced .cinema-button .svg-icon { width: 19px; height: 19px; }
-  .player-enhanced .shortcuts-grid { grid-template-columns: 1fr; }
-}
-
-/* In-Player Slide-Out Episodes Drawer (Desktop) */
-#player-wrap .player-episodes-drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: auto;
-  width: 380px;
-  max-width: 85%;
-  height: 100%;
-  max-height: 100%;
-  margin: 0;
-  border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 0;
-  background: rgba(12, 14, 21, 0.96);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  box-shadow: -12px 0 50px rgba(0, 0, 0, 0.9);
-  color: #fff;
-  z-index: 25;
-  display: flex;
-  flex-direction: column;
-  animation: slideDrawerIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideDrawerIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-#player-wrap .player-episodes-drawer .dialog-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-#player-wrap .player-episodes-drawer ol {
-  flex: 1;
-  overflow-y: auto;
-  max-height: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* Mobile Bottom Sheet Course Playlist (Dribbble 18088886) */
-@media (max-width: 600px) {
-  .player-enhanced .cinema-control-row {
-    width: 100% !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    border: none !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    background: rgba(10, 12, 18, 0.96) !important;
-    padding: 2px 8px !important;
-  }
-
-  #episode-dialog,
-  #player-wrap .player-episodes-drawer {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: auto !important;
-    max-height: 75vh !important;
-    margin: 0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    border-bottom: none !important;
-    border-radius: 20px 20px 0 0 !important;
-    background: #0f1118 !important;
-    backdrop-filter: blur(24px) !important;
-    box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.95) !important;
-    z-index: 100 !important;
-    animation: slideSheetUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  }
-
-  @keyframes slideSheetUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-
-  #episode-dialog::before,
-  #player-wrap .player-episodes-drawer::before {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.3);
-    margin: 10px auto 4px;
-  }
-}
-
-/* ==========================================================================
-   CRITICAL FIXES: LINE-HEIGHT RESET, TIMELINE DOCKING, POPOVER Z-INDEX & MOBILE
-   ========================================================================== */
-
-/* 1. Reset Media Chrome's :host { line-height: 0 } so text & badges never overlap or collapse */
-.player-enhanced media-controller,
-.player-enhanced media-controller * {
-  line-height: 1.35 !important;
-  box-sizing: border-box;
-}
-
-/* Ensure [hidden] always hides flex/grid popovers and overlays */
-.player-enhanced .cinema-frosted-popover[hidden],
-.player-enhanced .player-shortcuts-popover[hidden],
-.player-enhanced .player-hud-pill[hidden],
-.player-enhanced .cinema-ripple[hidden],
-.player-enhanced .timeline-tooltip[hidden] {
-  display: none !important;
-}
-
-/* 2. Fix timeline scrubber: override style.css media-time-range { flex: 1 } in vertical column */
-.player-enhanced media-time-range,
-.player-enhanced .cinema-timeline {
-  flex: 0 0 18px !important;
-  flex-grow: 0 !important;
-  flex-shrink: 0 !important;
-  height: 18px !important;
-  min-height: 18px !important;
-  max-height: 18px !important;
-  width: calc(100% - 32px) !important;
-  margin: auto 16px 4px 16px !important;
-  padding: 0 4px !important;
-  background: transparent !important;
-  position: relative !important;
-  z-index: 8 !important;
-}
-
-/* 3. Raise bottom control bar stacking context above timeline (8) and center play (10) so popovers never get cut through */
-.player-enhanced .cinema-control-row {
-  position: relative !important;
-  z-index: 15 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
-  flex-wrap: nowrap !important;
-}
-
-.player-enhanced .cinema-left-group,
-.player-enhanced .cinema-right-group {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  flex-wrap: nowrap !important;
-}
-
-/* 4. Fix Speed & Quality Badges and Popovers */
-.player-enhanced .cinema-speed-btn,
-.player-enhanced .cinema-quality-btn {
-  width: auto !important;
-  min-width: 36px !important;
-  padding: 0 4px !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-.player-enhanced .speed-badge,
-.player-enhanced .quality-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1.2 !important;
-  min-height: 24px !important;
-  padding: 3px 8px !important;
-  border-radius: 6px !important;
-  font-size: 0.76rem !important;
-  font-weight: 700 !important;
-  white-space: nowrap !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: #fff !important;
-}
-
-.player-enhanced .cinema-speed.sr-only-actionable {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  opacity: 0.001 !important;
-  border: 0 !important;
-  clip: auto !important;
-  z-index: 1 !important;
-  pointer-events: auto !important;
-}
-
-.player-enhanced .cinema-frosted-popover {
-  position: absolute !important;
-  bottom: calc(100% + 10px) !important;
-  right: 0 !important;
-  min-width: 165px !important;
-  background: rgba(12, 14, 22, 0.96) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 12px !important;
-  padding: 8px !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(139, 92, 246, 0.22) !important;
-  z-index: 40 !important;
-}
-
-.player-enhanced .popover-heading {
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-  line-height: 1.3 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: rgba(255, 255, 255, 0.55) !important;
-  padding: 6px 10px 8px !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  margin-bottom: 4px !important;
-  white-space: nowrap !important;
-}
-
-.player-enhanced .popover-item {
-  line-height: 1.3 !important;
-  padding: 7px 10px !important;
-  font-size: 0.82rem !important;
-  white-space: nowrap !important;
-}
-
-/* ==========================================================================
-   5. MOBILE / PHONE RESPONSIVE PLAYER (Dribbble 18088886)
-   ========================================================================== */
-@media (max-width: 640px) {
-  .player-enhanced .cinema-top-actions {
-    padding: 8px 10px 14px !important;
-  }
-
-  .player-enhanced .cinema-breadcrumb {
-    max-width: 55% !important;
-    font-size: 0.75rem !important;
-    gap: 4px !important;
-  }
-
-  .player-enhanced .cinema-course-crumb,
-  .player-enhanced .cinema-sep {
-    display: none !important;
-  }
-
-  /* Hide desktop-only buttons on phone screens so controls never overflow */
-  .player-enhanced .cinema-zen-btn,
-  .player-enhanced .cinema-top-buttons button[aria-label='Keyboard shortcuts'],
-  .player-enhanced .cinema-left-group button[aria-label='Previous lesson'],
-  .player-enhanced .cinema-left-group button[aria-label='Next lesson'],
-  .player-enhanced .cinema-right-group button[aria-label='A-B Loop repeat'],
-  .player-enhanced .cinema-autoplay-btn,
-  .player-enhanced .cinema-right-group button[aria-label='Picture in picture'],
-  .player-enhanced .cinema-right-group button[aria-label='Toggle theater mode'],
-  .player-enhanced .cinema-volume-slider {
-    display: none !important;
-  }
-
-  .player-enhanced .cinema-center-play {
-    width: 48px !important;
-    height: 48px !important;
-  }
-
-  .player-enhanced .cinema-center-play .svg-icon {
-    width: 22px !important;
-    height: 22px !important;
-  }
-
-  .player-enhanced media-time-range,
-  .player-enhanced .cinema-timeline {
-    flex: 0 0 14px !important;
-    height: 14px !important;
-    min-height: 14px !important;
-    max-height: 14px !important;
-    width: calc(100% - 16px) !important;
-    margin: auto 8px 2px 8px !important;
-    padding: 0 2px !important;
-  }
-
-  .player-enhanced .cinema-control-row {
-    width: calc(100% - 12px) !important;
-    margin: 0 6px 6px 6px !important;
-    min-height: 36px !important;
-    padding: 2px 6px !important;
-    border-radius: 10px !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    background: rgba(12, 14, 22, 0.92) !important;
-    gap: 2px !important;
-  }
-
-  .player-enhanced .cinema-left-group,
-  .player-enhanced .cinema-right-group {
-    gap: 2px !important;
-  }
-
-  .player-enhanced .cinema-button {
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 6px !important;
-  }
-
-  .player-enhanced .cinema-button .svg-icon {
-    width: 16px !important;
-    height: 16px !important;
-  }
-
-  .player-enhanced .cinema-time-btn {
-    font-size: 0.68rem !important;
-    padding: 2px 4px !important;
-  }
-
-  .player-enhanced .speed-badge,
-  .player-enhanced .quality-badge {
-    min-height: 20px !important;
-    padding: 2px 5px !important;
-    font-size: 0.68rem !important;
-    border-radius: 5px !important;
-  }
-
-  .player-enhanced .cinema-frosted-popover {
-    bottom: calc(100% + 6px) !important;
-    min-width: 130px !important;
-    max-height: 140px !important;
-    overflow-y: auto !important;
-    padding: 5px !important;
-  }
-
-  .player-enhanced .popover-heading {
-    font-size: 0.6rem !important;
-    padding: 4px 6px 5px !important;
-  }
-
-  .player-enhanced .popover-item {
-    padding: 5px 8px !important;
-    font-size: 0.74rem !important;
-  }
-}
-
-@media (max-width: 400px) {
-  .player-enhanced .cinema-volume-group {
-    display: none !important;
-  }
-}
-
-
-/* Hide center play button and timeline scrubber while a bottom popover is open */
-.player-enhanced.popover-open .cinema-top-actions,
-.player-enhanced.popover-open .cinema-center-play,
-.player-enhanced.popover-open media-time-range,
-.player-enhanced.popover-open .cinema-timeline {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Keep center play button dead-center in the video stage above the bottom dock */
-.player-enhanced .cinema-center-actions {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding-bottom: 22px !important;
-  pointer-events: none !important;
-}
-
-/* Hide center play button completely while video is playing even on hover so it never blocks lecture slides */
-.player-enhanced .cinema-center-actions.is-playing .cinema-center-play,
-.player-enhanced:hover .cinema-center-actions.is-playing .cinema-center-play {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transform: scale(0.85) !important;
-}
-
-/* Move watermark to subtle bottom-right above timeline so it never collides with top-right buttons */
-#player-wrap .watermark,
-.player-enhanced .watermark {
-  top: auto !important;
-  bottom: 72px !important;
-  right: 22px !important;
-  font-size: 0.66rem !important;
-  opacity: 0.22 !important;
-  pointer-events: none !important;
-  z-index: 3 !important;
+.player-enhanced .shortcut-label {
+  color: #9ca3af;
 }

@@ -1,5 +1,5 @@
 {
-  "observed_at": "2026-10-13T06:23:43.164854+00:00",
+  "observed_at": "2026-10-13T07:02:01.100981+00:00",
   "command": "python3 scripts/rewrite_product_smoke.py --isolated-staging",
   "contracts": [
     "docs/rewrite/PATHS_CONTRACT.md",

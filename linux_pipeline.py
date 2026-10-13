@@ -111,11 +111,13 @@ ODYSEE_TOKENS = [
     "9ryTA4sULdxnA3hZZPaPVVQDJvBa4G5u",
     "31feNHAQyrk5KCXnxwQuFQbRg83hAGr7",
     "Cf98LFvmLBNQsqbmy1mZXxmP2wnbHroZ",
+    "6KN2Wfe14qhyinSshBTgwt6igwnBmoqx",
 ]
 TOKEN_CHANNELS = {
     "9ryTA4sULdxnA3hZZPaPVVQDJvBa4G5u": "97af564bce47e5ed942e992d720da25fa173b00c",
     "31feNHAQyrk5KCXnxwQuFQbRg83hAGr7": "096b6b7c7e831d4c2051d173cd1c528998df2e98",
     "Cf98LFvmLBNQsqbmy1mZXxmP2wnbHroZ": "8fb43b578a5c8508b03bfd75e8dfe2a6f9ba1cde",
+    "6KN2Wfe14qhyinSshBTgwt6igwnBmoqx": "485e18e67c115b92834b540c8e1cb1a9b2bd5ea9",
 }
 ODYSEE_CHANNEL_ID = "97af564bce47e5ed942e992d720da25fa173b00c"
 
@@ -280,7 +282,7 @@ async def main():
                     pass
 
     # Create 3 dedicated token rotators staggered across the 3 accounts
-    worker_rotators = [OdyseeTokenRotator(ODYSEE_TOKENS, start_idx=i) for i in range(3)]
+    worker_rotators = [OdyseeTokenRotator(ODYSEE_TOKENS, start_idx=i) for i in range(4)]
 
     client = TelegramClient(SESSION_PATH, API_ID, API_HASH)
     await client.connect()
@@ -381,7 +383,7 @@ async def main():
                 unmapped_videos.sort(key=lambda x: (0 if x["idx"] >= 151 else 1, x["idx"]))
 
             NUM_DL_WORKERS = 1
-            NUM_UP_WORKERS = 3
+            NUM_UP_WORKERS = 4
 
             dl_queue: asyncio.Queue = asyncio.Queue()
             for v in unmapped_videos:
@@ -389,7 +391,7 @@ async def main():
             for _ in range(NUM_DL_WORKERS):
                 dl_queue.put_nowait(None)
 
-            upload_queue: asyncio.Queue = asyncio.Queue(maxsize=3)
+            upload_queue: asyncio.Queue = asyncio.Queue(maxsize=4)
 
             async def downloader_worker(dl_id: int):
                 while True:

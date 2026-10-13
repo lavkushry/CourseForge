@@ -35,7 +35,7 @@ type Submission struct {
 	Revision       int64     `json:"revision"`
 	ContentHash    string    `json:"content_hash"`
 	Content        string    `json:"-"`
-	GraderVersion  string    `json:"grader_version"`
+	GraderVersion  string    `json:"-"`
 	ValidateInKind bool      `json:"validate_in_kind"`
 	JobID          *string   `json:"job_id"`
 	State          string    `json:"state"`

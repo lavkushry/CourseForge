@@ -52,6 +52,17 @@ export class StudyRail {
   private transcriptLoaded = false;
   private transcriptFilter = '';
 
+  // Chapters / Video Splits state
+  private chapters: Array<{
+    index: number;
+    title: string;
+    start_seconds: number;
+    end_seconds: number;
+    summary: string;
+  }> = [];
+  private chaptersLoaded = false;
+  private classifyingSplit = false;
+
   // AI Tutor state
   private tutorMode: 'explain' | 'notes' | 'quiz' | 'lab' = 'explain';
   private tutorHistory: Array<{
@@ -63,6 +74,10 @@ export class StudyRail {
   private tutorBusy = false;
 
   constructor(private readonly options: StudyRailOptions) {}
+
+  getChapters() {
+    return this.chapters;
+  }
 
   updateContext(course: Course | null, lessons: Lesson[], activeLesson: Lesson | null, learned: Set<string>): void {
     const lessonChanged = this.activeLesson?.id !== activeLesson?.id;
@@ -78,6 +93,8 @@ export class StudyRail {
       this.quizResult = null;
       this.transcriptLoaded = false;
       this.transcriptChunks = [];
+      this.chapters = [];
+      this.chaptersLoaded = false;
     }
 
     this.render();
@@ -219,7 +236,7 @@ export class StudyRail {
         const icon = el('span', 'rail-item-status');
         if (isDone) icon.append(svgIcon('check'));
         else if (isActive) icon.append(svgIcon('play'));
-        else icon.textContent = '○';
+        else icon.append(svgIcon('circle'));
         const info = el('div', 'rail-item-info');
         info.append(
           el('span', 'rail-item-title', l.title),
@@ -304,7 +321,7 @@ export class StudyRail {
       const card = el('div', 'material-item-card');
       card.append(
         el('strong', '', m.title),
-        el('a', 'button quiet', 'Download ↗'),
+        el('a', 'button quiet', 'Download'),
       );
       const link = card.querySelector('a');
       if (link) {
@@ -516,7 +533,7 @@ export class StudyRail {
   }
 
   // ==========================================
-  // PANEL 6: TRANSCRIPT
+  // PANEL 6: TRANSCRIPT & VIDEO SPLITS
   // ==========================================
   private renderTranscriptPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-transcript');
@@ -530,7 +547,96 @@ export class StudyRail {
       el('h3', '', 'Synchronized Transcript'),
       el('span', 'tag', 'Interactive'),
     );
+    panel.append(head);
 
+    // Asynchronously load real transcripts if not loaded
+    if (!this.transcriptLoaded) {
+      this.transcriptLoaded = true;
+      const lessonId = this.activeLesson.id;
+      this.options.api.getLessonTranscripts(lessonId).then(res => {
+        if (this.activeLesson?.id === lessonId && res.chunks && res.chunks.length > 0) {
+          this.transcriptChunks = res.chunks.map(c => ({
+            start: c.start_seconds,
+            end: c.end_seconds,
+            text: c.text,
+          }));
+          this.render();
+        } else if (this.activeLesson?.id === lessonId && this.transcriptChunks.length === 0) {
+          this.populateSyntheticChunks();
+          this.render();
+        }
+      }).catch(() => {
+        if (this.transcriptChunks.length === 0) {
+          this.populateSyntheticChunks();
+          this.render();
+        }
+      });
+    }
+
+    // Asynchronously load real chapters/splits if not loaded
+    if (!this.chaptersLoaded) {
+      this.chaptersLoaded = true;
+      const lessonId = this.activeLesson.id;
+      this.options.api.getLessonChapters(lessonId).then(res => {
+        if (this.activeLesson?.id === lessonId && res.chapters && res.chapters.length > 0) {
+          this.chapters = res.chapters;
+          this.render();
+        }
+      }).catch(() => {});
+    }
+
+    // 1. Chapters / Video Splits Section
+    if (this.chapters.length > 0) {
+      const chaptersSec = el('div', 'rail-chapters-section');
+      const chapHead = el('div', 'chapters-head');
+      chapHead.append(
+        el('h4', '', 'AI Video Splits & Key Topics'),
+        el('span', 'tag', `${this.chapters.length} Splits`)
+      );
+
+      const classifyBtn = el('button', 'button quiet small-btn', this.classifyingSplit ? 'Classifying…' : 'Re-classify Split');
+      classifyBtn.disabled = this.classifyingSplit;
+      classifyBtn.addEventListener('click', async () => {
+        if (!this.activeLesson) return;
+        this.classifyingSplit = true;
+        this.render();
+        try {
+          const res = await this.options.api.classifyVideoSplit(this.activeLesson.id);
+          if (res.chapters) {
+            this.chapters = res.chapters;
+          }
+        } catch {
+          // safe
+        } finally {
+          this.classifyingSplit = false;
+          this.render();
+        }
+      });
+      chapHead.append(classifyBtn);
+      chaptersSec.append(chapHead);
+
+      const chapList = el('div', 'chapters-pills-list');
+      for (const chap of this.chapters) {
+        const pill = el('div', 'chapter-pill-card');
+        const pTop = el('div', 'chapter-pill-top');
+        const pTime = el('button', 'chapter-time-btn', `${formatTime(chap.start_seconds)} - ${formatTime(chap.end_seconds)}`);
+        pTime.type = 'button';
+        pTime.title = `Jump to ${chap.title}`;
+        pTime.addEventListener('click', () => this.options.seekTo(chap.start_seconds));
+
+        const pTitle = el('strong', 'chapter-title', chap.title);
+        pTop.append(pTime, pTitle);
+        pill.append(pTop);
+        if (chap.summary) {
+          pill.append(el('p', 'chapter-summary', chap.summary));
+        }
+        chapList.append(pill);
+      }
+      chaptersSec.append(chapList);
+      panel.append(chaptersSec);
+    }
+
+    // 2. Transcript Search & Chunks List
     const filterInput = el('input', 'form-input rail-search-input');
     filterInput.type = 'search';
     filterInput.placeholder = 'Search within lecture speech…';
@@ -539,26 +645,7 @@ export class StudyRail {
       this.transcriptFilter = filterInput.value.toLowerCase().trim();
       this.render();
     });
-
-    panel.append(head, filterInput);
-
-    // Load transcript chunks if not loaded
-    if (!this.transcriptLoaded) {
-      this.transcriptLoaded = true;
-      // In CourseForge, transcript chunks are indexed in PostgreSQL GIN
-      // Populate with realistic time-coded chunks based on duration
-      const totalSec = this.activeLesson.duration_seconds || 1200;
-      const chunks: Array<{ start: number; end: number; text: string }> = [];
-      const interval = 60; // 1-minute blocks
-      for (let s = 0; s < totalSec; s += interval) {
-        chunks.push({
-          start: s,
-          end: Math.min(s + interval, totalSec),
-          text: `[${formatTime(s)} - ${formatTime(Math.min(s + interval, totalSec))}] Discussion covering core architectures, implementation trade-offs, and verified design patterns in ${this.activeLesson.title}.`,
-        });
-      }
-      this.transcriptChunks = chunks;
-    }
+    panel.append(filterInput);
 
     const list = el('div', 'transcript-chunks-list');
     const filtered = this.transcriptFilter
@@ -569,6 +656,7 @@ export class StudyRail {
       const row = el('div', 'transcript-row');
       const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
       timeBtn.type = 'button';
+      timeBtn.title = `Jump to ${formatTime(c.start)}`;
       timeBtn.addEventListener('click', () => this.options.seekTo(c.start));
 
       const text = el('p', 'transcript-text', c.text);
@@ -578,6 +666,21 @@ export class StudyRail {
 
     panel.append(list);
     return panel;
+  }
+
+  private populateSyntheticChunks(): void {
+    if (!this.activeLesson) return;
+    const totalSec = this.activeLesson.duration_seconds || 1200;
+    const chunks: Array<{ start: number; end: number; text: string }> = [];
+    const interval = 60;
+    for (let s = 0; s < totalSec; s += interval) {
+      chunks.push({
+        start: s,
+        end: Math.min(s + interval, totalSec),
+        text: `[${formatTime(s)} - ${formatTime(Math.min(s + interval, totalSec))}] Discussion covering core architectures, implementation trade-offs, and verified design patterns in ${this.activeLesson.title}.`,
+      });
+    }
+    this.transcriptChunks = chunks;
   }
 
   // ==========================================
@@ -638,7 +741,7 @@ export class StudyRail {
     textarea.rows = 3;
     textarea.required = true;
 
-    const askBtn = el('button', 'button primary', this.tutorBusy ? 'Thinking…' : 'Ask Tutor ↗');
+    const askBtn = el('button', 'button primary', this.tutorBusy ? 'Thinking…' : 'Ask Tutor');
     askBtn.type = 'submit';
     askBtn.disabled = this.tutorBusy;
 

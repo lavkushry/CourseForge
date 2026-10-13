@@ -5,6 +5,7 @@ import { LearningApi } from './learning/api';
 import { LearningView } from './learning/view';
 import { DiscoveryView, artwork } from './discovery/view';
 import type { CatalogView } from './discovery/view';
+import { svgIcon } from './icons';
 import { ApiClient, ApiError, errorMessage, isAbort } from './api';
 import type { Course, Lesson, Note, PulseAck, User } from './contracts';
 import { PlayerController, formatTime } from './player/controller';
@@ -366,6 +367,10 @@ function renderApp(account: User): void {
           <span class="academy-badge-pill">ACADEMY STUDIO</span>
           <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal ↗</button>
         </div>
+        <button id="nav-search-btn" type="button" class="lms-nav-item drawer-search-btn" aria-label="Search all pages" title="Search all pages">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg></span>
+          <span class="lms-nav-label">Search</span>
+        </button>
         <button id="nav-home" data-catalog-view="home" class="lms-nav-item">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/><path d="M9 16h6"/></svg></span>
           <span class="lms-nav-label">Home</span>
@@ -744,7 +749,10 @@ function renderApp(account: User): void {
     required<HTMLElement>('#player-wrap'),
     video,
     {
-      seek: position => controller?.seek(position),
+      seek: position => {
+        video.currentTime = Math.max(0, position);
+        controller?.seek(position);
+      },
       nextLesson: () => {
         const next = nextLesson();
         if (next) void loadLesson(next, true);
@@ -766,6 +774,10 @@ function renderApp(account: User): void {
       },
       onCancelNext: () => {
         controller?.cancelNext();
+      },
+      getChapters: () => studyRail?.getChapters() || [],
+      onOpenChapters: () => {
+        studyRail?.setTab('transcript');
       },
     },
     pageScope.signal
@@ -867,6 +879,13 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   }
   const quickSearch = document.querySelector<HTMLInputElement>('#header-quick-search');
   if (quickSearch) {
+    quickSearch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      omniSearch?.open(quickSearch.value);
+    }, { signal });
+    quickSearch.addEventListener('focus', () => {
+      omniSearch?.open(quickSearch.value);
+    }, { signal });
     quickSearch.addEventListener('input', () => {
       const catalogEl = document.querySelector<HTMLElement>('#catalog');
       if (catalogEl && catalogEl.hidden) {
@@ -893,6 +912,7 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
     }, { signal });
   }
   on('#mobile-search-btn', () => omniSearch?.open());
+  on('#nav-search-btn', () => { closeMobileMenu(); omniSearch?.open(); });
   const searchWrap = document.querySelector<HTMLElement>('#header-quick-search-wrap');
   if (searchWrap) {
     searchWrap.addEventListener('click', (e) => {
@@ -1284,18 +1304,20 @@ async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise
 }
 
 async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
-  await loadCourse(courseId, false);
+  await loadCourse(courseId, false, lessonId);
   if (selectedCourse?.id !== courseId) return;
   const generation = navigationGeneration;
   try {
     const lesson = lessons.find(value => value.id === lessonId) ?? (await api.lesson(lessonId, navigationScope.signal)).lesson;
     if (generation !== navigationGeneration || selectedCourse?.id !== courseId) return;
     if (!lessons.some(value => value.id === lessonId)) lessons.push(lesson);
-    await loadLesson(lesson);
+    if (selectedLesson?.id !== lesson.id) {
+      await loadLesson(lesson);
+    }
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
 }
 
-async function loadCourse(id: string, preview = true): Promise<void> {
+async function loadCourse(id: string, preview = true, targetLessonId?: string): Promise<void> {
   const navigation = newNavigation();
   await controller?.close();
   if (!navigation.current()) return;
@@ -1321,7 +1343,6 @@ async function loadCourse(id: string, preview = true): Promise<void> {
     if (cCur) cCur.textContent = response.course.title;
     const catBadge = document.querySelector<HTMLElement>('#lesson-category-badge');
     if (catBadge) catBadge.textContent = response.course.category || 'Engineering';
-    required('#lesson-title').textContent = 'Choose a lesson';
     required('#lesson-description').textContent = response.course.description || '';
     required<HTMLElement>('#materials').hidden = true;
     required<HTMLElement>('#notes').hidden = true;
@@ -1338,6 +1359,13 @@ async function loadCourse(id: string, preview = true): Promise<void> {
     } else {
       certSec.hidden = true;
       certSec.replaceChildren();
+    }
+    if (response.lessons && response.lessons.length > 0) {
+      const targetLesson = (targetLessonId && response.lessons.find(l => l.id === targetLessonId)) || response.lessons[0];
+      if (targetLesson) {
+        await loadLesson(targetLesson, false);
+        return;
+      }
     }
     required<HTMLElement>('#lesson-title').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });

@@ -140,8 +140,7 @@ func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, 400, "invalid_search", "Search is too long")
 		return
 	}
-	enrolledOnly := r.URL.Query().Get("enrolled") == "true"
-	rows, err := s.Pool.Query(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE ($2='admin' OR (c.published AND (NOT $6 OR EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))) AND c.id>$3 AND ($4='' OR c.title ILIKE '%' || $4 || '%' ESCAPE '') ORDER BY c.id LIMIT $5`, p.UserID, p.Role, cursor, search, limit+1, enrolledOnly)
+	rows, err := s.Pool.Query(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE ($2='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id))) AND c.id>$3 AND ($4='' OR c.title ILIKE '%' || $4 || '%' ESCAPE '') ORDER BY c.id LIMIT $5`, p.UserID, p.Role, cursor, search, limit+1)
 	if err != nil {
 		s.databaseError(w, err)
 		return
@@ -170,7 +169,7 @@ func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
 	var c Course
-	err := s.Pool.QueryRow(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR c.published)`, p.UserID, r.PathValue("id"), p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
+	err := s.Pool.QueryRow(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))`, p.UserID, r.PathValue("id"), p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
 	if err != nil {
 		s.databaseError(w, err)
 		return
