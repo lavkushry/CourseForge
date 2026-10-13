@@ -143,30 +143,32 @@ export function mountPlayerChrome(
     source('#play-toggle')?.click();
   }, { signal });
 
-  const hudPill = ui('div', 'cinema-seek-feedback player-hud-pill');
-  hudPill.hidden = true;
-  hudPill.setAttribute('aria-live', 'polite');
-  const hudIconWrap = ui('span', 'hud-icon');
-  const hudText = ui('span', 'hud-text');
-  hudPill.append(hudIconWrap, hudText);
+  const feedback = ui('span', 'cinema-seek-feedback');
+  feedback.hidden = true;
+  feedback.setAttribute('aria-live', 'polite');
+  wrap.append(feedback);
 
-  center.append(leftRipple, centerPlay, rightRipple, hudPill);
+  center.append(leftRipple, centerPlay, rightRipple);
   media.append(center);
 
-  let hudTimer: any = undefined;
+  let feedbackTimer: any = undefined;
   const triggerHud = (icon: IconName, text: string) => {
-    hudIconWrap.replaceChildren(svgIcon(icon));
-    hudText.textContent = text;
-    hudPill.hidden = false;
-    hudPill.classList.remove('is-active');
-    void hudPill.offsetWidth;
-    hudPill.classList.add('is-active');
-    clearTimeout(hudTimer);
-    hudTimer = setTimeout(() => {
-      hudPill.classList.remove('is-active');
-      hudPill.hidden = true;
+    feedback.replaceChildren(svgIcon(icon), ui('span', 'hud-text', text));
+    feedback.hidden = false;
+    clearTimeout(feedbackTimer);
+    feedbackTimer = setTimeout(() => {
+      feedback.hidden = true;
     }, 1100);
   };
+
+  video.addEventListener('seeked', () => {
+    feedback.textContent = formatTime(video.currentTime);
+    feedback.hidden = false;
+    clearTimeout(feedbackTimer);
+    feedbackTimer = setTimeout(() => {
+      feedback.hidden = true;
+    }, 900);
+  }, { signal });
 
   const showRipple = (side: 'left' | 'right') => {
     const el = side === 'left' ? leftRipple : rightRipple;
@@ -197,17 +199,19 @@ export function mountPlayerChrome(
   // 3. TIMELINE SCRUBBER & FLOATING TIME TOOLTIP
   const tooltip = ui('div', 'timeline-tooltip');
   tooltip.hidden = true;
-  timeline.append(tooltip);
+  wrap.append(tooltip);
 
   timeline.addEventListener('mousemove', (e: MouseEvent) => {
     const rect = timeline.getBoundingClientRect();
+    const wrapRect = wrap.getBoundingClientRect();
     if (rect.width <= 0) return;
     const pos = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
     const pct = pos / rect.width;
     const dur = Number.isFinite(video.duration) ? video.duration : 0;
     const hoverTime = dur * pct;
     tooltip.textContent = formatTime(hoverTime);
-    tooltip.style.left = `${pos}px`;
+    tooltip.style.left = `${(rect.left - wrapRect.left) + pos}px`;
+    tooltip.style.bottom = '56px';
     tooltip.hidden = false;
   }, { signal });
 
@@ -848,7 +852,7 @@ export function mountPlayerChrome(
   signal.addEventListener('abort', () => {
     observer.disconnect();
     titleObserver.disconnect();
-    clearTimeout(hudTimer);
+    clearTimeout(feedbackTimer);
     clearTimeout(clickTimer);
     clearTimeout(autohideTimer);
     if (dialog && prevParent && prevParent.isConnected) prevParent.append(dialog);

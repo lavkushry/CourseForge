@@ -5,8 +5,8 @@ import { formatTime } from '../player/controller';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
+  if (className) node.className = className;
+  if (text) node.textContent = text;
   return node;
 }
 
@@ -47,18 +47,18 @@ export class HistoryView {
     const root = this.options.root;
     root.replaceChildren();
 
-    const pageHead = el('div', 'page-heading');
-    const headText = el('div');
+    const pageHead = el('div', 'page-heading history-header');
+    const headText = el('div', 'page-heading-left');
     headText.append(
       el('span', 'eyebrow', 'CONTINUE WATCHING'),
-      el('h1', '', 'Watch History'),
-      el('p', 'muted', 'Your recently watched lectures, playback positions, and course completion progress.'),
+      el('h1', 'page-title', 'Watch History'),
+      el('p', 'muted page-subtitle', 'Pick up right where you left off. Track your completion progress across all masterclass lectures.'),
     );
     pageHead.append(headText);
 
     if (this.items.length > 0) {
       const clearBtn = el('button', 'button quiet clear-history-btn');
-      clearBtn.append(svgIcon('close'), ' Clear History');
+      clearBtn.append(svgIcon('close'), el('span', '', ' Clear History'));
       clearBtn.type = 'button';
       clearBtn.disabled = this.busyClear;
       clearBtn.addEventListener('click', async () => {
@@ -79,16 +79,16 @@ export class HistoryView {
     root.append(pageHead);
 
     if (this.loading) {
-      const loadingBox = el('div', 'history-loading');
+      const loadingBox = el('div', 'history-grid history-loading');
       for (let i = 0; i < 4; i++) {
-        loadingBox.append(el('div', 'course-skeleton'));
+        loadingBox.append(el('div', 'history-card-skeleton'));
       }
       root.append(loadingBox);
       return;
     }
 
     if (this.items.length === 0) {
-      const empty = el('div', 'catalog-empty');
+      const empty = el('div', 'catalog-empty history-empty-state');
       const iconWrap = el('span', 'empty-symbol');
       iconWrap.append(svgIcon('history'));
       empty.append(
@@ -104,25 +104,46 @@ export class HistoryView {
     for (const item of this.items) {
       const card = el('article', 'history-card');
 
-      const body = el('div', 'history-card-body');
-      body.append(
-        el('span', 'history-course-badge', item.course_id || 'MASTERCLASS'),
-        el('h3', 'history-lesson-title', item.title),
-        el('p', 'history-section-name', item.section_title || 'Core Lecture'),
-      );
+      // 1. Netflix Video Thumbnail Banner
+      const thumb = el('div', 'history-card-thumb');
+      const thumbGlow = el('div', 'history-thumb-glow');
+      const watermarkPill = el('span', 'history-watermark', 'COURSEFORGE');
+      const thumbBadge = el('span', 'history-thumb-badge', item.section_title ? item.section_title.slice(0, 24) : 'LECTURE');
+      const durBadge = el('span', 'history-dur-badge', formatTime(item.duration_seconds));
+      const playOverlay = el('div', 'history-thumb-play');
+      playOverlay.append(svgIcon('play'));
 
-      // Progress bar
-      const progressWrap = el('div', 'history-progress-wrap');
+      // Progress bar attached to thumbnail base
       const bar = el('div', 'history-progress-bar');
       const fill = el('div', 'history-progress-fill');
-      fill.style.width = `${Math.min(100, Math.max(0, item.percent))}%`;
+      const pct = Math.min(100, Math.max(0, item.percent));
+      fill.style.width = `${pct}%`;
       bar.append(fill);
-      progressWrap.append(
-        bar,
-        el('span', 'history-percent-label', `${item.percent}% complete (${formatTime(item.position)} / ${formatTime(item.duration_seconds)})`),
-      );
-      body.append(progressWrap);
 
+      thumb.append(thumbGlow, watermarkPill, thumbBadge, durBadge, playOverlay, bar);
+      thumb.addEventListener('click', () => {
+        this.options.onResumeLesson(item.course_id, item.id, item.position);
+      });
+
+      // 2. Card Body Content
+      const body = el('div', 'history-card-body');
+      const courseBadge = el('span', 'history-course-badge', (item.course_id || 'MASTERCLASS').toUpperCase().replace(/-/g, ' '));
+      const title = el('h3', 'history-lesson-title', item.title);
+      title.title = item.title;
+      const section = el('p', 'history-section-name', item.section_title || 'Core Lecture');
+
+      const metaRow = el('div', 'history-meta-row');
+      const remainingSec = Math.max(0, item.duration_seconds - item.position);
+      const remainText = remainingSec > 60 ? `${Math.ceil(remainingSec / 60)} min left` : 'Almost finished';
+      metaRow.append(
+        el('span', 'history-percent-label', `${pct}% watched`),
+        el('span', 'history-dot-sep', '·'),
+        el('span', 'history-remain-label', remainText),
+      );
+
+      body.append(courseBadge, title, section, metaRow);
+
+      // 3. Card Footer with Action Button
       const footer = el('div', 'history-card-footer');
       const timeAgo = new Date(item.watched_at).toLocaleDateString(undefined, {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -130,14 +151,14 @@ export class HistoryView {
       footer.append(el('span', 'history-timestamp', `Watched ${timeAgo}`));
 
       const resumeBtn = el('button', 'button primary history-resume-btn');
-      resumeBtn.append(svgIcon('play'), ' Resume');
+      resumeBtn.append(svgIcon('play'), el('span', '', ' Resume'));
       resumeBtn.type = 'button';
       resumeBtn.addEventListener('click', () => {
         this.options.onResumeLesson(item.course_id, item.id, item.position);
       });
       footer.append(resumeBtn);
 
-      card.append(body, footer);
+      card.append(thumb, body, footer);
       grid.append(card);
     }
 

@@ -353,7 +353,7 @@ function renderApp(account: User): void {
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom" hidden>
-        <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><h1 id="lesson-title" tabindex="-1">Choose a lesson</h1></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div>
+        <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div>
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
         <section id="course-certificate-section" class="course-certificate-section" hidden></section>
         <div class="classroom-grid">
@@ -405,7 +405,7 @@ function renderApp(account: User): void {
                 <div class="lesson-action-pills">
                   <button id="mark-complete" class="action-pill pill-complete" disabled title="Mark as complete">
                     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Mark Complete</span>
+                    <span>Mark as complete</span>
                   </button>
                   <button id="save-note-pill" class="action-pill pill-note" type="button" title="Save lesson note">
                     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -416,7 +416,7 @@ function renderApp(account: User): void {
                     <span>Capture</span>
                   </button>
                   <button id="next-lesson" class="action-pill pill-next" disabled title="Next lesson">
-                    <span>Next Lesson</span>
+                    <span>Next lesson →</span>
                     <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
                   </button>
                 </div>

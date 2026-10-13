@@ -1,5 +1,5 @@
 {
-  "observed_at": "2026-10-13T03:50:15.383137+00:00",
+  "observed_at": "2026-10-13T05:06:13.320669+00:00",
   "command": "python3 scripts/rewrite_planning_smoke.py --isolated-staging",
   "contract": "docs/rewrite/PLANNING_CONTRACT.md",
   "scope": "Two fixed isolated staging replicas; one synthetic disposable account; no production/provider/media/AI/load calls",

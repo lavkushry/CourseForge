@@ -56,7 +56,15 @@ export type IconName =
   | 'terminal'
   | 'refresh'
   | 'chevron-down'
-  | 'chevron-up';
+  | 'chevron-up'
+  | 'calendar'
+  | 'send'
+  | 'code'
+  | 'award'
+  | 'trending-up'
+  | 'user'
+  | 'layers'
+  | 'flame';
 
 const PATHS: Record<IconName, string> = {
   fire: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
@@ -111,17 +119,33 @@ const PATHS: Record<IconName, string> = {
   star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor"/>',
   'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
   'chevron-up': '<polyline points="18 15 12 9 6 15"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  'trending-up': '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
 };
 
 export function iconSvg(name: IconName, extraClass = ''): string {
   const content = PATHS[name] || '';
   const cls = 'svg-icon svg-icon-' + name + (extraClass ? ' ' + extraClass : '');
-  return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + content + '</svg>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + content + '</svg>';
 }
 
 export function svgIcon(name: IconName, extraClass = ''): SVGElement {
-  const parser = new DOMParser();
-  const raw = iconSvg(name, extraClass);
-  const doc = parser.parseFromString(raw, 'image/svg+xml');
-  return (doc.documentElement as unknown as SVGElement) || document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const cls = 'svg-icon svg-icon-' + name + (extraClass ? ' ' + extraClass : '');
+  svg.setAttribute('class', cls);
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = PATHS[name] || '';
+  return svg;
 }

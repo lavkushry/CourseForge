@@ -1,3 +1,4 @@
+import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
 import type { LearningPath, PathStep } from './contracts';
 
@@ -57,8 +58,11 @@ export class PathsView {
     // Sidebar list of paths
     const sidebar = el('aside', 'paths-sidebar');
     const sideHead = el('div', 'paths-sidebar-head');
+    const aiBtn = button('AI Generate', () => void this.showAiGenerateModal(), 'button quiet ai-gen-path-btn');
+    aiBtn.prepend(svgIcon('sparkle'));
     sideHead.append(
       el('h2', '', 'Learning Roadmaps'),
+      aiBtn,
       button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn')
     );
     sidebar.append(sideHead);
@@ -107,7 +111,7 @@ export class PathsView {
         el('div', 'stat-chip', `Steps: ${p.completed_steps} / ${p.steps.length}`),
         el('div', 'stat-chip', `Revision: ${p.revision}`)
       );
-      main.append(head);
+      main.append(head, this.renderSkillTree(p));
 
       const stepsList = el('div', 'path-steps');
       for (let i = 0; i < p.steps.length; i++) {
@@ -125,8 +129,14 @@ export class PathsView {
 
   private renderStep(path: LearningPath, step: PathStep, index: number): HTMLElement {
     const card = el('article', `path-step-card${step.completed ? ' step-done' : ''}`);
+    card.id = `step-card-${index}`;
     const top = el('div', 'step-card-head');
     const indexBadge = el('span', 'step-index-badge', `Step ${index}`);
+    if (step.completed) {
+      indexBadge.prepend(svgIcon('check'));
+    } else {
+      indexBadge.prepend(svgIcon('target'));
+    }
     const title = el('h3', '', step.title);
 
     const checkLabel = el('label', 'step-checkbox-label');
@@ -165,10 +175,11 @@ export class PathsView {
       sourcesWrap.append(el('span', 'muted', 'Jump to Lecture: '));
       for (const src of step.sources) {
         const chip = button(
-          `${src.title || src.lesson_id} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
+          ` ${src.title || src.lesson_id} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
           () => this.openLesson(src.course_id, src.lesson_id, src.start),
           'button quiet source-chip'
         );
+        chip.prepend(svgIcon('play'));
         sourcesWrap.append(chip);
       }
       card.append(sourcesWrap);
@@ -244,5 +255,175 @@ export class PathsView {
     document.body.append(dialog);
     dialog.showModal();
     dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  }
+
+  private async showAiGenerateModal(): Promise<void> {
+    const dialog = el('dialog', 'new-path-dialog');
+    const form = el('form', 'new-path-form');
+
+    form.append(
+      el('h2', '', 'AI Career Roadmap Generator'),
+      el('p', 'muted', 'Synthesize a multi-stage engineering roadmap powered by hosted Ollama and PostgreSQL courses.'),
+      el('label', 'field-label', 'Target Career Goal'),
+      el('input', 'text-input')
+    );
+    const input = form.querySelector<HTMLInputElement>('input')!;
+    input.placeholder = 'e.g. Full-Stack Cloud & Distributed Systems Architect';
+    input.value = 'Full-Stack Cloud & Distributed Systems Architect';
+    input.required = true;
+
+    form.append(el('label', 'field-label', 'Target Engineering Role'));
+    const roleInput = el('input', 'text-input');
+    roleInput.placeholder = 'e.g. Lead Platform Engineer';
+    roleInput.value = 'Lead Platform Engineer';
+    form.append(roleInput);
+
+    const actions = el('div', 'dialog-actions');
+    const generateBtn = button('Synthesize with Ollama AI', async () => {
+      const goal = input.value.trim();
+      const role = roleInput.value.trim();
+      if (goal.length < 3) {
+        this.notice('Goal must be at least 3 characters', true);
+        return;
+      }
+      try {
+        const aiResult = await this.api.generateAiRoadmap(goal, role);
+        const steps = (aiResult.steps || []) as Array<{ course_id: string }>;
+        const courseIds = steps.map((s: { course_id: string }) => s.course_id).filter(Boolean);
+        if (!courseIds.length) courseIds.push('fixture-course');
+        const newPath = await this.api.createLearningPath(goal, courseIds.slice(0, 4), steps.length || 4);
+        dialog.close();
+        this.activePath = newPath;
+        await this.activate();
+        this.notice(`AI Career Roadmap generated: ${aiResult.steps.length} stages mapped!`);
+      } catch (err) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Synthesize with Ollama AI';
+        this.notice('Could not generate AI roadmap: ' + (err instanceof Error ? err.message : String(err)), true);
+      }
+    }, 'button primary');
+
+    const cancelBtn = button('Cancel', () => dialog.close(), 'button quiet');
+    actions.append(cancelBtn, generateBtn);
+    form.append(actions);
+
+    dialog.append(form);
+    document.body.append(dialog);
+    dialog.showModal();
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  }
+
+  private renderSkillTree(path: LearningPath): HTMLElement {
+    const wrap = el('div', 'path-skill-tree');
+    const header = el('div', 'skill-tree-header');
+    header.append(
+      el('h3', '', 'Curriculum Progression & Skill Tree'),
+      el('span', 'muted', `${path.steps.length} Milestones · Interactive Progression`)
+    );
+    wrap.append(header);
+
+    const steps = path.steps;
+    if (steps.length === 0) return wrap;
+
+    const width = Math.max(580, steps.length * 130);
+    const height = 110;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.classList.add('skill-tree-svg');
+
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML = `
+      <linearGradient id="activeNodeGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#8b5cf6"/>
+        <stop offset="100%" stop-color="#c4b5fd"/>
+      </linearGradient>
+      <linearGradient id="doneNodeGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#10b981"/>
+        <stop offset="100%" stop-color="#34d399"/>
+      </linearGradient>
+    `;
+    svg.append(defs);
+
+    const stepWidth = (width - 80) / Math.max(1, steps.length - 1);
+    const yCenter = 45;
+
+    for (let i = 0; i < steps.length - 1; i++) {
+      const x1 = 40 + i * stepWidth;
+      const x2 = 40 + (i + 1) * stepWidth;
+      const isSegmentDone = steps[i]?.completed && steps[i + 1]?.completed;
+      const isSegmentActive = steps[i]?.completed && !steps[i + 1]?.completed;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(x1));
+      line.setAttribute('y1', String(yCenter));
+      line.setAttribute('x2', String(x2));
+      line.setAttribute('y2', String(yCenter));
+      line.setAttribute('stroke', isSegmentDone ? '#10b981' : isSegmentActive ? '#8b5cf6' : '#2b2d42');
+      line.setAttribute('stroke-width', '4');
+      line.setAttribute('stroke-dasharray', isSegmentDone ? 'none' : isSegmentActive ? '4 3' : 'none');
+      svg.append(line);
+    }
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i]!;
+      const x = 40 + i * stepWidth;
+      const isDone = step.completed;
+      const isCurrent = !isDone && (i === 0 || steps[i - 1]?.completed);
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('skill-node-group');
+      g.style.cursor = 'pointer';
+      g.addEventListener('click', () => {
+        const elStep = document.querySelector(`#step-card-${i + 1}`);
+        if (elStep) elStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      if (isCurrent) {
+        const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pulse.setAttribute('cx', String(x));
+        pulse.setAttribute('cy', String(yCenter));
+        pulse.setAttribute('r', '24');
+        pulse.setAttribute('fill', 'rgba(139, 92, 246, 0.25)');
+        g.append(pulse);
+      }
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', String(x));
+      circle.setAttribute('cy', String(yCenter));
+      circle.setAttribute('r', '18');
+      circle.setAttribute('fill', isDone ? 'url(#doneNodeGrad)' : isCurrent ? 'url(#activeNodeGrad)' : '#161824');
+      circle.setAttribute('stroke', isDone ? '#10b981' : isCurrent ? '#8b5cf6' : '#393c54');
+      circle.setAttribute('stroke-width', '2.5');
+      g.append(circle);
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', String(x));
+      txt.setAttribute('y', String(yCenter + 5));
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '12');
+      txt.setAttribute('font-weight', '700');
+      txt.setAttribute('fill', isDone || isCurrent ? '#090a0f' : '#8c90a8');
+      txt.textContent = isDone ? '✓' : String(i + 1);
+      g.append(txt);
+
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', String(x));
+      label.setAttribute('y', String(yCenter + 35));
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-size', '10.5');
+      label.setAttribute('font-weight', '600');
+      label.setAttribute('fill', isCurrent ? '#c4b5fd' : isDone ? '#6ee7b7' : '#70748e');
+      const truncatedTitle = step.title.length > 18 ? step.title.slice(0, 16) + '…' : step.title;
+      label.textContent = truncatedTitle;
+      g.append(label);
+
+      svg.append(g);
+    }
+
+    const scrollWrap = el('div', 'skill-tree-scroll');
+    scrollWrap.append(svg);
+    wrap.append(scrollWrap);
+    return wrap;
   }
 }

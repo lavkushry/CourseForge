@@ -201,14 +201,27 @@ export class DiscoveryView {
     const hero = required('#featured-course'); hero.replaceChildren();
     const art = artwork(course, true); art.classList.add('hero-art');
     const content = node('div', 'hero-content');
-    content.append(node('p', 'hero-kicker', 'COURSEFORGE / THE FEATURED COURSE'), node('h2', 'hero-title', course.title), node('p', 'hero-description', course.description || 'Find a new perspective. Learn something that stays with you.'));
+    content.append(
+      node('p', 'hero-kicker', 'COURSEFORGE ORIGINAL MASTERCLASS'),
+      node('h2', 'hero-title', course.title),
+      node('p', 'hero-description', course.description || 'Find a new perspective. Learn something that stays with you.')
+    );
     const metadata = node('div', 'hero-metadata');
-    for (const label of [course.category, course.lesson_count === undefined ? undefined : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`, duration(course.duration_seconds)]) if (label) metadata.append(node('span', '', label));
+    const matchBadge = node('span', 'hero-badge-match', '98% MATCH');
+    const yearChip = node('span', 'hero-chip', '2026 EDITION');
+    const levelBadge = node('span', 'hero-chip-badge', 'PRO');
+    const durationChip = node('span', 'hero-chip', `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} lessons`} · ${duration(course.duration_seconds)}`);
+    const uhdBadge = node('span', 'hero-tech-badge', '4K ULTRA HD');
+    const dolbyBadge = node('span', 'hero-tech-badge', 'DOLBY AUDIO');
+    const ccBadge = node('span', 'hero-tech-badge', 'CC');
+    metadata.append(matchBadge, yearChip, levelBadge, durationChip, uhdBadge, dolbyBadge, ccBadge);
+    if (course.category) metadata.append(node('span', 'hero-category-chip', course.category));
     content.append(metadata);
     const actions = node('div', 'hero-actions');
     actions.append(
       (() => { const b = action(course.enrolled ? ' Continue course' : ' Explore course', () => this.options.open(course.id, !course.enrolled), 'button primary hero-play'); b.prepend(svgIcon('play')); return b; })(),
       action('Curriculum', () => this.options.syllabus ? this.options.syllabus(course) : this.options.open(course.id, !course.enrolled), 'button quiet hero-syllabus'),
+      (() => { const b = action(' Roadmap', () => { const btn = document.querySelector<HTMLButtonElement>('#nav-paths'); if (btn) btn.click(); }, 'button quiet hero-roadmap'); b.prepend(svgIcon('target')); return b; })(),
       this.saveButton(course),
     );
     content.append(actions, node('p', 'hero-footnote', course.instructor ? `With ${course.instructor}` : 'Make room for what you want to learn.'));

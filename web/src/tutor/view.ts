@@ -5,8 +5,8 @@ import type { TutorSource } from '../learning/contracts';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
+  if (className) node.className = className;
+  if (text) node.textContent = text;
   return node;
 }
 
@@ -32,6 +32,7 @@ export class TutorView {
     answer: string;
     sources: TutorSource[];
     mode: string;
+    timestamp: Date;
   }> = [];
 
   constructor(private readonly options: TutorViewOptions) {}
@@ -55,22 +56,27 @@ export class TutorView {
     const root = this.options.root;
     root.replaceChildren();
 
-    const pageHead = el('div', 'page-heading');
-    pageHead.append(
+    const pageHead = el('div', 'page-heading tutor-header');
+    const headText = el('div', 'page-heading-left');
+    headText.append(
       el('span', 'eyebrow', 'LOCAL AI STUDY PARTNER'),
-      el('h1', '', 'Meet Your Personal Tutor'),
-      el('p', 'muted', 'Grounded explanations and notes drawn exclusively from your masterclass lectures with video timestamps.'),
+      el('h1', 'page-title', 'Meet Your Personal Tutor'),
+      el('p', 'muted page-subtitle', 'Grounded explanations and study notes drawn exclusively from your masterclass lectures with clickable video timestamps.'),
     );
+    pageHead.append(headText);
     root.append(pageHead);
 
     const layout = el('div', 'tutor-page-layout');
     const mainCol = el('div', 'tutor-main-col');
 
-    // Scope & Learning Modes
+    // 1. Scope & Mode Controls
+    const controlsCard = el('div', 'panel tutor-controls-card');
+
     const scopeRow = el('div', 'tutor-scope-row');
     const scopeLabel = el('label', 'field-label');
-    scopeLabel.append(el('span', '', 'Learning from: '));
-    const scopeSelect = el('select', 'form-input');
+    scopeLabel.append(el('span', 'scope-label-text', 'Knowledge Source: '));
+
+    const scopeSelect = el('select', 'form-input tutor-scope-select');
     scopeSelect.append(el('option', '', 'Entire Course Library (All Masterclasses)'));
     scopeSelect.querySelector('option')!.value = 'all';
 
@@ -85,7 +91,6 @@ export class TutorView {
     });
     scopeLabel.append(scopeSelect);
     scopeRow.append(scopeLabel);
-    mainCol.append(scopeRow);
 
     // Modes Bar
     const modesBar = el('div', 'tutor-modes-bar');
@@ -103,9 +108,13 @@ export class TutorView {
       });
       modesBar.append(btn);
     }
-    mainCol.append(modesBar);
 
-    // Prompt Suggestions
+    controlsCard.append(scopeRow, modesBar);
+    mainCol.append(controlsCard);
+
+    // 2. Clickable Prompt Suggestions
+    const suggestionsCard = el('div', 'tutor-suggestions-wrap');
+    suggestionsCard.append(el('span', 'suggestions-heading', 'RECOMMENDED PROMPTS'));
     const suggestionsRow = el('div', 'tutor-suggestions-row');
     for (const s of [
       'Explain how Distributed Systems maintain consensus and quorum.',
@@ -123,21 +132,38 @@ export class TutorView {
       });
       suggestionsRow.append(pill);
     }
-    mainCol.append(suggestionsRow);
+    suggestionsCard.append(suggestionsRow);
+    mainCol.append(suggestionsCard);
 
-    // Question Box
+    // 3. Question Form
+    const formCard = el('div', 'panel tutor-ask-card');
     const form = el('form', 'tutor-ask-form');
     const textarea = el('textarea', 'form-input tutor-textarea');
     textarea.id = 'tutor-question-input';
-    textarea.placeholder = 'Ask anything about your courses, architecture trade-offs, code, or interview problems…';
-    textarea.rows = 4;
+    textarea.placeholder = 'Ask anything about your courses, architecture trade-offs, code, or interview problems… (Press Enter to submit)';
+    textarea.rows = 3;
     textarea.required = true;
 
+    // Support Enter to submit
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
     const askFooter = el('div', 'tutor-ask-footer');
-    askFooter.append(
-      (() => { const s = el('span', 'muted'); s.append(svgIcon('zap'), ' Answers synthesized from lecture transcripts in <3 seconds'); return s; })(),
-      el('button', 'button primary tutor-submit-btn', this.busy ? 'Synthesizing…' : 'Ask Tutor ↗'),
-    );
+    const hint = el('span', 'tutor-latency-badge');
+    hint.append(svgIcon('zap'), el('span', '', ' Answers synthesized from lecture transcripts in <3 seconds'));
+
+    const submitBtn = el('button', 'button primary tutor-submit-btn');
+    submitBtn.type = 'submit';
+    submitBtn.disabled = this.busy;
+    submitBtn.append(svgIcon('send'), el('span', '', this.busy ? ' Synthesizing…' : ' Ask Tutor'));
+
+    askFooter.append(hint, submitBtn);
+    form.append(textarea, askFooter);
+    formCard.append(form);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -163,6 +189,7 @@ export class TutorView {
             text: c.text,
           })),
           mode: this.tutorMode,
+          timestamp: new Date(),
         });
       } catch (err) {
         alert(errorMessage(err));
@@ -172,34 +199,62 @@ export class TutorView {
       }
     });
 
-    form.append(textarea, askFooter);
-    mainCol.append(form);
+    mainCol.append(formCard);
 
-    // History Feed
+    // 4. Conversation Feed
     if (this.history.length > 0) {
       const feed = el('div', 'tutor-feed');
+      feed.append(el('h3', 'tutor-feed-heading', 'Conversation History'));
+
       for (const h of this.history) {
-        const card = el('div', 'tutor-response-card');
-        card.append(
-          el('h3', 'tutor-history-q', `Q: ${h.question}`),
-          el('div', 'tutor-response-body', h.answer),
+        const threadItem = el('div', 'tutor-thread-item');
+
+        // User Question Bubble
+        const userBubble = el('div', 'tutor-user-bubble');
+        const userAvatar = el('div', 'user-avatar-pill');
+        userAvatar.append(svgIcon('user'));
+        const userText = el('p', 'user-question-text', h.question);
+        userBubble.append(userAvatar, userText);
+
+        // Assistant Response Card
+        const assistCard = el('div', 'tutor-response-card');
+        const assistHead = el('div', 'tutor-response-head');
+        const aiAvatar = el('div', 'ai-avatar-pill');
+        aiAvatar.append(svgIcon('bulb'));
+        const aiTitle = el('div', 'ai-title-wrap');
+        aiTitle.append(
+          el('strong', '', 'CourseForge AI Partner'),
+          el('span', 'tag mode-tag', h.mode.toUpperCase()),
         );
+        assistHead.append(aiAvatar, aiTitle);
+
+        const answerBody = el('div', 'tutor-response-body', h.answer);
+
+        assistCard.append(assistHead, answerBody);
 
         if (h.sources.length > 0) {
           const sourcesBox = el('div', 'tutor-sources-box');
-          sourcesBox.append(el('span', 'eyebrow', 'GROUNDED LECTURE SOURCES:'));
+          sourcesBox.append(el('span', 'sources-box-heading', 'GROUNDED LECTURE SOURCES'));
+          const sourcesGrid = el('div', 'tutor-sources-grid');
+
           for (const s of h.sources) {
-            const cite = el('button', 'citation-link');
+            const cite = el('button', 'citation-link-card');
             cite.type = 'button';
-            cite.append(svgIcon('play'), el('span', '', ` ${s.lesson_title} (${formatTime(s.start_seconds)})`));
+            const citeIcon = el('span', 'cite-icon');
+            citeIcon.append(svgIcon('play'));
+            const citeText = el('span', 'cite-title', `${s.lesson_title} · ${formatTime(s.start_seconds)}`);
+            cite.append(citeIcon, citeText);
             cite.addEventListener('click', () => {
               this.options.onNavigateLesson(s.lesson_id, s.start_seconds);
             });
-            sourcesBox.append(cite);
+            sourcesGrid.append(cite);
           }
-          card.append(sourcesBox);
+          sourcesBox.append(sourcesGrid);
+          assistCard.append(sourcesBox);
         }
-        feed.append(card);
+
+        threadItem.append(userBubble, assistCard);
+        feed.append(threadItem);
       }
       mainCol.append(feed);
     }
