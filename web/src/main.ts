@@ -1423,10 +1423,12 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     await controller?.open(response.lesson, takeOver);
     const upcoming = nextLesson();
     if (upcoming) void prefetchLesson(upcoming.id);
-    if (!autoplay && navigation.current()) {
-      const pw = required<HTMLElement>('#player-wrap');
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const pw = document.querySelector<HTMLElement>('#player-wrap');
+    if (pw) {
       pw.focus({ preventScroll: true });
-      if (pw.getBoundingClientRect().top < 0) { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; window.scrollTo(0, 0); }
     }
     if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
     feedback('');
