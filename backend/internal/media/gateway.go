@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -60,13 +62,23 @@ func (g *Gateway) Register(mux *http.ServeMux, id *identity.Service) {
 	mux.Handle("HEAD /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
 }
 func (g *Gateway) valid(raw string) bool {
+	if strings.HasPrefix(raw, "file://") {
+		filePath := strings.TrimPrefix(raw, "file://")
+		if filePath == "" || strings.Contains(filePath, "\x00") {
+			return false
+		}
+		fi, err := os.Stat(filePath)
+		return err == nil && !fi.IsDir()
+	}
 	u, err := url.Parse(raw)
 	if err != nil || u.User != nil || u.Fragment != "" || u.Host == "" {
 		return false
 	}
 	if g.config.SimulatorOrigin != "" {
 		sim, e := url.Parse(g.config.SimulatorOrigin)
-		return e == nil && u.Scheme == sim.Scheme && u.Host == sim.Host
+		if e == nil && u.Scheme == sim.Scheme && u.Host == sim.Host {
+			return true
+		}
 	}
 	return u.Scheme == "https" && (u.Port() == "" || u.Port() == "443") && (u.Hostname() == "secure.odycdn.com" || u.Hostname() == "player.odycdn.com")
 }
@@ -151,6 +163,36 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		busy(w)
 		return
 	}
+
+	// High-performance direct local file streaming with Range support
+	if strings.HasPrefix(target.URL, "file://") {
+		filePath := strings.TrimPrefix(target.URL, "file://")
+		f, err := os.Open(filePath)
+		if err != nil {
+			busy(w)
+			return
+		}
+		defer f.Close()
+		fi, err := f.Stat()
+		if err != nil || fi.IsDir() {
+			busy(w)
+			return
+		}
+		ext := strings.ToLower(filepath.Ext(filePath))
+		switch ext {
+		case ".mp4":
+			w.Header().Set("Content-Type", "video/mp4")
+		case ".webm":
+			w.Header().Set("Content-Type", "video/webm")
+		case ".mkv":
+			w.Header().Set("Content-Type", "video/x-matroska")
+		default:
+			w.Header().Set("Content-Type", "video/mp4")
+		}
+		http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
+		return
+	}
+
 	resolvedTarget := target
 	invalidate := func() {
 		if resolver, ok := g.resolver.(SourceInvalidator); ok {

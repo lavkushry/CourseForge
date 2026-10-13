@@ -49,7 +49,9 @@ type session struct {
 	At                                                                   time.Time
 	Playing, WasVisible                                                  bool
 }
-type Source struct{ LessonID, ClaimName, ClaimID string }
+type Source struct{
+	LessonID, ClaimName, ClaimID, CourseID, Title string
+}
 
 func New(pool *pgxpool.Pool, id *identity.Service) *Service {
 	return &Service{Pool: pool, Identity: id, Now: time.Now}
@@ -377,7 +379,7 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 		v.Visible += math.Min(b.ElapsedSeconds, math.Min(gap, 20))
 	}
 	ack = Ack{Sequence: b.Sequence, Position: b.Position, WatchedSeconds: v.Watched, VisibleSeconds: v.Visible, Coverage: coverage(v.Ranges, v.Duration), Owner: true, Completed: completed}
-	if b.Kind == "ended" && v.Duration > 0 && b.Position >= v.Duration-2 && ack.Coverage >= 90 {
+	if ack.Coverage >= 90 || (b.Kind == "ended" && v.Duration > 0 && b.Position >= v.Duration-2) {
 		ack.Completed = true
 	}
 	raw, _ := json.Marshal(v.Ranges)
@@ -388,6 +390,13 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil {
 		_, err = tx.Exec(ctx, `INSERT INTO progress(user_id,lesson_id,position,percent,completed,revision,updated_at)VALUES($1,$2,$3,$4,$5,1,$6)ON CONFLICT(user_id,lesson_id)DO UPDATE SET position=excluded.position,percent=GREATEST(progress.percent,excluded.percent),completed=progress.completed OR excluded.completed,revision=progress.revision+1,updated_at=excluded.updated_at`, p.UserID, v.LessonID, b.Position, int(math.Floor(ack.Coverage)), ack.Completed, now)
+	}
+	if err == nil && (seconds > 0 || ack.Completed) {
+		var courseID string
+		_ = tx.QueryRow(ctx, `SELECT course_id FROM lessons WHERE id=$1`, v.LessonID).Scan(&courseID)
+		if courseID != "" {
+			_, _ = tx.Exec(ctx, `INSERT INTO watch_history(user_id,lesson_id,course_id,position,duration_seconds,completed,watched_at)VALUES($1,$2,$3,$4,$5,$6,$7)`, p.UserID, v.LessonID, courseID, b.Position, v.Duration, ack.Completed, now)
+		}
 	}
 	if !b.Visible || b.Kind == "hidden" || b.Kind == "close" {
 		ack.Owner = false
@@ -506,7 +515,7 @@ func (s *Service) AuthorizeMedia(ctx context.Context, p identity.Principal, id, 
 	if len(mediaToken) > 100 {
 		return source, ErrDenied
 	}
-	err := s.Pool.QueryRow(ctx, `SELECT ps.lesson_id,COALESCE(lp.claim_name,''),COALESCE(lp.claim_id,'') FROM playback_sessions ps JOIN users u ON u.id=ps.user_id JOIN auth_sessions a ON a.id=ps.auth_session_id JOIN playback_leases pl ON pl.session_id=ps.id AND pl.user_id=u.id JOIN lessons l ON l.id=ps.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN lesson_providers lp ON lp.lesson_id=l.id WHERE ps.id=$1 AND ps.token_hash=$2 AND ps.user_id=$3 AND ps.auth_session_id=$4 AND ps.closed_at IS NULL AND ps.expires_at>now() AND pl.expires_at>now() AND a.revoked_at IS NULL AND a.expires_at>now() AND u.verified AND NOT u.suspended AND (u.role='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=u.id AND e.course_id=c.id)))`, id, digest(mediaToken), p.UserID, p.SessionID).Scan(&source.LessonID, &source.ClaimName, &source.ClaimID)
+	err := s.Pool.QueryRow(ctx, `SELECT ps.lesson_id,COALESCE(lp.claim_name,''),COALESCE(lp.claim_id,''),l.course_id,l.title FROM playback_sessions ps JOIN users u ON u.id=ps.user_id JOIN auth_sessions a ON a.id=ps.auth_session_id JOIN playback_leases pl ON pl.session_id=ps.id AND pl.user_id=u.id JOIN lessons l ON l.id=ps.lesson_id JOIN courses c ON c.id=l.course_id LEFT JOIN lesson_providers lp ON lp.lesson_id=l.id WHERE ps.id=$1 AND ps.token_hash=$2 AND ps.user_id=$3 AND ps.auth_session_id=$4 AND ps.closed_at IS NULL AND ps.expires_at>now() AND pl.expires_at>now() AND a.revoked_at IS NULL AND a.expires_at>now() AND u.verified AND NOT u.suspended AND (u.role='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=u.id AND e.course_id=c.id)))`, id, digest(mediaToken), p.UserID, p.SessionID).Scan(&source.LessonID, &source.ClaimName, &source.ClaimID, &source.CourseID, &source.Title)
 	if errors.Is(err, pgx.ErrNoRows) {
 		err = ErrDenied
 	}

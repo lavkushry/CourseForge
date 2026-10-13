@@ -39,7 +39,13 @@ export class ProgressDelivery {
   get active(): boolean { return !this.stopped; }
 
   send(pulse: Pulse): Promise<PulseAck> {
-    if (this.stopped) return Promise.reject(new DOMException('Progress delivery stopped.', 'AbortError'));
+    if (this.stopped) {
+      if (pulse.kind === 'seek') {
+        const ctrl = new AbortController();
+        return this.options.request(pulse, ctrl.signal).then(parsePulseAck);
+      }
+      return Promise.reject(new DOMException('Progress delivery stopped.', 'AbortError'));
+    }
     if (this.queue.length >= (this.options.maxQueue ?? 12)) {
       const error = new ApiError('Progress could not save. Playback is paused; reconnect and resume here.', 0, 'queue_full');
       this.fail(error);

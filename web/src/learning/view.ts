@@ -1,3 +1,4 @@
+import { svgIcon, type IconName } from '../icons';
 import { ApiError, errorMessage, isAbort } from "../api";
 import type { Lesson } from "../contracts";
 import { formatTime } from "../player/controller";
@@ -753,16 +754,16 @@ export class LearningView {
     modeBar.setAttribute("role", "toolbar");
     modeBar.setAttribute("aria-label", "AI Tutor modes");
 
-    const modes = [
-      { id: "explain", label: "💡 Explain Concept", desc: "Clear explanation with examples & citations" },
-      { id: "notes", label: "📝 Study Notes", desc: "Structured hierarchical summary" },
-      { id: "quiz", label: "❓ Concept Quiz", desc: "Self-check questions with solutions" },
-      { id: "lab", label: "🛠️ Hands-on Lab", desc: "Practical hands-on terminal exercise" },
-    ] as const;
+    const modes: Array<{ id: "explain" | "notes" | "quiz" | "lab"; label: string; icon: IconName; desc: string }> = [
+      { id: "explain", label: "Explain Concept", icon: "bulb", desc: "Clear explanation with examples & citations" },
+      { id: "notes", label: "Study Notes", icon: "edit", desc: "Structured hierarchical summary" },
+      { id: "quiz", label: "Concept Quiz", icon: "help", desc: "Self-check questions with solutions" },
+      { id: "lab", label: "Hands-on Lab", icon: "wrench", desc: "Practical hands-on terminal exercise" },
+    ];
 
     for (const m of modes) {
       const modeBtn = button(
-        m.label,
+        ' ' + m.label,
         () => {
           this.tutorMode = m.id;
           for (const b of modeBar.querySelectorAll("button")) {
@@ -771,6 +772,7 @@ export class LearningView {
         },
         "button quiet tutor-mode-btn",
       );
+      modeBtn.prepend(svgIcon(m.icon));
       modeBtn.dataset.mode = m.id;
       modeBtn.title = m.desc;
       modeBtn.setAttribute("aria-pressed", String(this.tutorMode === m.id));
@@ -849,7 +851,7 @@ export class LearningView {
           for (const src of item.sources) {
             const srcRow = el("div", "source-row");
             const tsBtn = button(
-              `⏱ ${formatTime(src.start_seconds)} - ${formatTime(src.end_seconds)}: ${src.lesson_title}`,
+              `${formatTime(src.start_seconds)} - ${formatTime(src.end_seconds)}: ${src.lesson_title}`,
               () => {
                 if (src.lesson_id === ctx.lesson.id) {
                   this.seek(src.start_seconds);

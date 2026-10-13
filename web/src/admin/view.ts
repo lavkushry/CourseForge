@@ -1,3 +1,4 @@
+import { svgIcon, type IconName } from '../icons';
 import type { ApiClient } from '../api';
 import type { AdminOverview, AdminUser } from './contracts';
 
@@ -15,7 +16,7 @@ function button(text: string, action: () => void, cls = 'button'): HTMLButtonEle
   return n;
 }
 
-type AdminTab = 'overview' | 'learners' | 'funnels' | 'activity' | 'system';
+type AdminTab = 'overview' | 'learners' | 'funnels' | 'retention' | 'ai' | 'activity' | 'system';
 
 export class AdminView {
   private activeTab: AdminTab = 'overview';
@@ -68,6 +69,8 @@ export class AdminView {
       { id: 'overview', label: 'Overview Metrics' },
       { id: 'learners', label: 'Learners Directory' },
       { id: 'funnels', label: 'Course Funnels' },
+      { id: 'retention', label: 'Retention & Heatmaps' },
+      { id: 'ai', label: 'AI Workers & Vectors' },
       { id: 'activity', label: 'Live Activity & Exports' },
       { id: 'system', label: 'System Health' },
     ];
@@ -95,6 +98,12 @@ export class AdminView {
         case 'funnels':
           body.append(this.renderFunnelsTab());
           break;
+        case 'retention':
+          body.append(this.renderRetentionTab());
+          break;
+        case 'ai':
+          body.append(this.renderAiTab());
+          break;
         case 'activity':
           body.append(this.renderActivityTab());
           break;
@@ -115,12 +124,12 @@ export class AdminView {
 
     const grid = el('div', 'admin-metrics-grid');
     grid.append(
-      this.metricCard('Total Students', String(s.students), `${s.verified_students} verified, ${s.suspended_students} suspended`, '👥'),
-      this.metricCard('Active Courses', String(s.courses), `${s.available_lectures} / ${s.lectures} lectures ready`, '📚'),
-      this.metricCard('Completed Lessons', String(s.completed_lessons), 'Durable learner progress', '✅'),
-      this.metricCard('Active Sessions', String(s.active_sessions), 'Currently signed-in learners', '⚡'),
-      this.metricCard('Total Watch Time', `${Math.round(s.watched_seconds / 3600)} hrs`, `${s.watched_seconds.toLocaleString()} seconds accepted`, '⏱️'),
-      this.metricCard('Total Enrollments', String(s.enrollments), 'Active course registrations', '🎯')
+      this.metricCard('Total Students', String(s.students), `${s.verified_students} verified, ${s.suspended_students} suspended`, 'users'),
+      this.metricCard('Active Courses', String(s.courses), `${s.available_lectures} / ${s.lectures} lectures ready`, 'book'),
+      this.metricCard('Completed Lessons', String(s.completed_lessons), 'Durable learner progress', 'check'),
+      this.metricCard('Active Sessions', String(s.active_sessions), 'Currently signed-in learners', 'zap'),
+      this.metricCard('Total Watch Time', `${Math.round(s.watched_seconds / 3600)} hrs`, `${s.watched_seconds.toLocaleString()} seconds accepted`, 'clock'),
+      this.metricCard('Total Enrollments', String(s.enrollments), 'Active course registrations', 'target')
     );
 
     wrap.append(grid);
@@ -235,6 +244,132 @@ export class AdminView {
     return wrap;
   }
 
+  private renderRetentionTab(): HTMLElement {
+    const wrap = el('div', 'admin-tab-pane');
+    wrap.append(
+      el('h2', '', 'Video Retention Curves & Replay Heatmaps'),
+      el('p', 'muted', 'Audience retention, second-by-second drop-off gradients, and high-frequency replay moments.')
+    );
+
+    const container = el('div', 'admin-retention-container');
+    container.append(el('p', 'muted', 'Loading retention telemetry…'));
+    wrap.append(container);
+
+    this.api.adminRetentionCurve().then(data => {
+      container.replaceChildren();
+
+      const metaRow = el('div', 'retention-meta-row');
+      metaRow.append(
+        el('h3', '', data.lesson_title || 'Active Lecture'),
+        el('span', 'badge-stat', `Completion Rate: ${data.completion_rate}%`),
+        el('span', 'badge-stat', `Audience Sessions: ${data.total_sessions}`)
+      );
+      container.append(metaRow);
+
+      // Render crisp responsive SVG Chart
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 600 180');
+      svg.classList.add('retention-chart-svg');
+
+      const pts = data.points;
+      if (pts.length > 1) {
+        const maxSec = data.duration_seconds || 1800;
+        const coords = pts.map(p => {
+          const x = (p.second / maxSec) * 580 + 10;
+          const y = 170 - (p.percentage / 100) * 150;
+          return { x, y, p };
+        });
+
+        const lineD = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+        const firstX = coords[0]?.x ?? 10;
+        const lastX = coords[coords.length - 1]?.x ?? 590;
+        const areaD = `${lineD} L ${lastX.toFixed(1)} 170 L ${firstX.toFixed(1)} 170 Z`;
+
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        defs.innerHTML = `
+          <linearGradient id="retentionGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.02"/>
+          </linearGradient>
+        `;
+        svg.append(defs);
+
+        const areaPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        areaPath.setAttribute('d', areaD);
+        areaPath.setAttribute('fill', 'url(#retentionGrad)');
+
+        const linePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        linePath.setAttribute('d', lineD);
+        linePath.setAttribute('fill', 'none');
+        linePath.setAttribute('stroke', '#6366f1');
+        linePath.setAttribute('stroke-width', '2.5');
+
+        svg.append(areaPath, linePath);
+
+        // Highlight replay peaks
+        for (const c of coords) {
+          if (c.p.replays > 3) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', c.x.toFixed(1));
+            circle.setAttribute('cy', c.y.toFixed(1));
+            circle.setAttribute('r', '4');
+            circle.setAttribute('fill', '#10b981');
+            circle.setAttribute('stroke', '#0d1117');
+            circle.setAttribute('stroke-width', '2');
+            svg.append(circle);
+          }
+        }
+      }
+      container.append(svg);
+
+      if (data.peak_moments.length > 0) {
+        const peakBox = el('div', 'retention-peaks-box');
+        peakBox.append(el('h4', '', 'Identified Concept Spikes'));
+        for (const m of data.peak_moments) {
+          const row = el('div', 'peak-moment-row');
+          const min = Math.floor(m.second / 60);
+          const sec = m.second % 60;
+          row.append(
+            el('span', 'badge-time', `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`),
+            el('span', '', m.label)
+          );
+          peakBox.append(row);
+        }
+        container.append(peakBox);
+      }
+    }).catch(err => {
+      container.replaceChildren(el('p', 'muted', 'Could not load retention data: ' + err.message));
+    });
+
+    return wrap;
+  }
+
+  private renderAiTab(): HTMLElement {
+    const wrap = el('div', 'admin-tab-pane');
+    wrap.append(
+      el('h2', '', 'AI Learning Engine & pgvector Health'),
+      el('p', 'muted', 'PostgreSQL pgvector extension, hosted Ollama embedding/chat pipelines, and background transcription workers.')
+    );
+
+    const stats = el('div', 'admin-metrics-grid');
+    wrap.append(stats);
+
+    this.api.aiStatus().then(st => {
+      stats.replaceChildren(
+        this.metricCard('pgvector Database', st.pgvector_active ? 'Active · 0.8.1' : 'Offline', 'PostgreSQL cosine similarity HNSW indexing', 'database'),
+        this.metricCard('Vector Dimensions', `${st.vector_dimensions}-dim`, 'Embeddings matching qwen3-embedding:0.6b', 'target'),
+        this.metricCard('Indexed Vectors', String(st.embeddings_count), 'Embeddings stored in lesson_embeddings', 'check-circle'),
+        this.metricCard('Transcript Chunks', String(st.transcript_chunks), 'Total timestamped lecture segments', 'file'),
+        this.metricCard('Ollama Service', st.ollama_online ? 'Online · Port 11434' : 'Connecting', `Model: ${st.ollama_chat_model}`, 'sparkle'),
+        this.metricCard('Embedding Model', st.ollama_embedding_model, 'Fast local inference for RAG semantic search', 'zap')
+      );
+    }).catch(err => {
+      stats.replaceChildren(el('p', 'muted', 'Could not load AI engine status: ' + err.message));
+    });
+
+    return wrap;
+  }
+
   private renderActivityTab(): HTMLElement {
     const wrap = el('div', 'admin-tab-pane');
     wrap.append(
@@ -272,19 +407,21 @@ export class AdminView {
 
     const stats = el('div', 'admin-metrics-grid');
     stats.append(
-      this.metricCard('Go Core API', 'Healthy · Port 18090/18091', 'Active HTTP Replicas with Connection Pooling', '🟢'),
-      this.metricCard('PostgreSQL 18.3', 'Connected · Port 15439', 'Repeatable-read transaction isolation', '🐘'),
-      this.metricCard('Media Gateway', 'Online · Standalone Range Gateway', 'Encrypted signed leases with byte-range delivery', '⚡'),
-      this.metricCard('Vite Frontend', 'Vite 8 + TypeScript 5.9', 'Zero client runtime regressions', '🚀')
+      this.metricCard('Go Core API', 'Healthy · Port 18090/18091', 'Active HTTP Replicas with Connection Pooling', 'pulse'),
+      this.metricCard('PostgreSQL 18.3', 'Connected · Port 15439', 'Repeatable-read transaction isolation', 'database'),
+      this.metricCard('Media Gateway', 'Online · Standalone Range Gateway', 'Encrypted signed leases with byte-range delivery', 'zap'),
+      this.metricCard('Vite Frontend', 'Vite 8 + TypeScript 5.9', 'Zero client runtime regressions', 'rocket')
     );
     wrap.append(stats);
     return wrap;
   }
 
-  private metricCard(title: string, value: string, subtitle: string, icon: string): HTMLElement {
+  private metricCard(title: string, value: string, subtitle: string, icon: IconName): HTMLElement {
     const card = el('div', 'admin-metric-card');
+    const top = el('div', 'metric-top');
+    top.append(svgIcon(icon), el('span', '', title));
     card.append(
-      el('div', 'metric-top', `${icon} ${title}`),
+      top,
       el('div', 'metric-value', value),
       el('div', 'metric-sub', subtitle)
     );

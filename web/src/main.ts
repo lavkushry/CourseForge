@@ -1,3 +1,5 @@
+import { HistoryView } from './history/view';
+import { SettingsView } from './settings/view';
 import './style.css';
 import { LearningApi } from './learning/api';
 import { LearningView } from './learning/view';
@@ -9,9 +11,17 @@ import { PlayerController, formatTime } from './player/controller';
 import type { PlayerState } from './player/controller';
 import { PreferenceStore } from './player/preferences';
 import { NativeVideoAdapter } from './player/video';
+import { mountPlayerChrome } from './player/chrome';
 import { CertificatesView } from './certificates/view';
 import { PathsView } from './paths/view';
 import { AdminView } from './admin/view';
+import { SyllabusDialog } from './discovery/syllabus-dialog';
+import { StudyRail } from './player/study-rail';
+import { LibraryView } from './library/view';
+import { PlanningView } from './planning/view';
+import { ReviewsView } from './reviews/view';
+import { TutorView } from './tutor/view';
+import { LabsView } from './labs/view';
 
 const api = new ApiClient();
 
@@ -46,6 +56,15 @@ let learning: LearningView | null = null;
 let certificates: CertificatesView | null = null;
 let pathsView: PathsView | null = null;
 let adminView: AdminView | null = null;
+let syllabusDialog: SyllabusDialog | null = null;
+let studyRail: StudyRail | null = null;
+let libraryView: LibraryView | null = null;
+let historyView: HistoryView | null = null;
+let settingsView: SettingsView | null = null;
+let planningView: PlanningView | null = null;
+let reviewsView: ReviewsView | null = null;
+let tutorView: TutorView | null = null;
+let labsView: LabsView | null = null;
 let lessonCursor: string | null = null;
 let noteCursor: string | null = null;
 let noteSubmission: { lessonId: string; key: string; content: string; position: number } | null = null;
@@ -82,6 +101,12 @@ function newNavigation(): { signal: AbortSignal; generation: number; current(): 
   learning?.close();
   pathsView?.deactivate();
   adminView?.deactivate();
+  libraryView?.deactivate();
+  planningView?.deactivate();
+  reviewsView?.deactivate();
+  tutorView?.deactivate();
+  labsView?.deactivate();
+  syllabusDialog?.close();
   navigationScope.abort();
   navigationScope = new AbortController();
   const generation = ++navigationGeneration;
@@ -94,6 +119,19 @@ function renderLogin(message = ''): void {
   certificates = null;
   discovery?.deactivate();
   discovery = null;
+  libraryView?.deactivate();
+  libraryView = null;
+  planningView?.deactivate();
+  planningView = null;
+  reviewsView?.deactivate();
+  reviewsView = null;
+  tutorView?.deactivate();
+  tutorView = null;
+  labsView?.deactivate();
+  labsView = null;
+  syllabusDialog?.close();
+  syllabusDialog = null;
+  studyRail = null;
   preferences?.dispose();
   preferences = null;
   user = null; learnedLessons.clear(); learnedCursor = ''; learnedLoaded = false;
@@ -282,7 +320,14 @@ function renderApp(account: User): void {
         <button id="nav-home" data-catalog-view="home">Home</button>
         <button id="nav-courses" data-catalog-view="courses">Courses</button>
         <button id="nav-saved" data-catalog-view="saved">My List</button>
+        <button id="nav-library" data-catalog-view="library">Library</button>
+        <button id="nav-planner" data-catalog-view="planner">Daily Plan</button>
+        <button id="nav-history" data-catalog-view="history">History</button>
+        <button id="nav-reviews" data-catalog-view="reviews">Review Deck</button>
+        <button id="nav-tutor" data-catalog-view="tutor">AI Tutor</button>
+        <button id="nav-labs" data-catalog-view="labs">Labs</button>
         <button id="nav-paths" data-catalog-view="paths">Roadmaps</button>
+        <button id="nav-settings" data-catalog-view="settings">Settings</button>
         ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin">Admin</button>' : ''}
       </nav>
       <div class="account"><span class="account-avatar" aria-hidden="true"></span><span id="account-name"></span><button id="logout" class="button quiet">Sign out</button></div>
@@ -292,13 +337,20 @@ function renderApp(account: User): void {
       <section id="catalog" aria-labelledby="catalog-heading">
         <section id="featured-course" class="featured-course" aria-label="Featured course" hidden></section>
         <section id="continue-section" class="continue-section" aria-labelledby="continue-heading" hidden><div class="row-heading"><h2 id="continue-heading">Right where you left off.</h2><span class="muted">Continue learning</span></div><div id="continue-list" class="continue-row"></div></section>
-        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">The learning collection</span><h1 id="catalog-heading" tabindex="-1">Find your next obsession.</h1><p id="catalog-description" class="muted">Big ideas. Small steps. A world of possibility.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true">⌕</span><input id="course-search" type="search" maxlength="100" placeholder="Titles, topics, instructors" autocomplete="off" /></div></form></div>
+        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">The learning collection</span><h1 id="catalog-heading" tabindex="-1">Find your next obsession.</h1><p id="catalog-description" class="muted">Big ideas. Small steps. A world of possibility.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true" class="search-icon-slot"></span><input id="course-search" type="search" maxlength="100" placeholder="Titles, topics, instructors" autocomplete="off" /></div></form></div>
         <p id="catalog-results" class="catalog-results" role="status" aria-live="polite"></p>
         <div id="course-list" class="course-grid"></div>
         <button id="load-more" class="button" hidden>More courses</button>
         <footer class="catalog-footer"><span class="footer-wordmark">COURSEFORGE</span><p>Make room for what you want to learn.</p><span>One lesson. A new perspective.</span></footer>
       </section>
+      <section id="library-panel" class="library-panel" hidden></section>
+      <section id="planner-panel" class="planner-panel" hidden></section>
+      <section id="history-panel" class="history-panel" hidden></section>
+      <section id="reviews-panel" class="reviews-panel" hidden></section>
+      <section id="tutor-panel" class="tutor-panel" hidden></section>
+      <section id="labs-panel" class="labs-panel" hidden></section>
       <section id="paths-panel" class="paths-panel" hidden></section>
+      <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom" hidden>
         <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><h1 id="lesson-title" tabindex="-1">Choose a lesson</h1></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div>
@@ -339,7 +391,13 @@ function renderApp(account: User): void {
             <section id="notes" class="notes" hidden aria-labelledby="notes-heading"><h2 id="notes-heading">Your lesson notes</h2><form id="note-form"><label for="note-content">Add a note at the current timestamp</label><textarea id="note-content" maxlength="3000" rows="3" required></textarea><button class="button" type="submit">Save note</button></form><div id="note-list"></div><button id="more-notes" class="button quiet" hidden>More notes</button></section>
             <details class="shortcuts"><summary>Keyboard shortcuts</summary><p><kbd>Space</kbd> / <kbd>K</kbd> Play or pause · <kbd>J</kbd> / <kbd>L</kbd> Seek 10s · <kbd>←</kbd> / <kbd>→</kbd> Seek · <kbd>↑</kbd> / <kbd>↓</kbd> Volume · <kbd>M</kbd> Mute · <kbd>F</kbd> Fullscreen · <kbd>C</kbd> Theater · <kbd>P</kbd> PiP · <kbd>Shift+N</kbd> Next · <kbd>0-9</kbd> Seek %</p></details>
           </div>
-          <aside class="lesson-sidebar" aria-label="Course lessons"><h2>Your lessons</h2><p id="lesson-count" class="muted"></p><ol id="lesson-list"></ol><button id="more-lessons" class="button quiet" hidden>More lessons</button><button id="more-learned" class="button quiet" hidden>More learned badges</button></aside>
+          <aside class="lesson-sidebar study-rail" id="study-rail" aria-label="Course lessons and study rail">
+            <h2>Your lessons</h2>
+            <p id="lesson-count" class="muted"></p>
+            <ol id="lesson-list"></ol>
+            <button id="more-lessons" class="button quiet" hidden>More lessons</button>
+            <button id="more-learned" class="button quiet" hidden>More learned badges</button>
+          </aside>
         </div>
       </section>
       <dialog id="episode-dialog" class="episode-dialog" aria-labelledby="episode-heading"><div class="dialog-heading"><h2 id="episode-heading">Course lessons</h2><button id="close-episodes" class="button quiet">Close</button></div><ol id="drawer-lessons"></ol><button id="drawer-more-lessons" class="button quiet" hidden>More lessons</button><button id="drawer-more-learned" class="button quiet" hidden>More learned badges</button></dialog>
@@ -350,6 +408,82 @@ function renderApp(account: User): void {
   learning?.close();
   certificates = new CertificatesView(api, feedback);
   learning = new LearningView(required<HTMLElement>('#learning-tools'), learningApi, () => controller?.position ?? 0, position => controller?.seek(position), () => { void controller?.close().then(() => { controller = null; renderLogin('Your sign-in expired. Sign in again to continue.'); }); }, lesson => { learnedLessons.add(lesson); renderLessons(); });
+  syllabusDialog = new SyllabusDialog();
+  studyRail = new StudyRail({
+    root: required<HTMLElement>('#study-rail'),
+    api,
+    learningApi,
+    getCurrentPosition: () => controller?.position ?? 0,
+    seekTo: (sec) => controller?.seek(sec),
+    onPlayLesson: (lesson) => { void loadLesson(lesson); },
+    onMarkComplete: async (lessonId) => { await markComplete(lessonId); },
+  });
+  libraryView = new LibraryView({
+    root: required<HTMLElement>('#library-panel'),
+    api,
+    onOpenSyllabus: (course) => { void openCourseSyllabus(course); },
+    onPlayCourse: (course) => { void loadCourse(course.id, !course.enrolled); },
+    onToggleSave: async (course) => {
+      const isSaved = discovery?.isSaved(course.id) ?? false;
+      if (isSaved) {
+        await api.removeSaved('course', course.id, navigationScope.signal);
+        return false;
+      } else {
+        await api.saveCourse(course.id, navigationScope.signal);
+        return true;
+      }
+    },
+    isSaved: (id) => discovery?.isSaved(id) ?? false,
+  });
+  planningView = new PlanningView({
+    root: required<HTMLElement>('#planner-panel'),
+    api,
+    onNavigateLesson: (lessonId) => {
+      void api.lesson(lessonId, navigationScope.signal).then(res => {
+        void resumeLesson(res.lesson.course_id, lessonId);
+      }).catch(err => { if (!isAbort(err)) feedback(errorMessage(err), true); });
+    },
+  });
+  historyView = new HistoryView({
+    root: required<HTMLElement>('#history-panel'),
+    api,
+    onResumeLesson: (courseId, lessonId, position) => {
+      void resumeLesson(courseId, lessonId).then(() => {
+        if (position && controller) controller.seek(position);
+      });
+    },
+  });
+  settingsView = new SettingsView({
+    root: required<HTMLElement>('#settings-panel'),
+    api,
+    account,
+    onSignOut: () => {
+      void api.logout().finally(() => {
+        user = null;
+        renderLogin();
+      });
+    },
+    feedback,
+  });
+  reviewsView = new ReviewsView({
+    root: required<HTMLElement>('#reviews-panel'),
+    api,
+  });
+  tutorView = new TutorView({
+    root: required<HTMLElement>('#tutor-panel'),
+    api,
+    onNavigateLesson: (lessonId, timestamp) => {
+      void api.lesson(lessonId, navigationScope.signal).then(res => {
+        void resumeLesson(res.lesson.course_id, lessonId).then(() => {
+          if (timestamp !== undefined && controller) controller.seek(timestamp);
+        });
+      }).catch(err => { if (!isAbort(err)) feedback(errorMessage(err), true); });
+    },
+  });
+  labsView = new LabsView({
+    root: required<HTMLElement>('#labs-panel'),
+    api,
+  });
   pathsView = new PathsView(
     required<HTMLElement>('#paths-panel'),
     api,
@@ -367,7 +501,13 @@ function renderApp(account: User): void {
       feedback,
     );
   }
-  discovery = new DiscoveryView({ api, open: (id, preview) => { void loadCourse(id, preview); }, resume: (id, lessonId) => { void resumeLesson(id, lessonId); }, notice: feedback });
+  discovery = new DiscoveryView({
+    api,
+    open: (id, preview) => { void loadCourse(id, preview); },
+    resume: (id, lessonId) => { void resumeLesson(id, lessonId); },
+    notice: feedback,
+    syllabus: (course) => { void openCourseSyllabus(course); },
+  });
   required('#watermark').textContent = account.name || account.email;
   const video = required<HTMLVideoElement>('#lesson-video');
   video.setAttribute('aria-label', 'Lesson video');
@@ -404,6 +544,7 @@ function renderApp(account: User): void {
     },
   });
   bindInterface(video, pageScope.signal);
+  mountPlayerChrome(required<HTMLElement>('#player-wrap'), video, { seek: position => controller?.seek(position) }, pageScope.signal);
   restoreBrowserPreferences(video);
   void api.preferences(pageScope.signal).then(value => preferences?.initialize(value)).catch(error => {
     if (!isAbort(error)) feedback(`Could not load player preferences: ${errorMessage(error)}`, true);
@@ -452,7 +593,14 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   on('#nav-home', () => { void loadCatalog(false, 'home'); });
   on('#nav-courses', () => { void loadCatalog(false, 'courses'); });
   on('#nav-saved', () => { void loadCatalog(false, 'saved'); });
+  on('#nav-library', () => { void showLibrary(); });
+  on('#nav-planner', () => { void showPlanner(); });
+  on('#nav-history', () => { void showHistory(); });
+  on('#nav-reviews', () => { void showReviews(); });
+  on('#nav-tutor', () => { void showTutor(); });
+  on('#nav-labs', () => { void showLabs(); });
   on('#nav-paths', () => { void showPaths(); });
+  on('#nav-settings', () => { void showSettings(); });
   if (user?.role === 'admin') {
     on('#nav-admin', () => { void showAdmin(); });
   }
@@ -587,20 +735,157 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   }, { signal });
 }
 
+function hideAllWorkspaces(): void {
+  required<HTMLElement>('#catalog').hidden = true;
+  required<HTMLElement>('#classroom').hidden = true;
+  required<HTMLElement>('#paths-panel').hidden = true;
+  required<HTMLElement>('#admin-panel').hidden = true;
+  required<HTMLElement>('#library-panel').hidden = true;
+  required<HTMLElement>('#planner-panel').hidden = true;
+  required<HTMLElement>('#history-panel').hidden = true;
+  required<HTMLElement>('#reviews-panel').hidden = true;
+  required<HTMLElement>('#tutor-panel').hidden = true;
+  required<HTMLElement>('#labs-panel').hidden = true;
+  required<HTMLElement>('#settings-panel').hidden = true;
+}
+
+function setActiveNav(name: string): void {
+  for (const link of document.querySelectorAll('[data-catalog-view]')) {
+    if (link.getAttribute('data-catalog-view') === name) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+}
+
+async function showLibrary(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#library-panel').hidden = false;
+  setActiveNav('library');
+  feedback('');
+  libraryView?.activate(navigation.signal);
+}
+
+async function showPlanner(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#planner-panel').hidden = false;
+  setActiveNav('planner');
+  feedback('');
+  planningView?.activate(navigation.signal);
+}
+
+async function showHistory(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#history-panel').hidden = false;
+  setActiveNav('history');
+  feedback('');
+  historyView?.activate(navigation.signal);
+}
+
+async function showSettings(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#settings-panel').hidden = false;
+  setActiveNav('settings');
+  feedback('');
+  settingsView?.activate(navigation.signal);
+}
+
+async function showReviews(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#reviews-panel').hidden = false;
+  setActiveNav('reviews');
+  feedback('');
+  reviewsView?.activate(navigation.signal);
+}
+
+async function showTutor(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#tutor-panel').hidden = false;
+  setActiveNav('tutor');
+  feedback('');
+  tutorView?.activate(navigation.signal);
+}
+
+async function showLabs(): Promise<void> {
+  if (!user) return;
+  const navigation = newNavigation();
+  await controller?.close();
+  if (!navigation.current()) return;
+  selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
+  required<HTMLElement>('#labs-panel').hidden = false;
+  setActiveNav('labs');
+  feedback('');
+  labsView?.activate(navigation.signal);
+}
+
+async function openCourseSyllabus(course: Course): Promise<void> {
+  try {
+    feedback('Opening curriculum…');
+    const full = await api.courseAll(course.id, navigationScope.signal, !course.enrolled);
+    feedback('');
+    syllabusDialog?.open(
+      full.course,
+      full.lessons,
+      learnedLessons,
+      (lesson) => {
+        syllabusDialog?.close();
+        void loadCourse(full.course.id, !full.course.enrolled).then(() => loadLesson(lesson));
+      },
+      async (c) => {
+        const isSaved = discovery?.isSaved(c.id) ?? false;
+        if (isSaved) {
+          await api.removeSaved('course', c.id, navigationScope.signal);
+          return false;
+        } else {
+          await api.saveCourse(c.id, navigationScope.signal);
+          return true;
+        }
+      },
+      discovery?.isSaved(course.id) ?? false,
+    );
+  } catch (error) {
+    if (!isAbort(error)) feedback(errorMessage(error), true);
+  }
+}
+
 async function showPaths(): Promise<void> {
   if (!user) return;
   const navigation = newNavigation();
   await controller?.close();
   if (!navigation.current()) return;
   selectedCourse = null; selectedLesson = null; lessons = [];
-  required<HTMLElement>('#catalog').hidden = true;
-  required<HTMLElement>('#classroom').hidden = true;
-  required<HTMLElement>('#admin-panel').hidden = true;
+  hideAllWorkspaces();
   required<HTMLElement>('#paths-panel').hidden = false;
-  for (const link of document.querySelectorAll('[data-catalog-view]')) {
-    if (link.getAttribute('data-catalog-view') === 'paths') link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  }
+  setActiveNav('paths');
   feedback('');
   await pathsView?.activate(navigation.signal);
 }
@@ -611,14 +896,9 @@ async function showAdmin(): Promise<void> {
   await controller?.close();
   if (!navigation.current()) return;
   selectedCourse = null; selectedLesson = null; lessons = [];
-  required<HTMLElement>('#catalog').hidden = true;
-  required<HTMLElement>('#classroom').hidden = true;
-  required<HTMLElement>('#paths-panel').hidden = true;
+  hideAllWorkspaces();
   required<HTMLElement>('#admin-panel').hidden = false;
-  for (const link of document.querySelectorAll('[data-catalog-view]')) {
-    if (link.getAttribute('data-catalog-view') === 'admin') link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  }
+  setActiveNav('admin');
   feedback('');
   await adminView?.activate(navigation.signal);
 }
@@ -629,12 +909,9 @@ async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise
   await controller?.close();
   if (!navigation.current()) return;
   selectedCourse = null; selectedLesson = null; lessons = [];
+  hideAllWorkspaces();
   required<HTMLElement>('#catalog').hidden = false;
-  required<HTMLElement>('#classroom').hidden = true;
-  required<HTMLElement>('#paths-panel').hidden = true;
-  required<HTMLElement>('#admin-panel').hidden = true;
-  pathsView?.deactivate();
-  adminView?.deactivate();
+  setActiveNav(view);
   feedback('');
   await discovery?.activate(navigation.signal, view);
 }
@@ -657,20 +934,16 @@ async function loadCourse(id: string, preview = true): Promise<void> {
   if (!navigation.current()) return;
   try {
     feedback('Opening course…');
-    const response = await (preview ? api.publicCourse(id, navigation.signal) : api.course(id, navigation.signal));
+    const response = await api.courseAll(id, navigation.signal, preview);
     if (!navigation.current()) return;
     selectedCourse = response.course;
     learnedLessons = new Set(); learnedCursor = ''; learnedLoaded = false;
     selectedLesson = null;
     lessons = response.lessons;
-    lessonCursor = response.next_cursor || null;
-    required<HTMLElement>('#catalog').hidden = true;
+    lessonCursor = null;
+    hideAllWorkspaces();
     required<HTMLElement>('#classroom').hidden = false;
-    required<HTMLElement>('#paths-panel').hidden = true;
-    required<HTMLElement>('#admin-panel').hidden = true;
-    pathsView?.deactivate();
-    adminView?.deactivate();
-    for (const link of document.querySelectorAll('[data-catalog-view]')) link.removeAttribute('aria-current');
+    setActiveNav('');
     required('#course-name').textContent = response.course.title;
     required('#lesson-title').textContent = 'Choose a lesson';
     required('#lesson-description').textContent = response.course.description || '';
@@ -722,6 +995,7 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     void loadNotes(response.lesson.id);
     learning?.open(response.lesson, navigation.signal);
     if (!learnedLoaded) void loadLearnedStatus();
+    studyRail?.updateContext(selectedCourse, lessons, selectedLesson, learnedLessons);
     await controller?.open(response.lesson, takeOver);
     if (!autoplay && navigation.current()) required<HTMLElement>('#player-wrap').focus({ preventScroll: true });
     if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
@@ -738,17 +1012,25 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
 }
 
 function renderLessons(): void {
-  required('#lesson-count').textContent = `${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'}`;
-  for (const selector of ['#more-lessons', '#drawer-more-lessons']) required<HTMLButtonElement>(selector).hidden = !lessonCursor;
-  for (const selector of ['#more-learned', '#drawer-more-learned']) required<HTMLButtonElement>(selector).hidden = !learnedCursor;
-  for (const selector of ['#lesson-list', '#drawer-lessons']) {
-    const list = required(selector);
-    list.replaceChildren();
+  studyRail?.updateContext(selectedCourse, lessons, selectedLesson, learnedLessons);
+  const countEl = document.querySelector('#lesson-count');
+  if (countEl) countEl.textContent = `${lessons.length} ${lessons.length === 1 ? 'lesson' : 'lessons'}`;
+  for (const selector of ['#more-lessons', '#drawer-more-lessons']) {
+    const el = document.querySelector<HTMLButtonElement>(selector);
+    if (el) el.hidden = !lessonCursor;
+  }
+  for (const selector of ['#more-learned', '#drawer-more-learned']) {
+    const el = document.querySelector<HTMLButtonElement>(selector);
+    if (el) el.hidden = !learnedCursor;
+  }
+  const drawerList = document.querySelector<HTMLElement>('#drawer-lessons');
+  if (drawerList) {
+    drawerList.replaceChildren();
     let section = '';
     lessons.forEach((lesson, index) => {
       if (lesson.section_title && lesson.section_title !== section) {
         section = lesson.section_title;
-        const group = element('li', 'lesson-section'); group.append(element('h3', '', section)); list.append(group);
+        const group = element('li', 'lesson-section'); group.append(element('h3', '', section)); drawerList.append(group);
       }
       const item = element('li');
       const choice = button('', () => { closeEpisodes(); void loadLesson(lesson); }, 'lesson-choice');
@@ -758,7 +1040,7 @@ function renderLessons(): void {
       if (learnedLessons.has(lesson.id)) details.append(element('span', 'learned-badge', '✓ Learned'));
       choice.append(number, details);
       if (lesson.id === selectedLesson?.id) choice.setAttribute('aria-current', 'true');
-      item.append(choice); list.append(item);
+      item.append(choice); drawerList.append(item);
     });
   }
 }
@@ -766,7 +1048,7 @@ function renderLessons(): void {
 async function loadLearnedStatus(append = false): Promise<void> {
   const course = selectedCourse; if (!course) return;
   const generation = navigationGeneration;
-  const controls = ['#more-learned', '#drawer-more-learned'].map(selector => required<HTMLButtonElement>(selector));
+  const controls = ['#more-learned', '#drawer-more-learned'].map(selector => document.querySelector<HTMLButtonElement>(selector)).filter((c): c is HTMLButtonElement => Boolean(c));
   controls.forEach(control => { control.disabled = true; });
   try {
     const response = await learningApi.courseStatus(course.id, navigationScope.signal, append ? learnedCursor : '');
@@ -787,7 +1069,7 @@ async function loadMoreLessons(): Promise<void> {
   const next = lessonCursor;
   if (!courseId || !next) return;
   const generation = navigationGeneration;
-  const controls = ['#more-lessons', '#drawer-more-lessons'].map(selector => required<HTMLButtonElement>(selector));
+  const controls = ['#more-lessons', '#drawer-more-lessons'].map(selector => document.querySelector<HTMLButtonElement>(selector)).filter((c): c is HTMLButtonElement => Boolean(c));
   controls.forEach(control => { control.disabled = true; });
   try {
     const response = await (selectedCourse?.enrolled || user?.role === 'admin' ? api.course(courseId, navigationScope.signal, next) : api.publicCourse(courseId, navigationScope.signal, next));
@@ -796,28 +1078,35 @@ async function loadMoreLessons(): Promise<void> {
     lessons.push(...response.lessons.filter(lesson => !known.has(lesson.id)));
     lessonCursor = response.next_cursor || null;
     renderLessons();
-    required<HTMLButtonElement>('#next-lesson').disabled = nextLesson() === null;
+    const nextBtn = document.querySelector<HTMLButtonElement>('#next-lesson');
+    if (nextBtn) nextBtn.disabled = nextLesson() === null;
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
   finally { controls.forEach(control => { control.disabled = false; }); }
 }
 
-async function markComplete(): Promise<void> {
-  const lessonId = selectedLesson?.id;
+async function markComplete(targetLessonId?: string): Promise<void> {
+  const lessonId = targetLessonId || selectedLesson?.id;
   if (!lessonId) return;
   const generation = navigationGeneration;
-  const control = required<HTMLButtonElement>('#mark-complete');
-  control.disabled = true;
-  controller?.pause();
+  const control = document.querySelector<HTMLButtonElement>('#mark-complete');
+  if (control) control.disabled = true;
+  if (lessonId === selectedLesson?.id) controller?.pause();
   try {
-    await controller?.saveNow();
+    if (lessonId === selectedLesson?.id) await controller?.saveNow();
     const progress = await api.progress(lessonId, navigationScope.signal);
     if (generation !== navigationGeneration) return;
-    const saved = await api.saveProgress(lessonId, controller?.position ?? progress.position, 100, progress.revision ?? 0, navigationScope.signal);
+    const saved = await api.saveProgress(lessonId, (lessonId === selectedLesson?.id ? controller?.position : undefined) ?? progress.position, 100, progress.revision ?? 0, navigationScope.signal);
     if (generation !== navigationGeneration) return;
-    if (saved.completed) { required('#coverage').textContent = 'Lesson completed'; feedback('Lesson marked as complete.'); }
+    learnedLessons.add(lessonId);
+    renderLessons();
+    if (saved.completed) {
+      const cov = document.querySelector('#coverage');
+      if (cov && lessonId === selectedLesson?.id) cov.textContent = 'Lesson completed';
+      feedback('Lesson marked as complete.');
+    }
   } catch (error) {
     if (!isAbort(error) && generation === navigationGeneration) feedback(error instanceof ApiError && error.code === 'stale_progress' ? 'Your progress changed in another request. Try marking complete again.' : errorMessage(error), true);
-  } finally { if (generation === navigationGeneration) control.disabled = false; }
+  } finally { if (control && generation === navigationGeneration) control.disabled = false; }
 }
 
 async function loadNotes(lessonId: string, append = false): Promise<void> {

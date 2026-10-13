@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -240,5 +242,46 @@ func TestDefaultURLRestrictions(t *testing.T) {
 	}
 	if !g.valid("https://secure.odycdn.com/a?t=provider-signature") {
 		t.Fatal("valid source rejected")
+	}
+}
+
+
+func TestLocalFileRangeStreaming(t *testing.T) {
+	tmpDir := t.TempDir()
+	sampleVideo := filepath.Join(tmpDir, "sample.mp4")
+	data := []byte("0123456789abcdefghijklmnopqrstuvwxyz")
+	if err := os.WriteFile(sampleVideo, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	a := &testAuthority{}
+	a.active.Store(true)
+	g := New(a, FixedResolver{Target: Target{URL: "file://" + sampleVideo}}, Config{MaxTransfers: 2, RevalidateEvery: time.Second})
+	t.Cleanup(g.Close)
+
+	server := httptest.NewServer(wrapGateway(g))
+	defer server.Close()
+
+	r, _ := http.NewRequest("GET", server.URL+"?t=opaque", nil)
+	r.Header.Set("Range", "bytes=4-10")
+	res, err := server.Client().Do(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 206 {
+		t.Fatalf("expected 206, got %d", res.StatusCode)
+	}
+	if res.Header.Get("Content-Type") != "video/mp4" {
+		t.Fatalf("expected video/mp4, got %s", res.Header.Get("Content-Type"))
+	}
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := "456789a"
+	if string(body) != expected {
+		t.Fatalf("expected %q, got %q", expected, string(body))
 	}
 }

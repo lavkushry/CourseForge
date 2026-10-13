@@ -8,16 +8,19 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"strings"
 	"time"
 
 	"courseforge/backend/internal/activity"
 	"courseforge/backend/internal/administration"
+	"courseforge/backend/internal/ai"
 	"courseforge/backend/internal/api"
 	"courseforge/backend/internal/certificates"
 	"courseforge/backend/internal/config"
 	"courseforge/backend/internal/contract"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
+	"courseforge/backend/internal/labs"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/media"
 	"courseforge/backend/internal/observe"
@@ -35,6 +38,7 @@ func main() {
 	}
 }
 func run() error {
+	loadEnvFile("/home/ubuntu/CourseForge/.env", ".env", "../.env")
 	c, err := config.FromEnv()
 	if err != nil {
 		return err
@@ -84,6 +88,8 @@ func run() error {
 	planner.Register(app.Mux, auth)
 	certificates.New(pool).Register(app.Mux, auth)
 	activity.New(pool).Register(app.Mux, auth)
+	labs.New(pool).Register(app.Mux, auth)
+	ai.New(pool).Register(app.Mux, auth)
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)
 		if err != nil {
@@ -124,4 +130,25 @@ func run() error {
 		return listenErr
 	}
 	return err
+}
+
+func loadEnvFile(paths ...string) {
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			k := strings.TrimSpace(parts[0])
+			v := strings.Trim(strings.TrimSpace(parts[1]), "\"\x27")
+			if os.Getenv(k) == "" {
+				_ = os.Setenv(k, v)
+			}
+		}
+	}
 }

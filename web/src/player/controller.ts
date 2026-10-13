@@ -325,7 +325,7 @@ export class PlayerController {
   }
 
   private emit(current: CurrentLesson, kind: PulseKind, visible = this.options.visible()): Promise<PulseAck | null> {
-    if (!current.delivery?.active || !current.ownership.owns) return Promise.resolve(null);
+    if (!current.delivery || (!current.delivery.active && kind !== 'seek') || (!current.ownership.owns && kind !== 'seek')) return Promise.resolve(null);
     const now = this.clock.now();
     const snapshot = this.options.video.snapshot();
     const position = this.samplePosition(current);
@@ -396,8 +396,12 @@ export class PlayerController {
       current.ownership.lost();
       this.setState('unauthenticated', 'Your sign-in expired. Sign in again to continue this lesson.');
     } else if (error instanceof ApiError && error.status === 409) {
-      current.ownership.lost();
-      this.setState('conflict', 'Playback is open in another window. Move playback here to continue.');
+      if (current.loaded) {
+        this.ownershipLost(current, 'Playback moved to another window. Select Resume here to continue.');
+      } else {
+        current.ownership.lost();
+        this.setState('conflict', 'Playback is open in another window. Move playback here to continue.');
+      }
     } else {
       const message = error instanceof ApiError && error.terminal ? errorMessage(error) : `${errorMessage(error)} Select Retry lesson to try again, or return to the course.`;
       this.setState('error', message);

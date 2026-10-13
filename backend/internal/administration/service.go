@@ -43,6 +43,8 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		handler http.HandlerFunc
 	}{
 		{"GET /api/v1/admin/overview", s.overview},
+		{"GET /api/v1/admin/analytics/retention", s.retentionCurve},
+		{"GET /api/v1/admin/analytics/overview", s.analyticsOverview},
 		{"GET /api/v1/admin/course-funnels", s.funnels},
 		{"GET /api/v1/admin/learner-reports", s.learners},
 		{"GET /api/v1/admin/users/{id}/learning-report", s.learner},

@@ -1,5 +1,5 @@
 import type {
-  AuthResponse, ClaimResponse, Course, Lesson, Note, PlaybackSession, PlaybackTransport,
+  AuthResponse, ClaimResponse, Course, HistoryItem, Lesson, Note, PlaybackSession, PlaybackTransport,
   PlayerPreferences, Progress, Pulse, PulseAck,
 } from './contracts';
 import { parseContinued, parseSaved } from './discovery/contracts';
@@ -136,6 +136,17 @@ export class ApiClient implements PlaybackTransport {
     return this.request(`/public/courses?${query}`, signal ? { signal } : {}).then(parseCourses);
   }
 
+
+  history(cursor = '', signal?: AbortSignal): Promise<{ history: HistoryItem[]; next_cursor?: string | null }> {
+    const query = new URLSearchParams({ limit: '30' });
+    if (cursor) query.set('cursor', cursor);
+    return this.request(`/streaming/history?${query}`, signal ? { signal } : {});
+  }
+
+  clearHistory(signal?: AbortSignal): Promise<void> {
+    return this.request('/streaming/history/clear', { method: 'POST', body: {}, ...(signal ? { signal } : {}) });
+  }
+
   savedItems(cursor = '', signal?: AbortSignal) {
     const query = new URLSearchParams({ limit: '24' });
     if (cursor) query.set('cursor', cursor);
@@ -164,6 +175,20 @@ export class ApiClient implements PlaybackTransport {
     const query = new URLSearchParams({ limit: '100' });
     if (cursor) query.set('cursor', cursor);
     return this.request(`/public/courses/${encodeURIComponent(id)}?${query}`, signal ? { signal } : {}).then(parseCourseDetail);
+  }
+
+  async courseAll(id: string, signal?: AbortSignal, preview = false): Promise<{ course: Course; lessons: Lesson[] }> {
+    const fn = preview ? this.publicCourse.bind(this) : this.course.bind(this);
+    let res = await fn(id, signal);
+    const course = res.course;
+    const lessons = [...res.lessons];
+    let cursor = res.next_cursor;
+    while (cursor && !signal?.aborted) {
+      res = await fn(id, signal, cursor);
+      lessons.push(...res.lessons);
+      cursor = res.next_cursor;
+    }
+    return { course, lessons };
   }
 
   enroll(id: string, signal?: AbortSignal): Promise<void> {
@@ -285,6 +310,82 @@ export class ApiClient implements PlaybackTransport {
 
   adminLearnerReport(userId: string, signal?: AbortSignal): Promise<AdminLearnerReport> {
     return this.request(`/admin/users/${encodeURIComponent(userId)}/learning-report`, signal ? { signal } : {});
+  }
+
+  // AI Endpoints
+  aiStatus(signal?: AbortSignal): Promise<{
+    pgvector_active: boolean;
+    vector_dimensions: number;
+    embeddings_count: number;
+    transcript_chunks: number;
+    ollama_online: boolean;
+    ollama_embedding_model: string;
+    ollama_chat_model: string;
+  }> {
+    return this.request('/ai/status', signal ? { signal } : {});
+  }
+
+  aiAsk(courseId: string, lessonId: string, question: string, mode = 'general', signal?: AbortSignal): Promise<{
+    answer: string;
+    mode: string;
+    citations: Array<{
+      chunk_id: string;
+      lesson_id: string;
+      lesson_title: string;
+      start_seconds: number;
+      end_seconds: number;
+      text: string;
+    }>;
+  }> {
+    return this.request('/ai/tutor/ask', {
+      method: 'POST',
+      body: { course_id: courseId, lesson_id: lessonId, question, mode },
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  aiSummary(lessonId: string, signal?: AbortSignal): Promise<{
+    lesson_id: string;
+    title: string;
+    course_id: string;
+    summary: string;
+  }> {
+    return this.request(`/ai/lessons/${encodeURIComponent(lessonId)}/summary`, signal ? { signal } : {});
+  }
+
+  generateAiRoadmap(goal: string, role?: string, signal?: AbortSignal): Promise<{
+    id: string;
+    goal: string;
+    target_role: string;
+    estimated_weeks: number;
+    steps: Array<{
+      step_number: number;
+      title: string;
+      description: string;
+      course_id: string;
+      course_title: string;
+      estimated_hours: number;
+      key_concepts: string[];
+    }>;
+  }> {
+    return this.request('/ai/roadmaps/generate', {
+      method: 'POST',
+      body: { goal, role: role || '' },
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminRetentionCurve(lessonId?: string, signal?: AbortSignal): Promise<{
+    lesson_id: string;
+    lesson_title: string;
+    duration_seconds: number;
+    total_sessions: number;
+    completion_rate: number;
+    points: Array<{ second: number; percentage: number; replays: number }>;
+    peak_moments: Array<{ second: number; label: string }>;
+  }> {
+    const q = lessonId ? `?lesson_id=${encodeURIComponent(lessonId)}` : '';
+    return this.request(`/admin/analytics/retention${q}`, signal ? { signal } : {});
   }
 
   async exportReport(type: 'player-activity' | 'playback', userId?: string, signal?: AbortSignal): Promise<string> {

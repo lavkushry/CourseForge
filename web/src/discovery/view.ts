@@ -1,3 +1,4 @@
+import { svgIcon, type IconName } from '../icons';
 import { ApiClient, errorMessage, isAbort } from '../api';
 import type { Course } from '../contracts';
 import { courseCover } from './contracts';
@@ -9,6 +10,7 @@ interface Options {
   open(courseId: string, preview: boolean): void;
   resume(courseId: string, lessonId: string): void;
   notice(message: string, error?: boolean): void;
+  syllabus?(course: Course): void;
 }
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const value = document.createElement(tag); value.className = className; value.textContent = text; return value;
@@ -69,6 +71,9 @@ export class DiscoveryView {
   deactivate(): void {
     this.scope.abort(); this.fetchScope.abort(); this.generation++;
     if (this.searchTimer !== undefined) clearTimeout(this.searchTimer);
+  }
+  isSaved(courseId: string): boolean {
+    return this.savedIDs.has(courseId);
   }
   async activate(signal: AbortSignal, view: CatalogView = 'home'): Promise<void> {
     this.deactivate(); this.scope = new AbortController();
@@ -147,7 +152,7 @@ export class DiscoveryView {
     const home = this.view === 'home' && !this.query;
     required('#catalog').classList.toggle('is-home', home);
     const hero = required<HTMLElement>('#featured-course');
-    const course = this.courses.find(c => c.id === 'fixture-course') ?? this.courses[0];
+    const course = this.courses.find(c => c.id.includes('Agentic AI') || c.id.includes('TrendyTech') || c.id.includes('Scaler DSA')) ?? this.courses.find(c => !c.id.startsWith('fixture-')) ?? this.courses[0];
     hero.hidden = !home || !course;
     if (home && course) this.renderHero(course);
     const continued = required<HTMLElement>('#continue-section');
@@ -166,18 +171,18 @@ export class DiscoveryView {
     } else if (home && this.courses.length > 5) {
       list.className = 'carousel-container';
       const top10 = this.courses.slice(0, 10);
-      list.append(this.carouselRow('🔥 Top 10 Masterclasses This Week', top10, true));
+      list.append(this.carouselRow('Top 10 Masterclasses This Week', top10, true, 'fire'));
 
       const aiCourses = this.courses.filter(c => /ai|genai|agent|llm|rag|voice/i.test((c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' ')));
-      if (aiCourses.length) list.append(this.carouselRow('⚡ GenAI, LLMs & Agentic AI', aiCourses));
+      if (aiCourses.length) list.append(this.carouselRow('GenAI, LLMs & Agentic AI', aiCourses, false, 'zap'));
 
       const sysDesign = this.courses.filter(c => /system design|hld|lld|architecture|scale/i.test((c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' ')));
-      if (sysDesign.length) list.append(this.carouselRow('🏛 System Design & Distributed Systems', sysDesign));
+      if (sysDesign.length) list.append(this.carouselRow('System Design & Distributed Systems', sysDesign, false, 'building'));
 
       const dataEng = this.courses.filter(c => /data|spark|hadoop|databricks|azure|sql|lake/i.test((c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' ')));
-      if (dataEng.length) list.append(this.carouselRow('☁ Cloud & Big Data Engineering', dataEng));
+      if (dataEng.length) list.append(this.carouselRow('Cloud & Big Data Engineering', dataEng, false, 'cloud'));
 
-      list.append(this.carouselRow('🚀 All Masterclasses & Deep Dives', this.courses));
+      list.append(this.carouselRow('All Masterclasses & Deep Dives', this.courses, false, 'rocket'));
     } else {
       list.className = 'course-grid';
       for (const item of this.courses) list.append(this.courseCard(item));
@@ -201,13 +206,17 @@ export class DiscoveryView {
     for (const label of [course.category, course.lesson_count === undefined ? undefined : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`, duration(course.duration_seconds)]) if (label) metadata.append(node('span', '', label));
     content.append(metadata);
     const actions = node('div', 'hero-actions');
-    actions.append(action(course.enrolled ? '▶ Continue course' : '▶ Explore course', () => this.options.open(course.id, !course.enrolled), 'button primary hero-play'), this.saveButton(course));
+    actions.append(
+      (() => { const b = action(course.enrolled ? ' Continue course' : ' Explore course', () => this.options.open(course.id, !course.enrolled), 'button primary hero-play'); b.prepend(svgIcon('play')); return b; })(),
+      action('Curriculum', () => this.options.syllabus ? this.options.syllabus(course) : this.options.open(course.id, !course.enrolled), 'button quiet hero-syllabus'),
+      this.saveButton(course),
+    );
     content.append(actions, node('p', 'hero-footnote', course.instructor ? `With ${course.instructor}` : 'Make room for what you want to learn.'));
     hero.append(art, content);
   }
   private saveButton(course: Course): HTMLButtonElement {
     const saved = this.savedIDs.has(course.id);
-    const value = action(saved ? '✓ My List' : '+ My List', () => {
+    const value = action(saved ? 'In My List' : '+ My List', () => {
       const focused = document.activeElement === value;
       const featured = Boolean(value.closest('#featured-course'));
       value.disabled = true;
@@ -229,11 +238,11 @@ export class DiscoveryView {
     const card = node('article', 'course-card');
     const openCourse = () => this.options.open(course.id, !course.enrolled);
     card.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.list-button, a')) return;
+      if ((e.target as HTMLElement).closest('.list-button, a, button')) return;
       openCourse();
     });
     const cover = action('', openCourse, 'cover-button');
-    cover.setAttribute('aria-label', `Explore ${course.title}`); cover.append(artwork(course), node('span', 'art-play', '▶'));
+    cover.setAttribute('aria-label', `Explore ${course.title}`); const artPlay = node('span', 'art-play'); artPlay.append(svgIcon('play')); cover.append(artwork(course), artPlay);
     card.append(cover);
     const body = node('div', 'course-card-body');
     const badge = node('span', 'course-badge', course.enrolled ? 'YOUR COURSE' : course.category || 'DISCOVER');
@@ -241,14 +250,18 @@ export class DiscoveryView {
     const metadata = node('p', 'course-meta', `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`} · ${duration(course.duration_seconds)}`);
     body.append(metadata);
     const footer = node('div', 'course-card-footer');
-    footer.append(action('Open course →', openCourse, 'text-button'), this.saveButton(course));
+    footer.append(
+      action('Open course →', openCourse, 'text-button'),
+      action('Curriculum', () => this.options.syllabus ? this.options.syllabus(course) : openCourse(), 'text-button syllabus-link-btn'),
+      this.saveButton(course),
+    );
     body.append(footer); card.append(body); return card;
   }
   private continueCard(item: ContinueItem): HTMLElement {
     const card = node('article', 'continue-card');
     const open = action('', () => this.options.resume(item.course_id, item.id), 'continue-open');
     open.setAttribute('aria-label', `Resume ${item.title}`);
-    open.append(artwork({ id: item.course_id, title: item.title }), node('span', 'continue-play', '▶'));
+    const contPlay = node('span', 'continue-play'); contPlay.append(svgIcon('play')); open.append(artwork({ id: item.course_id, title: item.title }), contPlay);
     const body = node('div', 'continue-body');
     body.append(node('span', 'eyebrow', 'CONTINUE LEARNING'), node('h3', '', item.title), node('p', 'muted', `${Math.floor(item.position / 60)}:${String(Math.floor(item.position % 60)).padStart(2, '0')} / ${duration(item.duration_seconds)}`));
     const progress = node('progress', 'watch-progress'); progress.max = 100; progress.value = item.percent; progress.setAttribute('aria-label', `${item.percent}% complete`);
@@ -271,10 +284,12 @@ export class DiscoveryView {
     }, 'button quiet');
     footer.append(action(item.item_type === 'lecture' ? 'Open lesson →' : 'Open course →', open, 'text-button'), remove); body.append(footer); card.append(cover, body); return card;
   }
-  private carouselRow(title: string, items: Course[], isTop10 = false): HTMLElement {
+  private carouselRow(title: string, items: Course[], isTop10 = false, iconName?: IconName): HTMLElement {
     const section = node('section', 'carousel-row');
     const header = node('div', 'carousel-header');
-    header.append(node('h2', 'carousel-title', title), action('Explore all →', () => {
+    const h2 = node('h2', 'carousel-title');
+    if (iconName) { h2.append(svgIcon(iconName), ' ' + title); } else { h2.textContent = title; }
+    header.append(h2, action('Explore all →', () => {
       const btn = document.querySelector<HTMLButtonElement>('#nav-courses');
       if (btn) btn.click();
     }, 'carousel-explore-link'));
@@ -325,6 +340,6 @@ export class DiscoveryView {
     return section;
   }
   private empty(title: string, message: string): HTMLElement {
-    const value = node('div', 'catalog-empty'); value.append(node('span', 'empty-symbol', '✦'), node('h2', '', title), node('p', 'muted', message)); return value;
+    const value = node('div', 'catalog-empty'); value.append((() => { const s = node('span', 'empty-symbol'); s.append(svgIcon('sparkle')); return s; })(), node('h2', '', title), node('p', 'muted', message)); return value;
   }
 }

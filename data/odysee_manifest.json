@@ -9754,5 +9754,625 @@
     "odysee_url": "https://odysee.com/gauravsen-lld-2026-073-implementation-details-4-machine-coding-a-rate-limiter:51241011d0d25af0ba10fd07db4ddce254466016",
     "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-073-implementation-details-4-machine-coding-a-rate-limiter/51241011d0d25af0ba10fd07db4ddce254466016",
     "uploaded_at": "2026-10-12T20:28:44+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[074] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - API Breakdown 4 Machine Coding a Rate Limiter Low Lev.mp4": {
+    "video_id": "v_e1e2a7e30dff",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[074] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - API Breakdown 4 Machine Coding a Rate Limiter Low Leve",
+    "claim_name": "gauravsen-lld-2026-074-api-breakdown-4-machine-coding-a-rate-limiter-low-leve",
+    "claim_id": "e0ee8e1aea35dab08fca3df94fdc4add61730fb1",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-074-api-breakdown-4-machine-coding-a-rate-limiter-low-leve:e0ee8e1aea35dab08fca3df94fdc4add61730fb1",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-074-api-breakdown-4-machine-coding-a-rate-limiter-low-leve/e0ee8e1aea35dab08fca3df94fdc4add61730fb1",
+    "uploaded_at": "2026-10-12T20:32:44+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[075] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Models, Controllers, Packages and ThreadPools 4 Machi.mp4": {
+    "video_id": "v_9dd752da8104",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[075] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Models, Controllers, Packages and ThreadPools 4 Machin",
+    "claim_name": "gauravsen-lld-2026-075-models-controllers-packages-and-threadpools-4-machin",
+    "claim_id": "5de584ab243943d9bc3b3f03a805425112480555",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-075-models-controllers-packages-and-threadpools-4-machin:5de584ab243943d9bc3b3f03a805425112480555",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-075-models-controllers-packages-and-threadpools-4-machin/5de584ab243943d9bc3b3f03a805425112480555",
+    "uploaded_at": "2026-10-12T20:33:09+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[076] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Reading and Writing Data 4 Machine Coding a Rate Limi.mp4": {
+    "video_id": "v_24d097cd905f",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[076] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Reading and Writing Data 4 Machine Coding a Rate Limit",
+    "claim_name": "gauravsen-lld-2026-076-reading-and-writing-data-4-machine-coding-a-rate-limit",
+    "claim_id": "1127284dc170ef7d4a11c257b794668dbbb1b9c3",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-076-reading-and-writing-data-4-machine-coding-a-rate-limit:1127284dc170ef7d4a11c257b794668dbbb1b9c3",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-076-reading-and-writing-data-4-machine-coding-a-rate-limit/1127284dc170ef7d4a11c257b794668dbbb1b9c3",
+    "uploaded_at": "2026-10-12T20:34:49+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[077] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - RateLimiter Client Setup 4 Machine Coding a Rate Limi.mp4": {
+    "video_id": "v_3ffee0acab7d",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[077] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - RateLimiter Client Setup 4 Machine Coding a Rate Limit",
+    "claim_name": "gauravsen-lld-2026-077-ratelimiter-client-setup-4-machine-coding-a-rate-limit",
+    "claim_id": "e8526678fee347deb8497b95a78e5a047682676b",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-077-ratelimiter-client-setup-4-machine-coding-a-rate-limit:e8526678fee347deb8497b95a78e5a047682676b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-077-ratelimiter-client-setup-4-machine-coding-a-rate-limit/e8526678fee347deb8497b95a78e5a047682676b",
+    "uploaded_at": "2026-10-12T20:35:50+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[078] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Sliding Window Algorithm Setup 4 Machine Coding a Rat.mp4": {
+    "video_id": "v_5f3cf090e08f",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[078] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Sliding Window Algorithm Setup 4 Machine Coding a Rate",
+    "claim_name": "gauravsen-lld-2026-078-sliding-window-algorithm-setup-4-machine-coding-a-rate",
+    "claim_id": "88471cbc9e2c66f597e025bee82fdc905168f600",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-078-sliding-window-algorithm-setup-4-machine-coding-a-rate:88471cbc9e2c66f597e025bee82fdc905168f600",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-078-sliding-window-algorithm-setup-4-machine-coding-a-rate/88471cbc9e2c66f597e025bee82fdc905168f600",
+    "uploaded_at": "2026-10-12T20:36:36+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[079] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Dependency Inversion 4 Machine Coding a Rate Limiter .mp4": {
+    "video_id": "v_d6704d0ad7cc",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[079] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Dependency Inversion 4 Machine Coding a Rate Limiter L",
+    "claim_name": "gauravsen-lld-2026-079-dependency-inversion-4-machine-coding-a-rate-limiter-l",
+    "claim_id": "6c178ada769137291d445bc8c6d58ac56e91a75c",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-079-dependency-inversion-4-machine-coding-a-rate-limiter-l:6c178ada769137291d445bc8c6d58ac56e91a75c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-079-dependency-inversion-4-machine-coding-a-rate-limiter-l/6c178ada769137291d445bc8c6d58ac56e91a75c",
+    "uploaded_at": "2026-10-12T20:38:01+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[080] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Sliding window with backpressure.mp4": {
+    "video_id": "v_00bf4a1936aa",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[080] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Sliding window with backpressure",
+    "claim_name": "gauravsen-lld-2026-080-sliding-window-with-backpressure",
+    "claim_id": "b4ac25bbff0d344f421b4698ef8b577f9fe645ff",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-080-sliding-window-with-backpressure:b4ac25bbff0d344f421b4698ef8b577f9fe645ff",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-080-sliding-window-with-backpressure/b4ac25bbff0d344f421b4698ef8b577f9fe645ff",
+    "uploaded_at": "2026-10-12T20:39:40+00:00"
+  },
+  "Gaurav Sen Low Level Design (LLD) 2026/[081] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Clearing stale entries in sliding window @hmaracolleg.mp4": {
+    "video_id": "v_9bf0974b3062",
+    "course": "Gaurav Sen Low Level Design (LLD) 2026",
+    "title": "[081] Module 15 (Case Study 4 \u2014 Machine Coding a Distributed Rate Limiter) - Clearing stale entries in sliding window\n@hmaracollege + @thebatmanreborn",
+    "claim_name": "gauravsen-lld-2026-081-clearing-stale-entries-in-sliding-window-hmaracollege-t",
+    "claim_id": "9a44aac6adbdfd5a85f79782724bc65143d4cd1f",
+    "odysee_url": "https://odysee.com/gauravsen-lld-2026-081-clearing-stale-entries-in-sliding-window-hmaracollege-t:9a44aac6adbdfd5a85f79782724bc65143d4cd1f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-lld-2026-081-clearing-stale-entries-in-sliding-window-hmaracollege-t/9a44aac6adbdfd5a85f79782724bc65143d4cd1f",
+    "uploaded_at": "2026-10-12T20:40:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[001] Module 01 (1. Basics \u2014 How do I use this course ) - What do we offer.mp4": {
+    "video_id": "v_5b5d62f235ff",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[001] Module 01 (1. Basics \u2014 How do I use this course?) - What do we offer?",
+    "claim_name": "gauravsen-hld-2026-001-what-do-we-offer",
+    "claim_id": "4c03da2e022099c6b71f574b0cba3efcc6a5bbb4",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-001-what-do-we-offer:4c03da2e022099c6b71f574b0cba3efcc6a5bbb4",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-001-what-do-we-offer/4c03da2e022099c6b71f574b0cba3efcc6a5bbb4",
+    "uploaded_at": "2026-10-12T20:42:38+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[002] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #1 What is System Design.mp4": {
+    "video_id": "v_8498322ed3a6",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[002] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #1: What is System Design?",
+    "claim_name": "gauravsen-hld-2026-002-1-what-is-system-design",
+    "claim_id": "9193ad679243ad4320770d6c82cf3f728f4fb955",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-002-1-what-is-system-design:9193ad679243ad4320770d6c82cf3f728f4fb955",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-002-1-what-is-system-design/9193ad679243ad4320770d6c82cf3f728f4fb955",
+    "uploaded_at": "2026-10-12T20:44:12+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[003] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #2 A star-tup is born!.mp4": {
+    "video_id": "v_0ef69c41bb94",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[003] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #2: A star-tup is born!",
+    "claim_name": "gauravsen-hld-2026-003-2-a-star-tup-is-born",
+    "claim_id": "0e88ce20476388be1ba66602a365d45227c6abbd",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-003-2-a-star-tup-is-born:0e88ce20476388be1ba66602a365d45227c6abbd",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-003-2-a-star-tup-is-born/0e88ce20476388be1ba66602a365d45227c6abbd",
+    "uploaded_at": "2026-10-12T20:44:48+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[004] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #3 Where are the pages.mp4": {
+    "video_id": "v_524966bded72",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[004] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #3: Where are the pages?",
+    "claim_name": "gauravsen-hld-2026-004-3-where-are-the-pages",
+    "claim_id": "b7241f12486d91384d058196e10fff2a15161fc0",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-004-3-where-are-the-pages:b7241f12486d91384d058196e10fff2a15161fc0",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-004-3-where-are-the-pages/b7241f12486d91384d058196e10fff2a15161fc0",
+    "uploaded_at": "2026-10-12T20:46:50+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[005] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #4 Debugging in the trenches.mp4": {
+    "video_id": "v_90b7cb535ad9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[005] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #4: Debugging in the trenches",
+    "claim_name": "gauravsen-hld-2026-005-4-debugging-in-the-trenches",
+    "claim_id": "2f6ad6303835a763917b7b0e96038aa1efc0c768",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-005-4-debugging-in-the-trenches:2f6ad6303835a763917b7b0e96038aa1efc0c768",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-005-4-debugging-in-the-trenches/2f6ad6303835a763917b7b0e96038aa1efc0c768",
+    "uploaded_at": "2026-10-12T20:48:05+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[049] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Migration Across Regions.mp4": {
+    "video_id": "v_9816cde8aa8c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[049] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Migration Across Regions",
+    "claim_name": "gauravsen-hld-2026-049-migration-across-regions",
+    "claim_id": "bd0b35b1faa591f1833113dc1c5d2249c26ee856",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-049-migration-across-regions:bd0b35b1faa591f1833113dc1c5d2249c26ee856",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-049-migration-across-regions/bd0b35b1faa591f1833113dc1c5d2249c26ee856",
+    "uploaded_at": "2026-10-13T01:59:06+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[050] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Security aspects in distributed systems.mp4": {
+    "video_id": "v_5119319e1af9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[050] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Security aspects in distributed systems",
+    "claim_name": "gauravsen-hld-2026-050-security-aspects-in-distributed-systems",
+    "claim_id": "6c9fe857488d29734324aac3bc7480a0bc5713f8",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-050-security-aspects-in-distributed-systems:6c9fe857488d29734324aac3bc7480a0bc5713f8",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-050-security-aspects-in-distributed-systems/6c9fe857488d29734324aac3bc7480a0bc5713f8",
+    "uploaded_at": "2026-10-13T02:01:56+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[051] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Token Based Auth.mp4": {
+    "video_id": "v_7632781be0cd",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[051] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Token Based Auth",
+    "claim_name": "gauravsen-hld-2026-051-token-based-auth",
+    "claim_id": "ccb7d695243f2f807de117ceea0562a3f7d06b73",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-051-token-based-auth:ccb7d695243f2f807de117ceea0562a3f7d06b73",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-051-token-based-auth/ccb7d695243f2f807de117ceea0562a3f7d06b73",
+    "uploaded_at": "2026-10-13T02:07:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[052] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - SSO and OAuth.mp4": {
+    "video_id": "v_425e2d72ebcd",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[052] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - SSO and OAuth",
+    "claim_name": "gauravsen-hld-2026-052-sso-and-oauth",
+    "claim_id": "43c612226f8ec210c17e5cd660d060cbec397e28",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-052-sso-and-oauth:43c612226f8ec210c17e5cd660d060cbec397e28",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-052-sso-and-oauth/43c612226f8ec210c17e5cd660d060cbec397e28",
+    "uploaded_at": "2026-10-13T02:10:18+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[053] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Access Control Lists and Rule Engines.mp4": {
+    "video_id": "v_8d4975291c98",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[053] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Access Control Lists and Rule Engines",
+    "claim_name": "gauravsen-hld-2026-053-access-control-lists-and-rule-engines",
+    "claim_id": "f5497bd24d32f404529892a46ae89858d7a9a97b",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-053-access-control-lists-and-rule-engines:f5497bd24d32f404529892a46ae89858d7a9a97b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-053-access-control-lists-and-rule-engines/f5497bd24d32f404529892a46ae89858d7a9a97b",
+    "uploaded_at": "2026-10-13T02:14:38+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[054] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Attack Vectors - Hackers, Developers and Code.mp4": {
+    "video_id": "v_8db41c2eebb5",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[054] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - Attack Vectors - Hackers, Developers and Code",
+    "claim_name": "gauravsen-hld-2026-054-attack-vectors-hackers-developers-and-code",
+    "claim_id": "0c0bbb660d69a7dd9ebcb7c1107b047f5fcae07a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-054-attack-vectors-hackers-developers-and-code:0c0bbb660d69a7dd9ebcb7c1107b047f5fcae07a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-054-attack-vectors-hackers-developers-and-code/0c0bbb660d69a7dd9ebcb7c1107b047f5fcae07a",
+    "uploaded_at": "2026-10-13T02:18:04+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[055] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - How videos are protected inside CDNs.mp4": {
+    "video_id": "v_a3ba944996f5",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[055] Module 08 (2. Concepts \u2014 6. Security in distributed systems) - How videos are protected inside CDNs",
+    "claim_name": "gauravsen-hld-2026-055-how-videos-are-protected-inside-cdns",
+    "claim_id": "f29d60419df620cc71ebaa1b83b0c86ef0364fd7",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-055-how-videos-are-protected-inside-cdns:f29d60419df620cc71ebaa1b83b0c86ef0364fd7",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-055-how-videos-are-protected-inside-cdns/f29d60419df620cc71ebaa1b83b0c86ef0364fd7",
+    "uploaded_at": "2026-10-13T02:21:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[056] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Introduction to Observability.mp4": {
+    "video_id": "v_27e2d641437d",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[056] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Introduction to Observability",
+    "claim_name": "gauravsen-hld-2026-056-introduction-to-observability",
+    "claim_id": "32df5e96f238c11d6035770eab10d0662af2936d",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-056-introduction-to-observability:32df5e96f238c11d6035770eab10d0662af2936d",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-056-introduction-to-observability/32df5e96f238c11d6035770eab10d0662af2936d",
+    "uploaded_at": "2026-10-13T02:22:17+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[057] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Logging - Best Practices.mp4": {
+    "video_id": "v_fb4d50c48d3c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[057] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Logging - Best Practices",
+    "claim_name": "gauravsen-hld-2026-057-logging-best-practices",
+    "claim_id": "54ae60778ba44978a634dc85320f6ed3dee99478",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-057-logging-best-practices:54ae60778ba44978a634dc85320f6ed3dee99478",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-057-logging-best-practices/54ae60778ba44978a634dc85320f6ed3dee99478",
+    "uploaded_at": "2026-10-13T02:22:33+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[058] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Monitoring Metrics.mp4": {
+    "video_id": "v_c0ef2f744b84",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[058] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Monitoring Metrics",
+    "claim_name": "gauravsen-hld-2026-058-monitoring-metrics",
+    "claim_id": "62462c0dbc6dca9fc41f5e2cf6187adef98b91ac",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-058-monitoring-metrics:62462c0dbc6dca9fc41f5e2cf6187adef98b91ac",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-058-monitoring-metrics/62462c0dbc6dca9fc41f5e2cf6187adef98b91ac",
+    "uploaded_at": "2026-10-13T02:22:49+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[059] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Anomaly Detection Holt-Winters Algorithm.mp4": {
+    "video_id": "v_d8cc0ad2dac6",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[059] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Anomaly Detection: Holt-Winters Algorithm",
+    "claim_name": "gauravsen-hld-2026-059-anomaly-detection-holt-winters-algorithm",
+    "claim_id": "9e61dfeb7c8e42dad8946791992bdc4b3d218ff7",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-059-anomaly-detection-holt-winters-algorithm:9e61dfeb7c8e42dad8946791992bdc4b3d218ff7",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-059-anomaly-detection-holt-winters-algorithm/9e61dfeb7c8e42dad8946791992bdc4b3d218ff7",
+    "uploaded_at": "2026-10-13T02:23:12+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[060] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Root Cause Analysis.mp4": {
+    "video_id": "v_90e5819645ea",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[060] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Root Cause Analysis",
+    "claim_name": "gauravsen-hld-2026-060-root-cause-analysis",
+    "claim_id": "e01f541b1c5653bfb0599aadce06fae50c0e2b36",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-060-root-cause-analysis:e01f541b1c5653bfb0599aadce06fae50c0e2b36",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-060-root-cause-analysis/e01f541b1c5653bfb0599aadce06fae50c0e2b36",
+    "uploaded_at": "2026-10-13T02:23:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[061] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Conclusion to Observability.mp4": {
+    "video_id": "v_13167a84df44",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[061] Module 09 (2. Concepts \u2014 7. Observability in Distributed Systems) - Conclusion to Observability",
+    "claim_name": "gauravsen-hld-2026-061-conclusion-to-observability",
+    "claim_id": "0c4ed49c593a12632c8bce4a970d6cca7cc02d1d",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-061-conclusion-to-observability:0c4ed49c593a12632c8bce4a970d6cca7cc02d1d",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-061-conclusion-to-observability/0c4ed49c593a12632c8bce4a970d6cca7cc02d1d",
+    "uploaded_at": "2026-10-13T02:23:59+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[062] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - The Problem of Distributed Consensus.mp4": {
+    "video_id": "v_6a74315ced66",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[062] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - The Problem of Distributed Consensus",
+    "claim_name": "gauravsen-hld-2026-062-the-problem-of-distributed-consensus",
+    "claim_id": "6f04f7bb4348178e4edf1d1ccec30f00b68cee3f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-062-the-problem-of-distributed-consensus:6f04f7bb4348178e4edf1d1ccec30f00b68cee3f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-062-the-problem-of-distributed-consensus/6f04f7bb4348178e4edf1d1ccec30f00b68cee3f",
+    "uploaded_at": "2026-10-13T02:24:31+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[063] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Basic Algorithm.mp4": {
+    "video_id": "v_e4560abecf5a",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[063] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Basic Algorithm",
+    "claim_name": "gauravsen-hld-2026-063-basic-algorithm",
+    "claim_id": "74808e67ab91b7de3fcc8a328ac9ed5f44350c8a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-063-basic-algorithm:74808e67ab91b7de3fcc8a328ac9ed5f44350c8a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-063-basic-algorithm/74808e67ab91b7de3fcc8a328ac9ed5f44350c8a",
+    "uploaded_at": "2026-10-13T02:25:03+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[064] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Improving the algorithm.mp4": {
+    "video_id": "v_bcacc3c5dc9e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[064] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Improving the algorithm",
+    "claim_name": "gauravsen-hld-2026-064-improving-the-algorithm",
+    "claim_id": "d99320ca3beb211f40de186375adf91e6ecf7671",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-064-improving-the-algorithm:d99320ca3beb211f40de186375adf91e6ecf7671",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-064-improving-the-algorithm/d99320ca3beb211f40de186375adf91e6ecf7671",
+    "uploaded_at": "2026-10-13T02:25:23+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[065] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Termination Conditions.mp4": {
+    "video_id": "v_505cc136d700",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[065] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Termination Conditions",
+    "claim_name": "gauravsen-hld-2026-065-termination-conditions",
+    "claim_id": "0f0fd28b9b2ab60ece1cb4130e57a4207f13a68c",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-065-termination-conditions:0f0fd28b9b2ab60ece1cb4130e57a4207f13a68c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-065-termination-conditions/0f0fd28b9b2ab60ece1cb4130e57a4207f13a68c",
+    "uploaded_at": "2026-10-13T02:26:17+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[066] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Practical Considerations.mp4": {
+    "video_id": "v_1bed8a67963c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[066] Module 10 (2. Concepts \u2014 8. Distributed Consensus with Paxos) - Practical Considerations",
+    "claim_name": "gauravsen-hld-2026-066-practical-considerations",
+    "claim_id": "0810ed7c35143071da2a20e95abba44cec940887",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-066-practical-considerations:0810ed7c35143071da2a20e95abba44cec940887",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-066-practical-considerations/0810ed7c35143071da2a20e95abba44cec940887",
+    "uploaded_at": "2026-10-13T02:26:57+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[067] Module 11 (2. Concepts \u2014 9. Distributed Rate Limiting) - The Oracle and the Timer Wheel.mp4": {
+    "video_id": "v_371b8c5eb793",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[067] Module 11 (2. Concepts \u2014 9. Distributed Rate Limiting) - The Oracle and the Timer Wheel",
+    "claim_name": "gauravsen-hld-2026-067-the-oracle-and-the-timer-wheel",
+    "claim_id": "09855d2f834322de0506c326123069520d218139",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-067-the-oracle-and-the-timer-wheel:09855d2f834322de0506c326123069520d218139",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-067-the-oracle-and-the-timer-wheel/09855d2f834322de0506c326123069520d218139",
+    "uploaded_at": "2026-10-13T02:36:18+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[068] Module 11 (2. Concepts \u2014 9. Distributed Rate Limiting) - Partitioning and Real-life Optimisations.mp4": {
+    "video_id": "v_93b0a9341ebc",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[068] Module 11 (2. Concepts \u2014 9. Distributed Rate Limiting) - Partitioning and Real-life Optimisations",
+    "claim_name": "gauravsen-hld-2026-068-partitioning-and-real-life-optimisations",
+    "claim_id": "ec1b6c81b3f2ff2c914e6d55540d3a694842be04",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-068-partitioning-and-real-life-optimisations:ec1b6c81b3f2ff2c914e6d55540d3a694842be04",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-068-partitioning-and-real-life-optimisations/ec1b6c81b3f2ff2c914e6d55540d3a694842be04",
+    "uploaded_at": "2026-10-13T02:43:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[069] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Introduction to design tradeoffs.mp4": {
+    "video_id": "v_7f0025ea53f5",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[069] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Introduction to design tradeoffs",
+    "claim_name": "gauravsen-hld-2026-069-introduction-to-design-tradeoffs",
+    "claim_id": "3fb4c055c54e7882b1a04eb343aa3ea0005b236b",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-069-introduction-to-design-tradeoffs:3fb4c055c54e7882b1a04eb343aa3ea0005b236b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-069-introduction-to-design-tradeoffs/3fb4c055c54e7882b1a04eb343aa3ea0005b236b",
+    "uploaded_at": "2026-10-13T02:44:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[070] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Pull vs. Push Architectures.mp4": {
+    "video_id": "v_e36c5851b93e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[070] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Pull vs. Push Architectures",
+    "claim_name": "gauravsen-hld-2026-070-pull-vs-push-architectures",
+    "claim_id": "6be22700ba59dcf6b77051f57d2288a74eb75cc2",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-070-pull-vs-push-architectures:6be22700ba59dcf6b77051f57d2288a74eb75cc2",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-070-pull-vs-push-architectures/6be22700ba59dcf6b77051f57d2288a74eb75cc2",
+    "uploaded_at": "2026-10-13T02:49:34+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[071] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Memory vs. Latency.mp4": {
+    "video_id": "v_f7b0990569fd",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[071] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Memory vs. Latency",
+    "claim_name": "gauravsen-hld-2026-071-memory-vs-latency",
+    "claim_id": "81c91be52bad3f54889c1a8b89916977a10a158d",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-071-memory-vs-latency:81c91be52bad3f54889c1a8b89916977a10a158d",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-071-memory-vs-latency/81c91be52bad3f54889c1a8b89916977a10a158d",
+    "uploaded_at": "2026-10-13T02:50:11+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[072] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Throughput vs. Latency.mp4": {
+    "video_id": "v_ae1b4701d2d5",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[072] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Throughput vs. Latency",
+    "claim_name": "gauravsen-hld-2026-072-throughput-vs-latency",
+    "claim_id": "059f6aaaaa57ba798ee8d170d7c84d92086ac86f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-072-throughput-vs-latency:059f6aaaaa57ba798ee8d170d7c84d92086ac86f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-072-throughput-vs-latency/059f6aaaaa57ba798ee8d170d7c84d92086ac86f",
+    "uploaded_at": "2026-10-13T02:52:33+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[073] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Consistency vs. Availability.mp4": {
+    "video_id": "v_573f89f51f29",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[073] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Consistency vs. Availability",
+    "claim_name": "gauravsen-hld-2026-073-consistency-vs-availability",
+    "claim_id": "0d0804ab50505903a826fbdb38f3c16d244f9d37",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-073-consistency-vs-availability:0d0804ab50505903a826fbdb38f3c16d244f9d37",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-073-consistency-vs-availability/0d0804ab50505903a826fbdb38f3c16d244f9d37",
+    "uploaded_at": "2026-10-13T02:53:50+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[074] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Latency vs. Accuracy.mp4": {
+    "video_id": "v_9dee1e7e6bbe",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[074] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Latency vs. Accuracy",
+    "claim_name": "gauravsen-hld-2026-074-latency-vs-accuracy",
+    "claim_id": "f6c8f58d8cd6061e36c134db6ba9de45c4a4c76a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-074-latency-vs-accuracy:f6c8f58d8cd6061e36c134db6ba9de45c4a4c76a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-074-latency-vs-accuracy/f6c8f58d8cd6061e36c134db6ba9de45c4a4c76a",
+    "uploaded_at": "2026-10-13T02:56:05+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[075] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - SQL vs. NoSQL databases.mp4": {
+    "video_id": "v_6eac9c7e8474",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[075] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - SQL vs. NoSQL databases",
+    "claim_name": "gauravsen-hld-2026-075-sql-vs-nosql-databases",
+    "claim_id": "4e0018c8e6dc68929b199dbcbf0f70cdd4e8a9f3",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-075-sql-vs-nosql-databases:4e0018c8e6dc68929b199dbcbf0f70cdd4e8a9f3",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-075-sql-vs-nosql-databases/4e0018c8e6dc68929b199dbcbf0f70cdd4e8a9f3",
+    "uploaded_at": "2026-10-13T02:58:47+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[076] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Relations Between Tradeoffs.mp4": {
+    "video_id": "v_774add2de965",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[076] Module 12 (2. Concepts \u2014 10. System Design Tradeoffs) - Relations Between Tradeoffs",
+    "claim_name": "gauravsen-hld-2026-076-relations-between-tradeoffs",
+    "claim_id": "403737b801492970242a0c7768357f395f7d77e3",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-076-relations-between-tradeoffs:403737b801492970242a0c7768357f395f7d77e3",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-076-relations-between-tradeoffs/403737b801492970242a0c7768357f395f7d77e3",
+    "uploaded_at": "2026-10-13T03:01:49+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[077] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Scope and Requirement setting.mp4": {
+    "video_id": "v_b430f7164116",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[077] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Scope and Requirement setting",
+    "claim_name": "gauravsen-hld-2026-077-scope-and-requirement-setting",
+    "claim_id": "8204e75189c88d4d71b416b068e744029d700e89",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-077-scope-and-requirement-setting:8204e75189c88d4d71b416b068e744029d700e89",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-077-scope-and-requirement-setting/8204e75189c88d4d71b416b068e744029d700e89",
+    "uploaded_at": "2026-10-13T03:02:20+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[078] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #1 Service Registration and Proxies.mp4": {
+    "video_id": "v_95d752a0da1d",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[078] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #1: Service Registration and Proxies",
+    "claim_name": "gauravsen-hld-2026-078-chapter-1-service-registration-and-proxies",
+    "claim_id": "ecb92a9f0cd42fa001bfd4521f49d88451c99a42",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-078-chapter-1-service-registration-and-proxies:ecb92a9f0cd42fa001bfd4521f49d88451c99a42",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-078-chapter-1-service-registration-and-proxies/ecb92a9f0cd42fa001bfd4521f49d88451c99a42",
+    "uploaded_at": "2026-10-13T03:07:04+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[079] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #2 Authentication & Global Caching.mp4": {
+    "video_id": "v_302a4c6211e8",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[079] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #2: Authentication & Global Caching",
+    "claim_name": "gauravsen-hld-2026-079-chapter-2-authentication-global-caching",
+    "claim_id": "1cad667147f39861f749410254ecdf1b2de0ddd9",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-079-chapter-2-authentication-global-caching:1cad667147f39861f749410254ecdf1b2de0ddd9",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-079-chapter-2-authentication-global-caching/1cad667147f39861f749410254ecdf1b2de0ddd9",
+    "uploaded_at": "2026-10-13T03:11:08+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[080] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #3 API contracts & Versioning.mp4": {
+    "video_id": "v_e91b2f4dd5b2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[080] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #3: API contracts & Versioning",
+    "claim_name": "gauravsen-hld-2026-080-chapter-3-api-contracts-versioning",
+    "claim_id": "2d72577468841e852e1a97503c5aff1be361bb3c",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-080-chapter-3-api-contracts-versioning:2d72577468841e852e1a97503c5aff1be361bb3c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-080-chapter-3-api-contracts-versioning/2d72577468841e852e1a97503c5aff1be361bb3c",
+    "uploaded_at": "2026-10-13T03:12:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[081] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #4 Sending, Tagging & Searching Emails.mp4": {
+    "video_id": "v_452e1e2576b8",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[081] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #4: Sending, Tagging & Searching Emails",
+    "claim_name": "gauravsen-hld-2026-081-chapter-4-sending-tagging-searching-emails",
+    "claim_id": "bbf1635b6fa6b7a5f46b58fe287ab411a37e0a75",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-081-chapter-4-sending-tagging-searching-emails:bbf1635b6fa6b7a5f46b58fe287ab411a37e0a75",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-081-chapter-4-sending-tagging-searching-emails/bbf1635b6fa6b7a5f46b58fe287ab411a37e0a75",
+    "uploaded_at": "2026-10-13T03:15:33+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[082] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #5 Contacts & Groups.mp4": {
+    "video_id": "v_044365e59abc",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[082] Module 13 (3. High Level Design \u2014 1. Design an Emailing service like Gmail) - Chapter #5: Contacts & Groups",
+    "claim_name": "gauravsen-hld-2026-082-chapter-5-contacts-groups",
+    "claim_id": "154ed8385cfdc2d1aa002de6bc69137d29117548",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-082-chapter-5-contacts-groups:154ed8385cfdc2d1aa002de6bc69137d29117548",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-082-chapter-5-contacts-groups/154ed8385cfdc2d1aa002de6bc69137d29117548",
+    "uploaded_at": "2026-10-13T03:17:55+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[083] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Requirements.mp4": {
+    "video_id": "v_09265924c3ce",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[083] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Requirements",
+    "claim_name": "gauravsen-hld-2026-083-requirements",
+    "claim_id": "e9703b7998aae462e008fe5c5cbe7e6117dcfd78",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-083-requirements:e9703b7998aae462e008fe5c5cbe7e6117dcfd78",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-083-requirements/e9703b7998aae462e008fe5c5cbe7e6117dcfd78",
+    "uploaded_at": "2026-10-13T03:18:16+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[084] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Image Storage Files vs. Database BLOB.mp4": {
+    "video_id": "v_a52da3312837",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[084] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Image Storage: Files vs. Database BLOB",
+    "claim_name": "gauravsen-hld-2026-084-image-storage-files-vs-database-blob",
+    "claim_id": "a5c3099a888a60cf8d79ea3743582e2a41a77141",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-084-image-storage-files-vs-database-blob:a5c3099a888a60cf8d79ea3743582e2a41a77141",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-084-image-storage-files-vs-database-blob/a5c3099a888a60cf8d79ea3743582e2a41a77141",
+    "uploaded_at": "2026-10-13T03:18:50+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[085] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Profile Creation and Authentication.mp4": {
+    "video_id": "v_0c89621adecc",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[085] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Profile Creation and Authentication",
+    "claim_name": "gauravsen-hld-2026-085-profile-creation-and-authentication",
+    "claim_id": "d914659201b248f70f621400df1b8e1281933112",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-085-profile-creation-and-authentication:d914659201b248f70f621400df1b8e1281933112",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-085-profile-creation-and-authentication/d914659201b248f70f621400df1b8e1281933112",
+    "uploaded_at": "2026-10-13T03:19:49+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[086] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - One to One chat messaging.mp4": {
+    "video_id": "v_4ad9df26f5fe",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[086] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - One to One chat messaging",
+    "claim_name": "gauravsen-hld-2026-086-one-to-one-chat-messaging",
+    "claim_id": "c826708ce749bded9c4baee1a556d0f398ad9eb5",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-086-one-to-one-chat-messaging:c826708ce749bded9c4baee1a556d0f398ad9eb5",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-086-one-to-one-chat-messaging/c826708ce749bded9c4baee1a556d0f398ad9eb5",
+    "uploaded_at": "2026-10-13T03:20:45+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[087] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Matching right-swiped users.mp4": {
+    "video_id": "v_2c4fcab59471",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[087] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Matching right-swiped users",
+    "claim_name": "gauravsen-hld-2026-087-matching-right-swiped-users",
+    "claim_id": "8733119512c48058288a4f1e808c12ed1364d713",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-087-matching-right-swiped-users:8733119512c48058288a4f1e808c12ed1364d713",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-087-matching-right-swiped-users/8733119512c48058288a4f1e808c12ed1364d713",
+    "uploaded_at": "2026-10-13T03:21:23+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[088] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Serving recommendations to users.mp4": {
+    "video_id": "v_4a3be175fb72",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[088] Module 14 (3. High Level Design \u2014 2. Tinder System Design) - Serving recommendations to users",
+    "claim_name": "gauravsen-hld-2026-088-serving-recommendations-to-users",
+    "claim_id": "3a44813284e86a4a7502c40816468456340ae1ca",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-088-serving-recommendations-to-users:3a44813284e86a4a7502c40816468456340ae1ca",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-088-serving-recommendations-to-users/3a44813284e86a4a7502c40816468456340ae1ca",
+    "uploaded_at": "2026-10-13T03:22:51+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[089] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - System Requirements.mp4": {
+    "video_id": "v_b5eb85d106aa",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[089] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - System Requirements",
+    "claim_name": "gauravsen-hld-2026-089-system-requirements",
+    "claim_id": "6a02e9c78dca7a43c6cca3da391a384a45bfb654",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-089-system-requirements:6a02e9c78dca7a43c6cca3da391a384a45bfb654",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-089-system-requirements/6a02e9c78dca7a43c6cca3da391a384a45bfb654",
+    "uploaded_at": "2026-10-13T03:23:46+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[090] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - One to one messaging.mp4": {
+    "video_id": "v_d0765b513989",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[090] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - One to one messaging",
+    "claim_name": "gauravsen-hld-2026-090-one-to-one-messaging",
+    "claim_id": "ec28f5f88ab9bea72e8b35a9587e805495450f96",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-090-one-to-one-messaging:ec28f5f88ab9bea72e8b35a9587e805495450f96",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-090-one-to-one-messaging/ec28f5f88ab9bea72e8b35a9587e805495450f96",
+    "uploaded_at": "2026-10-13T03:25:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[091] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - Last Seen Timestamps.mp4": {
+    "video_id": "v_f0b22e3894bf",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[091] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - Last Seen Timestamps",
+    "claim_name": "gauravsen-hld-2026-091-last-seen-timestamps",
+    "claim_id": "50921af227aa495b8ad1ab59a82ff52d9d8f0d28",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-091-last-seen-timestamps:50921af227aa495b8ad1ab59a82ff52d9d8f0d28",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-091-last-seen-timestamps/50921af227aa495b8ad1ab59a82ff52d9d8f0d28",
+    "uploaded_at": "2026-10-13T03:26:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[092] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - Group Messaging.mp4": {
+    "video_id": "v_68ee0db10813",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[092] Module 15 (3. High Level Design \u2014 3. WhatsApp System Design) - Group Messaging",
+    "claim_name": "gauravsen-hld-2026-092-group-messaging",
+    "claim_id": "fa70adf391b3799b8c1891372a3518fe96bb440e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-092-group-messaging:fa70adf391b3799b8c1891372a3518fe96bb440e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-092-group-messaging/fa70adf391b3799b8c1891372a3518fe96bb440e",
+    "uploaded_at": "2026-10-13T03:28:48+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[093] Module 16 (3. High Level Design \u2014 4. Chess Design Building a highly scalable turn-based gaming website) - Requirements of a .mp4": {
+    "video_id": "v_48b8c8a2e3f9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[093] Module 16 (3. High Level Design \u2014 4. Chess Design: Building a highly scalable turn-based gaming website) - Requirements of a chess website",
+    "claim_name": "gauravsen-hld-2026-093-requirements-of-a-chess-website",
+    "claim_id": "599ce7075f177dc8d1a8b2b23f7e7bdde8b671b5",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-093-requirements-of-a-chess-website:599ce7075f177dc8d1a8b2b23f7e7bdde8b671b5",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-093-requirements-of-a-chess-website/599ce7075f177dc8d1a8b2b23f7e7bdde8b671b5",
+    "uploaded_at": "2026-10-13T03:31:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[094] Module 16 (3. High Level Design \u2014 4. Chess Design Building a highly scalable turn-based gaming website) - Handling connectio.mp4": {
+    "video_id": "v_0b40a292444a",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[094] Module 16 (3. High Level Design \u2014 4. Chess Design: Building a highly scalable turn-based gaming website) - Handling connections at scale",
+    "claim_name": "gauravsen-hld-2026-094-handling-connections-at-scale",
+    "claim_id": "5158f15d90e0bdd62363b5f6f0a8c26550040cd9",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-094-handling-connections-at-scale:5158f15d90e0bdd62363b5f6f0a8c26550040cd9",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-094-handling-connections-at-scale/5158f15d90e0bdd62363b5f6f0a8c26550040cd9",
+    "uploaded_at": "2026-10-13T03:35:52+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[095] Module 16 (3. High Level Design \u2014 4. Chess Design Building a highly scalable turn-based gaming website) - Consistent Hashing.mp4": {
+    "video_id": "v_0684f3114133",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[095] Module 16 (3. High Level Design \u2014 4. Chess Design: Building a highly scalable turn-based gaming website) - Consistent Hashing vs. Sharding",
+    "claim_name": "gauravsen-hld-2026-095-consistent-hashing-vs-sharding",
+    "claim_id": "11a4cc119951b5540116eeebf73ca417116ba78b",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-095-consistent-hashing-vs-sharding:11a4cc119951b5540116eeebf73ca417116ba78b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-095-consistent-hashing-vs-sharding/11a4cc119951b5540116eeebf73ca417116ba78b",
+    "uploaded_at": "2026-10-13T03:37:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[096] Module 16 (3. High Level Design \u2014 4. Chess Design Building a highly scalable turn-based gaming website) - Connection related.mp4": {
+    "video_id": "v_87351a6a9e7c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[096] Module 16 (3. High Level Design \u2014 4. Chess Design: Building a highly scalable turn-based gaming website) - Connection related thundering herds",
+    "claim_name": "gauravsen-hld-2026-096-connection-related-thundering-herds",
+    "claim_id": "f3fcb27afa679bcb9b66205299d829a98b70427c",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-096-connection-related-thundering-herds:f3fcb27afa679bcb9b66205299d829a98b70427c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-096-connection-related-thundering-herds/f3fcb27afa679bcb9b66205299d829a98b70427c",
+    "uploaded_at": "2026-10-13T03:37:54+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[097] Module 16 (3. High Level Design \u2014 4. Chess Design Building a highly scalable turn-based gaming website) - Request Batching a.mp4": {
+    "video_id": "v_4c659eacf746",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[097] Module 16 (3. High Level Design \u2014 4. Chess Design: Building a highly scalable turn-based gaming website) - Request Batching and Conclusion",
+    "claim_name": "gauravsen-hld-2026-097-request-batching-and-conclusion",
+    "claim_id": "4d2e548a659a66aeb4f0d0f3e3af31f39506e9a7",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-097-request-batching-and-conclusion:4d2e548a659a66aeb4f0d0f3e3af31f39506e9a7",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-097-request-batching-and-conclusion/4d2e548a659a66aeb4f0d0f3e3af31f39506e9a7",
+    "uploaded_at": "2026-10-13T03:38:16+00:00"
   }
 }

@@ -42,6 +42,10 @@ func (s *Service) habitSummary(ctx context.Context, tx pgx.Tx, user string, at t
 		return nil, err
 	}
 	pref.Initialized = err == nil
+	var anchored bool
+	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM learning_preferences WHERE user_id=$1)`, user).Scan(&anchored); err != nil {
+		return nil, err
+	}
 	today := at.In(loc).Format("2006-01-02")
 	var day HabitDay
 	err = tx.QueryRow(ctx, `SELECT watched_seconds,lessons,quizzes,reviews,goal_met FROM habit_days WHERE user_id=$1 AND day=$2`, user, today).Scan(&day.WatchedSeconds, &day.Lessons, &day.Quizzes, &day.Reviews, &day.GoalMet)
@@ -58,7 +62,7 @@ func (s *Service) habitSummary(ctx context.Context, tx pgx.Tx, user string, at t
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{"day": today, "today": day, "week": week, "streak": streak, "best_streak": best, "preferences": pref, "email_available": s.EmailAvailable, "reminder_delivery_available": false}, nil
+	return map[string]any{"day": today, "today": day, "week": week, "streak": streak, "best_streak": best, "preferences": pref, "timezone_anchored": anchored, "email_available": s.EmailAvailable, "reminder_delivery_available": false}, nil
 }
 func (s *Service) habits(w http.ResponseWriter, r *http.Request) {
 	tx, err := s.Pool.Begin(r.Context())

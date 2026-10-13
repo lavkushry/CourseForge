@@ -114,3 +114,17 @@ export interface PlaybackTransport {
   preferences(signal: AbortSignal): Promise<PlayerPreferences>;
   savePreferences(preferences: PlayerPreferences, signal: AbortSignal): Promise<PlayerPreferences>;
 }
+
+export interface HistoryItem {
+  id: string;
+  course_id: string;
+  title: string;
+  sort_order: number;
+  duration_seconds: number;
+  section_title: string;
+  flow_order: number;
+  position: number;
+  percent: number;
+  completed: boolean;
+  watched_at: string;
+}

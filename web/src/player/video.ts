@@ -101,13 +101,11 @@ export class NativeVideoAdapter implements VideoPort {
   pause(): void { this.element.pause(); }
 
   seek(position: number): void {
-    if (Number.isFinite(this.element.duration)) {
+    if (Number.isFinite(position) && Number.isFinite(this.element.duration) && this.element.duration >= 0) {
       const target = Math.max(0, Math.min(this.element.duration, position));
-      if ('fastSeek' in this.element && typeof (this.element as unknown as { fastSeek: (t: number) => void }).fastSeek === 'function') {
-        (this.element as unknown as { fastSeek: (t: number) => void }).fastSeek(target);
-      } else {
-        this.element.currentTime = target;
-      }
+      // fastSeek may stop at a nearby keyframe. Notes, citations and resume
+      // commands refer to an exact timestamp, so use the precise browser seek.
+      this.element.currentTime = target;
     }
   }
 

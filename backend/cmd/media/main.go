@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"strings"
 	"time"
 
 	"courseforge/backend/internal/api"
@@ -30,6 +31,7 @@ func main() {
 }
 
 func run() error {
+	loadEnvFile("/home/ubuntu/CourseForge/.env", ".env", "../.env")
 	c, err := config.FromEnv()
 	if err != nil {
 		return err
@@ -100,4 +102,25 @@ func run() error {
 		return listenErr
 	}
 	return err
+}
+
+func loadEnvFile(paths ...string) {
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") || !strings.Contains(line, "=") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			k := strings.TrimSpace(parts[0])
+			v := strings.Trim(strings.TrimSpace(parts[1]), "\"\x27")
+			if os.Getenv(k) == "" {
+				_ = os.Setenv(k, v)
+			}
+		}
+	}
 }
