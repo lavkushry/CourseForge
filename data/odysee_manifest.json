@@ -10904,5 +10904,1355 @@
     "odysee_url": "https://odysee.com/gauravsen-hld-2026-150-10-system-features:9e035090c6ff3d9d3f3a281d83f139c892741b39",
     "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-150-10-system-features/9e035090c6ff3d9d3f3a281d83f139c892741b39",
     "uploaded_at": "2026-10-13T06:40:06+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[151] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 11. Query Optimization.mp4": {
+    "video_id": "v_606db30b5f82",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[151] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 11. Query Optimization",
+    "claim_name": "gauravsen-hld-2026-151-11-query-optimization",
+    "claim_id": "f583b1b177d2a2f2fb3f298340e2bbd7409097d3",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-151-11-query-optimization:f583b1b177d2a2f2fb3f298340e2bbd7409097d3",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-151-11-query-optimization/f583b1b177d2a2f2fb3f298340e2bbd7409097d3",
+    "uploaded_at": "2026-10-13T06:55:05+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[152] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - Livestream GorillaDB Timeseries datab.mp4": {
+    "video_id": "v_1c5af56754ee",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[152] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - Livestream: GorillaDB Timeseries database",
+    "claim_name": "gauravsen-hld-2026-152-livestream-gorilladb-timeseries-database",
+    "claim_id": "f82ab6f4f7f4110204241344f9ef7080569600b8",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-152-livestream-gorilladb-timeseries-database:f82ab6f4f7f4110204241344f9ef7080569600b8",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-152-livestream-gorilladb-timeseries-database/f82ab6f4f7f4110204241344f9ef7080569600b8",
+    "uploaded_at": "2026-10-13T07:07:35+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[153] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - Livestream GorillaDB Timeseries datab.mp4": {
+    "video_id": "v_6d3e86b7677a",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[153] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - Livestream: GorillaDB Timeseries database II",
+    "claim_name": "gauravsen-hld-2026-153-livestream-gorilladb-timeseries-database-ii",
+    "claim_id": "370d30aeabc6461aceccb27d5731edc855485e9f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-153-livestream-gorilladb-timeseries-database-ii:370d30aeabc6461aceccb27d5731edc855485e9f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-153-livestream-gorilladb-timeseries-database-ii/370d30aeabc6461aceccb27d5731edc855485e9f",
+    "uploaded_at": "2026-10-13T07:15:54+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[154] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 1. Usecases and Data Schema.mp4": {
+    "video_id": "v_6acf67dee1be",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[154] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 1. Usecases and Data Schema",
+    "claim_name": "gauravsen-hld-2026-154-1-usecases-and-data-schema",
+    "claim_id": "267ea1f326474acedd01918791f7415279718700",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-154-1-usecases-and-data-schema:267ea1f326474acedd01918791f7415279718700",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-154-1-usecases-and-data-schema/267ea1f326474acedd01918791f7415279718700",
+    "uploaded_at": "2026-10-13T07:36:28+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[155] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 2. Data Consistency and evictions.mp4": {
+    "video_id": "v_ad14cd045f30",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[155] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 2. Data Consistency and evictions",
+    "claim_name": "gauravsen-hld-2026-155-2-data-consistency-and-evictions",
+    "claim_id": "e08ba698c988ba60016bcedc9e7bd48e7bb16800",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-155-2-data-consistency-and-evictions:e08ba698c988ba60016bcedc9e7bd48e7bb16800",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-155-2-data-consistency-and-evictions/e08ba698c988ba60016bcedc9e7bd48e7bb16800",
+    "uploaded_at": "2026-10-13T07:50:01+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[156] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 3. Cache Features for the graph.mp4": {
+    "video_id": "v_795aee7b4dca",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[156] Module 26 (4. Research Paper Analysis \u2014 4. TAO - An in-memory graph database by Meta) - 3. Cache Features for the graph",
+    "claim_name": "gauravsen-hld-2026-156-3-cache-features-for-the-graph",
+    "claim_id": "d27e4f085b839226452982da8db27ef61c494ad3",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-156-3-cache-features-for-the-graph:d27e4f085b839226452982da8db27ef61c494ad3",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-156-3-cache-features-for-the-graph/d27e4f085b839226452982da8db27ef61c494ad3",
+    "uploaded_at": "2026-10-13T07:53:04+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[157] Module 27 (4. Research Paper Analysis \u2014 5. Google Dremel - Interactive Analytics) - Google Dremel.mp4": {
+    "video_id": "v_b980fcb20720",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[157] Module 27 (4. Research Paper Analysis \u2014 5. Google Dremel - Interactive Analytics) - Google Dremel",
+    "claim_name": "gauravsen-hld-2026-157-google-dremel",
+    "claim_id": "79801e00fe241e8e278f07bf36ca51e910dc4ad4",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-157-google-dremel:79801e00fe241e8e278f07bf36ca51e910dc4ad4",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-157-google-dremel/79801e00fe241e8e278f07bf36ca51e910dc4ad4",
+    "uploaded_at": "2026-10-13T08:12:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[158] Module 28 (4. Research Paper Analysis \u2014 6. Apache Kafka - Feb 2025) - Kafka Paper Reading - Combined.mp4": {
+    "video_id": "v_6ea002190b94",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[158] Module 28 (4. Research Paper Analysis \u2014 6. Apache Kafka - Feb 2025) - Kafka Paper Reading - Combined",
+    "claim_name": "gauravsen-hld-2026-158-kafka-paper-reading-combined",
+    "claim_id": "48d9cf8bf71586272768c6a4011bcd2011ab4068",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-158-kafka-paper-reading-combined:48d9cf8bf71586272768c6a4011bcd2011ab4068",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-158-kafka-paper-reading-combined/48d9cf8bf71586272768c6a4011bcd2011ab4068",
+    "uploaded_at": "2026-10-13T08:30:22+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[159] Module 29 (4. Research Paper Analysis \u2014 7. Apache Spark) - Apache Spark - Combined.mp4": {
+    "video_id": "v_5b9f72ec4ceb",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[159] Module 29 (4. Research Paper Analysis \u2014 7. Apache Spark) - Apache Spark - Combined",
+    "claim_name": "gauravsen-hld-2026-159-apache-spark-combined",
+    "claim_id": "8daaa01eebcd04e3a50bd57baf70781881e7ac8f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-159-apache-spark-combined:8daaa01eebcd04e3a50bd57baf70781881e7ac8f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-159-apache-spark-combined/8daaa01eebcd04e3a50bd57baf70781881e7ac8f",
+    "uploaded_at": "2026-10-13T08:41:04+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[160] Module 30 (4. Research Paper Analysis \u2014 8. Milvus DB) - What are Vectors.mp4": {
+    "video_id": "v_0bcc5e1c87e9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[160] Module 30 (4. Research Paper Analysis \u2014 8. Milvus DB) - What are Vectors?",
+    "claim_name": "gauravsen-hld-2026-160-what-are-vectors",
+    "claim_id": "c08edfab26481cc188eac73f71d37b8d289160b9",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-160-what-are-vectors:c08edfab26481cc188eac73f71d37b8d289160b9",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-160-what-are-vectors/c08edfab26481cc188eac73f71d37b8d289160b9",
+    "uploaded_at": "2026-10-13T08:48:50+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[161] Module 30 (4. Research Paper Analysis \u2014 8. Milvus DB) - Vector Indexes - HNSW.mp4": {
+    "video_id": "v_6991b81c1a23",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[161] Module 30 (4. Research Paper Analysis \u2014 8. Milvus DB) - Vector Indexes - HNSW",
+    "claim_name": "gauravsen-hld-2026-161-vector-indexes-hnsw",
+    "claim_id": "046902e7fb3dcd7ba7887453dc63411a664325c6",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-161-vector-indexes-hnsw:046902e7fb3dcd7ba7887453dc63411a664325c6",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-161-vector-indexes-hnsw/046902e7fb3dcd7ba7887453dc63411a664325c6",
+    "uploaded_at": "2026-10-13T08:57:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[006] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #4.1 Hard questions, harder answers.mp4": {
+    "video_id": "v_96b221490347",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[006] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #4.1: Hard questions, harder answers",
+    "claim_name": "gauravsen-hld-2026-006-4-1-hard-questions-harder-answers",
+    "claim_id": "0aab80e2fdbe04ae6eb56c8a624fd04a922512cc",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-006-4-1-hard-questions-harder-answers:0aab80e2fdbe04ae6eb56c8a624fd04a922512cc",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-006-4-1-hard-questions-harder-answers/0aab80e2fdbe04ae6eb56c8a624fd04a922512cc",
+    "uploaded_at": "2026-10-13T08:57:49+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[007] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #5 Serverless or Server-More.mp4": {
+    "video_id": "v_59b782eb4ad0",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[007] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #5: Serverless or Server-More?",
+    "claim_name": "gauravsen-hld-2026-007-5-serverless-or-server-more",
+    "claim_id": "52391abac5edcd37c3829565986dbb32eddc0f49",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-007-5-serverless-or-server-more:52391abac5edcd37c3829565986dbb32eddc0f49",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-007-5-serverless-or-server-more/52391abac5edcd37c3829565986dbb32eddc0f49",
+    "uploaded_at": "2026-10-13T09:00:48+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[008] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #6 Database-like Memory, Cache-like Recall.mp4": {
+    "video_id": "v_5454e6d5b446",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[008] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #6: Database-like Memory, Cache-like Recall",
+    "claim_name": "gauravsen-hld-2026-008-6-database-like-memory-cache-like-recall",
+    "claim_id": "7c0426879a9316fed2be68a7c4d45aa9b8cd3faf",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-008-6-database-like-memory-cache-like-recall:7c0426879a9316fed2be68a7c4d45aa9b8cd3faf",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-008-6-database-like-memory-cache-like-recall/7c0426879a9316fed2be68a7c4d45aa9b8cd3faf",
+    "uploaded_at": "2026-10-13T09:05:05+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[009] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #7 The case of the Expensive Cache.mp4": {
+    "video_id": "v_80bba2bfaf9b",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[009] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #7: The case of the Expensive Cache",
+    "claim_name": "gauravsen-hld-2026-009-7-the-case-of-the-expensive-cache",
+    "claim_id": "9b8d2196624887854afef366a93e48f3dce2d586",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-009-7-the-case-of-the-expensive-cache:9b8d2196624887854afef366a93e48f3dce2d586",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-009-7-the-case-of-the-expensive-cache/9b8d2196624887854afef366a93e48f3dce2d586",
+    "uploaded_at": "2026-10-13T09:07:56+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[010] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #8 Sale Day Jitters.mp4": {
+    "video_id": "v_3d345e036dfa",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[010] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #8: Sale Day Jitters",
+    "claim_name": "gauravsen-hld-2026-010-8-sale-day-jitters",
+    "claim_id": "7235db593ee047ae7419c6fd19429ef6d9370222",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-010-8-sale-day-jitters:7235db593ee047ae7419c6fd19429ef6d9370222",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-010-8-sale-day-jitters/7235db593ee047ae7419c6fd19429ef6d9370222",
+    "uploaded_at": "2026-10-13T09:13:06+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[011] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #9 A new CTO is born!.mp4": {
+    "video_id": "v_21c907f98a3f",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[011] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #9: A new CTO is born!",
+    "claim_name": "gauravsen-hld-2026-011-9-a-new-cto-is-born",
+    "claim_id": "6fba73282a27428411ef95fc23cb63c60c46ea87",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-011-9-a-new-cto-is-born:6fba73282a27428411ef95fc23cb63c60c46ea87",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-011-9-a-new-cto-is-born/6fba73282a27428411ef95fc23cb63c60c46ea87",
+    "uploaded_at": "2026-10-13T09:17:22+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[012] Module 02 (1. Basics \u2014 Building an Ecommerce App 1 to 1M) - #10 Concluding the series!.mp4": {
+    "video_id": "v_15ac8802e747",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[012] Module 02 (1. Basics \u2014 Building an Ecommerce App: 1 to 1M) - #10: Concluding the series!",
+    "claim_name": "gauravsen-hld-2026-012-10-concluding-the-series",
+    "claim_id": "aaca62658340576b00f5ae87ac4ee8fae7b7a1fd",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-012-10-concluding-the-series:aaca62658340576b00f5ae87ac4ee8fae7b7a1fd",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-012-10-concluding-the-series/aaca62658340576b00f5ae87ac4ee8fae7b7a1fd",
+    "uploaded_at": "2026-10-13T09:19:47+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[013] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What are Databases.mp4": {
+    "video_id": "v_8e3f155637ae",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[013] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What are Databases?",
+    "claim_name": "gauravsen-hld-2026-013-what-are-databases",
+    "claim_id": "066f49cb9b01b696ee3d28b2a932af5a21afe57d",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-013-what-are-databases:066f49cb9b01b696ee3d28b2a932af5a21afe57d",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-013-what-are-databases/066f49cb9b01b696ee3d28b2a932af5a21afe57d",
+    "uploaded_at": "2026-10-13T09:20:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[014] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - Storage and Retrieval.mp4": {
+    "video_id": "v_2d486be8610b",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[014] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - Storage and Retrieval",
+    "claim_name": "gauravsen-hld-2026-014-storage-and-retrieval",
+    "claim_id": "3a3eac08ef28d90a8bc9d67779b7b77b4d944048",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-014-storage-and-retrieval:3a3eac08ef28d90a8bc9d67779b7b77b4d944048",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-014-storage-and-retrieval/3a3eac08ef28d90a8bc9d67779b7b77b4d944048",
+    "uploaded_at": "2026-10-13T09:21:31+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[015] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What is a NoSQL database.mp4": {
+    "video_id": "v_3ff4aeee0a01",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[015] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What is a NoSQL database?",
+    "claim_name": "gauravsen-hld-2026-015-what-is-a-nosql-database",
+    "claim_id": "593d26557ef7ef93cc6a5095ef6d811b8017fd7e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-015-what-is-a-nosql-database:593d26557ef7ef93cc6a5095ef6d811b8017fd7e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-015-what-is-a-nosql-database/593d26557ef7ef93cc6a5095ef6d811b8017fd7e",
+    "uploaded_at": "2026-10-13T09:22:03+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[016] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - Types of Databases Graph, TimeSeries and Object.mp4": {
+    "video_id": "v_70b011369d9e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[016] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - Types of Databases: Graph, TimeSeries and Object",
+    "claim_name": "gauravsen-hld-2026-016-types-of-databases-graph-timeseries-and-object",
+    "claim_id": "e23cbf10ecfc9a2a30da53127b69f8e4ddba2eef",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-016-types-of-databases-graph-timeseries-and-object:e23cbf10ecfc9a2a30da53127b69f8e4ddba2eef",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-016-types-of-databases-graph-timeseries-and-object/e23cbf10ecfc9a2a30da53127b69f8e4ddba2eef",
+    "uploaded_at": "2026-10-13T09:22:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[018] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - What is Data Consistency.mp4": {
+    "video_id": "v_b925af19e2fd",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[018] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - What is Data Consistency?",
+    "claim_name": "gauravsen-hld-2026-018-what-is-data-consistency",
+    "claim_id": "51ee44feef5fb016245afcf4fc2cecf647adc20e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-018-what-is-data-consistency:51ee44feef5fb016245afcf4fc2cecf647adc20e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-018-what-is-data-consistency/51ee44feef5fb016245afcf4fc2cecf647adc20e",
+    "uploaded_at": "2026-10-13T09:24:58+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[017] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What database should you choose.mp4": {
+    "video_id": "v_d09fcdebbd3e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[017] Module 03 (2. Concepts \u2014 1. Databases Deep Dive) - What database should you choose?",
+    "claim_name": "gauravsen-hld-2026-017-what-database-should-you-choose",
+    "claim_id": "661bd4a4029b6afb1eacbc4b90d0563a2a7f9982",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-017-what-database-should-you-choose:661bd4a4029b6afb1eacbc4b90d0563a2a7f9982",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-017-what-database-should-you-choose/661bd4a4029b6afb1eacbc4b90d0563a2a7f9982",
+    "uploaded_at": "2026-10-13T09:24:58+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[019] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Linearizable Consistency.mp4": {
+    "video_id": "v_edc4009b5dd2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[019] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Linearizable Consistency",
+    "claim_name": "gauravsen-hld-2026-019-linearizable-consistency",
+    "claim_id": "59a03f2d69ec6e82a504766d9b4f99ed59100478",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-019-linearizable-consistency:59a03f2d69ec6e82a504766d9b4f99ed59100478",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-019-linearizable-consistency/59a03f2d69ec6e82a504766d9b4f99ed59100478",
+    "uploaded_at": "2026-10-13T09:25:16+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[020] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Eventual Consistency.mp4": {
+    "video_id": "v_ed6c090c04f7",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[020] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Eventual Consistency",
+    "claim_name": "gauravsen-hld-2026-020-eventual-consistency",
+    "claim_id": "bf3036624dc0acdcbfcbe1555ed68d0465994dc5",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-020-eventual-consistency:bf3036624dc0acdcbfcbe1555ed68d0465994dc5",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-020-eventual-consistency/bf3036624dc0acdcbfcbe1555ed68d0465994dc5",
+    "uploaded_at": "2026-10-13T09:25:31+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[021] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Causal Consistency.mp4": {
+    "video_id": "v_9fb2d6bc468b",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[021] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Causal Consistency",
+    "claim_name": "gauravsen-hld-2026-021-causal-consistency",
+    "claim_id": "2b94f787cf8392240c440002c2bf48a31b2b6730",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-021-causal-consistency:2b94f787cf8392240c440002c2bf48a31b2b6730",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-021-causal-consistency/2b94f787cf8392240c440002c2bf48a31b2b6730",
+    "uploaded_at": "2026-10-13T09:26:38+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[022] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Quorum.mp4": {
+    "video_id": "v_9be06bf18ca7",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[022] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Quorum",
+    "claim_name": "gauravsen-hld-2026-022-quorum",
+    "claim_id": "9a66da18db4f2828d08e7dbd015d769a4c59b86b",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-022-quorum:9a66da18db4f2828d08e7dbd015d769a4c59b86b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-022-quorum/9a66da18db4f2828d08e7dbd015d769a4c59b86b",
+    "uploaded_at": "2026-10-13T09:27:48+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[023] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Data Consistency Levels Tradeoffs.mp4": {
+    "video_id": "v_b9772ced8786",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[023] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Data Consistency Levels Tradeoffs",
+    "claim_name": "gauravsen-hld-2026-023-data-consistency-levels-tradeoffs",
+    "claim_id": "f8af69d6d1647630f56601b3efcc83d55993cd39",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-023-data-consistency-levels-tradeoffs:f8af69d6d1647630f56601b3efcc83d55993cd39",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-023-data-consistency-levels-tradeoffs/f8af69d6d1647630f56601b3efcc83d55993cd39",
+    "uploaded_at": "2026-10-13T09:28:14+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[024] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Transaction Isolation Levels - Read Uncommitted Data.mp4": {
+    "video_id": "v_2cc5dee4a319",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[024] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Transaction Isolation Levels - Read Uncommitted Data",
+    "claim_name": "gauravsen-hld-2026-024-transaction-isolation-levels-read-uncommitted-data",
+    "claim_id": "3d35e3ac43801d6cd3f1470d74993c7bcfda322f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-024-transaction-isolation-levels-read-uncommitted-data:3d35e3ac43801d6cd3f1470d74993c7bcfda322f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-024-transaction-isolation-levels-read-uncommitted-data/3d35e3ac43801d6cd3f1470d74993c7bcfda322f",
+    "uploaded_at": "2026-10-13T09:28:48+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[025] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Read Committed.mp4": {
+    "video_id": "v_296a2fd7df07",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[025] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Read Committed",
+    "claim_name": "gauravsen-hld-2026-025-read-committed",
+    "claim_id": "45292d282131a73ffedeb439db25bc29197fe789",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-025-read-committed:45292d282131a73ffedeb439db25bc29197fe789",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-025-read-committed/45292d282131a73ffedeb439db25bc29197fe789",
+    "uploaded_at": "2026-10-13T09:29:59+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[026] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Repeatable Reads.mp4": {
+    "video_id": "v_10c59798e58d",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[026] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Repeatable Reads",
+    "claim_name": "gauravsen-hld-2026-026-repeatable-reads",
+    "claim_id": "c0010853429ec9a6666f63f833567721972c4249",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-026-repeatable-reads:c0010853429ec9a6666f63f833567721972c4249",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-026-repeatable-reads/c0010853429ec9a6666f63f833567721972c4249",
+    "uploaded_at": "2026-10-13T09:31:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[027] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Serializable Isolation Level.mp4": {
+    "video_id": "v_8b6367492b91",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[027] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Serializable Isolation Level",
+    "claim_name": "gauravsen-hld-2026-027-serializable-isolation-level",
+    "claim_id": "0b7aaf4680043ec272b24628558287f189ad1114",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-027-serializable-isolation-level:0b7aaf4680043ec272b24628558287f189ad1114",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-027-serializable-isolation-level/0b7aaf4680043ec272b24628558287f189ad1114",
+    "uploaded_at": "2026-10-13T09:31:40+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[029] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Conclusion - Transaction Isolation.mp4": {
+    "video_id": "v_4a6501728300",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[029] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Conclusion - Transaction Isolation",
+    "claim_name": "gauravsen-hld-2026-029-conclusion-transaction-isolation",
+    "claim_id": "0ce73dc55354b692d5187448b4742e88f5213770",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-029-conclusion-transaction-isolation:0ce73dc55354b692d5187448b4742e88f5213770",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-029-conclusion-transaction-isolation/0ce73dc55354b692d5187448b4742e88f5213770",
+    "uploaded_at": "2026-10-13T09:32:11+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[028] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Transaction Level Implementations.mp4": {
+    "video_id": "v_e848c5abed6c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[028] Module 04 (2. Concepts \u2014 2. Consistency in Distributed Systems) - Transaction Level Implementations",
+    "claim_name": "gauravsen-hld-2026-028-transaction-level-implementations",
+    "claim_id": "86590762cbf4bd1c007dc72f8d2853b95f109f16",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-028-transaction-level-implementations:86590762cbf4bd1c007dc72f8d2853b95f109f16",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-028-transaction-level-implementations/86590762cbf4bd1c007dc72f8d2853b95f109f16",
+    "uploaded_at": "2026-10-13T09:32:13+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[031] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Policies Write Back Policy.mp4": {
+    "video_id": "v_335cafbf5e56",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[031] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Policies: Write Back Policy",
+    "claim_name": "gauravsen-hld-2026-031-write-policies-write-back-policy",
+    "claim_id": "843e3a53e8cd6198bf6369a87180007a55414a30",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-031-write-policies-write-back-policy:843e3a53e8cd6198bf6369a87180007a55414a30",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-031-write-policies-write-back-policy/843e3a53e8cd6198bf6369a87180007a55414a30",
+    "uploaded_at": "2026-10-13T09:38:23+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[032] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Through Policy.mp4": {
+    "video_id": "v_826df03de987",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[032] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Through Policy",
+    "claim_name": "gauravsen-hld-2026-032-write-through-policy",
+    "claim_id": "0113038ca5524c7e18536aaac017210510e48684",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-032-write-through-policy:0113038ca5524c7e18536aaac017210510e48684",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-032-write-through-policy/0113038ca5524c7e18536aaac017210510e48684",
+    "uploaded_at": "2026-10-13T09:38:40+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[030] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Caching Basics.mp4": {
+    "video_id": "v_3e09434433d4",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[030] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Caching: Basics",
+    "claim_name": "gauravsen-hld-2026-030-caching-basics",
+    "claim_id": "de5738403e9bed6bf4be84cd8cf248e42ea772f2",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-030-caching-basics:de5738403e9bed6bf4be84cd8cf248e42ea772f2",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-030-caching-basics/de5738403e9bed6bf4be84cd8cf248e42ea772f2",
+    "uploaded_at": "2026-10-13T09:38:56+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[033] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Around Policy.mp4": {
+    "video_id": "v_82cc62cd6da2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[033] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Write Around Policy",
+    "claim_name": "gauravsen-hld-2026-033-write-around-policy",
+    "claim_id": "5543b698b4f6a29faa3c7cec4130f5b41c17d5e5",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-033-write-around-policy:5543b698b4f6a29faa3c7cec4130f5b41c17d5e5",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-033-write-around-policy/5543b698b4f6a29faa3c7cec4130f5b41c17d5e5",
+    "uploaded_at": "2026-10-13T09:39:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[035] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown The physical layer.mp4": {
+    "video_id": "v_6cd8e36f2cf3",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[035] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown: The physical layer",
+    "claim_name": "gauravsen-hld-2026-035-breakdown-the-physical-layer",
+    "claim_id": "ec265d4fe4735ef01fbca89393903139e992c2fc",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-035-breakdown-the-physical-layer:ec265d4fe4735ef01fbca89393903139e992c2fc",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-035-breakdown-the-physical-layer/ec265d4fe4735ef01fbca89393903139e992c2fc",
+    "uploaded_at": "2026-10-13T09:41:37+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[034] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Replacement Policies LRU, LFU and Segmented LRU.mp4": {
+    "video_id": "v_34a2dec08678",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[034] Module 05 (2. Concepts \u2014 3. Caches Deep Dive) - Replacement Policies: LRU, LFU and Segmented LRU",
+    "claim_name": "gauravsen-hld-2026-034-replacement-policies-lru-lfu-and-segmented-lru",
+    "claim_id": "2bc0429800f910df3c514501c1507348cd9270ab",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-034-replacement-policies-lru-lfu-and-segmented-lru:2bc0429800f910df3c514501c1507348cd9270ab",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-034-replacement-policies-lru-lfu-and-segmented-lru/2bc0429800f910df3c514501c1507348cd9270ab",
+    "uploaded_at": "2026-10-13T09:41:37+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[036] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown The Routing Layer.mp4": {
+    "video_id": "v_8262244c383d",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[036] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown: The Routing Layer",
+    "claim_name": "gauravsen-hld-2026-036-breakdown-the-routing-layer",
+    "claim_id": "0c64ba5e50e4b1db740b273048a7beb502fb1229",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-036-breakdown-the-routing-layer:0c64ba5e50e4b1db740b273048a7beb502fb1229",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-036-breakdown-the-routing-layer/0c64ba5e50e4b1db740b273048a7beb502fb1229",
+    "uploaded_at": "2026-10-13T09:42:08+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[037] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown The behavioral layer.mp4": {
+    "video_id": "v_b31ed2a219e1",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[037] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Breakdown: The behavioral layer",
+    "claim_name": "gauravsen-hld-2026-037-breakdown-the-behavioral-layer",
+    "claim_id": "fb9b850e97dec7c744c978baaba32a0cd372b221",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-037-breakdown-the-behavioral-layer:fb9b850e97dec7c744c978baaba32a0cd372b221",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-037-breakdown-the-behavioral-layer/fb9b850e97dec7c744c978baaba32a0cd372b221",
+    "uploaded_at": "2026-10-13T09:42:46+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[038] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Connecting to the internet ISPs, DNS and everything in between.mp4": {
+    "video_id": "v_9d215317ec06",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[038] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Connecting to the internet: ISPs, DNS and everything in between",
+    "claim_name": "gauravsen-hld-2026-038-connecting-to-the-internet-isps-dns-and-everything-in-b",
+    "claim_id": "9b5d7b3f4d30ec7f3861766403f15ad828510e6a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-038-connecting-to-the-internet-isps-dns-and-everything-in-b:9b5d7b3f4d30ec7f3861766403f15ad828510e6a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-038-connecting-to-the-internet-isps-dns-and-everything-in-b/9b5d7b3f4d30ec7f3861766403f15ad828510e6a",
+    "uploaded_at": "2026-10-13T09:43:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[039] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Internal routing MAC addresses and NAT.mp4": {
+    "video_id": "v_eef843b593d9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[039] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Internal routing: MAC addresses and NAT",
+    "claim_name": "gauravsen-hld-2026-039-internal-routing-mac-addresses-and-nat",
+    "claim_id": "4d409bd87b7dc3946582806a4eb354011e6d435a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-039-internal-routing-mac-addresses-and-nat:4d409bd87b7dc3946582806a4eb354011e6d435a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-039-internal-routing-mac-addresses-and-nat/4d409bd87b7dc3946582806a4eb354011e6d435a",
+    "uploaded_at": "2026-10-13T09:44:05+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[040] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - HTTP, WebSockets, TCP and UDP.mp4": {
+    "video_id": "v_a452b35e9ca6",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[040] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - HTTP, WebSockets, TCP and UDP",
+    "claim_name": "gauravsen-hld-2026-040-http-websockets-tcp-and-udp",
+    "claim_id": "27d81b3a10a07e89da9b9d94f2d1afc71497a75f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-040-http-websockets-tcp-and-udp:27d81b3a10a07e89da9b9d94f2d1afc71497a75f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-040-http-websockets-tcp-and-udp/27d81b3a10a07e89da9b9d94f2d1afc71497a75f",
+    "uploaded_at": "2026-10-13T09:46:39+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[041] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Communication Standards REST, GraphQL and GRPC.mp4": {
+    "video_id": "v_d8da5d404057",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[041] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Communication Standards: REST, GraphQL and GRPC",
+    "claim_name": "gauravsen-hld-2026-041-communication-standards-rest-graphql-and-grpc",
+    "claim_id": "c1c5506a1a45fb7113c85582b16bc67cb75d3ea1",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-041-communication-standards-rest-graphql-and-grpc:c1c5506a1a45fb7113c85582b16bc67cb75d3ea1",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-041-communication-standards-rest-graphql-and-grpc/c1c5506a1a45fb7113c85582b16bc67cb75d3ea1",
+    "uploaded_at": "2026-10-13T09:47:20+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[042] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Head of line blocking.mp4": {
+    "video_id": "v_bd89bab43300",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[042] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Head of line blocking",
+    "claim_name": "gauravsen-hld-2026-042-head-of-line-blocking",
+    "claim_id": "57082c301ddf144c346f77c25c5950ab4fcd2958",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-042-head-of-line-blocking:57082c301ddf144c346f77c25c5950ab4fcd2958",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-042-head-of-line-blocking/57082c301ddf144c346f77c25c5950ab4fcd2958",
+    "uploaded_at": "2026-10-13T09:47:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[043] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Video transmission WebRTC and HTTP-DASH.mp4": {
+    "video_id": "v_fc84b7a55144",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[043] Module 06 (2. Concepts \u2014 4. Networks Deep Dive) - Video transmission: WebRTC and HTTP-DASH",
+    "claim_name": "gauravsen-hld-2026-043-video-transmission-webrtc-and-http-dash",
+    "claim_id": "180ac6afa74a0b1b149c3c4d0815ad427ac2b66b",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-043-video-transmission-webrtc-and-http-dash:180ac6afa74a0b1b149c3c4d0815ad427ac2b66b",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-043-video-transmission-webrtc-and-http-dash/180ac6afa74a0b1b149c3c4d0815ad427ac2b66b",
+    "uploaded_at": "2026-10-13T09:50:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[044] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Primary Replica Architectures.mp4": {
+    "video_id": "v_68f840bc9231",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[044] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Primary Replica Architectures",
+    "claim_name": "gauravsen-hld-2026-044-primary-replica-architectures",
+    "claim_id": "2ffb847b06102cbaae501e64488c07ba31262744",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-044-primary-replica-architectures:2ffb847b06102cbaae501e64488c07ba31262744",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-044-primary-replica-architectures/2ffb847b06102cbaae501e64488c07ba31262744",
+    "uploaded_at": "2026-10-13T09:50:30+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[045] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - WAL and Change Data Capture.mp4": {
+    "video_id": "v_f04bfa5789f2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[045] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - WAL and Change Data Capture",
+    "claim_name": "gauravsen-hld-2026-045-wal-and-change-data-capture",
+    "claim_id": "e4d706620ad7367e4606fbc32e4ae1e84650bdcb",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-045-wal-and-change-data-capture:e4d706620ad7367e4606fbc32e4ae1e84650bdcb",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-045-wal-and-change-data-capture/e4d706620ad7367e4606fbc32e4ae1e84650bdcb",
+    "uploaded_at": "2026-10-13T09:51:21+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[046] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Write Amplification and Split Brain.mp4": {
+    "video_id": "v_727d905bf8fb",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[046] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Write Amplification and Split Brain",
+    "claim_name": "gauravsen-hld-2026-046-write-amplification-and-split-brain",
+    "claim_id": "88e65c4ace03ac69b3cbbb83dc49ee494caf7a04",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-046-write-amplification-and-split-brain:88e65c4ace03ac69b3cbbb83dc49ee494caf7a04",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-046-write-amplification-and-split-brain/88e65c4ace03ac69b3cbbb83dc49ee494caf7a04",
+    "uploaded_at": "2026-10-13T09:52:11+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[048] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Migrating the Database.mp4": {
+    "video_id": "v_9618bf5c32b0",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[048] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Migrating the Database",
+    "claim_name": "gauravsen-hld-2026-048-migrating-the-database",
+    "claim_id": "b5df2a77ca4c4632da742ab6bff440d878eb2889",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-048-migrating-the-database:b5df2a77ca4c4632da742ab6bff440d878eb2889",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-048-migrating-the-database/b5df2a77ca4c4632da742ab6bff440d878eb2889",
+    "uploaded_at": "2026-10-13T09:53:25+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[047] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Database Migrations.mp4": {
+    "video_id": "v_b92c7508d48a",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[047] Module 07 (2. Concepts \u2014 5. Database Replication and Migration) - Database Migrations",
+    "claim_name": "gauravsen-hld-2026-047-database-migrations",
+    "claim_id": "d1b8c65f075e2714cba3cd579b4b81f133b571e6",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-047-database-migrations:d1b8c65f075e2714cba3cd579b4b81f133b571e6",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-047-database-migrations/d1b8c65f075e2714cba3cd579b4b81f133b571e6",
+    "uploaded_at": "2026-10-13T09:53:28+00:00"
+  },
+  "Namaste AI/[001] Module 01 Season 1 Episode 01 - Welcome to Namaste AI.mp4": {
+    "video_id": "v_877a4b7fd3ba",
+    "course": "Namaste AI",
+    "title": "[001] Module 01: Season 1 Episode 01 - Welcome to Namaste AI",
+    "claim_name": "namaste-ai-2026-001-season-1-episode-01-welcome-to-namaste-ai",
+    "claim_id": "e998b69dfe23e5e70059fd20a0b0c32c26da80b5",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-001-season-1-episode-01-welcome-to-namaste-ai:e998b69dfe23e5e70059fd20a0b0c32c26da80b5",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-001-season-1-episode-01-welcome-to-namaste-ai/e998b69dfe23e5e70059fd20a0b0c32c26da80b5",
+    "uploaded_at": "2026-10-13T09:56:15+00:00"
+  },
+  "Namaste AI/[002] Module 01 Season 1 Episode 02 - The Evolution of AI.mp4": {
+    "video_id": "v_78f4bba08f03",
+    "course": "Namaste AI",
+    "title": "[002] Module 01: Season 1 Episode 02 - The Evolution of AI",
+    "claim_name": "namaste-ai-2026-002-season-1-episode-02-the-evolution-of-ai",
+    "claim_id": "fe078803a532552b8156acfb350997dc21ba643d",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-002-season-1-episode-02-the-evolution-of-ai:fe078803a532552b8156acfb350997dc21ba643d",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-002-season-1-episode-02-the-evolution-of-ai/fe078803a532552b8156acfb350997dc21ba643d",
+    "uploaded_at": "2026-10-13T10:00:25+00:00"
+  },
+  "Namaste AI/[003] Module 01 Season 1 Episode 03 - Does ChatGPT Think or Does It Guess.mp4": {
+    "video_id": "v_7e5a1fd8b80e",
+    "course": "Namaste AI",
+    "title": "[003] Module 01: Season 1 Episode 03 - Does ChatGPT Think or Does It Guess",
+    "claim_name": "namaste-ai-2026-003-season-1-episode-03-does-chatgpt-think-or-does-it-guess",
+    "claim_id": "c720217cbfc332fb263318136f9870899ec3160a",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-003-season-1-episode-03-does-chatgpt-think-or-does-it-guess:c720217cbfc332fb263318136f9870899ec3160a",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-003-season-1-episode-03-does-chatgpt-think-or-does-it-guess/c720217cbfc332fb263318136f9870899ec3160a",
+    "uploaded_at": "2026-10-13T10:04:23+00:00"
+  },
+  "Namaste AI/[004] Module 02 Season 1 Episode 04 - The Secret Language of LLMs.mp4": {
+    "video_id": "v_8d9fcf05d44f",
+    "course": "Namaste AI",
+    "title": "[004] Module 02: Season 1 Episode 04 - The Secret Language of LLMs",
+    "claim_name": "namaste-ai-2026-004-season-1-episode-04-the-secret-language-of-llms",
+    "claim_id": "91552835a09315f125ed4ae8bb203d87a47a1827",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-004-season-1-episode-04-the-secret-language-of-llms:91552835a09315f125ed4ae8bb203d87a47a1827",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-004-season-1-episode-04-the-secret-language-of-llms/91552835a09315f125ed4ae8bb203d87a47a1827",
+    "uploaded_at": "2026-10-13T10:05:45+00:00"
+  },
+  "Namaste AI/[005] Module 02 Season 1 Episode 05 - How Machines Represent Meaning.mp4": {
+    "video_id": "v_17b96c0f45cc",
+    "course": "Namaste AI",
+    "title": "[005] Module 02: Season 1 Episode 05 - How Machines Represent Meaning",
+    "claim_name": "namaste-ai-2026-005-season-1-episode-05-how-machines-represent-meaning",
+    "claim_id": "c0b1c17dcf9b8318fbea9afcd7807cda604f1859",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-005-season-1-episode-05-how-machines-represent-meaning:c0b1c17dcf9b8318fbea9afcd7807cda604f1859",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-005-season-1-episode-05-how-machines-represent-meaning/c0b1c17dcf9b8318fbea9afcd7807cda604f1859",
+    "uploaded_at": "2026-10-13T10:14:02+00:00"
+  },
+  "Namaste AI/[007] Module 03 Season 1 Episode 07 - Sharpening the Brain.mp4": {
+    "video_id": "v_8e5b47bba7de",
+    "course": "Namaste AI",
+    "title": "[007] Module 03: Season 1 Episode 07 - Sharpening the Brain",
+    "claim_name": "namaste-ai-2026-007-season-1-episode-07-sharpening-the-brain",
+    "claim_id": "813159792eb07b686008bce77c2522502594c23d",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-007-season-1-episode-07-sharpening-the-brain:813159792eb07b686008bce77c2522502594c23d",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-007-season-1-episode-07-sharpening-the-brain/813159792eb07b686008bce77c2522502594c23d",
+    "uploaded_at": "2026-10-13T10:17:38+00:00"
+  },
+  "Namaste AI/[006] Module 02 Season 1 Episode 06 - The Computational Brain of Machines.mp4": {
+    "video_id": "v_77d9fbac7e60",
+    "course": "Namaste AI",
+    "title": "[006] Module 02: Season 1 Episode 06 - The Computational Brain of Machines",
+    "claim_name": "namaste-ai-2026-006-season-1-episode-06-the-computational-brain-of-machines",
+    "claim_id": "981e11266fc2b5fa6321154afdf9b719787495bf",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-006-season-1-episode-06-the-computational-brain-of-machines:981e11266fc2b5fa6321154afdf9b719787495bf",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-006-season-1-episode-06-the-computational-brain-of-machines/981e11266fc2b5fa6321154afdf9b719787495bf",
+    "uploaded_at": "2026-10-13T10:18:29+00:00"
+  },
+  "Namaste AI/[010] Module 04 Season 2 Episode 01 - Fundamentals Of Building With Ai.mp4": {
+    "video_id": "v_6867c538900d",
+    "course": "Namaste AI",
+    "title": "[010] Module 04: Season 2 Episode 01 - Fundamentals Of Building With Ai",
+    "claim_name": "namaste-ai-2026-010-season-2-episode-01-fundamentals-of-building-with-ai",
+    "claim_id": "7bc38064026681e3a83d5c5a91e7254c14496f70",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-010-season-2-episode-01-fundamentals-of-building-with-ai:7bc38064026681e3a83d5c5a91e7254c14496f70",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-010-season-2-episode-01-fundamentals-of-building-with-ai/7bc38064026681e3a83d5c5a91e7254c14496f70",
+    "uploaded_at": "2026-10-13T10:21:15+00:00"
+  },
+  "Namaste AI/[008] Module 03 Season 1 Episode 08 - From a Base Model to an AI Assistant.mp4": {
+    "video_id": "v_908a1f031f8d",
+    "course": "Namaste AI",
+    "title": "[008] Module 03: Season 1 Episode 08 - From a Base Model to an AI Assistant",
+    "claim_name": "namaste-ai-2026-008-season-1-episode-08-from-a-base-model-to-an-ai-assistant",
+    "claim_id": "1b3f1c3b480e38511389890036f10792788cb313",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-008-season-1-episode-08-from-a-base-model-to-an-ai-assistant:1b3f1c3b480e38511389890036f10792788cb313",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-008-season-1-episode-08-from-a-base-model-to-an-ai-assistant/1b3f1c3b480e38511389890036f10792788cb313",
+    "uploaded_at": "2026-10-13T10:22:46+00:00"
+  },
+  "Namaste AI/[011] Module 04 Season 2 Episode 02 - Ideation & Brainstroming Features Using Ai.mp4": {
+    "video_id": "v_b4309745ad1d",
+    "course": "Namaste AI",
+    "title": "[011] Module 04: Season 2 Episode 02 - Ideation & Brainstroming Features Using Ai",
+    "claim_name": "namaste-ai-2026-011-season-2-episode-02-ideation-brainstroming-features-using-",
+    "claim_id": "843993fcbb6b8f7c3f4f0b5d21ca8c6f344166f0",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-011-season-2-episode-02-ideation-brainstroming-features-using-:843993fcbb6b8f7c3f4f0b5d21ca8c6f344166f0",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-011-season-2-episode-02-ideation-brainstroming-features-using-/843993fcbb6b8f7c3f4f0b5d21ca8c6f344166f0",
+    "uploaded_at": "2026-10-13T10:24:59+00:00"
+  },
+  "Namaste AI/[009] Module 03 Season 1 Episode 09 - Can AI Really Think.mp4": {
+    "video_id": "v_f822cd10c658",
+    "course": "Namaste AI",
+    "title": "[009] Module 03: Season 1 Episode 09 - Can AI Really Think",
+    "claim_name": "namaste-ai-2026-009-season-1-episode-09-can-ai-really-think",
+    "claim_id": "4f86b498ddc664e96bfbdcc074408d7d0c80e33e",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-009-season-1-episode-09-can-ai-really-think:4f86b498ddc664e96bfbdcc074408d7d0c80e33e",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-009-season-1-episode-09-can-ai-really-think/4f86b498ddc664e96bfbdcc074408d7d0c80e33e",
+    "uploaded_at": "2026-10-13T10:27:48+00:00"
+  },
+  "Namaste AI/[012] Module 04 Season 2 Episode 03 - Product Requirement Documentation Using Ai.mp4": {
+    "video_id": "v_1bb4600b7c72",
+    "course": "Namaste AI",
+    "title": "[012] Module 04: Season 2 Episode 03 - Product Requirement Documentation Using Ai",
+    "claim_name": "namaste-ai-2026-012-season-2-episode-03-product-requirement-documentation-usin",
+    "claim_id": "b25e86dc8eab1feaee1c9a002706bf6f79b92712",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-012-season-2-episode-03-product-requirement-documentation-usin:b25e86dc8eab1feaee1c9a002706bf6f79b92712",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-012-season-2-episode-03-product-requirement-documentation-usin/b25e86dc8eab1feaee1c9a002706bf6f79b92712",
+    "uploaded_at": "2026-10-13T10:29:19+00:00"
+  },
+  "Namaste AI/[013] Module 04 Season 2 Episode 04 - System Design Architecture Documentation Using Ai.mp4": {
+    "video_id": "v_588fe0bc7455",
+    "course": "Namaste AI",
+    "title": "[013] Module 04: Season 2 Episode 04 - System Design Architecture Documentation Using Ai",
+    "claim_name": "namaste-ai-2026-013-season-2-episode-04-system-design-architecture-documentati",
+    "claim_id": "a029a40ba2ea77372fd614b5e3af4fa544d1f59f",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-013-season-2-episode-04-system-design-architecture-documentati:a029a40ba2ea77372fd614b5e3af4fa544d1f59f",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-013-season-2-episode-04-system-design-architecture-documentati/a029a40ba2ea77372fd614b5e3af4fa544d1f59f",
+    "uploaded_at": "2026-10-13T10:31:58+00:00"
+  },
+  "Namaste AI/[017] Module 05 Season 2 Episode 08 - Bringing Desigm To Life.mp4": {
+    "video_id": "v_342bc71459dc",
+    "course": "Namaste AI",
+    "title": "[017] Module 05: Season 2 Episode 08 - Bringing Desigm To Life",
+    "claim_name": "namaste-ai-2026-017-season-2-episode-08-bringing-desigm-to-life",
+    "claim_id": "e3a3f6e8491efd05204979bbca47add2cfa58a0b",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-017-season-2-episode-08-bringing-desigm-to-life:e3a3f6e8491efd05204979bbca47add2cfa58a0b",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-017-season-2-episode-08-bringing-desigm-to-life/e3a3f6e8491efd05204979bbca47add2cfa58a0b",
+    "uploaded_at": "2026-10-13T12:15:19+00:00"
+  },
+  "Namaste AI/[018] Module 05 Season 2 Episode 09 - Auth Setup And Onboarding Flow.mp4": {
+    "video_id": "v_a4dd21efeda4",
+    "course": "Namaste AI",
+    "title": "[018] Module 05: Season 2 Episode 09 - Auth Setup And Onboarding Flow",
+    "claim_name": "namaste-ai-2026-018-season-2-episode-09-auth-setup-and-onboarding-flow",
+    "claim_id": "c17f72c78a742a189710e38119aafbca4b3bedb4",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-018-season-2-episode-09-auth-setup-and-onboarding-flow:c17f72c78a742a189710e38119aafbca4b3bedb4",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-018-season-2-episode-09-auth-setup-and-onboarding-flow/c17f72c78a742a189710e38119aafbca4b3bedb4",
+    "uploaded_at": "2026-10-13T12:40:24+00:00"
+  },
+  "Namaste AI/[019] Module 05 Season 2 Episode 10 - Email Sending Flow And Role Based Access.mp4": {
+    "video_id": "v_555192e6126f",
+    "course": "Namaste AI",
+    "title": "[019] Module 05: Season 2 Episode 10 - Email Sending Flow And Role Based Access",
+    "claim_name": "namaste-ai-2026-019-season-2-episode-10-email-sending-flow-and-role-based-acce",
+    "claim_id": "9786ee68ac5257173ed9d1031d1f124693c7784a",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-019-season-2-episode-10-email-sending-flow-and-role-based-acce:9786ee68ac5257173ed9d1031d1f124693c7784a",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-019-season-2-episode-10-email-sending-flow-and-role-based-acce/9786ee68ac5257173ed9d1031d1f124693c7784a",
+    "uploaded_at": "2026-10-13T12:58:18+00:00"
+  },
+  "Namaste AI/[021] Module 06 Season 2 Episode 12 - Setting Up A Custom Domain Name.mp4": {
+    "video_id": "v_97eae3abe94c",
+    "course": "Namaste AI",
+    "title": "[021] Module 06: Season 2 Episode 12 - Setting Up A Custom Domain Name",
+    "claim_name": "namaste-ai-2026-021-season-2-episode-12-setting-up-a-custom-domain-name",
+    "claim_id": "a02161ac99abb7d56c304fabd160d1a59cd6b8be",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-021-season-2-episode-12-setting-up-a-custom-domain-name:a02161ac99abb7d56c304fabd160d1a59cd6b8be",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-021-season-2-episode-12-setting-up-a-custom-domain-name/a02161ac99abb7d56c304fabd160d1a59cd6b8be",
+    "uploaded_at": "2026-10-13T14:24:03+00:00"
+  },
+  "Namaste AI/[022] Module 06 Season 2 Episode 13 - Building User Dashvoard And Managing Events.mp4": {
+    "video_id": "v_aa6f55722343",
+    "course": "Namaste AI",
+    "title": "[022] Module 06: Season 2 Episode 13 - Building User Dashvoard And Managing Events",
+    "claim_name": "namaste-ai-2026-022-season-2-episode-13-building-user-dashvoard-and-managing-e",
+    "claim_id": "24a3c646ad224acc7757498f0b95a29c94bb22fa",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-022-season-2-episode-13-building-user-dashvoard-and-managing-e:24a3c646ad224acc7757498f0b95a29c94bb22fa",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-022-season-2-episode-13-building-user-dashvoard-and-managing-e/24a3c646ad224acc7757498f0b95a29c94bb22fa",
+    "uploaded_at": "2026-10-13T14:32:48+00:00"
+  },
+  "Namaste AI/[023] Module 06 Season 2 Episode 14 - Building Task Management, Invites And Rsvp.mp4": {
+    "video_id": "v_aa0c6fe1a2c7",
+    "course": "Namaste AI",
+    "title": "[023] Module 06: Season 2 Episode 14 - Building Task   Management, Invites And Rsvp",
+    "claim_name": "namaste-ai-2026-023-season-2-episode-14-building-task-management-invites-and-r",
+    "claim_id": "dc07e17e71403c11b0c2b6307509cd04f9a7f0fb",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-023-season-2-episode-14-building-task-management-invites-and-r:dc07e17e71403c11b0c2b6307509cd04f9a7f0fb",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-023-season-2-episode-14-building-task-management-invites-and-r/dc07e17e71403c11b0c2b6307509cd04f9a7f0fb",
+    "uploaded_at": "2026-10-13T14:50:47+00:00"
+  },
+  "Namaste AI/[024] Module 06 Season 2 Episode 15 - Building Photo Upload & Gallery Feature Using Ai.mp4": {
+    "video_id": "v_d944fe451f69",
+    "course": "Namaste AI",
+    "title": "[024] Module 06: Season 2 Episode 15 - Building Photo Upload & Gallery Feature Using Ai",
+    "claim_name": "namaste-ai-2026-024-season-2-episode-15-building-photo-upload-gallery-feature-",
+    "claim_id": "2938ccde27d9837b0411db0b994f917ee77fe719",
+    "odysee_url": "https://odysee.com/namaste-ai-2026-024-season-2-episode-15-building-photo-upload-gallery-feature-:2938ccde27d9837b0411db0b994f917ee77fe719",
+    "stream_url": "https://odysee.com/$/stream/namaste-ai-2026-024-season-2-episode-15-building-photo-upload-gallery-feature-/2938ccde27d9837b0411db0b994f917ee77fe719",
+    "uploaded_at": "2026-10-13T14:52:27+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[003] Module 01 Day 3 - Types of RAGs, Eval Metrics.mp4": {
+    "video_id": "v_d25b4c13fa82",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[003] Module 01: Day 3 - Types of RAGs, Eval Metrics",
+    "claim_name": "keerti-agentic-sd-2026-003-day-3-types-of-rags-eval-metrics",
+    "claim_id": "7d7d6cb96768a1da5b1af36c5b16cfb9fc111d84",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-003-day-3-types-of-rags-eval-metrics:7d7d6cb96768a1da5b1af36c5b16cfb9fc111d84",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-003-day-3-types-of-rags-eval-metrics/7d7d6cb96768a1da5b1af36c5b16cfb9fc111d84",
+    "uploaded_at": "2026-10-13T15:07:31+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[004] Module 02 Day 4 - RAG Eval Comparison.mp4": {
+    "video_id": "v_39016ca3c593",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[004] Module 02: Day 4 - RAG Eval Comparison",
+    "claim_name": "keerti-agentic-sd-2026-004-day-4-rag-eval-comparison",
+    "claim_id": "94ba1c7e5905c735fb780be63b951afd1a2ad868",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-004-day-4-rag-eval-comparison:94ba1c7e5905c735fb780be63b951afd1a2ad868",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-004-day-4-rag-eval-comparison/94ba1c7e5905c735fb780be63b951afd1a2ad868",
+    "uploaded_at": "2026-10-13T15:13:32+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[002] Module 01 Day 2 - AST, Lexical, Hybrid, Agentic RAG.mp4 @hmaracollege + @thebatmanreborn.mp4": {
+    "video_id": "v_0ef1c2470a3b",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[002] Module 01: Day 2 - AST, Lexical, Hybrid, Agentic RAG.mp4\n@hmaracollege + @thebatmanreborn",
+    "claim_name": "keerti-agentic-sd-2026-002-day-2-ast-lexical-hybrid-agentic-rag-mp4-hmaracolle",
+    "claim_id": "92f68b2a27fa8b2babe3553d67bbe58c6e741892",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-002-day-2-ast-lexical-hybrid-agentic-rag-mp4-hmaracolle:92f68b2a27fa8b2babe3553d67bbe58c6e741892",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-002-day-2-ast-lexical-hybrid-agentic-rag-mp4-hmaracolle/92f68b2a27fa8b2babe3553d67bbe58c6e741892",
+    "uploaded_at": "2026-10-13T15:15:33+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[005] Module 02 Day 5 - RAG Types, Context Engineering.mp4": {
+    "video_id": "v_646306646e18",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[005] Module 02: Day 5 - RAG Types, Context Engineering",
+    "claim_name": "keerti-agentic-sd-2026-005-day-5-rag-types-context-engineering",
+    "claim_id": "112db9709c94ca2f061ebc07a3a392ee9e2b796c",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-005-day-5-rag-types-context-engineering:112db9709c94ca2f061ebc07a3a392ee9e2b796c",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-005-day-5-rag-types-context-engineering/112db9709c94ca2f061ebc07a3a392ee9e2b796c",
+    "uploaded_at": "2026-10-13T15:16:32+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[007] Module 03 Day 7 - Claude Code Project.mp4": {
+    "video_id": "v_527a7b405d95",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[007] Module 03: Day 7 - Claude Code Project",
+    "claim_name": "keerti-agentic-sd-2026-007-day-7-claude-code-project",
+    "claim_id": "97e01ff96ad9026a3f07791f11771c8a223eb618",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-007-day-7-claude-code-project:97e01ff96ad9026a3f07791f11771c8a223eb618",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-007-day-7-claude-code-project/97e01ff96ad9026a3f07791f11771c8a223eb618",
+    "uploaded_at": "2026-10-13T15:19:58+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[006] Module 02 Day 6 - Memory.mp4": {
+    "video_id": "v_121710fdad3e",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[006] Module 02: Day 6 - Memory",
+    "claim_name": "keerti-agentic-sd-2026-006-day-6-memory",
+    "claim_id": "c7ac319ebb924aad50c723447ea29084f1edef92",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-006-day-6-memory:c7ac319ebb924aad50c723447ea29084f1edef92",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-006-day-6-memory/c7ac319ebb924aad50c723447ea29084f1edef92",
+    "uploaded_at": "2026-10-13T15:22:05+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[009] Module 03 Day 9 - MCP, Skills, Intro to Long Running Tasks.mp4": {
+    "video_id": "v_18ffd9632cf0",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[009] Module 03: Day 9 - MCP, Skills, Intro to Long Running Tasks",
+    "claim_name": "keerti-agentic-sd-2026-009-day-9-mcp-skills-intro-to-long-running-tasks",
+    "claim_id": "cb6b72dc1a38d9b76f45bea5bd31f427912445d3",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-009-day-9-mcp-skills-intro-to-long-running-tasks:cb6b72dc1a38d9b76f45bea5bd31f427912445d3",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-009-day-9-mcp-skills-intro-to-long-running-tasks/cb6b72dc1a38d9b76f45bea5bd31f427912445d3",
+    "uploaded_at": "2026-10-13T15:26:07+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[008] Module 03 Day 8 - Project, MCP.mp4": {
+    "video_id": "v_3ff2fc68a9a9",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[008] Module 03: Day 8 - Project, MCP",
+    "claim_name": "keerti-agentic-sd-2026-008-day-8-project-mcp",
+    "claim_id": "3f92118865d4a41e25f050f3ecc4f1d6ed364d35",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-008-day-8-project-mcp:3f92118865d4a41e25f050f3ecc4f1d6ed364d35",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-008-day-8-project-mcp/3f92118865d4a41e25f050f3ecc4f1d6ed364d35",
+    "uploaded_at": "2026-10-13T15:27:25+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[010] Module 03 Day 10 - Safety, Long Running Tasks.mp4": {
+    "video_id": "v_b8ee03d1e8c1",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[010] Module 03: Day 10 - Safety, Long Running Tasks",
+    "claim_name": "keerti-agentic-sd-2026-010-day-10-safety-long-running-tasks",
+    "claim_id": "127276ade4cc840a01e87c3e017c5298a5bf6a2e",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-010-day-10-safety-long-running-tasks:127276ade4cc840a01e87c3e017c5298a5bf6a2e",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-010-day-10-safety-long-running-tasks/127276ade4cc840a01e87c3e017c5298a5bf6a2e",
+    "uploaded_at": "2026-10-13T15:30:34+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[012] Module 04 Day 12 - Project Dicussions, Reindexing.mp4 @hmaracollege + @thebatmanreborn.mp4": {
+    "video_id": "v_7218a6af0a5e",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[012] Module 04: Day 12 - Project Dicussions, Reindexing.mp4\n@hmaracollege + @thebatmanreborn",
+    "claim_name": "keerti-agentic-sd-2026-012-day-12-project-dicussions-reindexing-mp4-hmaracolle",
+    "claim_id": "8ffdcac33d4eb366882a041e4f5d1fb2f5307d3c",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-012-day-12-project-dicussions-reindexing-mp4-hmaracolle:8ffdcac33d4eb366882a041e4f5d1fb2f5307d3c",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-012-day-12-project-dicussions-reindexing-mp4-hmaracolle/8ffdcac33d4eb366882a041e4f5d1fb2f5307d3c",
+    "uploaded_at": "2026-10-13T15:36:36+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[013] Module 04 Day 13 Semantic Caching, Langfuse, Scaling RAG, Sharding, Multi.mp4": {
+    "video_id": "v_6d7ac118bc24",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[013] Module 04: Day 13 Semantic Caching, Langfuse, Scaling RAG, Sharding, Multi",
+    "claim_name": "keerti-agentic-sd-2026-013-day-13-semantic-caching-langfuse-scaling-rag-shardi",
+    "claim_id": "c7ce79e5b2b499135399de95cc9f91d4576b5c3a",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-013-day-13-semantic-caching-langfuse-scaling-rag-shardi:c7ce79e5b2b499135399de95cc9f91d4576b5c3a",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-013-day-13-semantic-caching-langfuse-scaling-rag-shardi/c7ce79e5b2b499135399de95cc9f91d4576b5c3a",
+    "uploaded_at": "2026-10-13T15:40:36+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[014] Module 05 Day 14 - Interview Quess, LLMOps.mp4": {
+    "video_id": "v_4846b6c7c4e5",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[014] Module 05: Day 14 - Interview Quess, LLMOps",
+    "claim_name": "keerti-agentic-sd-2026-014-day-14-interview-quess-llmops",
+    "claim_id": "822eb704a1b7b23ba7809002fbd87524987c0b94",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-014-day-14-interview-quess-llmops:822eb704a1b7b23ba7809002fbd87524987c0b94",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-014-day-14-interview-quess-llmops/822eb704a1b7b23ba7809002fbd87524987c0b94",
+    "uploaded_at": "2026-10-13T15:45:19+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[015] Module 05 Day 15 - Project Demos, Interview Discussion.mp4": {
+    "video_id": "v_1f7198794417",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[015] Module 05: Day 15 - Project Demos, Interview Discussion",
+    "claim_name": "keerti-agentic-sd-2026-015-day-15-project-demos-interview-discussion",
+    "claim_id": "2fb982c34fee51ada881a81527447c88b7445d03",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-015-day-15-project-demos-interview-discussion:2fb982c34fee51ada881a81527447c88b7445d03",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-015-day-15-project-demos-interview-discussion/2fb982c34fee51ada881a81527447c88b7445d03",
+    "uploaded_at": "2026-10-13T15:47:53+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[011] Module 04 Day 11 - Claude Code Design & Implementation.mp4 @hmaracollege + @thebatmanreborn.mp4": {
+    "video_id": "v_3516323dd247",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[011] Module 04: Day 11 - Claude Code Design & Implementation.mp4\n@hmaracollege + @thebatmanreborn",
+    "claim_name": "keerti-agentic-sd-2026-011-day-11-claude-code-design-implementation-mp4-hmarac",
+    "claim_id": "cd08651155c4657036e8900d65659e04d5557631",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-011-day-11-claude-code-design-implementation-mp4-hmarac:cd08651155c4657036e8900d65659e04d5557631",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-011-day-11-claude-code-design-implementation-mp4-hmarac/cd08651155c4657036e8900d65659e04d5557631",
+    "uploaded_at": "2026-10-13T15:52:03+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[017] Module 05 Easiest explanation of Agentic Apps for Papa How do these Apps work.mp4": {
+    "video_id": "v_8bc147f9462a",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[017] Module 05: Easiest explanation of Agentic Apps for Papa How do these Apps work",
+    "claim_name": "keerti-agentic-sd-2026-017-easiest-explanation-of-agentic-apps-for-papa-how-do",
+    "claim_id": "d8cdcd47015a271ae4892d9d9c097a0dce15c21b",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-017-easiest-explanation-of-agentic-apps-for-papa-how-do:d8cdcd47015a271ae4892d9d9c097a0dce15c21b",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-017-easiest-explanation-of-agentic-apps-for-papa-how-do/d8cdcd47015a271ae4892d9d9c097a0dce15c21b",
+    "uploaded_at": "2026-10-13T15:56:31+00:00"
+  },
+  "Keerti Purswani Agentic AI System Design Course 2026/[016] Module 05 Simplest RAG Explanation with Working Code! Beginner Friendly Step.mp4": {
+    "video_id": "v_552f15968de3",
+    "course": "Keerti Purswani Agentic AI System Design Course 2026",
+    "title": "[016] Module 05: Simplest RAG Explanation with Working Code! Beginner Friendly Step",
+    "claim_name": "keerti-agentic-sd-2026-016-simplest-rag-explanation-with-working-code-beginner",
+    "claim_id": "55f1d194d781a881ca1e39352d6acdaec0fd627d",
+    "odysee_url": "https://odysee.com/keerti-agentic-sd-2026-016-simplest-rag-explanation-with-working-code-beginner:55f1d194d781a881ca1e39352d6acdaec0fd627d",
+    "stream_url": "https://odysee.com/$/stream/keerti-agentic-sd-2026-016-simplest-rag-explanation-with-working-code-beginner/55f1d194d781a881ca1e39352d6acdaec0fd627d",
+    "uploaded_at": "2026-10-13T16:03:12+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[001] Module 01 (Beginner) - Course Introduction.mp4": {
+    "video_id": "v_31da81cf9f67",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[001] Module 01 (Beginner) - Course Introduction",
+    "claim_name": "arpit-bhayani-sd-2026-001-beginner-course-introduction",
+    "claim_id": "79f1de09a3668db036ab39db46b9a6ade1d4f07d",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-001-beginner-course-introduction:79f1de09a3668db036ab39db46b9a6ade1d4f07d",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-001-beginner-course-introduction/79f1de09a3668db036ab39db46b9a6ade1d4f07d",
+    "uploaded_at": "2026-10-13T16:13:37+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[002] Module 01 (Beginner) - What is System Design.mp4": {
+    "video_id": "v_d5329b440f39",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[002] Module 01 (Beginner) - What is System Design",
+    "claim_name": "arpit-bhayani-sd-2026-002-beginner-what-is-system-design",
+    "claim_id": "e00b004d893e92d7b3271b8aeb7bf26955228ed2",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-002-beginner-what-is-system-design:e00b004d893e92d7b3271b8aeb7bf26955228ed2",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-002-beginner-what-is-system-design/e00b004d893e92d7b3271b8aeb7bf26955228ed2",
+    "uploaded_at": "2026-10-13T16:13:47+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[004] Module 01 (Beginner) - How do you evaluate that you have built a good system.mp4": {
+    "video_id": "v_a2078cd4a732",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[004] Module 01 (Beginner) - How do you evaluate that you have built a good system",
+    "claim_name": "arpit-bhayani-sd-2026-004-beginner-how-do-you-evaluate-that-you-have-built-a-g",
+    "claim_id": "c395ea174501959bdf457f6c83c35d8b369f78b2",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-004-beginner-how-do-you-evaluate-that-you-have-built-a-g:c395ea174501959bdf457f6c83c35d8b369f78b2",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-004-beginner-how-do-you-evaluate-that-you-have-built-a-g/c395ea174501959bdf457f6c83c35d8b369f78b2",
+    "uploaded_at": "2026-10-13T16:14:18+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[003] Module 01 (Beginner) - How to approach system design.mp4": {
+    "video_id": "v_6b1d9b2f5466",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[003] Module 01 (Beginner) - How to approach system design",
+    "claim_name": "arpit-bhayani-sd-2026-003-beginner-how-to-approach-system-design",
+    "claim_id": "ac31a9bd4ab205462acf55c238f74dbb480c33f0",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-003-beginner-how-to-approach-system-design:ac31a9bd4ab205462acf55c238f74dbb480c33f0",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-003-beginner-how-to-approach-system-design/ac31a9bd4ab205462acf55c238f74dbb480c33f0",
+    "uploaded_at": "2026-10-13T16:14:36+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[005] Module 01 (Beginner) - Relational Databases.mp4": {
+    "video_id": "v_a3baaa39d911",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[005] Module 01 (Beginner) - Relational Databases",
+    "claim_name": "arpit-bhayani-sd-2026-005-beginner-relational-databases",
+    "claim_id": "3b920bc7c0ce34a4f0a00efe2a8b4d9808a81d3b",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-005-beginner-relational-databases:3b920bc7c0ce34a4f0a00efe2a8b4d9808a81d3b",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-005-beginner-relational-databases/3b920bc7c0ce34a4f0a00efe2a8b4d9808a81d3b",
+    "uploaded_at": "2026-10-13T16:14:46+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[006] Module 01 (Beginner) - Databse Isolation Levels.mp4": {
+    "video_id": "v_d3803ff8455e",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[006] Module 01 (Beginner) - Databse Isolation Levels",
+    "claim_name": "arpit-bhayani-sd-2026-006-beginner-databse-isolation-levels",
+    "claim_id": "075e114b8cdde609dee1779417f07e439dbaced7",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-006-beginner-databse-isolation-levels:075e114b8cdde609dee1779417f07e439dbaced7",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-006-beginner-databse-isolation-levels/075e114b8cdde609dee1779417f07e439dbaced7",
+    "uploaded_at": "2026-10-13T16:14:58+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[008] Module 02 (Beginner) - Sharding and Partitioning.mp4": {
+    "video_id": "v_967e866c4aba",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[008] Module 02 (Beginner) - Sharding and Partitioning",
+    "claim_name": "arpit-bhayani-sd-2026-008-beginner-sharding-and-partitioning",
+    "claim_id": "7d7a266e7cdbbd35e9c68c15a7b416e68c842422",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-008-beginner-sharding-and-partitioning:7d7a266e7cdbbd35e9c68c15a7b416e68c842422",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-008-beginner-sharding-and-partitioning/7d7a266e7cdbbd35e9c68c15a7b416e68c842422",
+    "uploaded_at": "2026-10-13T16:15:17+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[007] Module 02 (Beginner) - Scaling Databases.mp4": {
+    "video_id": "v_e46c87d4d36d",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[007] Module 02 (Beginner) - Scaling Databases",
+    "claim_name": "arpit-bhayani-sd-2026-007-beginner-scaling-databases",
+    "claim_id": "784e73b17a2d68a839064a37737587aea908e8f3",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-007-beginner-scaling-databases:784e73b17a2d68a839064a37737587aea908e8f3",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-007-beginner-scaling-databases/784e73b17a2d68a839064a37737587aea908e8f3",
+    "uploaded_at": "2026-10-13T16:15:24+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[009] Module 02 (Beginner) - Non-Relational Databases.mp4": {
+    "video_id": "v_e31329d49134",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[009] Module 02 (Beginner) - Non-Relational Databases",
+    "claim_name": "arpit-bhayani-sd-2026-009-beginner-non-relational-databases",
+    "claim_id": "f0ec8d7743fda2c06ba748d747d51907fa6791ad",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-009-beginner-non-relational-databases:f0ec8d7743fda2c06ba748d747d51907fa6791ad",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-009-beginner-non-relational-databases/f0ec8d7743fda2c06ba748d747d51907fa6791ad",
+    "uploaded_at": "2026-10-13T16:15:41+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[010] Module 02 (Beginner) - Picking the right database.mp4": {
+    "video_id": "v_e4a91a70b570",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[010] Module 02 (Beginner) - Picking the right database",
+    "claim_name": "arpit-bhayani-sd-2026-010-beginner-picking-the-right-database",
+    "claim_id": "0d6421cdf38de2db30a836a0ca968d6553dd397d",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-010-beginner-picking-the-right-database:0d6421cdf38de2db30a836a0ca968d6553dd397d",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-010-beginner-picking-the-right-database/0d6421cdf38de2db30a836a0ca968d6553dd397d",
+    "uploaded_at": "2026-10-13T16:15:42+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[011] Module 02 (Beginner) - What is caching.mp4": {
+    "video_id": "v_aeac5a06bdd7",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[011] Module 02 (Beginner) - What is caching",
+    "claim_name": "arpit-bhayani-sd-2026-011-beginner-what-is-caching",
+    "claim_id": "8f0b4357633e4882b8c958ace767c3f67ebc985b",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-011-beginner-what-is-caching:8f0b4357633e4882b8c958ace767c3f67ebc985b",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-011-beginner-what-is-caching/8f0b4357633e4882b8c958ace767c3f67ebc985b",
+    "uploaded_at": "2026-10-13T16:15:43+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[012] Module 02 (Beginner) - Populating and scaling a cache.mp4": {
+    "video_id": "v_d018939bafd4",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[012] Module 02 (Beginner) - Populating and scaling a cache",
+    "claim_name": "arpit-bhayani-sd-2026-012-beginner-populating-and-scaling-a-cache",
+    "claim_id": "44db163091ace7a773d782dea8391da808853592",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-012-beginner-populating-and-scaling-a-cache:44db163091ace7a773d782dea8391da808853592",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-012-beginner-populating-and-scaling-a-cache/44db163091ace7a773d782dea8391da808853592",
+    "uploaded_at": "2026-10-13T16:16:04+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[013] Module 02 (Beginner) - Caching at different levels.mp4": {
+    "video_id": "v_514e23ad8d1e",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[013] Module 02 (Beginner) - Caching at different levels",
+    "claim_name": "arpit-bhayani-sd-2026-013-beginner-caching-at-different-levels",
+    "claim_id": "2871a9216587617a186d827032669c8590932303",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-013-beginner-caching-at-different-levels:2871a9216587617a186d827032669c8590932303",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-013-beginner-caching-at-different-levels/2871a9216587617a186d827032669c8590932303",
+    "uploaded_at": "2026-10-13T16:16:36+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[014] Module 03 (Beginner) - Message Brokers and Queues.mp4": {
+    "video_id": "v_c58b217b9a85",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[014] Module 03 (Beginner) - Message Brokers and Queues",
+    "claim_name": "arpit-bhayani-sd-2026-014-beginner-message-brokers-and-queues",
+    "claim_id": "1e6a0066a48fe5260a21cee9305dbed7d81ac6b4",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-014-beginner-message-brokers-and-queues:1e6a0066a48fe5260a21cee9305dbed7d81ac6b4",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-014-beginner-message-brokers-and-queues/1e6a0066a48fe5260a21cee9305dbed7d81ac6b4",
+    "uploaded_at": "2026-10-13T16:16:40+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[015] Module 03 (Beginner) - Message Stream and Kafka Essentials.mp4": {
+    "video_id": "v_3f04f710c241",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[015] Module 03 (Beginner) - Message Stream and Kafka Essentials",
+    "claim_name": "arpit-bhayani-sd-2026-015-beginner-message-stream-and-kafka-essentials",
+    "claim_id": "41a19d4b6fa44541a61131766b7a22b700452c0b",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-015-beginner-message-stream-and-kafka-essentials:41a19d4b6fa44541a61131766b7a22b700452c0b",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-015-beginner-message-stream-and-kafka-essentials/41a19d4b6fa44541a61131766b7a22b700452c0b",
+    "uploaded_at": "2026-10-13T16:16:42+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[016] Module 03 (Beginner) - Realtime Pubsub.mp4": {
+    "video_id": "v_8f5e430f73d1",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[016] Module 03 (Beginner) - Realtime Pubsub",
+    "claim_name": "arpit-bhayani-sd-2026-016-beginner-realtime-pubsub",
+    "claim_id": "22a2f71eca695139df7856d3911d6b6b06b3156d",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-016-beginner-realtime-pubsub:22a2f71eca695139df7856d3911d6b6b06b3156d",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-016-beginner-realtime-pubsub/22a2f71eca695139df7856d3911d6b6b06b3156d",
+    "uploaded_at": "2026-10-13T16:16:53+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[019] Module 03 (Beginner) - Data Redundancy & Recovery.mp4": {
+    "video_id": "v_d4bb8c17bb0d",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[019] Module 03 (Beginner) - Data Redundancy & Recovery",
+    "claim_name": "arpit-bhayani-sd-2026-019-beginner-data-redundancy-recovery",
+    "claim_id": "c9a9cb578d54e93eafe0600e725ba47d34a89db5",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-019-beginner-data-redundancy-recovery:c9a9cb578d54e93eafe0600e725ba47d34a89db5",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-019-beginner-data-redundancy-recovery/c9a9cb578d54e93eafe0600e725ba47d34a89db5",
+    "uploaded_at": "2026-10-13T16:17:14+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[017] Module 03 (Beginner) - Load Balancers.mp4": {
+    "video_id": "v_535ed52235e3",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[017] Module 03 (Beginner) - Load Balancers",
+    "claim_name": "arpit-bhayani-sd-2026-017-beginner-load-balancers",
+    "claim_id": "603611d653f17320063702c9a03983b1724c1693",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-017-beginner-load-balancers:603611d653f17320063702c9a03983b1724c1693",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-017-beginner-load-balancers/603611d653f17320063702c9a03983b1724c1693",
+    "uploaded_at": "2026-10-13T16:17:20+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[018] Module 03 (Beginner) - Circuit Balancers.mp4": {
+    "video_id": "v_74fb79dd0cc5",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[018] Module 03 (Beginner) - Circuit Balancers",
+    "claim_name": "arpit-bhayani-sd-2026-018-beginner-circuit-balancers",
+    "claim_id": "988871aa75c70db1e1ffd4c1c31343a2c5cde9f1",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-018-beginner-circuit-balancers:988871aa75c70db1e1ffd4c1c31343a2c5cde9f1",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-018-beginner-circuit-balancers/988871aa75c70db1e1ffd4c1c31343a2c5cde9f1",
+    "uploaded_at": "2026-10-13T16:17:24+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[020] Module 03 (Beginner) - Leader Election for auto-recovery.mp4": {
+    "video_id": "v_72e23bafc252",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[020] Module 03 (Beginner) - Leader Election for auto-recovery",
+    "claim_name": "arpit-bhayani-sd-2026-020-beginner-leader-election-for-auto-recovery",
+    "claim_id": "cbbace056ed504aeab2788735e8b8c64aa804ad2",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-020-beginner-leader-election-for-auto-recovery:cbbace056ed504aeab2788735e8b8c64aa804ad2",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-020-beginner-leader-election-for-auto-recovery/cbbace056ed504aeab2788735e8b8c64aa804ad2",
+    "uploaded_at": "2026-10-13T16:17:31+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[021] Module 04 (Beginner) - Client server model & Communication protocols.mp4": {
+    "video_id": "v_b50f57b74fd2",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[021] Module 04 (Beginner) - Client server model & Communication protocols",
+    "claim_name": "arpit-bhayani-sd-2026-021-beginner-client-server-model-communication-protocols",
+    "claim_id": "2af756adab4b06f2910ada7a1e7d591ee4fbbf7c",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-021-beginner-client-server-model-communication-protocols:2af756adab4b06f2910ada7a1e7d591ee4fbbf7c",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-021-beginner-client-server-model-communication-protocols/2af756adab4b06f2910ada7a1e7d591ee4fbbf7c",
+    "uploaded_at": "2026-10-13T16:18:00+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[023] Module 04 (Beginner) - Bloom Filters.mp4": {
+    "video_id": "v_95460a47156f",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[023] Module 04 (Beginner) - Bloom Filters",
+    "claim_name": "arpit-bhayani-sd-2026-023-beginner-bloom-filters",
+    "claim_id": "ac0c02fbe7e04fe663a4e2991c14ce5e1be30180",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-023-beginner-bloom-filters:ac0c02fbe7e04fe663a4e2991c14ce5e1be30180",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-023-beginner-bloom-filters/ac0c02fbe7e04fe663a4e2991c14ce5e1be30180",
+    "uploaded_at": "2026-10-13T16:18:03+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[022] Module 04 (Beginner) - Blob Storage & S3.mp4": {
+    "video_id": "v_68d612f16c79",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[022] Module 04 (Beginner) - Blob Storage & S3",
+    "claim_name": "arpit-bhayani-sd-2026-022-beginner-blob-storage-s3",
+    "claim_id": "54829f876c2f3f488459f5aa3b237eda13e30c10",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-022-beginner-blob-storage-s3:54829f876c2f3f488459f5aa3b237eda13e30c10",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-022-beginner-blob-storage-s3/54829f876c2f3f488459f5aa3b237eda13e30c10",
+    "uploaded_at": "2026-10-13T16:18:09+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[025] Module 04 (Beginner) - Introduction to Big Data Tools.mp4": {
+    "video_id": "v_a62f04d5ca68",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[025] Module 04 (Beginner) - Introduction to Big Data Tools",
+    "claim_name": "arpit-bhayani-sd-2026-025-beginner-introduction-to-big-data-tools",
+    "claim_id": "5ac037a57f4a8ad44394e28c595971e5fef9937a",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-025-beginner-introduction-to-big-data-tools:5ac037a57f4a8ad44394e28c595971e5fef9937a",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-025-beginner-introduction-to-big-data-tools/5ac037a57f4a8ad44394e28c595971e5fef9937a",
+    "uploaded_at": "2026-10-13T16:18:43+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[024] Module 04 (Beginner) - Consistent Hashing.mp4": {
+    "video_id": "v_c8949e7c119b",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[024] Module 04 (Beginner) - Consistent Hashing",
+    "claim_name": "arpit-bhayani-sd-2026-024-beginner-consistent-hashing",
+    "claim_id": "52094961a6c19fb8439144feb44e577a4db354b0",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-024-beginner-consistent-hashing:52094961a6c19fb8439144feb44e577a4db354b0",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-024-beginner-consistent-hashing/52094961a6c19fb8439144feb44e577a4db354b0",
+    "uploaded_at": "2026-10-13T16:18:51+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[026] Module 05 (Beginner) - Design Ecommerce Product Listing.mp4": {
+    "video_id": "v_2f890bc51c3e",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[026] Module 05 (Beginner) - Design Ecommerce Product Listing",
+    "claim_name": "arpit-bhayani-sd-2026-026-beginner-design-ecommerce-product-listing",
+    "claim_id": "12677892c4362f619ae5b2b6ddc1932816b0244e",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-026-beginner-design-ecommerce-product-listing:12677892c4362f619ae5b2b6ddc1932816b0244e",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-026-beginner-design-ecommerce-product-listing/12677892c4362f619ae5b2b6ddc1932816b0244e",
+    "uploaded_at": "2026-10-13T16:19:01+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[027] Module 05 (Beginner) - Designing API Rate Limiter.mp4": {
+    "video_id": "v_f6163e8c72ae",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[027] Module 05 (Beginner) - Designing API Rate Limiter",
+    "claim_name": "arpit-bhayani-sd-2026-027-beginner-designing-api-rate-limiter",
+    "claim_id": "40615f2c0daa83b9f69bc9ded8ffbf434d2efc28",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-027-beginner-designing-api-rate-limiter:40615f2c0daa83b9f69bc9ded8ffbf434d2efc28",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-027-beginner-designing-api-rate-limiter/40615f2c0daa83b9f69bc9ded8ffbf434d2efc28",
+    "uploaded_at": "2026-10-13T16:19:36+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[029] Module 05 (Beginner) - Designing Realtime Abuse Master.mp4": {
+    "video_id": "v_1fac91290528",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[029] Module 05 (Beginner) - Designing Realtime Abuse Master",
+    "claim_name": "arpit-bhayani-sd-2026-029-beginner-designing-realtime-abuse-master",
+    "claim_id": "32c1b947f90f9557ce8a790ffe607db32d2f25cb",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-029-beginner-designing-realtime-abuse-master:32c1b947f90f9557ce8a790ffe607db32d2f25cb",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-029-beginner-designing-realtime-abuse-master/32c1b947f90f9557ce8a790ffe607db32d2f25cb",
+    "uploaded_at": "2026-10-13T16:19:41+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[028] Module 05 (Beginner) - Designing & Scaling Notifications.mp4": {
+    "video_id": "v_fd6c5f086d86",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[028] Module 05 (Beginner) - Designing & Scaling Notifications",
+    "claim_name": "arpit-bhayani-sd-2026-028-beginner-designing-scaling-notifications",
+    "claim_id": "6abd69d9045963aff2a8a7995db0b895101de545",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-028-beginner-designing-scaling-notifications:6abd69d9045963aff2a8a7995db0b895101de545",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-028-beginner-designing-scaling-notifications/6abd69d9045963aff2a8a7995db0b895101de545",
+    "uploaded_at": "2026-10-13T16:20:03+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[030] Module 05 (Beginner) - Designing Tinder Feed.mp4": {
+    "video_id": "v_6fc52a2b27f0",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[030] Module 05 (Beginner) - Designing Tinder Feed",
+    "claim_name": "arpit-bhayani-sd-2026-030-beginner-designing-tinder-feed",
+    "claim_id": "d2f199ba296467f6b9fa0480e4f1d30bd4609771",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-030-beginner-designing-tinder-feed:d2f199ba296467f6b9fa0480e4f1d30bd4609771",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-030-beginner-designing-tinder-feed/d2f199ba296467f6b9fa0480e4f1d30bd4609771",
+    "uploaded_at": "2026-10-13T16:20:37+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[033] Module 06 (Beginner) - Designing GitHub Gists and PasteBin.mp4": {
+    "video_id": "v_2f88e955d9dd",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[033] Module 06 (Beginner) - Designing GitHub Gists and PasteBin",
+    "claim_name": "arpit-bhayani-sd-2026-033-beginner-designing-github-gists-and-pastebin",
+    "claim_id": "fbc9a1f7a7df4a583edfa3484564c5eb0ace25e1",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-033-beginner-designing-github-gists-and-pastebin:fbc9a1f7a7df4a583edfa3484564c5eb0ace25e1",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-033-beginner-designing-github-gists-and-pastebin/fbc9a1f7a7df4a583edfa3484564c5eb0ace25e1",
+    "uploaded_at": "2026-10-13T16:21:49+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[032] Module 06 (Beginner) - Designing URL Shortner.mp4": {
+    "video_id": "v_0d8b58595bcf",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[032] Module 06 (Beginner) - Designing URL Shortner",
+    "claim_name": "arpit-bhayani-sd-2026-032-beginner-designing-url-shortner",
+    "claim_id": "18119d3ccee49fef4febda6838f1e8097cbb3b8a",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-032-beginner-designing-url-shortner:18119d3ccee49fef4febda6838f1e8097cbb3b8a",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-032-beginner-designing-url-shortner/18119d3ccee49fef4febda6838f1e8097cbb3b8a",
+    "uploaded_at": "2026-10-13T16:21:50+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[035] Module 06 (Beginner) - Designing a Recommendation Engine.mp4": {
+    "video_id": "v_ec6aac091ca3",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[035] Module 06 (Beginner) - Designing a Recommendation Engine",
+    "claim_name": "arpit-bhayani-sd-2026-035-beginner-designing-a-recommendation-engine",
+    "claim_id": "0d5150dbb87e85551f847dd0ccd488b77f00b07f",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-035-beginner-designing-a-recommendation-engine:0d5150dbb87e85551f847dd0ccd488b77f00b07f",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-035-beginner-designing-a-recommendation-engine/0d5150dbb87e85551f847dd0ccd488b77f00b07f",
+    "uploaded_at": "2026-10-13T16:22:44+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[034] Module 06 (Beginner) - Designing a Fraud Detection system.mp4": {
+    "video_id": "v_af962ad5bc7a",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[034] Module 06 (Beginner) - Designing a Fraud Detection system",
+    "claim_name": "arpit-bhayani-sd-2026-034-beginner-designing-a-fraud-detection-system",
+    "claim_id": "1be61b0719538b7d507fc721f8804723ce2ad6b4",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-034-beginner-designing-a-fraud-detection-system:1be61b0719538b7d507fc721f8804723ce2ad6b4",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-034-beginner-designing-a-fraud-detection-system/1be61b0719538b7d507fc721f8804723ce2ad6b4",
+    "uploaded_at": "2026-10-13T16:23:05+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[031] Module 06 (Beginner) - Desigining Twitter Trends.mp4": {
+    "video_id": "v_88bedb89eb8d",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[031] Module 06 (Beginner) - Desigining Twitter Trends",
+    "claim_name": "arpit-bhayani-sd-2026-031-beginner-desigining-twitter-trends",
+    "claim_id": "72f0f780995cecd358f7444b277496d3c43382f5",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-031-beginner-desigining-twitter-trends:72f0f780995cecd358f7444b277496d3c43382f5",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-031-beginner-desigining-twitter-trends/72f0f780995cecd358f7444b277496d3c43382f5",
+    "uploaded_at": "2026-10-13T16:24:01+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[036] Module 06 (Beginner) - Designing a Web Crawler.mp4": {
+    "video_id": "v_872866dda80e",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[036] Module 06 (Beginner) - Designing a Web Crawler",
+    "claim_name": "arpit-bhayani-sd-2026-036-beginner-designing-a-web-crawler",
+    "claim_id": "198e3195d41d690e515b343046ef992cc5f371d3",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-036-beginner-designing-a-web-crawler:198e3195d41d690e515b343046ef992cc5f371d3",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-036-beginner-designing-a-web-crawler/198e3195d41d690e515b343046ef992cc5f371d3",
+    "uploaded_at": "2026-10-13T16:24:15+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[037] Module 07 (Advanced #01) - Foundational Topics in System Design - I.mp4": {
+    "video_id": "v_92530ac9e100",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[037] Module 07 (Advanced #01) - Foundational Topics in System Design - I",
+    "claim_name": "arpit-bhayani-sd-2026-037-advanced-01-foundational-topics-in-system-design-i",
+    "claim_id": "03e31f2fd344af46ac6ea75dbdfa4277b55b9fd4",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-037-advanced-01-foundational-topics-in-system-design-i:03e31f2fd344af46ac6ea75dbdfa4277b55b9fd4",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-037-advanced-01-foundational-topics-in-system-design-i/03e31f2fd344af46ac6ea75dbdfa4277b55b9fd4",
+    "uploaded_at": "2026-10-13T16:30:49+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[038] Module 07 (Advanced #02) - Foundational Topics in System Design - II.mp4": {
+    "video_id": "v_1bcc7d707290",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[038] Module 07 (Advanced #02) - Foundational Topics in System Design - II",
+    "claim_name": "arpit-bhayani-sd-2026-038-advanced-02-foundational-topics-in-system-design-ii",
+    "claim_id": "a9fcb58d2b6161a8549151265cb29d5c815702fd",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-038-advanced-02-foundational-topics-in-system-design-ii:a9fcb58d2b6161a8549151265cb29d5c815702fd",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-038-advanced-02-foundational-topics-in-system-design-ii/a9fcb58d2b6161a8549151265cb29d5c815702fd",
+    "uploaded_at": "2026-10-13T16:34:52+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[039] Module 07 (Advanced #03) - Relational Databases.mp4": {
+    "video_id": "v_bae5ef4172e2",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[039] Module 07 (Advanced #03) - Relational Databases",
+    "claim_name": "arpit-bhayani-sd-2026-039-advanced-03-relational-databases",
+    "claim_id": "1b7d38ac7cbfcac433cde09475f4d212450e3e3d",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-039-advanced-03-relational-databases:1b7d38ac7cbfcac433cde09475f4d212450e3e3d",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-039-advanced-03-relational-databases/1b7d38ac7cbfcac433cde09475f4d212450e3e3d",
+    "uploaded_at": "2026-10-13T16:41:54+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[040] Module 07 (Advanced #04) - Non-relational Databases.mp4": {
+    "video_id": "v_e467aa6b28c1",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[040] Module 07 (Advanced #04) - Non-relational Databases",
+    "claim_name": "arpit-bhayani-sd-2026-040-advanced-04-non-relational-databases",
+    "claim_id": "87a0e89af065454b5b0f60c3908284158e7ff30a",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-040-advanced-04-non-relational-databases:87a0e89af065454b5b0f60c3908284158e7ff30a",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-040-advanced-04-non-relational-databases/87a0e89af065454b5b0f60c3908284158e7ff30a",
+    "uploaded_at": "2026-10-13T16:43:08+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[041] Module 07 (Advanced #05) - Distributed Systems.mp4": {
+    "video_id": "v_0b2ae9e10758",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[041] Module 07 (Advanced #05) - Distributed Systems",
+    "claim_name": "arpit-bhayani-sd-2026-041-advanced-05-distributed-systems",
+    "claim_id": "45d8f90a04a616174aeca0612c1e4295b8c3e23f",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-041-advanced-05-distributed-systems:45d8f90a04a616174aeca0612c1e4295b8c3e23f",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-041-advanced-05-distributed-systems/45d8f90a04a616174aeca0612c1e4295b8c3e23f",
+    "uploaded_at": "2026-10-13T16:49:15+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[042] Module 07 (Advanced #06) - Distributed ID Generators.mp4": {
+    "video_id": "v_8118d92b4b0b",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[042] Module 07 (Advanced #06) - Distributed ID Generators",
+    "claim_name": "arpit-bhayani-sd-2026-042-advanced-06-distributed-id-generators",
+    "claim_id": "3a61d76db035615223612aea1a04ae0abda96498",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-042-advanced-06-distributed-id-generators:3a61d76db035615223612aea1a04ae0abda96498",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-042-advanced-06-distributed-id-generators/3a61d76db035615223612aea1a04ae0abda96498",
+    "uploaded_at": "2026-10-13T16:51:21+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[044] Module 08 (Advanced #08) - Building Social Network - II.mp4": {
+    "video_id": "v_df992c288205",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[044] Module 08 (Advanced #08) - Building Social Network - II",
+    "claim_name": "arpit-bhayani-sd-2026-044-advanced-08-building-social-network-ii",
+    "claim_id": "3a5233166982858478d2195aa2d09a1c322fc319",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-044-advanced-08-building-social-network-ii:3a5233166982858478d2195aa2d09a1c322fc319",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-044-advanced-08-building-social-network-ii/3a5233166982858478d2195aa2d09a1c322fc319",
+    "uploaded_at": "2026-10-13T16:58:21+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[043] Module 08 (Advanced #07) - Building Social Network - I.mp4": {
+    "video_id": "v_4136a7b2a250",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[043] Module 08 (Advanced #07) - Building Social Network - I",
+    "claim_name": "arpit-bhayani-sd-2026-043-advanced-07-building-social-network-i",
+    "claim_id": "d94b945c668a001740851865661b920d20f70c2a",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-043-advanced-07-building-social-network-i:d94b945c668a001740851865661b920d20f70c2a",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-043-advanced-07-building-social-network-i/d94b945c668a001740851865661b920d20f70c2a",
+    "uploaded_at": "2026-10-13T16:59:13+00:00"
+  },
+  "Arpit Bhaiyani - System Design Course/[045] Module 08 (Advanced #09) - Storage Engines - I.mp4": {
+    "video_id": "v_a0b409ced35e",
+    "course": "Arpit Bhaiyani - System Design Course",
+    "title": "[045] Module 08 (Advanced #09) - Storage Engines - I",
+    "claim_name": "arpit-bhayani-sd-2026-045-advanced-09-storage-engines-i",
+    "claim_id": "b69ef2d1c974de50f47d57f298e7f621b4ec58ff",
+    "odysee_url": "https://odysee.com/arpit-bhayani-sd-2026-045-advanced-09-storage-engines-i:b69ef2d1c974de50f47d57f298e7f621b4ec58ff",
+    "stream_url": "https://odysee.com/$/stream/arpit-bhayani-sd-2026-045-advanced-09-storage-engines-i/b69ef2d1c974de50f47d57f298e7f621b4ec58ff",
+    "uploaded_at": "2026-10-13T17:03:43+00:00"
   }
 }
