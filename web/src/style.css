@@ -3464,3 +3464,691 @@ html[data-theme="light"] .momentum-stat-card {
     display: none !important;
   }
 }
+
+
+/* ==========================================================================
+   UNIVERSITY LMS DESIGN SYSTEM (Dribbble 27155177 — Ronas IT)
+   Left Circular Icon Rail + Expandable Studio Sidebar + Mobile Bottom Dock & Drawer
+   ========================================================================== */
+
+:root {
+  --lms-accent: #E54503;
+  --lms-accent-glow: rgba(229, 69, 3, 0.38);
+  --lms-surface: #202020;
+  --lms-canvas: #0D0D0D;
+}
+
+html[data-accent="teal"] {
+  --lms-accent: #0d9488;
+  --lms-accent-glow: rgba(13, 148, 136, 0.38);
+}
+
+html[data-accent="rose"] {
+  --lms-accent: #e11d48;
+  --lms-accent-glow: rgba(225, 29, 72, 0.38);
+}
+
+/* Top Header Bar */
+.site-header.lms-top-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 120 !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  padding: 0 28px 0 18px !important;
+  background: rgba(13, 13, 13, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+}
+
+.lms-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  min-width: 0 !important;
+}
+
+.brand .lms-floral-mark {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+  background: rgba(229, 69, 3, 0.14) !important;
+  color: var(--lms-accent) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(229, 69, 3, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(229, 69, 3, 0.2) !important;
+}
+
+.brand .lms-floral-mark svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.lms-breadcrumb {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13px !important;
+  color: #8e8e93 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding-left: 8px !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.lms-breadcrumb .crumb-link {
+  color: #8e8e93 !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease !important;
+}
+
+.lms-breadcrumb .crumb-link:hover {
+  color: #ffffff !important;
+}
+
+.lms-breadcrumb .crumb-sep {
+  color: rgba(255, 255, 255, 0.24) !important;
+}
+
+.lms-breadcrumb .crumb-current {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  max-width: 280px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.lms-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Header Quick Search Pill (Dribbble 27155177) */
+.lms-header-search {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 40px !important;
+  width: 220px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  background: #202020 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  color: #8e8e93 !important;
+  transition: border-color 0.18s ease, width 0.2s ease !important;
+}
+
+.lms-header-search:focus-within {
+  border-color: var(--lms-accent) !important;
+  width: 250px !important;
+  color: #ffffff !important;
+}
+
+.lms-header-search svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex-shrink: 0 !important;
+}
+
+.lms-header-search input {
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.lms-header-search input::placeholder {
+  color: #71717a !important;
+}
+
+/* Circular Header Icon Buttons (Bell & Settings Gear) */
+.lms-circle-icon-btn {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  border-radius: 50% !important;
+  background: #202020 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  color: #e4e4e7 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+}
+
+.lms-circle-icon-btn:hover {
+  background: #2a2a2e !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  transform: translateY(-1px) !important;
+}
+
+.lms-circle-icon-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.account-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #27272a, #18181b) !important;
+  border: 2px solid var(--lms-accent) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 0 12px var(--lms-accent-glow) !important;
+}
+
+/* Hide mobile-only controls on desktop */
+@media (min-width: 901px) {
+  .mobile-only-btn,
+  .mobile-more-trigger,
+  .mobile-nav-backdrop {
+    display: none !important;
+  }
+
+  /* Desktop Left Vertical Icon Rail (Normal Mode — Dribbble 27155177) */
+  #primary-nav.lms-left-rail {
+    position: fixed !important;
+    top: 68px !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 82px !important;
+    background: #0d0d0d !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 14px 0 16px !important;
+    gap: 8px !important;
+    z-index: 110 !important;
+    overflow: visible !important;
+    transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+
+  .lms-rail-studio-head {
+    display: none !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item {
+    position: relative !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 50% !important;
+    background: #202020 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: #a1a1aa !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.16s ease !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item::after {
+    display: none !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item:hover {
+    background: #2c2c30 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: var(--lms-accent) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 6px 18px var(--lms-accent-glow) !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  /* Floating Hover Tooltip Pill in Compact Rail Mode */
+  #primary-nav.lms-left-rail .lms-nav-label {
+    position: absolute !important;
+    left: 54px !important;
+    top: 50% !important;
+    transform: translateY(-50%) translateX(-6px) !important;
+    background: #202020 !important;
+    color: #ffffff !important;
+    padding: 6px 13px !important;
+    border-radius: 999px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.15s ease, transform 0.15s ease !important;
+    z-index: 250 !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item:hover .lms-nav-label,
+  #primary-nav.lms-left-rail .lms-nav-item:focus-visible .lms-nav-label {
+    opacity: 1 !important;
+    transform: translateY(-50%) translateX(0) !important;
+  }
+
+  .lms-rail-bottom {
+    margin-top: auto !important;
+    padding-top: 8px !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .lms-rail-exit-btn {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: #202020 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: #a1a1aa !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.16s ease !important;
+  }
+
+  .lms-rail-exit-btn:hover {
+    background: #2c2c30 !important;
+    color: #ffffff !important;
+    border-color: var(--lms-accent) !important;
+  }
+
+  .lms-rail-exit-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .app-layout-shell {
+    padding-left: 82px !important;
+    transition: padding-left 0.22s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+
+  /* ========================================================================
+     ACADEMY STUDIO MODE (Expanded Left Sidebar with Full Labels)
+     ======================================================================== */
+  body.academy-studio-mode #primary-nav.lms-left-rail {
+    width: 244px !important;
+    align-items: stretch !important;
+    padding: 14px 14px 18px !important;
+    gap: 5px !important;
+    background: #111116 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  body.academy-studio-mode .lms-rail-studio-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 2px 6px 10px !important;
+    margin-bottom: 4px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item {
+    width: 100% !important;
+    height: 39px !important;
+    min-height: 39px !important;
+    border-radius: 12px !important;
+    justify-content: flex-start !important;
+    padding: 0 12px !important;
+    gap: 12px !important;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item:hover {
+    background: #202020 !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: rgba(229, 69, 3, 0.16) !important;
+    border-color: rgba(229, 69, 3, 0.42) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] .lms-nav-icon {
+    color: var(--lms-accent) !important;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-label {
+    position: static !important;
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    padding-left: 244px !important;
+  }
+}
+
+/* ==========================================================================
+   MOBILE & TABLET MENU MANAGEMENT (@media max-width: 900px)
+   Bottom Fixed Navigation Dock + 1-Tap Full 3-Column Menu Sheet
+   ========================================================================== */
+@media (max-width: 900px) {
+  .site-header.lms-top-header {
+    height: 60px !important;
+    min-height: 60px !important;
+    padding: 0 12px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .lms-breadcrumb,
+  .lms-header-search,
+  #header-bell-btn,
+  #account-name,
+  .lms-rail-studio-head,
+  .lms-rail-bottom {
+    display: none !important;
+  }
+
+  .brand-wordmark {
+    font-size: 16px !important;
+  }
+
+  #workspace-mode-toggle span {
+    display: none !important;
+  }
+
+  #workspace-mode-toggle {
+    padding: 0 !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+  }
+
+  .lms-circle-icon-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+  }
+
+  .app-layout-shell {
+    padding-left: 0 !important;
+    padding-bottom: 76px !important;
+  }
+
+  /* Default Mobile Bottom Navigation Bar */
+  #primary-nav.lms-left-rail {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    background: rgba(13, 13, 13, 0.96) !important;
+    backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 0 6px !important;
+    gap: 2px !important;
+    z-index: 950 !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.mobile-menu-open) #primary-nav.lms-left-rail .lms-secondary-mobile {
+    display: none !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item {
+    flex: 1 1 0 !important;
+    height: 52px !important;
+    min-width: 0 !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #9ca3af !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 4px 2px !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item::after {
+    display: none !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    color: var(--lms-accent) !important;
+    background: rgba(229, 69, 3, 0.12) !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon {
+    width: 20px !important;
+    height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-label {
+    position: static !important;
+    opacity: 1 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  /* Expanded Full Mobile Menu Sheet (when Hamburger or More is tapped) */
+  .mobile-nav-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.72) !important;
+    backdrop-filter: blur(6px) !important;
+    z-index: 940 !important;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail {
+    height: auto !important;
+    max-height: 82vh !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 20px 14px 26px !important;
+    background: #141418 !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-top: 1px solid rgba(229, 69, 3, 0.45) !important;
+    box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.92) !important;
+    overflow-y: auto !important;
+    z-index: 960 !important;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item {
+    height: 72px !important;
+    background: #202020 !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 16px !important;
+    gap: 6px !important;
+    color: #e4e4e7 !important;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: rgba(229, 69, 3, 0.18) !important;
+    border-color: var(--lms-accent) !important;
+    color: #ffffff !important;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-label {
+    font-size: 11.5px !important;
+  }
+}
+
+/* ==========================================================================
+   DRIBBBLE 27155177 CLASSROOM COLORED TOPIC PILLS & DARK CHARCOAL CARDS
+   ========================================================================== */
+.lesson-badge-pill.pill-terracotta {
+  background: rgba(229, 69, 3, 0.18) !important;
+  color: #ff8a5c !important;
+  border: 1px solid rgba(229, 69, 3, 0.32) !important;
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+}
+
+.lesson-badge-pill.pill-purple {
+  background: rgba(139, 92, 246, 0.18) !important;
+  color: #c4b5fd !important;
+  border: 1px solid rgba(139, 92, 246, 0.32) !important;
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+}
+
+.lesson-badge-pill.pill-emerald {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+}
+
+.lesson-badge-pill.pill-ocean {
+  background: rgba(14, 165, 233, 0.16) !important;
+  color: #7dd3fc !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+}
+
+
+/* Fix Academy Studio full-width workspace & hide mobile-more-btn on desktop */
+@media (min-width: 901px) {
+  #primary-nav.lms-left-rail #mobile-more-btn,
+  #primary-nav.lms-left-rail .mobile-more-trigger {
+    display: none !important;
+  }
+
+  .app-layout-shell,
+  body.academy-studio-mode .app-layout-shell {
+    display: block !important;
+    grid-template-columns: none !important;
+    width: 100% !important;
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    padding-left: 244px !important;
+  }
+
+  body.academy-studio-mode .workspace {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 24px 32px !important;
+  }
+}
+
+/* Fix single-row mobile top header (no wrapping onto 2 lines) */
+@media (max-width: 900px) {
+  .site-header.lms-top-header {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+
+  .site-header.lms-top-header .lms-header-left {
+    width: auto !important;
+    flex: 0 1 auto !important;
+    gap: 10px !important;
+  }
+
+  .site-header.lms-top-header .account.lms-header-right {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .site-header.lms-top-header #logout {
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+    min-height: 32px !important;
+  }
+}
+
+
+@media (max-width: 640px) {
+  #workspace-mode-toggle,
+  #header-gear-btn {
+    display: none !important;
+  }
+}

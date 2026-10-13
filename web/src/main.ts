@@ -314,49 +314,107 @@ function renderApp(account: User): void {
   selectedLesson = null;
   lessons = [];
   app.innerHTML = `
-    <header class="site-header">
-      <button id="home" class="brand"><span class="brand-mark" aria-hidden="true">F</span>CourseForge</button>
-      <nav class="primary-navigation" aria-label="Main navigation">
-        <button id="nav-home" data-catalog-view="home">Home</button>
-        <button id="nav-courses" data-catalog-view="courses">Courses</button>
-        <button id="nav-saved" data-catalog-view="saved">My List</button>
-        <button id="nav-library" data-catalog-view="library">Library</button>
-        <button id="nav-planner" data-catalog-view="planner">Daily Plan</button>
-        <button id="nav-history" data-catalog-view="history">History</button>
-        <button id="nav-reviews" data-catalog-view="reviews">Review Deck</button>
-        <button id="nav-tutor" data-catalog-view="tutor">AI Tutor</button>
-        <button id="nav-labs" data-catalog-view="labs">Labs</button>
-        <button id="nav-paths" data-catalog-view="paths">Roadmaps</button>
-        <button id="nav-settings" data-catalog-view="settings">Settings</button>
-        ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin">Admin</button>' : ''}
-      </nav>
-      <div class="account"><button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" title="Switch between Normal Mode and Academy Studio Mode"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span id="workspace-mode-label">Academy Studio</span></button><span class="account-avatar" aria-hidden="true"></span><span id="account-name"></span><button id="logout" class="button quiet">Sign out</button></div>
+    <header class="site-header lms-top-header">
+      <div class="lms-header-left">
+        <button id="mobile-menu-toggle" type="button" class="lms-circle-icon-btn mobile-only-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
+        </button>
+        <button id="home" class="brand" aria-label="CourseForge">
+          <span class="brand-mark lms-floral-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 16c-3-6.5-9.5-6.5-9.5-1S13 20 16 16z"/><path d="M16 16c6.5-3 6.5-9.5 1-9.5S12 13 16 16z"/><path d="M16 16c3 6.5 9.5 6.5 9.5 1S19 12 16 16z"/><path d="M16 16c-6.5 3-6.5 9.5-1 9.5S20 19 16 16z"/><circle cx="16" cy="16" r="2.2" fill="currentColor"/></svg>
+          </span>
+          <span class="brand-wordmark">CourseForge</span>
+        </button>
+        <div id="header-breadcrumb" class="lms-breadcrumb" aria-label="Current location">
+          <span class="crumb-link" id="crumb-home">Home</span>
+          <span class="crumb-sep" aria-hidden="true">/</span>
+          <span class="crumb-link" id="crumb-section">Courses</span>
+          <span class="crumb-sep" aria-hidden="true">/</span>
+          <span id="crumb-current" class="crumb-current">2026 Masterclass Catalog</span>
+        </div>
+      </div>
+      <div class="account lms-header-right">
+        <div class="lms-header-search" id="header-quick-search-wrap">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
+          <input id="header-quick-search" type="search" placeholder="Search..." aria-label="Quick catalog filter" autocomplete="off" />
+        </div>
+        <button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" title="Switch between Normal Mode (Icon Rail) and Academy Studio Mode (Expanded Sidebar)">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span id="workspace-mode-label">Academy Studio</span>
+        </button>
+        <button id="header-bell-btn" type="button" class="lms-circle-icon-btn" aria-label="Open daily plan notifications" title="Daily Plan &amp; Schedule">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <button id="header-gear-btn" type="button" class="lms-circle-icon-btn" aria-label="Open studio settings" title="Studio Settings">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <span class="account-avatar" aria-hidden="true"></span>
+        <span id="account-name"></span>
+        <button id="logout" class="button quiet">Sign out</button>
+      </div>
     </header>
+    <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" hidden></div>
     <div class="app-layout-shell">
-      <aside id="academy-sidebar" class="academy-sidebar" aria-label="Academy Studio Navigation" hidden>
-        <div class="academy-side-head">
+      <nav id="primary-nav" class="primary-navigation lms-left-rail" aria-label="Main navigation">
+        <div class="lms-rail-studio-head">
           <span class="academy-badge-pill">ACADEMY STUDIO</span>
-          <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal Mode ↗</button>
+          <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal ↗</button>
         </div>
-        <div class="academy-side-group">WORKSPACE</div>
-        <div class="academy-side-nav">
-          <button type="button" class="academy-side-btn active" data-studio-nav="home">Home / Continue</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="courses">All Courses</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="library">Course Library</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="planner">Daily Plan</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="history">Watch History</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="saved">My List</button>
+        <button id="nav-home" data-catalog-view="home" class="lms-nav-item">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/><path d="M9 16h6"/></svg></span>
+          <span class="lms-nav-label">Home</span>
+        </button>
+        <button id="nav-courses" data-catalog-view="courses" class="lms-nav-item">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg></span>
+          <span class="lms-nav-label">Courses</span>
+        </button>
+        <button id="nav-saved" data-catalog-view="saved" class="lms-nav-item">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="lms-nav-label">My List</span>
+        </button>
+        <button id="nav-library" data-catalog-view="library" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+          <span class="lms-nav-label">Library</span>
+        </button>
+        <button id="nav-planner" data-catalog-view="planner" class="lms-nav-item">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></span>
+          <span class="lms-nav-label">Daily Plan</span>
+        </button>
+        <button id="nav-history" data-catalog-view="history" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span>
+          <span class="lms-nav-label">History</span>
+        </button>
+        <button id="nav-reviews" data-catalog-view="reviews" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+          <span class="lms-nav-label">Review Deck</span>
+        </button>
+        <button id="nav-tutor" data-catalog-view="tutor" class="lms-nav-item">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3"/><polygon points="22 8 16 12 22 16 22 8"/></svg></span>
+          <span class="lms-nav-label">AI Tutor</span>
+        </button>
+        <button id="nav-labs" data-catalog-view="labs" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>
+          <span class="lms-nav-label">Labs</span>
+        </button>
+        <button id="nav-paths" data-catalog-view="paths" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
+          <span class="lms-nav-label">Roadmaps</span>
+        </button>
+        <button id="nav-settings" data-catalog-view="settings" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="lms-nav-label">Settings</span>
+        </button>
+        ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin" class="lms-nav-item lms-secondary-mobile"><span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="lms-nav-label">Admin</span></button>' : ''}
+        <button id="mobile-more-btn" type="button" class="lms-nav-item mobile-more-trigger" aria-label="More menu options">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg></span>
+          <span class="lms-nav-label">Menu</span>
+        </button>
+        <div class="lms-rail-bottom">
+          <button id="rail-mode-expand" type="button" class="lms-rail-exit-btn" aria-label="Toggle Studio sidebar labels" title="Expand / Collapse Studio Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
         </div>
-        <div class="academy-side-group">STUDIO &amp; PRACTICE</div>
-        <div class="academy-side-nav">
-          <button type="button" class="academy-side-btn" data-studio-nav="reviews">Review Deck</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="tutor">AI Study Partner</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="labs">Cloud IDE Labs</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="paths">Learning Roadmaps</button>
-          <button type="button" class="academy-side-btn" data-studio-nav="settings">Studio Settings</button>
-          ${account.role === 'admin' ? '<button type="button" class="academy-side-btn" data-studio-nav="admin">Command Center</button>' : ''}
-        </div>
-      </aside>
+      </nav>
       <main class="workspace">
       <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
       <section id="catalog" aria-labelledby="catalog-heading">
@@ -405,9 +463,10 @@ function renderApp(account: User): void {
             <div class="lesson-meta-bar">
               <div class="lesson-meta-top">
                 <div class="lesson-meta-badges">
-                  <span id="lesson-module-badge" class="lesson-badge-pill accent">MODULE 1</span>
-                  <span id="lesson-duration-badge" class="lesson-badge-pill">Lecture</span>
-                  <span id="coverage" class="lesson-badge-pill coverage">0% watched</span>
+                  <span id="lesson-module-badge" class="lesson-badge-pill pill-terracotta">MODULE 1</span>
+                  <span id="lesson-category-badge" class="lesson-badge-pill pill-purple">Engineering</span>
+                  <span id="lesson-duration-badge" class="lesson-badge-pill pill-emerald">Studio Lecture</span>
+                  <span id="coverage" class="lesson-badge-pill pill-ocean coverage">0% watched</span>
                 </div>
                 <div class="lesson-progress-container">
                   <div class="lesson-progress-track">
@@ -731,6 +790,53 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   on('#sidebar-normal-mode', () => setWorkspaceMode('normal'));
   on('#mode-normal-btn', () => setWorkspaceMode('normal'));
   on('#mode-studio-btn', () => setWorkspaceMode('studio'));
+  on('#rail-mode-expand', () => {
+    const cur = document.body.classList.contains('academy-studio-mode');
+    setWorkspaceMode(cur ? 'normal' : 'studio');
+  });
+  on('#header-bell-btn', () => { void showPlanner(); });
+  on('#header-gear-btn', () => { void showSettings(); });
+  on('#crumb-home', () => { void loadCatalog(false, 'home'); });
+  on('#crumb-section', () => { void loadCatalog(false, 'courses'); });
+  const closeMobileMenu = () => {
+    document.body.classList.remove('mobile-menu-open');
+    document.querySelector('#mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
+    const bd = document.querySelector<HTMLElement>('#mobile-nav-backdrop');
+    if (bd) bd.hidden = true;
+  };
+  const toggleMobileMenu = () => {
+    const open = document.body.classList.toggle('mobile-menu-open');
+    document.querySelector('#mobile-menu-toggle')?.setAttribute('aria-expanded', String(open));
+    const bd = document.querySelector<HTMLElement>('#mobile-nav-backdrop');
+    if (bd) bd.hidden = !open;
+  };
+  on('#mobile-menu-toggle', toggleMobileMenu);
+  on('#mobile-more-btn', toggleMobileMenu);
+  on('#mobile-nav-backdrop', closeMobileMenu);
+  for (const navBtn of document.querySelectorAll<HTMLButtonElement>('#primary-nav [data-catalog-view]')) {
+    navBtn.addEventListener('click', closeMobileMenu, { signal });
+  }
+  const quickSearch = document.querySelector<HTMLInputElement>('#header-quick-search');
+  if (quickSearch) {
+    quickSearch.addEventListener('input', () => {
+      const catalogEl = document.querySelector<HTMLElement>('#catalog');
+      if (catalogEl && catalogEl.hidden) {
+        void loadCatalog(false, 'courses').then(() => {
+          const cs = document.querySelector<HTMLInputElement>('#course-search');
+          if (cs) {
+            cs.value = quickSearch.value;
+            cs.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+      } else {
+        const cs = document.querySelector<HTMLInputElement>('#course-search');
+        if (cs) {
+          cs.value = quickSearch.value;
+          cs.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }, { signal });
+  }
   window.addEventListener('courseforge:workspace-mode', ((e: CustomEvent<'normal' | 'studio'>) => {
     setWorkspaceMode(e.detail);
   }) as EventListener, { signal });
@@ -928,8 +1034,25 @@ function setActiveNav(name: string): void {
     if (link.getAttribute('data-catalog-view') === name) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
-  for (const sbtn of document.querySelectorAll('[data-studio-nav]')) {
-    sbtn.classList.toggle('active', sbtn.getAttribute('data-studio-nav') === name);
+  const crumbSec = document.querySelector<HTMLElement>('#crumb-section');
+  const crumbCur = document.querySelector<HTMLElement>('#crumb-current');
+  const map: Record<string, [string, string]> = {
+    home: ['Discovery', '2026 Masterclass Catalog'],
+    courses: ['Courses', 'All Engineering Tracks'],
+    saved: ['Courses', 'My Saved List'],
+    library: ['Workspace', 'Course Library'],
+    planner: ['Workspace', 'Daily Plan & Schedule'],
+    history: ['Workspace', 'Watch History'],
+    reviews: ['Studio', 'Spaced Repetition Deck'],
+    tutor: ['Studio', 'AI Study Partner'],
+    labs: ['Studio', 'Cloud IDE Labs'],
+    paths: ['Studio', 'Learning Roadmaps'],
+    settings: ['Studio', 'Studio Settings'],
+    admin: ['Studio', 'Command Center'],
+  };
+  if (name && map[name]) {
+    if (crumbSec) crumbSec.textContent = map[name]![0];
+    if (crumbCur) crumbCur.textContent = map[name]![1];
   }
 }
 
@@ -1122,6 +1245,12 @@ async function loadCourse(id: string, preview = true): Promise<void> {
     required<HTMLElement>('#classroom').hidden = false;
     setActiveNav('');
     required('#course-name').textContent = response.course.title;
+    const cSec = document.querySelector<HTMLElement>('#crumb-section');
+    const cCur = document.querySelector<HTMLElement>('#crumb-current');
+    if (cSec) cSec.textContent = response.course.category || 'Masterclass';
+    if (cCur) cCur.textContent = response.course.title;
+    const catBadge = document.querySelector<HTMLElement>('#lesson-category-badge');
+    if (catBadge) catBadge.textContent = response.course.category || 'Engineering';
     required('#lesson-title').textContent = 'Choose a lesson';
     required('#lesson-description').textContent = response.course.description || '';
     required<HTMLElement>('#materials').hidden = true;
