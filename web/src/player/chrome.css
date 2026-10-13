@@ -718,3 +718,276 @@
     margin: 10px auto 4px;
   }
 }
+
+/* ==========================================================================
+   CRITICAL FIXES: LINE-HEIGHT RESET, TIMELINE DOCKING, POPOVER Z-INDEX & MOBILE
+   ========================================================================== */
+
+/* 1. Reset Media Chrome's :host { line-height: 0 } so text & badges never overlap or collapse */
+.player-enhanced media-controller,
+.player-enhanced media-controller * {
+  line-height: 1.35 !important;
+  box-sizing: border-box;
+}
+
+/* Ensure [hidden] always hides flex/grid popovers and overlays */
+.player-enhanced .cinema-frosted-popover[hidden],
+.player-enhanced .player-shortcuts-popover[hidden],
+.player-enhanced .player-hud-pill[hidden],
+.player-enhanced .cinema-ripple[hidden],
+.player-enhanced .timeline-tooltip[hidden] {
+  display: none !important;
+}
+
+/* 2. Fix timeline scrubber: override style.css media-time-range { flex: 1 } in vertical column */
+.player-enhanced media-time-range,
+.player-enhanced .cinema-timeline {
+  flex: 0 0 18px !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  width: calc(100% - 32px) !important;
+  margin: auto 16px 4px 16px !important;
+  padding: 0 4px !important;
+  background: transparent !important;
+  position: relative !important;
+  z-index: 8 !important;
+}
+
+/* 3. Raise bottom control bar stacking context above timeline (8) and center play (10) so popovers never get cut through */
+.player-enhanced .cinema-control-row {
+  position: relative !important;
+  z-index: 15 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+.player-enhanced .cinema-left-group,
+.player-enhanced .cinema-right-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* 4. Fix Speed & Quality Badges and Popovers */
+.player-enhanced .cinema-speed-btn,
+.player-enhanced .cinema-quality-btn {
+  width: auto !important;
+  min-width: 36px !important;
+  padding: 0 4px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.player-enhanced .speed-badge,
+.player-enhanced .quality-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+  min-height: 24px !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+}
+
+.player-enhanced .cinema-speed.sr-only-actionable {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0.001 !important;
+  border: 0 !important;
+  clip: auto !important;
+  z-index: 1 !important;
+  pointer-events: auto !important;
+}
+
+.player-enhanced .cinema-frosted-popover {
+  position: absolute !important;
+  bottom: calc(100% + 10px) !important;
+  right: 0 !important;
+  min-width: 165px !important;
+  background: rgba(12, 14, 22, 0.96) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(139, 92, 246, 0.22) !important;
+  z-index: 40 !important;
+}
+
+.player-enhanced .popover-heading {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  padding: 6px 10px 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-bottom: 4px !important;
+  white-space: nowrap !important;
+}
+
+.player-enhanced .popover-item {
+  line-height: 1.3 !important;
+  padding: 7px 10px !important;
+  font-size: 0.82rem !important;
+  white-space: nowrap !important;
+}
+
+/* ==========================================================================
+   5. MOBILE / PHONE RESPONSIVE PLAYER (Dribbble 18088886)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .player-enhanced .cinema-top-actions {
+    padding: 8px 10px 14px !important;
+  }
+
+  .player-enhanced .cinema-breadcrumb {
+    max-width: 55% !important;
+    font-size: 0.75rem !important;
+    gap: 4px !important;
+  }
+
+  .player-enhanced .cinema-course-crumb,
+  .player-enhanced .cinema-sep {
+    display: none !important;
+  }
+
+  /* Hide desktop-only buttons on phone screens so controls never overflow */
+  .player-enhanced .cinema-zen-btn,
+  .player-enhanced .cinema-top-buttons button[aria-label='Keyboard shortcuts'],
+  .player-enhanced .cinema-left-group button[aria-label='Previous lesson'],
+  .player-enhanced .cinema-left-group button[aria-label='Next lesson'],
+  .player-enhanced .cinema-right-group button[aria-label='A-B Loop repeat'],
+  .player-enhanced .cinema-autoplay-btn,
+  .player-enhanced .cinema-right-group button[aria-label='Picture in picture'],
+  .player-enhanced .cinema-right-group button[aria-label='Toggle theater mode'],
+  .player-enhanced .cinema-volume-slider {
+    display: none !important;
+  }
+
+  .player-enhanced .cinema-center-play {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .player-enhanced .cinema-center-play .svg-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .player-enhanced media-time-range,
+  .player-enhanced .cinema-timeline {
+    flex: 0 0 14px !important;
+    height: 14px !important;
+    min-height: 14px !important;
+    max-height: 14px !important;
+    width: calc(100% - 16px) !important;
+    margin: auto 8px 2px 8px !important;
+    padding: 0 2px !important;
+  }
+
+  .player-enhanced .cinema-control-row {
+    width: calc(100% - 12px) !important;
+    margin: 0 6px 6px 6px !important;
+    min-height: 36px !important;
+    padding: 2px 6px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background: rgba(12, 14, 22, 0.92) !important;
+    gap: 2px !important;
+  }
+
+  .player-enhanced .cinema-left-group,
+  .player-enhanced .cinema-right-group {
+    gap: 2px !important;
+  }
+
+  .player-enhanced .cinema-button {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+
+  .player-enhanced .cinema-button .svg-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .player-enhanced .cinema-time-btn {
+    font-size: 0.68rem !important;
+    padding: 2px 4px !important;
+  }
+
+  .player-enhanced .speed-badge,
+  .player-enhanced .quality-badge {
+    min-height: 20px !important;
+    padding: 2px 5px !important;
+    font-size: 0.68rem !important;
+    border-radius: 5px !important;
+  }
+
+  .player-enhanced .cinema-frosted-popover {
+    bottom: calc(100% + 6px) !important;
+    min-width: 130px !important;
+    max-height: 140px !important;
+    overflow-y: auto !important;
+    padding: 5px !important;
+  }
+
+  .player-enhanced .popover-heading {
+    font-size: 0.6rem !important;
+    padding: 4px 6px 5px !important;
+  }
+
+  .player-enhanced .popover-item {
+    padding: 5px 8px !important;
+    font-size: 0.74rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .player-enhanced .cinema-volume-group {
+    display: none !important;
+  }
+}
+
+
+/* Hide center play button and timeline scrubber while a bottom popover is open */
+.player-enhanced.popover-open .cinema-top-actions,
+.player-enhanced.popover-open .cinema-center-play,
+.player-enhanced.popover-open media-time-range,
+.player-enhanced.popover-open .cinema-timeline {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Keep center play button dead-center in the video stage above the bottom dock */
+.player-enhanced .cinema-center-actions {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-bottom: 22px !important;
+  pointer-events: none !important;
+}

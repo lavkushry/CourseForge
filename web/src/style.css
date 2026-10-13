@@ -2739,7 +2739,7 @@ body.in-zen-studio .classroom-grid {
   stroke: currentColor;
 }
 
-/* Make legacy test-harness .player-tools 100% invisible fixed bar so clicks never scroll viewport */
+/* Make legacy test-harness .player-tools 100% invisible fixed bar within mobile viewport width */
 .player-tools,
 .player-tools.sr-only-actionable {
   position: fixed !important;
@@ -2749,13 +2749,13 @@ body.in-zen-studio .classroom-grid {
   justify-content: flex-start !important;
   align-items: center !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   gap: 1px !important;
   padding: 0 !important;
   margin: 0 !important;
   width: auto !important;
   height: auto !important;
-  max-width: none !important;
+  max-width: 300px !important;
   max-height: none !important;
   border: none !important;
   background: transparent !important;
@@ -2770,7 +2770,7 @@ body.in-zen-studio .classroom-grid {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   gap: 1px !important;
 }
 
@@ -2778,13 +2778,17 @@ body.in-zen-studio .classroom-grid {
 .player-tools select,
 .player-tools label,
 .player-tools input {
-  font-size: 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 4px !important;
   line-height: 1 !important;
-  padding: 1px 2px !important;
+  padding: 0 1px !important;
   margin: 0 !important;
-  min-height: 8px !important;
-  height: 8px !important;
-  min-width: 8px !important;
+  min-height: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+  width: auto !important;
+  max-width: 60px !important;
   border: none !important;
   background: transparent !important;
   pointer-events: auto !important;

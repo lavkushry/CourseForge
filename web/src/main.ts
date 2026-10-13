@@ -355,7 +355,6 @@ function renderApp(account: User): void {
       <section id="classroom" class="classroom" hidden>
         <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div>
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
-        <section id="course-certificate-section" class="course-certificate-section" hidden></section>
         <div class="classroom-grid">
           <div class="lesson-column">
             <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. Arrows seek. M mutes. F opens fullscreen. C toggles theater mode. P toggles picture-in-picture. Shift+N next lesson.">
@@ -445,6 +444,7 @@ function renderApp(account: User): void {
             <button id="more-learned" class="button quiet" hidden>More learned badges</button>
           </aside>
         </div>
+        <section id="course-certificate-section" class="course-certificate-section" hidden></section>
       </section>
       <dialog id="episode-dialog" class="episode-dialog" aria-labelledby="episode-heading"><div class="dialog-heading"><h2 id="episode-heading">Course lessons</h2><button id="close-episodes" class="button quiet">Close</button></div><ol id="drawer-lessons"></ol><button id="drawer-more-lessons" class="button quiet" hidden>More lessons</button><button id="drawer-more-learned" class="button quiet" hidden>More learned badges</button></dialog>
     </main>`;
@@ -1069,6 +1069,7 @@ async function loadCourse(id: string, preview = true): Promise<void> {
       certSec.replaceChildren();
     }
     required<HTMLElement>('#lesson-title').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     feedback('');
   } catch (error) { if (!isAbort(error) && navigation.current()) feedback(errorMessage(error), true); }
 }
@@ -1120,7 +1121,11 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     await controller?.open(response.lesson, takeOver);
     const upcoming = nextLesson();
     if (upcoming) void prefetchLesson(upcoming.id);
-    if (!autoplay && navigation.current()) required<HTMLElement>('#player-wrap').focus({ preventScroll: true });
+    if (!autoplay && navigation.current()) {
+      const pw = required<HTMLElement>('#player-wrap');
+      pw.focus({ preventScroll: true });
+      if (pw.getBoundingClientRect().top < 0) { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; window.scrollTo(0, 0); }
+    }
     if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
     feedback('');
   } catch (error) {

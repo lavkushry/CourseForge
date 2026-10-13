@@ -465,6 +465,7 @@ export function mountPlayerChrome(
           externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
         }
         speedPopover.hidden = true;
+        syncPopoverState();
         triggerHud('settings', `${rate}x Speed`);
       }, { signal });
       speedPopover.append(item);
@@ -536,6 +537,7 @@ export function mountPlayerChrome(
         currentQuality = q;
         qualityBadge.textContent = q.startsWith('Auto') ? 'Auto' : q;
         qualityPopover.hidden = true;
+        syncPopoverState();
         triggerHud('quality', `Quality: ${q}`);
       }, { signal });
       qualityPopover.append(item);
@@ -587,11 +589,13 @@ export function mountPlayerChrome(
   document.addEventListener('click', (e) => {
     if (!speedGroup.contains(e.target as Node)) speedPopover.hidden = true;
     if (!qualityGroup.contains(e.target as Node)) qualityPopover.hidden = true;
+    syncPopoverState();
   }, { signal });
 
   // 5. AUTOHIDE & ACTIVITY TRACKING (2.5 seconds)
   let autohideTimer: any = undefined;
   const isPopoverOpen = () => !speedPopover.hidden || !qualityPopover.hidden || !shortcutsPopover.hidden;
+  const syncPopoverState = () => wrap.classList.toggle('popover-open', isPopoverOpen());
 
   const showControls = () => {
     wrap.classList.remove('user-inactive');
@@ -664,6 +668,7 @@ export function mountPlayerChrome(
   }, { signal });
   shortcutsPopover.querySelector('.shortcuts-close')?.addEventListener('click', () => {
     shortcutsPopover.hidden = true;
+    syncPopoverState();
   }, { signal });
 
   const reflect = () => {
@@ -804,6 +809,7 @@ export function mountPlayerChrome(
       speedPopover.hidden = true;
       qualityPopover.hidden = true;
       shortcutsPopover.hidden = true;
+      syncPopoverState();
     }
   }, { signal, capture: true });
 
@@ -841,6 +847,7 @@ export function mountPlayerChrome(
   }, { signal });
 
   const pin = () => {
+    syncPopoverState();
     media.setAttribute('autohide', wrap.contains(document.activeElement) || Boolean(dialog?.open) || isPopoverOpen() ? '-1' : '3');
   };
   wrap.addEventListener('focusin', pin, { signal });
