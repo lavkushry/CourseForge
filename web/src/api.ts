@@ -165,30 +165,31 @@ export class ApiClient implements PlaybackTransport {
     return this.request(`/streaming/my-list/${type}/${encodeURIComponent(id)}`, { method: 'DELETE', ...(signal ? { signal } : {}) });
   }
 
-  course(id: string, signal?: AbortSignal, cursor = ''): Promise<{ course: Course; lessons: Lesson[]; next_cursor?: string | null }> {
+  course(id: string, signal?: AbortSignal, cursor = ''): Promise<{ course: Course; lessons: Lesson[]; next_cursor?: string | null; resume_lesson_id?: string | null }> {
     const query = new URLSearchParams({ limit: '100' });
     if (cursor) query.set('cursor', cursor);
     return this.request(`/courses/${encodeURIComponent(id)}?${query}`, signal ? { signal } : {}).then(parseCourseDetail);
   }
 
-  publicCourse(id: string, signal?: AbortSignal, cursor = ''): Promise<{ course: Course; lessons: Lesson[]; next_cursor?: string | null }> {
+  publicCourse(id: string, signal?: AbortSignal, cursor = ''): Promise<{ course: Course; lessons: Lesson[]; next_cursor?: string | null; resume_lesson_id?: string | null }> {
     const query = new URLSearchParams({ limit: '100' });
     if (cursor) query.set('cursor', cursor);
     return this.request(`/public/courses/${encodeURIComponent(id)}?${query}`, signal ? { signal } : {}).then(parseCourseDetail);
   }
 
-  async courseAll(id: string, signal?: AbortSignal, preview = false): Promise<{ course: Course; lessons: Lesson[] }> {
+  async courseAll(id: string, signal?: AbortSignal, preview = false): Promise<{ course: Course; lessons: Lesson[]; resume_lesson_id?: string | null }> {
     const fn = preview ? this.publicCourse.bind(this) : this.course.bind(this);
     let res = await fn(id, signal);
     const course = res.course;
     const lessons = [...res.lessons];
+    const resume_lesson_id = res.resume_lesson_id ?? null;
     let cursor = res.next_cursor;
     while (cursor && !signal?.aborted) {
       res = await fn(id, signal, cursor);
       lessons.push(...res.lessons);
       cursor = res.next_cursor;
     }
-    return { course, lessons };
+    return { course, lessons, resume_lesson_id };
   }
 
   enroll(id: string, signal?: AbortSignal): Promise<void> {

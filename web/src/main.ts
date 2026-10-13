@@ -591,7 +591,7 @@ function renderApp(account: User): void {
     learningApi,
     getCurrentPosition: () => controller?.position ?? 0,
     seekTo: (sec) => controller?.seek(sec),
-    onPlayLesson: (lesson) => { void loadLesson(lesson); },
+    onPlayLesson: (lesson) => { void loadLesson(lesson, true); },
     onMarkComplete: async (lessonId) => { await markComplete(lessonId); },
   });
   libraryView = new LibraryView({
@@ -937,13 +937,13 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   required<HTMLFormElement>('#search-form').addEventListener('submit', event => event.preventDefault(), { signal });
   on('#play-toggle', () => { if (!video.paused && controller?.owns) controller.pause(); else void controller?.requestPlay(); });
   on('#resume-here', () => { void controller?.requestPlay(); });
-  on('#retry-lesson', () => { if (selectedLesson && controller?.lesson?.id !== selectedLesson.id) void loadLesson(selectedLesson); else void controller?.retry(); });
+  on('#retry-lesson', () => { if (selectedLesson && controller?.lesson?.id !== selectedLesson.id) void loadLesson(selectedLesson, true); else void controller?.retry(); });
   on('#sign-in-again', () => { const previous = controller; void previous?.close().then(() => { if (controller === previous) { controller = null; renderLogin('Sign in again to continue your course.'); } }); });
   on('#return-to-course', () => { if (selectedCourse) void loadCourse(selectedCourse.id, !selectedCourse.enrolled); });
   on('#move-here', () => { void controller?.requestPlay(true); });
   on('#restart', () => controller?.restart());
   on('#cancel-next', () => controller?.cancelNext());
-  on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next); });
+  on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next, true); });
   on('#mark-complete', () => { void markComplete(); });
   on('#save-note-pill', () => {
     const notesEl = document.querySelector<HTMLElement>('#notes');
@@ -1035,7 +1035,7 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
         const index = lessons.findIndex(l => l.id === selectedLesson?.id);
         if (index > 0) {
           const prevLesson = lessons[index - 1];
-          if (prevLesson) void loadLesson(prevLesson);
+          if (prevLesson) void loadLesson(prevLesson, true);
         }
       },
       l: () => setLocked(true),
@@ -1242,7 +1242,7 @@ async function openCourseSyllabus(course: Course): Promise<void> {
       learnedLessons,
       (lesson) => {
         syllabusDialog?.close();
-        void loadCourse(full.course.id, !full.course.enrolled).then(() => loadLesson(lesson));
+        void loadCourse(full.course.id, !full.course.enrolled, lesson.id, true);
       },
       async (c) => {
         const isSaved = discovery?.isSaved(c.id) ?? false;
@@ -1304,7 +1304,7 @@ async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise
 }
 
 async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
-  await loadCourse(courseId, false, lessonId);
+  await loadCourse(courseId, false, lessonId, true);
   if (selectedCourse?.id !== courseId) return;
   const generation = navigationGeneration;
   try {
@@ -1312,12 +1312,12 @@ async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
     if (generation !== navigationGeneration || selectedCourse?.id !== courseId) return;
     if (!lessons.some(value => value.id === lessonId)) lessons.push(lesson);
     if (selectedLesson?.id !== lesson.id) {
-      await loadLesson(lesson);
+      await loadLesson(lesson, true);
     }
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
 }
 
-async function loadCourse(id: string, preview = true, targetLessonId?: string): Promise<void> {
+async function loadCourse(id: string, preview = true, targetLessonId?: string, autoplay = true): Promise<void> {
   const navigation = newNavigation();
   await controller?.close();
   if (!navigation.current()) return;
@@ -1361,9 +1361,10 @@ async function loadCourse(id: string, preview = true, targetLessonId?: string): 
       certSec.replaceChildren();
     }
     if (response.lessons && response.lessons.length > 0) {
-      const targetLesson = (targetLessonId && response.lessons.find(l => l.id === targetLessonId)) || response.lessons[0];
+      const contId = targetLessonId || discovery?.getContinuation(id)?.id || response.resume_lesson_id;
+      const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
       if (targetLesson) {
-        await loadLesson(targetLesson, false);
+        await loadLesson(targetLesson, autoplay);
         return;
       }
     }
@@ -1425,7 +1426,7 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
       pw.focus({ preventScroll: true });
       if (pw.getBoundingClientRect().top < 0) { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; window.scrollTo(0, 0); }
     }
-    if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
+    if (autoplay && navigation.current() && controller?.state === 'ready') await controller.requestPlay();
     feedback('');
   } catch (error) {
     if (!isAbort(error) && navigation.current()) {
@@ -1460,7 +1461,7 @@ function renderLessons(): void {
         const group = element('li', 'lesson-section'); group.append(element('h3', '', section)); drawerList.append(group);
       }
       const item = element('li');
-      const choice = button('', () => { closeEpisodes(); void loadLesson(lesson); }, 'lesson-choice');
+      const choice = button('', () => { closeEpisodes(); void loadLesson(lesson, true); }, 'lesson-choice');
       const number = element('span', 'lesson-number', String(index + 1).padStart(2, '0'));
       const details = element('span', 'lesson-choice-info');
       details.append(element('strong', '', lesson.title), element('span', 'muted', formatTime(lesson.duration_seconds)));

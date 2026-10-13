@@ -97,7 +97,18 @@ export class NativeVideoAdapter implements VideoPort {
     });
   }
 
-  play(): Promise<void> { return this.element.play(); }
+  async play(): Promise<void> {
+    try {
+      await this.element.play();
+    } catch (err: unknown) {
+      if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'NotSupportedError')) {
+        this.element.muted = true;
+        await this.element.play();
+      } else {
+        throw err;
+      }
+    }
+  }
   pause(): void { this.element.pause(); }
 
   seek(position: number): void {

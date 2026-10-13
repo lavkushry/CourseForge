@@ -75,6 +75,9 @@ export class DiscoveryView {
   isSaved(courseId: string): boolean {
     return this.savedIDs.has(courseId);
   }
+  getContinuation(courseId: string): ContinueItem | undefined {
+    return this.continued.find(c => c.course_id === courseId);
+  }
   async activate(signal: AbortSignal, view: CatalogView = 'home'): Promise<void> {
     this.deactivate(); this.scope = new AbortController();
     signal.addEventListener('abort', () => this.deactivate(), { once: true, signal: this.scope.signal });
