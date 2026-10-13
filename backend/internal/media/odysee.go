@@ -325,13 +325,14 @@ func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, acc
 		if !validator.valid(target.URL) {
 			return Target{}, ErrProvider
 		}
-		req, err := http.NewRequestWithContext(ctx, "HEAD", target.URL, nil)
+		req, err := http.NewRequestWithContext(ctx, "GET", target.URL, nil)
 		if err != nil {
 			return Target{}, ErrProvider
 		}
+		req.Header.Set("Range", "bytes=0-0")
 		req.Header.Set("Referer", ref)
 		req.Header.Set("Origin", "https://odysee.com")
-		req.Header.Set("User-Agent", "CourseForge-Go/1")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 		res, err := o.client.Do(req)
 		if err != nil {
 			return Target{}, ErrProvider
@@ -342,10 +343,17 @@ func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, acc
 			if e != nil {
 				return Target{}, ErrProvider
 			}
-			target.URL = next.String()
+			resolvedNext := req.URL.ResolveReference(next).String()
+			if strings.HasSuffix(strings.Split(target.URL, "?")[0], ".mp4") && strings.HasSuffix(strings.Split(resolvedNext, "?")[0], ".m3u8") {
+				return target, nil
+			}
+			target.URL = resolvedNext
 			continue
 		}
-		if res.StatusCode >= 400 || !mediaType(res.Header.Get("Content-Type")) {
+		if res.StatusCode != 200 && res.StatusCode != 206 {
+			return Target{}, ErrProvider
+		}
+		if !mediaType(res.Header.Get("Content-Type")) {
 			return Target{}, ErrProvider
 		}
 		return target, nil

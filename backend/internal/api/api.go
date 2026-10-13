@@ -175,7 +175,12 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lessons := make([]Lesson, 0)
+	var resumeLessonID string
 	if c.Enrolled || p.Role == "admin" {
+		_ = s.Pool.QueryRow(r.Context(), `SELECT lesson_id FROM watch_history WHERE user_id= AND course_id= ORDER BY watched_at DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
+		if resumeLessonID == "" {
+			_ = s.Pool.QueryRow(r.Context(), `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id= AND l.course_id= AND NOT p.completed ORDER BY p.updated_at DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
+		}
 		limit, cursor, ok := pageArgs(w, r)
 		if !ok {
 			return
@@ -212,10 +217,10 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 			mark, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
 			next = nextCursor(string(mark))
 		}
-		httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": next})
+		httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": next, "resume_lesson_id": resumeLessonID})
 		return
 	}
-	httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": ""})
+	httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": "", "resume_lesson_id": ""})
 }
 
 type lessonCursor struct {

@@ -142,9 +142,14 @@ export function parseCourses(value: unknown): { courses: Course[]; next_cursor: 
   return { courses: list(data.courses, 'course list').map(parseCourse), next_cursor: cursor(data.next_cursor) };
 }
 
-export function parseCourseDetail(value: unknown): { course: Course; lessons: Lesson[]; next_cursor: string | null } {
+export function parseCourseDetail(value: unknown): { course: Course; lessons: Lesson[]; next_cursor: string | null; resume_lesson_id: string | null } {
   const data = record(value, 'course detail');
-  return { course: parseCourse(data.course), lessons: list(data.lessons, 'lesson list').map(parseLesson), next_cursor: cursor(data.next_cursor) };
+  return {
+    course: parseCourse(data.course),
+    lessons: list(data.lessons, 'lesson list').map(parseLesson),
+    next_cursor: cursor(data.next_cursor),
+    resume_lesson_id: typeof data.resume_lesson_id === 'string' && data.resume_lesson_id ? data.resume_lesson_id : null,
+  };
 }
 
 export function parseLessonDetail(value: unknown): { lesson: Lesson; progress: Progress | null } {

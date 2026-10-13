@@ -64,7 +64,7 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("POST /api/v1/ai/roadmaps/generate", auth.Require(http.HandlerFunc(s.generateRoadmap)))
 	mux.Handle("GET /api/v1/ai/search", auth.Require(http.HandlerFunc(s.semanticSearch)))
 	mux.Handle("GET /api/v1/ai/lessons/{id}/transcripts", auth.Require(http.HandlerFunc(s.lessonTranscripts)))
-	mux.Handle("GET /api/v1/ai/lessons/{id}/chapters", auth.Require(http.HandlerFunc(s.lessonChapters)))
+	mux.HandleFunc("GET /api/v1/ai/lessons/{id}/chapters", s.lessonChapters)
 	mux.Handle("POST /api/v1/ai/lessons/{id}/classify-split", auth.Require(http.HandlerFunc(s.classifySplit)))
 }
 
