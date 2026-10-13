@@ -91,8 +91,11 @@ export function mountPlayerChrome(
   zenBtn.addEventListener('click', () => {
     const isZen = document.body.classList.toggle('in-zen-studio');
     zenBtn.setAttribute('aria-pressed', String(isZen));
+    zenBtn.classList.toggle('active', isZen);
+    document.querySelector('#mode-normal-btn')?.classList.toggle('active', !isZen);
+    document.querySelector('#mode-studio-btn')?.classList.toggle('active', isZen);
     actions.toggleZen?.();
-    triggerHud('target', isZen ? 'Zen Mode On' : 'Zen Mode Off');
+    triggerHud('target', isZen ? 'Academy Studio On' : 'Normal Mode');
   }, { signal });
 
   const shortcutsBtn = document.createElement('button');

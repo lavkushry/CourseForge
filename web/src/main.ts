@@ -330,14 +330,39 @@ function renderApp(account: User): void {
         <button id="nav-settings" data-catalog-view="settings">Settings</button>
         ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin">Admin</button>' : ''}
       </nav>
-      <div class="account"><span class="account-avatar" aria-hidden="true"></span><span id="account-name"></span><button id="logout" class="button quiet">Sign out</button></div>
+      <div class="account"><button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" title="Switch between Normal Mode and Academy Studio Mode"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span id="workspace-mode-label">Academy Studio</span></button><span class="account-avatar" aria-hidden="true"></span><span id="account-name"></span><button id="logout" class="button quiet">Sign out</button></div>
     </header>
-    <main class="workspace">
+    <div class="app-layout-shell">
+      <aside id="academy-sidebar" class="academy-sidebar" aria-label="Academy Studio Navigation" hidden>
+        <div class="academy-side-head">
+          <span class="academy-badge-pill">ACADEMY STUDIO</span>
+          <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal Mode ↗</button>
+        </div>
+        <div class="academy-side-group">WORKSPACE</div>
+        <div class="academy-side-nav">
+          <button type="button" class="academy-side-btn active" data-studio-nav="home">Home / Continue</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="courses">All Courses</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="library">Course Library</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="planner">Daily Plan</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="history">Watch History</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="saved">My List</button>
+        </div>
+        <div class="academy-side-group">STUDIO &amp; PRACTICE</div>
+        <div class="academy-side-nav">
+          <button type="button" class="academy-side-btn" data-studio-nav="reviews">Review Deck</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="tutor">AI Study Partner</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="labs">Cloud IDE Labs</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="paths">Learning Roadmaps</button>
+          <button type="button" class="academy-side-btn" data-studio-nav="settings">Studio Settings</button>
+          ${account.role === 'admin' ? '<button type="button" class="academy-side-btn" data-studio-nav="admin">Command Center</button>' : ''}
+        </div>
+      </aside>
+      <main class="workspace">
       <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
       <section id="catalog" aria-labelledby="catalog-heading">
         <section id="featured-course" class="featured-course" aria-label="Featured course" hidden></section>
         <section id="continue-section" class="continue-section" aria-labelledby="continue-heading" hidden><div class="row-heading"><h2 id="continue-heading">Right where you left off.</h2><span class="muted">Continue learning</span></div><div id="continue-list" class="continue-row"></div></section>
-        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">The learning collection</span><h1 id="catalog-heading" tabindex="-1">Find your next obsession.</h1><p id="catalog-description" class="muted">Big ideas. Small steps. A world of possibility.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true" class="search-icon-slot"></span><input id="course-search" type="search" maxlength="100" placeholder="Titles, topics, instructors" autocomplete="off" /></div></form></div>
+        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">The learning collection</span><h1 id="catalog-heading" tabindex="-1">Find your next obsession.</h1><p id="catalog-description" class="muted">Big ideas. Small steps. A world of possibility.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true" class="search-icon-slot"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="course-search" type="search" maxlength="100" placeholder="Titles, topics, instructors" autocomplete="off" /></div></form></div>
         <p id="catalog-results" class="catalog-results" role="status" aria-live="polite"></p>
         <div id="course-list" class="course-grid"></div>
         <button id="load-more" class="button" hidden>More courses</button>
@@ -353,7 +378,7 @@ function renderApp(account: User): void {
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom" hidden>
-        <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div>
+        <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span></div><div class="classroom-heading-actions"><div class="classroom-mode-switch" role="group" aria-label="Classroom workspace mode"><button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal Mode</button><button id="mode-studio-btn" type="button" class="mode-seg-btn">Academy Studio</button></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div></div>
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
         <div class="classroom-grid">
           <div class="lesson-column">
@@ -447,7 +472,8 @@ function renderApp(account: User): void {
         <section id="course-certificate-section" class="course-certificate-section" hidden></section>
       </section>
       <dialog id="episode-dialog" class="episode-dialog" aria-labelledby="episode-heading"><div class="dialog-heading"><h2 id="episode-heading">Course lessons</h2><button id="close-episodes" class="button quiet">Close</button></div><ol id="drawer-lessons"></ol><button id="drawer-more-lessons" class="button quiet" hidden>More lessons</button><button id="drawer-more-learned" class="button quiet" hidden>More learned badges</button></dialog>
-    </main>`;
+      </main>
+    </div>`;
   required('#account-name').textContent = account.name || account.email;
   required('.account-avatar').textContent = (account.name || account.email).slice(0, 1).toUpperCase();
   discovery?.deactivate();
@@ -636,6 +662,12 @@ function renderApp(account: User): void {
     },
     pageScope.signal
   );
+  try {
+    const savedTheme = localStorage.getItem('courseforge_theme');
+    if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+    const savedAccent = localStorage.getItem('courseforge_accent');
+    if (savedAccent) document.documentElement.dataset.accent = savedAccent;
+  } catch {}
   restoreBrowserPreferences(video);
   void api.preferences(pageScope.signal).then(value => preferences?.initialize(value)).catch(error => {
     if (!isAbort(error)) feedback(`Could not load player preferences: ${errorMessage(error)}`, true);
@@ -692,6 +724,23 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   on('#nav-labs', () => { void showLabs(); });
   on('#nav-paths', () => { void showPaths(); });
   on('#nav-settings', () => { void showSettings(); });
+  on('#workspace-mode-toggle', () => {
+    const cur = document.body.classList.contains('academy-studio-mode') || document.body.classList.contains('in-zen-studio');
+    setWorkspaceMode(cur ? 'normal' : 'studio');
+  });
+  on('#sidebar-normal-mode', () => setWorkspaceMode('normal'));
+  on('#mode-normal-btn', () => setWorkspaceMode('normal'));
+  on('#mode-studio-btn', () => setWorkspaceMode('studio'));
+  window.addEventListener('courseforge:workspace-mode', ((e: CustomEvent<'normal' | 'studio'>) => {
+    setWorkspaceMode(e.detail);
+  }) as EventListener, { signal });
+  for (const sbtn of document.querySelectorAll<HTMLButtonElement>('[data-studio-nav]')) {
+    sbtn.addEventListener('click', () => {
+      const target = sbtn.getAttribute('data-studio-nav');
+      const navBtn = document.querySelector<HTMLButtonElement>(`[data-catalog-view="${target}"]`);
+      navBtn?.click();
+    }, { signal });
+  }
   if (user?.role === 'admin') {
     on('#nav-admin', () => { void showAdmin(); });
   }
@@ -854,10 +903,33 @@ function hideAllWorkspaces(): void {
   required<HTMLElement>('#settings-panel').hidden = true;
 }
 
+function setWorkspaceMode(mode: 'normal' | 'studio'): void {
+  const isStudio = mode === 'studio';
+  document.documentElement.dataset.workspaceMode = mode;
+  document.body.classList.toggle('academy-studio-mode', isStudio);
+  if (!isStudio) {
+    document.body.classList.remove('in-zen-studio');
+    document.querySelector('#classroom')?.classList.remove('theater');
+    document.querySelector('#theater')?.setAttribute('aria-pressed', 'false');
+  }
+  const side = document.querySelector<HTMLElement>('#academy-sidebar');
+  if (side) side.hidden = !isStudio;
+  const toggleBtn = document.querySelector<HTMLButtonElement>('#workspace-mode-toggle');
+  const toggleLbl = document.querySelector<HTMLElement>('#workspace-mode-label');
+  if (toggleBtn) toggleBtn.setAttribute('aria-pressed', String(isStudio));
+  if (toggleLbl) toggleLbl.textContent = isStudio ? 'Normal Mode' : 'Academy Studio';
+  document.querySelector('#mode-normal-btn')?.classList.toggle('active', !isStudio);
+  document.querySelector('#mode-studio-btn')?.classList.toggle('active', isStudio);
+  try { localStorage.setItem('courseforge_workspace_mode', mode); } catch {}
+}
+
 function setActiveNav(name: string): void {
   for (const link of document.querySelectorAll('[data-catalog-view]')) {
     if (link.getAttribute('data-catalog-view') === name) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
+  }
+  for (const sbtn of document.querySelectorAll('[data-studio-nav]')) {
+    sbtn.classList.toggle('active', sbtn.getAttribute('data-studio-nav') === name);
   }
 }
 

@@ -1464,7 +1464,6 @@
 
 /* Zen Study Studio Mode */
 body.in-zen-studio .site-header,
-body.in-zen-studio .classroom-heading,
 body.in-zen-studio .catalog-footer,
 body.in-zen-studio .shortcuts,
 body.in-zen-studio .materials {
@@ -2792,4 +2791,676 @@ body.in-zen-studio .classroom-grid {
   border: none !important;
   background: transparent !important;
   pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   COMPREHENSIVE UI POLISH V5 — SEARCH, WEEKLY CALENDAR, FOCUS, HABITS,
+   LIBRARY, ROADMAPS, THEATER MODE, ACADEMY STUDIO SIDEBAR & THEMES
+   ========================================================================== */
+
+/* 1. Fix Search Courses Double-Border Box (media_1791870368008_50a5624b.png) */
+.catalog-search > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 0 14px !important;
+  background: #121521 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.catalog-search > div:focus-within {
+  border-color: var(--accent-primary, #8b5cf6) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.22) !important;
+}
+
+.catalog-search .search-icon-slot {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #8e95b0 !important;
+  font-size: 1rem !important;
+}
+
+.catalog-search .search-icon-slot .svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.catalog-search input,
+.catalog-search input:focus,
+.catalog-search input:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 44px !important;
+  padding: 8px 0 !important;
+  font-size: 0.88rem !important;
+  color: #fff !important;
+}
+
+/* 2. Fix Theater Mode Alignment & Study Rail Stacking (media_1791870368027_970bae22.png) */
+.classroom.theater .classroom-grid,
+.theater .classroom-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 24px !important;
+}
+
+.classroom.theater .lesson-column,
+.theater .lesson-column {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.classroom.theater .lesson-sidebar.study-rail,
+.theater .lesson-sidebar.study-rail {
+  display: flex !important;
+  position: static !important;
+  width: 100% !important;
+  height: 520px !important;
+  max-height: 520px !important;
+}
+
+/* 3. Unified Dark Glass Inputs & Selects Across All Panels */
+.planning-panel input:not([type="checkbox"]):not([type="radio"]),
+.planning-panel select,
+.library-panel input:not([type="checkbox"]),
+.library-panel select,
+.settings-panel select,
+.paths-panel input:not([type="checkbox"]),
+.new-path-dialog input,
+.new-path-dialog select,
+.form-input,
+.text-input {
+  background: #121522 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 10px !important;
+  color: #f3f5fc !important;
+  padding: 10px 14px !important;
+  font-size: 0.88rem !important;
+  font-family: inherit !important;
+  min-height: 42px !important;
+  outline: none !important;
+  color-scheme: dark;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.planning-panel input:not([type="checkbox"]):focus,
+.planning-panel select:focus,
+.library-panel input:not([type="checkbox"]):focus,
+.library-panel select:focus,
+.settings-panel select:focus,
+.form-input:focus,
+.text-input:focus {
+  border-color: var(--accent-primary, #8b5cf6) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+}
+
+/* 4. Fix Daily Plan -> Weekly Calendar (media_1791870368026_f773d9bf.png & audit_weekly.png) */
+.weekly-setup-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  padding: 26px !important;
+}
+
+.weekly-setup-card > label[for="week-containing"] {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #9ba1bc !important;
+  margin-bottom: -12px !important;
+}
+
+.weekly-setup-card > input#week-containing {
+  max-width: 240px !important;
+  font-weight: 600 !important;
+}
+
+.weekday-budgets-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.weekday-box {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 14px 12px !important;
+  background: #0b0d15 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 12px !important;
+  transition: border-color 0.2s ease, transform 0.2s ease !important;
+}
+
+.weekday-box:hover {
+  border-color: rgba(139, 92, 246, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.weekday-box label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: #a5acc7 !important;
+  line-height: 1.3 !important;
+}
+
+.weekday-box input[type="number"] {
+  width: 100% !important;
+  text-align: center !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  padding: 8px 6px !important;
+  background: #141826 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+  color: #fff !important;
+}
+
+.weekly-setup-card > button.button.primary {
+  align-self: flex-start !important;
+  padding: 12px 24px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+}
+
+.weekly-days-display {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+  gap: 14px !important;
+  margin-top: 20px !important;
+}
+
+.week-day-display-card {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 18px !important;
+  background: #10131e !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+}
+
+.week-day-display-card strong {
+  font-size: 0.96rem !important;
+  color: #fff !important;
+}
+
+.rest-day-badge {
+  display: inline-flex !important;
+  align-self: flex-start !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* 5. Fix Daily Plan -> Focus Timer (audit_focus.png) */
+.focus-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 18px !important;
+  padding: 36px 28px !important;
+  max-width: 680px !important;
+}
+
+.focus-digital-clock {
+  font-size: clamp(3rem, 7vw, 4.5rem) !important;
+  font-weight: 800 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.03em !important;
+  color: #fff !important;
+  line-height: 1 !important;
+  padding: 18px 36px !important;
+  border-radius: 20px !important;
+  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.22), rgba(11, 13, 21, 0.95)) !important;
+  border: 1px solid rgba(139, 92, 246, 0.32) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.focus-status-display {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #c4b5fd !important;
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  background: rgba(139, 92, 246, 0.16) !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
+}
+
+.focus-actions-row,
+.focus-start-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.focus-start-row label {
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #b0b6ce !important;
+}
+
+.focus-start-row input#focus-duration {
+  width: 100px !important;
+  text-align: center !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+}
+
+/* 6. Fix Daily Plan -> Habits & Insights (audit_habits.png) */
+.habits-card {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  padding: 28px !important;
+  max-width: 680px !important;
+}
+
+.habits-card > label {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: #a8b0ca !important;
+  margin-bottom: -6px !important;
+  display: block !important;
+}
+
+.habits-card > input[type="text"],
+.habits-card > select {
+  max-width: 360px !important;
+  width: 100% !important;
+}
+
+.habits-card > input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  accent-color: #8b5cf6 !important;
+  cursor: pointer !important;
+}
+
+.habits-card > button.button {
+  justify-self: start !important;
+  margin-top: 6px !important;
+}
+
+.habits-card > p {
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  background: #0b0d15 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  color: #d5daf0 !important;
+}
+
+/* 7. Fix Daily Plan -> AI Roadmap Form (audit_ai_roadmap.png) */
+.roadmap-goals-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 14px 0 !important;
+}
+
+.roadmap-form {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 14px 0 24px !important;
+  padding: 16px !important;
+  background: #0f121d !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+}
+
+.roadmap-form .form-input {
+  flex: 1 1 320px !important;
+  min-width: 240px !important;
+}
+
+/* 8. Fix Library Controls Bar & Roadmaps Sidebar Header (audit_library.png & audit_paths.png) */
+.library-controls-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 16px 20px !important;
+  background: #0f121d !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+  margin-bottom: 20px !important;
+}
+
+.library-search-wrap {
+  flex: 1 1 260px !important;
+  min-width: 220px !important;
+}
+
+.library-search-input {
+  width: 100% !important;
+}
+
+.library-selects-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.library-selects-row .select-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #a3aac2 !important;
+}
+
+.paths-sidebar-head {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+}
+
+.paths-sidebar-head h2 {
+  width: 100% !important;
+  margin: 0 0 6px 0 !important;
+  font-size: 1.2rem !important;
+}
+
+.paths-sidebar-head .button {
+  flex: 1 1 calc(50% - 6px) !important;
+  justify-content: center !important;
+  font-size: 0.78rem !important;
+  padding: 8px 10px !important;
+  white-space: nowrap !important;
+}
+
+/* 9. Academy Studio Mode & Normal Mode Switcher + Sidebar Layout */
+.mode-switch-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 7px 13px !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  color: #e2e6f8 !important;
+  background: rgba(139, 92, 246, 0.14) !important;
+  border: 1px solid rgba(139, 92, 246, 0.38) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.mode-switch-pill:hover {
+  background: rgba(139, 92, 246, 0.28) !important;
+  border-color: #8b5cf6 !important;
+  color: #fff !important;
+}
+
+.mode-switch-pill[aria-pressed="true"] {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+  border-color: #a78bfa !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4) !important;
+}
+
+.classroom-heading-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.classroom-mode-switch {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px !important;
+  background: #0d101a !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  gap: 3px !important;
+}
+
+.mode-seg-btn {
+  padding: 6px 12px !important;
+  border-radius: 7px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #98a0bc !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+}
+
+.mode-seg-btn:hover {
+  color: #fff !important;
+}
+
+.mode-seg-btn.active {
+  background: rgba(139, 92, 246, 0.25) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5) !important;
+}
+
+.app-layout-shell {
+  display: block;
+  width: 100%;
+}
+
+body.academy-studio-mode .app-layout-shell {
+  display: grid !important;
+  grid-template-columns: 248px minmax(0, 1fr) !important;
+  align-items: start !important;
+  min-height: calc(100vh - 72px) !important;
+}
+
+.academy-sidebar {
+  position: sticky !important;
+  top: 72px !important;
+  height: calc(100vh - 72px) !important;
+  overflow-y: auto !important;
+  background: #0b0d15 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.09) !important;
+  padding: 18px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  z-index: 30 !important;
+}
+
+.academy-sidebar[hidden] {
+  display: none !important;
+}
+
+.academy-side-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 4px 6px 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-bottom: 6px !important;
+}
+
+.academy-badge-pill {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  color: #c4b5fd !important;
+  background: rgba(139, 92, 246, 0.18) !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+}
+
+.sidebar-mode-exit {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 6px !important;
+  color: #b5bdd6 !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+}
+
+.sidebar-mode-exit:hover {
+  color: #fff !important;
+  border-color: #8b5cf6 !important;
+}
+
+.academy-side-group {
+  font-size: 0.66rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  color: #6c738f !important;
+  padding: 10px 10px 4px !important;
+}
+
+.academy-side-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.academy-side-btn {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  text-align: left !important;
+  padding: 9px 12px !important;
+  border-radius: 9px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #a8b0ca !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.academy-side-btn:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+}
+
+.academy-side-btn.active {
+  background: rgba(139, 92, 246, 0.18) !important;
+  border-color: rgba(139, 92, 246, 0.4) !important;
+  color: #fff !important;
+}
+
+body.academy-studio-mode .workspace {
+  max-width: 100% !important;
+  padding: 24px 28px 60px !important;
+}
+
+/* 10. Theme (Light / Dark) & Accent (Indigo / Teal / Rose) Reactivity */
+html[data-accent="teal"] {
+  --accent: #14b8a6 !important;
+  --accent-primary: #14b8a6 !important;
+}
+
+html[data-accent="teal"] .button.primary,
+html[data-accent="teal"] .mode-switch-pill[aria-pressed="true"],
+html[data-accent="teal"] .pill-next {
+  background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
+  border-color: #2dd4bf !important;
+  color: #041f1e !important;
+}
+
+html[data-accent="rose"] {
+  --accent: #f43f5e !important;
+  --accent-primary: #f43f5e !important;
+}
+
+html[data-accent="rose"] .button.primary,
+html[data-accent="rose"] .mode-switch-pill[aria-pressed="true"],
+html[data-accent="rose"] .pill-next {
+  background: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+  border-color: #fb7185 !important;
+  color: #fff !important;
+}
+
+html[data-theme="light"] body {
+  background: #f4f6fb !important;
+  color: #111420 !important;
+}
+
+html[data-theme="light"] .site-header {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+html[data-theme="light"] .brand,
+html[data-theme="light"] .primary-navigation button,
+html[data-theme="light"] h1,
+html[data-theme="light"] h2,
+html[data-theme="light"] h3 {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .panel,
+html[data-theme="light"] .settings-panel-card,
+html[data-theme="light"] .planning-card,
+html[data-theme="light"] .course-card,
+html[data-theme="light"] .momentum-stat-card {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+@media (max-width: 900px) {
+  .weekday-budgets-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  body.academy-studio-mode .app-layout-shell {
+    grid-template-columns: 1fr !important;
+  }
+  .academy-sidebar {
+    position: static !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+
+/* Single-row navigation fit & Academy Studio header refinement */
+@media (min-width: 901px) {
+  .site-header {
+    gap: 18px !important;
+  }
+  .primary-navigation {
+    gap: 18px !important;
+    flex-wrap: nowrap !important;
+  }
+  .primary-navigation button {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+  }
+  body.academy-studio-mode .site-header .primary-navigation {
+    display: none !important;
+  }
 }

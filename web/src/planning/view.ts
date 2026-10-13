@@ -822,10 +822,13 @@ export class PlanningView {
 
       card.append(controlsRow);
     } else {
+      const clockDisplay = document.createElement('div');
+      clockDisplay.className = 'focus-digital-clock';
+      clockDisplay.textContent = `${String(this.focusDurationMinutes).padStart(2, '0')}:00`;
       const emptyP = document.createElement('p');
       emptyP.className = 'muted no-active-timer-msg';
       emptyP.textContent = 'No active timer';
-      card.append(emptyP);
+      card.append(clockDisplay, emptyP);
     }
 
     const curLesson = this.hooks.currentLesson?.();

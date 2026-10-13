@@ -10524,5 +10524,365 @@
     "odysee_url": "https://odysee.com/gauravsen-hld-2026-112-static-pricing-of-rides:2a2d5c07904dae63a64571527f7f3c7e8c9853fb",
     "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-112-static-pricing-of-rides/2a2d5c07904dae63a64571527f7f3c7e8c9853fb",
     "uploaded_at": "2026-10-13T04:05:38+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[113] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Ride Matching.mp4": {
+    "video_id": "v_44f73b8ea937",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[113] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Ride Matching",
+    "claim_name": "gauravsen-hld-2026-113-ride-matching",
+    "claim_id": "67c3fe2e9ff224b0ce912a38b112610d61a85f9a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-113-ride-matching:67c3fe2e9ff224b0ce912a38b112610d61a85f9a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-113-ride-matching/67c3fe2e9ff224b0ce912a38b112610d61a85f9a",
+    "uploaded_at": "2026-10-13T04:11:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[114] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Calculating Estimated Time of Arrival.mp4": {
+    "video_id": "v_90574c0da729",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[114] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Calculating Estimated Time of Arrival",
+    "claim_name": "gauravsen-hld-2026-114-calculating-estimated-time-of-arrival",
+    "claim_id": "ca0270c27530f1a96085b6ee06b0e5a3e163f228",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-114-calculating-estimated-time-of-arrival:ca0270c27530f1a96085b6ee06b0e5a3e163f228",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-114-calculating-estimated-time-of-arrival/ca0270c27530f1a96085b6ee06b0e5a3e163f228",
+    "uploaded_at": "2026-10-13T04:16:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[115] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Matching Drivers with Live Rides.mp4": {
+    "video_id": "v_4a9955d148fc",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[115] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Matching Drivers with Live Rides",
+    "claim_name": "gauravsen-hld-2026-115-matching-drivers-with-live-rides",
+    "claim_id": "cec6db37e2b2f743f0f247bb89409bc562e5a4df",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-115-matching-drivers-with-live-rides:cec6db37e2b2f743f0f247bb89409bc562e5a4df",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-115-matching-drivers-with-live-rides/cec6db37e2b2f743f0f247bb89409bc562e5a4df",
+    "uploaded_at": "2026-10-13T04:21:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[116] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Requirements of a Map application.mp4": {
+    "video_id": "v_fb7a734ab1fb",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[116] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Requirements of a Map application",
+    "claim_name": "gauravsen-hld-2026-116-requirements-of-a-map-application",
+    "claim_id": "065d99710b6812f0b2c5f2a9dcc6a658d421b2e6",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-116-requirements-of-a-map-application:065d99710b6812f0b2c5f2a9dcc6a658d421b2e6",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-116-requirements-of-a-map-application/065d99710b6812f0b2c5f2a9dcc6a658d421b2e6",
+    "uploaded_at": "2026-10-13T04:22:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[117] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Routing Challenges in Maps.mp4": {
+    "video_id": "v_9e200cb0c150",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[117] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Routing Challenges in Maps",
+    "claim_name": "gauravsen-hld-2026-117-routing-challenges-in-maps",
+    "claim_id": "c287e18df76569b8681447ec0dd581d03a0ae5bd",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-117-routing-challenges-in-maps:c287e18df76569b8681447ec0dd581d03a0ae5bd",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-117-routing-challenges-in-maps/c287e18df76569b8681447ec0dd581d03a0ae5bd",
+    "uploaded_at": "2026-10-13T04:23:34+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[118] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Partitioning Algorithm Splitting th.mp4": {
+    "video_id": "v_b5713fb233a9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[118] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Partitioning Algorithm: Splitting the graph into regions",
+    "claim_name": "gauravsen-hld-2026-118-partitioning-algorithm-splitting-the-graph-into-regions",
+    "claim_id": "ff7483c9e6b12a9ee9a81c1a58c919e087654dc7",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-118-partitioning-algorithm-splitting-the-graph-into-regions:ff7483c9e6b12a9ee9a81c1a58c919e087654dc7",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-118-partitioning-algorithm-splitting-the-graph-into-regions/ff7483c9e6b12a9ee9a81c1a58c919e087654dc7",
+    "uploaded_at": "2026-10-13T04:24:30+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[119] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Finding the shortest path - A searc.mp4": {
+    "video_id": "v_e06dd9a624a1",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[119] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Finding the shortest path - A* search",
+    "claim_name": "gauravsen-hld-2026-119-finding-the-shortest-path-a-search",
+    "claim_id": "bac43dbe0731a22d35b2913f3e8a5f062bf2f755",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-119-finding-the-shortest-path-a-search:bac43dbe0731a22d35b2913f3e8a5f062bf2f755",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-119-finding-the-shortest-path-a-search/bac43dbe0731a22d35b2913f3e8a5f062bf2f755",
+    "uploaded_at": "2026-10-13T04:25:30+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[120] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - GeoHash and other proximity filters.mp4": {
+    "video_id": "v_39cfeb319562",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[120] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - GeoHash and other proximity filters",
+    "claim_name": "gauravsen-hld-2026-120-geohash-and-other-proximity-filters",
+    "claim_id": "acc840b2d4d2148bce252358bce9c24dd7d0eb46",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-120-geohash-and-other-proximity-filters:acc840b2d4d2148bce252358bce9c24dd7d0eb46",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-120-geohash-and-other-proximity-filters/acc840b2d4d2148bce252358bce9c24dd7d0eb46",
+    "uploaded_at": "2026-10-13T04:25:53+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[121] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Detecting traffic jams and broadcas.mp4": {
+    "video_id": "v_444fb30c2bee",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[121] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Detecting traffic jams and broadcasting updates",
+    "claim_name": "gauravsen-hld-2026-121-detecting-traffic-jams-and-broadcasting-updates",
+    "claim_id": "466a496e65fd510ab50c5bf2db6edf022f589183",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-121-detecting-traffic-jams-and-broadcasting-updates:466a496e65fd510ab50c5bf2db6edf022f589183",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-121-detecting-traffic-jams-and-broadcasting-updates/466a496e65fd510ab50c5bf2db6edf022f589183",
+    "uploaded_at": "2026-10-13T04:26:29+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[122] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Calculating an accurate and efficie.mp4": {
+    "video_id": "v_b941cd9fb064",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[122] Module 20 (3. High Level Design \u2014 8. Design a Location Based Service like Google Maps) - Calculating an accurate and efficient estimated time of arrival",
+    "claim_name": "gauravsen-hld-2026-122-calculating-an-accurate-and-efficient-estimated-time-of",
+    "claim_id": "c5baa416be0c583d3a067bd88e4b9f7073aa35b1",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-122-calculating-an-accurate-and-efficient-estimated-time-of:c5baa416be0c583d3a067bd88e4b9f7073aa35b1",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-122-calculating-an-accurate-and-efficient-estimated-time-of/c5baa416be0c583d3a067bd88e4b9f7073aa35b1",
+    "uploaded_at": "2026-10-13T04:27:57+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[123] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Calling App Design.mp4": {
+    "video_id": "v_43a1cc947a74",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[123] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Calling App Design",
+    "claim_name": "gauravsen-hld-2026-123-calling-app-design",
+    "claim_id": "89ee04fde9069492830d5955bfc00cd86bae2a13",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-123-calling-app-design:89ee04fde9069492830d5955bfc00cd86bae2a13",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-123-calling-app-design/89ee04fde9069492830d5955bfc00cd86bae2a13",
+    "uploaded_at": "2026-10-13T04:35:02+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[124] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #1 Breaking calls into dialogs.mp4": {
+    "video_id": "v_e2dc902b8b19",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[124] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #1: Breaking calls into dialogs",
+    "claim_name": "gauravsen-hld-2026-124-concept-1-breaking-calls-into-dialogs",
+    "claim_id": "3df30b0e21aec257fdf588d17991a5ca1a34b9b1",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-124-concept-1-breaking-calls-into-dialogs:3df30b0e21aec257fdf588d17991a5ca1a34b9b1",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-124-concept-1-breaking-calls-into-dialogs/3df30b0e21aec257fdf588d17991a5ca1a34b9b1",
+    "uploaded_at": "2026-10-13T04:38:51+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[125] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #2 The state machine.mp4": {
+    "video_id": "v_24566a074714",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[125] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #2: The state machine",
+    "claim_name": "gauravsen-hld-2026-125-concept-2-the-state-machine",
+    "claim_id": "8ad4c5b20ac583a9b508d7bd8eeffaaa7f7794bb",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-125-concept-2-the-state-machine:8ad4c5b20ac583a9b508d7bd8eeffaaa7f7794bb",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-125-concept-2-the-state-machine/8ad4c5b20ac583a9b508d7bd8eeffaaa7f7794bb",
+    "uploaded_at": "2026-10-13T04:40:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[126] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #3 Charging Users.mp4": {
+    "video_id": "v_f25c930eebb8",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[126] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #3: Charging Users",
+    "claim_name": "gauravsen-hld-2026-126-concept-3-charging-users",
+    "claim_id": "8c1a71d62457867cb50d69a64121346ef90e217c",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-126-concept-3-charging-users:8c1a71d62457867cb50d69a64121346ef90e217c",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-126-concept-3-charging-users/8c1a71d62457867cb50d69a64121346ef90e217c",
+    "uploaded_at": "2026-10-13T04:43:15+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[127] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #4 Consistent Hashing for caching call state.mp4": {
+    "video_id": "v_e60e6983f49c",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[127] Module 21 (3. High Level Design \u2014 9. WhatsApp Calling App) - Concept #4: Consistent Hashing for caching call state",
+    "claim_name": "gauravsen-hld-2026-127-concept-4-consistent-hashing-for-caching-call-state",
+    "claim_id": "424863343ab4bc30fa18a7bdbedb9a9fe57b143f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-127-concept-4-consistent-hashing-for-caching-call-state:424863343ab4bc30fa18a7bdbedb9a9fe57b143f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-127-concept-4-consistent-hashing-for-caching-call-state/424863343ab4bc30fa18a7bdbedb9a9fe57b143f",
+    "uploaded_at": "2026-10-13T04:43:35+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[128] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Converting data sources to a lake.mp4": {
+    "video_id": "v_3ddb2f5d7567",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[128] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Converting data sources to a lake",
+    "claim_name": "gauravsen-hld-2026-128-converting-data-sources-to-a-lake",
+    "claim_id": "9f510a69e5429a42e92ccf05b019ac3735ac6dee",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-128-converting-data-sources-to-a-lake:9f510a69e5429a42e92ccf05b019ac3735ac6dee",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-128-converting-data-sources-to-a-lake/9f510a69e5429a42e92ccf05b019ac3735ac6dee",
+    "uploaded_at": "2026-10-13T04:46:00+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[129] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - The Map Reduce Architecture.mp4": {
+    "video_id": "v_254e53f35fd0",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[129] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - The Map Reduce Architecture",
+    "claim_name": "gauravsen-hld-2026-129-the-map-reduce-architecture",
+    "claim_id": "9dfdec1072d01c61948bf7ea27017a5739c704ff",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-129-the-map-reduce-architecture:9dfdec1072d01c61948bf7ea27017a5739c704ff",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-129-the-map-reduce-architecture/9dfdec1072d01c61948bf7ea27017a5739c704ff",
+    "uploaded_at": "2026-10-13T04:46:58+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[130] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Fault tolerance and engineering optimizations.mp4": {
+    "video_id": "v_53075ef02938",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[130] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Fault tolerance and engineering optimizations",
+    "claim_name": "gauravsen-hld-2026-130-fault-tolerance-and-engineering-optimizations",
+    "claim_id": "308913b06bc952acae21b8cb96f5aed5bcf19163",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-130-fault-tolerance-and-engineering-optimizations:308913b06bc952acae21b8cb96f5aed5bcf19163",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-130-fault-tolerance-and-engineering-optimizations/308913b06bc952acae21b8cb96f5aed5bcf19163",
+    "uploaded_at": "2026-10-13T04:48:27+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[131] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Real time analytics.mp4": {
+    "video_id": "v_ee95d304fbee",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[131] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Real time analytics",
+    "claim_name": "gauravsen-hld-2026-131-real-time-analytics",
+    "claim_id": "e83be8f270253ecf95964ff517f0ad31c7d9ab1d",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-131-real-time-analytics:e83be8f270253ecf95964ff517f0ad31c7d9ab1d",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-131-real-time-analytics/e83be8f270253ecf95964ff517f0ad31c7d9ab1d",
+    "uploaded_at": "2026-10-13T04:51:26+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[132] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Ranking restaurants in real time and batch.mp4": {
+    "video_id": "v_911ee35472ba",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[132] Module 22 (3. High Level Design \u2014 10. Recommendation Engine Design) - Ranking restaurants in real time and batch",
+    "claim_name": "gauravsen-hld-2026-132-ranking-restaurants-in-real-time-and-batch",
+    "claim_id": "4c34b029e5b850b62f03172223b3c67a23d23638",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-132-ranking-restaurants-in-real-time-and-batch:4c34b029e5b850b62f03172223b3c67a23d23638",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-132-ranking-restaurants-in-real-time-and-batch/4c34b029e5b850b62f03172223b3c67a23d23638",
+    "uploaded_at": "2026-10-13T04:52:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[133] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 1. Caching for Social Media.mp4": {
+    "video_id": "v_73278e69d69b",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[133] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 1. Caching for Social Media",
+    "claim_name": "gauravsen-hld-2026-133-1-caching-for-social-media",
+    "claim_id": "b2017dd8f8f45446cfa46a122d2d6d16a1289bd8",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-133-1-caching-for-social-media:b2017dd8f8f45446cfa46a122d2d6d16a1289bd8",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-133-1-caching-for-social-media/b2017dd8f8f45446cfa46a122d2d6d16a1289bd8",
+    "uploaded_at": "2026-10-13T04:57:39+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[134] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 1-1. Caching for Social Media - Revision.mp4": {
+    "video_id": "v_b1596fcaa8aa",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[134] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 1-1. Caching for Social Media - Revision",
+    "claim_name": "gauravsen-hld-2026-134-1-1-caching-for-social-media-revision",
+    "claim_id": "58f674636961cb56c9f75caaf23327bd8a4a2579",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-134-1-1-caching-for-social-media-revision:58f674636961cb56c9f75caaf23327bd8a4a2579",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-134-1-1-caching-for-social-media-revision/58f674636961cb56c9f75caaf23327bd8a4a2579",
+    "uploaded_at": "2026-10-13T05:02:19+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[135] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 2. Cascading Failures and Code Caches.mp4": {
+    "video_id": "v_2fba40bfc440",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[135] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 2. Cascading Failures and Code Caches",
+    "claim_name": "gauravsen-hld-2026-135-2-cascading-failures-and-code-caches",
+    "claim_id": "20fed06a21fe493f9cf37b3eb6cc723a9146e64e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-135-2-cascading-failures-and-code-caches:20fed06a21fe493f9cf37b3eb6cc723a9146e64e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-135-2-cascading-failures-and-code-caches/20fed06a21fe493f9cf37b3eb6cc723a9146e64e",
+    "uploaded_at": "2026-10-13T05:07:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[136] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 3. Managing consistency across regions.mp4": {
+    "video_id": "v_df1285c45914",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[136] Module 23 (4. Research Paper Analysis \u2014 1. Scaling Memcached at Facebook) - 3. Managing consistency across regions",
+    "claim_name": "gauravsen-hld-2026-136-3-managing-consistency-across-regions",
+    "claim_id": "59d8f48b50b755332b556db99a513a867fb93312",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-136-3-managing-consistency-across-regions:59d8f48b50b755332b556db99a513a867fb93312",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-136-3-managing-consistency-across-regions/59d8f48b50b755332b556db99a513a867fb93312",
+    "uploaded_at": "2026-10-13T05:12:17+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[137] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 1. Motivation and Data Model.mp4": {
+    "video_id": "v_bbcd47efc3d9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[137] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 1. Motivation and Data Model",
+    "claim_name": "gauravsen-hld-2026-137-1-motivation-and-data-model",
+    "claim_id": "870a05fd8790497b87fed0bfe8ac9bc8c9439f5f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-137-1-motivation-and-data-model:870a05fd8790497b87fed0bfe8ac9bc8c9439f5f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-137-1-motivation-and-data-model/870a05fd8790497b87fed0bfe8ac9bc8c9439f5f",
+    "uploaded_at": "2026-10-13T05:16:38+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[138] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 2. APIs and Google Spanner.mp4": {
+    "video_id": "v_770f71b22ce2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[138] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 2. APIs and Google Spanner",
+    "claim_name": "gauravsen-hld-2026-138-2-apis-and-google-spanner",
+    "claim_id": "ec424c16d90f10a781fd69ef838aeaca592fe1fa",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-138-2-apis-and-google-spanner:ec424c16d90f10a781fd69ef838aeaca592fe1fa",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-138-2-apis-and-google-spanner/ec424c16d90f10a781fd69ef838aeaca592fe1fa",
+    "uploaded_at": "2026-10-13T05:20:28+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[139] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 3. Overall Architecture and Optimizations.mp4": {
+    "video_id": "v_ae1a8ea41993",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[139] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 3. Overall Architecture and Optimizations",
+    "claim_name": "gauravsen-hld-2026-139-3-overall-architecture-and-optimizations",
+    "claim_id": "a9e1a0294b80ea785284a01fc3d58a26d54f3363",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-139-3-overall-architecture-and-optimizations:a9e1a0294b80ea785284a01fc3d58a26d54f3363",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-139-3-overall-architecture-and-optimizations/a9e1a0294b80ea785284a01fc3d58a26d54f3363",
+    "uploaded_at": "2026-10-13T05:26:24+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[140] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 4. Rate Limiting and Request Collapsing.mp4": {
+    "video_id": "v_48076d482578",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[140] Module 24 (4. Research Paper Analysis \u2014 2. Google's Authorization Service) - 4. Rate Limiting and Request Collapsing",
+    "claim_name": "gauravsen-hld-2026-140-4-rate-limiting-and-request-collapsing",
+    "claim_id": "5fafb28b6d0d79645f15c217dd8e9880cad32769",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-140-4-rate-limiting-and-request-collapsing:5fafb28b6d0d79645f15c217dd8e9880cad32769",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-140-4-rate-limiting-and-request-collapsing/5fafb28b6d0d79645f15c217dd8e9880cad32769",
+    "uploaded_at": "2026-10-13T05:28:04+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[141] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 1. What is a time series database.mp4": {
+    "video_id": "v_b469c22bc012",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[141] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 1. What is a time series database?",
+    "claim_name": "gauravsen-hld-2026-141-1-what-is-a-time-series-database",
+    "claim_id": "096c9191dd92aa95e99619d816ded50425351947",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-141-1-what-is-a-time-series-database:096c9191dd92aa95e99619d816ded50425351947",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-141-1-what-is-a-time-series-database/096c9191dd92aa95e99619d816ded50425351947",
+    "uploaded_at": "2026-10-13T05:31:31+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[142] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 2. Requirements.mp4": {
+    "video_id": "v_3f52ee9c0153",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[142] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 2. Requirements",
+    "claim_name": "gauravsen-hld-2026-142-2-requirements",
+    "claim_id": "348d78f3be55efde9f7b399a57641705e6fe6a8a",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-142-2-requirements:348d78f3be55efde9f7b399a57641705e6fe6a8a",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-142-2-requirements/348d78f3be55efde9f7b399a57641705e6fe6a8a",
+    "uploaded_at": "2026-10-13T05:38:29+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[143] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 3. Data Schema.mp4": {
+    "video_id": "v_29dc274c2ea2",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[143] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 3. Data Schema",
+    "claim_name": "gauravsen-hld-2026-143-3-data-schema",
+    "claim_id": "3367c4d3de210a372b6dc81e3b180ee9e7f6caa2",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-143-3-data-schema:3367c4d3de210a372b6dc81e3b180ee9e7f6caa2",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-143-3-data-schema/3367c4d3de210a372b6dc81e3b180ee9e7f6caa2",
+    "uploaded_at": "2026-10-13T05:42:51+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[144] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 4. Compression Algorithms.mp4": {
+    "video_id": "v_1515cb9d3623",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[144] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 4. Compression Algorithms",
+    "claim_name": "gauravsen-hld-2026-144-4-compression-algorithms",
+    "claim_id": "6d9b77f1997492a9d9f47907443a04a43a8ed10e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-144-4-compression-algorithms:6d9b77f1997492a9d9f47907443a04a43a8ed10e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-144-4-compression-algorithms/6d9b77f1997492a9d9f47907443a04a43a8ed10e",
+    "uploaded_at": "2026-10-13T05:45:22+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[145] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 5. Persistence.mp4": {
+    "video_id": "v_6c27e73d9d55",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[145] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 5. Persistence",
+    "claim_name": "gauravsen-hld-2026-145-5-persistence",
+    "claim_id": "465e64484af5c4c1817d5d5ff6abb2c77626010f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-145-5-persistence:465e64484af5c4c1817d5d5ff6abb2c77626010f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-145-5-persistence/465e64484af5c4c1817d5d5ff6abb2c77626010f",
+    "uploaded_at": "2026-10-13T05:49:52+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[146] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 6. Tradeoffs - Choosing a time window.mp4": {
+    "video_id": "v_11bcbf451440",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[146] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 6. Tradeoffs - Choosing a time window",
+    "claim_name": "gauravsen-hld-2026-146-6-tradeoffs-choosing-a-time-window",
+    "claim_id": "ee115a1445df2b7e52dcc55140a9a1f3cad5382f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-146-6-tradeoffs-choosing-a-time-window:ee115a1445df2b7e52dcc55140a9a1f3cad5382f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-146-6-tradeoffs-choosing-a-time-window/ee115a1445df2b7e52dcc55140a9a1f3cad5382f",
+    "uploaded_at": "2026-10-13T05:53:45+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[147] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 7. Load Balancing.mp4": {
+    "video_id": "v_5b9461016c97",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[147] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 7. Load Balancing",
+    "claim_name": "gauravsen-hld-2026-147-7-load-balancing",
+    "claim_id": "8ad5df119af08c78bf70fd7ed497a6d495435e3f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-147-7-load-balancing:8ad5df119af08c78bf70fd7ed497a6d495435e3f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-147-7-load-balancing/8ad5df119af08c78bf70fd7ed497a6d495435e3f",
+    "uploaded_at": "2026-10-13T06:03:32+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[148] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases Gorilla and Monarch) - 8. Replication and Fault tolerance.mp4": {
+    "video_id": "v_fa0d603d1cb7",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[148] Module 25 (4. Research Paper Analysis \u2014 3. Timeseries Databases: Gorilla and Monarch) - 8. Replication and Fault tolerance",
+    "claim_name": "gauravsen-hld-2026-148-8-replication-and-fault-tolerance",
+    "claim_id": "80d9d748859ebc0eef5040a6de0165e6e236326f",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-148-8-replication-and-fault-tolerance:80d9d748859ebc0eef5040a6de0165e6e236326f",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-148-8-replication-and-fault-tolerance/80d9d748859ebc0eef5040a6de0165e6e236326f",
+    "uploaded_at": "2026-10-13T06:04:23+00:00"
   }
 }

@@ -991,3 +991,23 @@
   padding-bottom: 22px !important;
   pointer-events: none !important;
 }
+
+/* Hide center play button completely while video is playing even on hover so it never blocks lecture slides */
+.player-enhanced .cinema-center-actions.is-playing .cinema-center-play,
+.player-enhanced:hover .cinema-center-actions.is-playing .cinema-center-play {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.85) !important;
+}
+
+/* Move watermark to subtle bottom-right above timeline so it never collides with top-right buttons */
+#player-wrap .watermark,
+.player-enhanced .watermark {
+  top: auto !important;
+  bottom: 72px !important;
+  right: 22px !important;
+  font-size: 0.66rem !important;
+  opacity: 0.22 !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+}
