@@ -66,6 +66,8 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("GET /api/v1/ai/lessons/{id}/transcripts", auth.Require(http.HandlerFunc(s.lessonTranscripts)))
 	mux.HandleFunc("GET /api/v1/ai/lessons/{id}/chapters", s.lessonChapters)
 	mux.Handle("POST /api/v1/ai/lessons/{id}/classify-split", auth.Require(http.HandlerFunc(s.classifySplit)))
+	mux.HandleFunc("GET /api/v1/ai/associative-search", s.associativeSearch)
+	mux.HandleFunc("GET /api/v1/ai/lessons/{id}/checkpoints", s.lessonCheckpoints)
 }
 
 type TranscriptChunk struct {
@@ -831,5 +833,146 @@ Respond ONLY with a valid JSON array of objects. Do not include markdown code bl
 		"lesson_id": lessonID,
 		"title":     title,
 		"chapters":  chapters,
+	})
+}
+
+
+type VideoCheckpoint struct {
+	ID                 string   `json:"id"`
+	LessonID           string   `json:"lesson_id"`
+	TimestampSeconds   float64  `json:"timestamp_seconds"`
+	Prompt             string   `json:"prompt"`
+	Options            []string `json:"options"`
+	CorrectOptionIndex int      `json:"correct_option_index"`
+	Explanation        string   `json:"explanation"`
+}
+
+func (s *Service) lessonCheckpoints(w http.ResponseWriter, r *http.Request) {
+	lessonID := r.PathValue("id")
+	if lessonID == "" {
+		httpx.Error(w, 400, "invalid_id", "Lesson ID is required")
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	rows, err := s.Pool.Query(ctx, `
+		SELECT id, lesson_id, timestamp_seconds, prompt, options, correct_option_index, explanation
+		FROM interactive_video_checkpoints
+		WHERE lesson_id = $1
+		ORDER BY timestamp_seconds ASC
+	`, lessonID)
+	if err != nil {
+		httpx.JSON(w, 200, map[string]any{"lesson_id": lessonID, "checkpoints": []VideoCheckpoint{}})
+		return
+	}
+	defer rows.Close()
+
+	var checkpoints []VideoCheckpoint
+	for rows.Next() {
+		var cp VideoCheckpoint
+		var optsJSON []byte
+		if err := rows.Scan(&cp.ID, &cp.LessonID, &cp.TimestampSeconds, &cp.Prompt, &optsJSON, &cp.CorrectOptionIndex, &cp.Explanation); err == nil {
+			_ = json.Unmarshal(optsJSON, &cp.Options)
+			checkpoints = append(checkpoints, cp)
+		}
+	}
+	if checkpoints == nil {
+		checkpoints = []VideoCheckpoint{}
+	}
+
+	httpx.JSON(w, 200, map[string]any{
+		"lesson_id":   lessonID,
+		"checkpoints": checkpoints,
+		"count":       len(checkpoints),
+	})
+}
+
+type AssociativeResult struct {
+	ChunkID          string  `json:"chunk_id"`
+	LessonID         string  `json:"lesson_id"`
+	LessonTitle      string  `json:"lesson_title"`
+	StartSeconds     float64 `json:"start_seconds"`
+	EndSeconds       float64 `json:"end_seconds"`
+	Text             string  `json:"text"`
+	EntityName       string  `json:"entity_name"`
+	AssociativeScore float64 `json:"associative_score"`
+	PathExplanation  string  `json:"path_explanation"`
+}
+
+func (s *Service) associativeSearch(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		httpx.Error(w, 400, "invalid_query", "Query parameter 'q' is required")
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	cleanKeywords := extractSearchKeywords(q)
+	rows, err := s.Pool.Query(ctx, `
+		WITH matched_seeds AS (
+			SELECT id, name, category, 1.0::float as score
+			FROM kg_entities
+			WHERE name ILIKE '%' || $1 || '%' OR $2 ILIKE '%' || name || '%'
+			LIMIT 3
+		),
+		graph_walk AS (
+			SELECT id as entity_id, name, score, 0 as depth, name as path
+			FROM matched_seeds
+
+			UNION ALL
+
+			SELECT r.target_entity_id, e.name, gw.score * r.weight * 0.85, gw.depth + 1,
+			       gw.path || ' -> ' || r.relation_type || ' -> ' || e.name
+			FROM graph_walk gw
+			JOIN kg_relations r ON r.source_entity_id = gw.entity_id
+			JOIN kg_entities e ON e.id = r.target_entity_id
+			WHERE gw.depth < 2
+		)
+		SELECT DISTINCT ON (t.id)
+			t.id, t.lesson_id, COALESCE(l.title, ''), t.start_seconds, t.end_seconds, t.text,
+			gw.name, round(gw.score::numeric, 3), gw.path
+		FROM graph_walk gw
+		JOIN kg_passage_entities pe ON pe.entity_id = gw.entity_id
+		JOIN transcript_chunks t ON t.id = pe.chunk_id
+		JOIN lessons l ON l.id = t.lesson_id
+		ORDER BY t.id, gw.score DESC
+		LIMIT 10
+	`, q, cleanKeywords)
+
+	var results []AssociativeResult
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var res AssociativeResult
+			if scanErr := rows.Scan(&res.ChunkID, &res.LessonID, &res.LessonTitle, &res.StartSeconds, &res.EndSeconds, &res.Text, &res.EntityName, &res.AssociativeScore, &res.PathExplanation); scanErr == nil {
+				results = append(results, res)
+			}
+		}
+	}
+
+	if len(results) == 0 {
+		cits := s.findRelevantCitations(ctx, "", "", q, 6)
+		for _, c := range cits {
+			results = append(results, AssociativeResult{
+				ChunkID:          c.ChunkID,
+				LessonID:         c.LessonID,
+				LessonTitle:      c.LessonTitle,
+				StartSeconds:     c.StartSeconds,
+				EndSeconds:       c.EndSeconds,
+				Text:             c.Text,
+				EntityName:       "Vector / Keyword Semantic Match",
+				AssociativeScore: c.Similarity,
+				PathExplanation:  "Direct Lexical & Cosine Retrieval",
+			})
+		}
+	}
+
+	httpx.JSON(w, 200, map[string]any{
+		"query":     q,
+		"algorithm": "HippoRAG-2 Dual-Node Multi-Hop Walk",
+		"count":     len(results),
+		"results":   results,
 	})
 }
