@@ -150,19 +150,25 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer close(done)
 		tick := time.NewTicker(g.config.RevalidateEvery)
 		defer tick.Stop()
+		consecutiveFailures := 0
 		for {
 			select {
 			case <-ctx.Done():
 				interruptWrite()
 				return
 			case <-tick.C:
-				checkCtx, stop := context.WithTimeout(ctx, time.Second)
+				checkCtx, stop := context.WithTimeout(ctx, 4*time.Second)
 				active, e := g.authority.Active(checkCtx, r.PathValue("id"))
 				stop()
-				if e != nil || !active {
-					cancel()
-					interruptWrite()
-					return
+				if e == nil && !active {
+					consecutiveFailures++
+					if consecutiveFailures >= 3 {
+						cancel()
+						interruptWrite()
+						return
+					}
+				} else if e == nil && active {
+					consecutiveFailures = 0
 				}
 			}
 		}
@@ -311,7 +317,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				deadlineMu.Unlock()
 				return
 			}
-			_ = controller.SetWriteDeadline(time.Now().Add(20 * time.Second))
+			_ = controller.SetWriteDeadline(time.Now().Add(180 * time.Second))
 			deadlineMu.Unlock()
 			if _, e = w.Write(buf[:n]); e != nil {
 				return

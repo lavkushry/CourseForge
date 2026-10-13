@@ -72,24 +72,58 @@ export class NativeVideoAdapter implements VideoPort {
       this.element.append(track);
     }
     return new Promise((resolve, reject) => {
+      let resolved = false;
       const cleanup = () => {
         clearTimeout(timeout);
         this.element.removeEventListener('loadedmetadata', metadata);
         this.element.removeEventListener('canplay', ready);
-        this.element.removeEventListener('error', failed);
+        this.element.removeEventListener('error', onError);
         signal.removeEventListener('abort', abort);
       };
       const metadata = () => {
         this.element.playbackRate = rate;
         if (position > 0) this.element.currentTime = Math.min(position, Math.max(0, this.element.duration - 0.1));
       };
-      const ready = () => { cleanup(); resolve(); };
-      const failed = () => { cleanup(); reject(new Error('The video could not decode or connect. Retry this lesson; your saved progress is safe.')); };
-      const abort = () => { cleanup(); reject(new DOMException('Cancelled', 'AbortError')); };
-      const timeout = setTimeout(failed, 20_000);
+      const ready = () => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          resolve();
+        }
+      };
+      const failed = (msg?: string) => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          reject(new Error(msg || 'The video could not decode or connect. Retry this lesson; your saved progress is safe.'));
+        }
+      };
+      const abort = () => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          reject(new DOMException('Cancelled', 'AbortError'));
+        }
+      };
+      let retries = 0;
+      const onError = () => {
+        if (retries < 2 && !signal.aborted) {
+          retries++;
+          const curTime = this.element.currentTime;
+          setTimeout(() => {
+            if (signal.aborted || resolved) return;
+            this.element.src = source;
+            if (curTime > 0) this.element.currentTime = curTime;
+            this.element.load();
+          }, 400);
+          return;
+        }
+        failed();
+      };
+      const timeout = setTimeout(() => failed('The video stream connection took too long to load.'), 45_000);
       this.element.addEventListener('loadedmetadata', metadata);
       this.element.addEventListener('canplay', ready, { once: true });
-      this.element.addEventListener('error', failed, { once: true });
+      this.element.addEventListener('error', onError);
       signal.addEventListener('abort', abort, { once: true });
       if (signal.aborted) { abort(); return; }
       this.element.src = source;

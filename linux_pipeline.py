@@ -169,21 +169,27 @@ def save_manifest(manifest: dict):
 
 
 def record_claim_in_db(video_id: str, claim_name: str, claim_id: str):
-    if not DB_PATH.exists():
-        return
+    if DB_PATH.exists():
+        try:
+            with sqlite3.connect(str(DB_PATH), timeout=30) as conn:
+                conn.execute(
+                    """INSERT INTO lecture_providers(video_id, claim_name, claim_id, updated_at)
+                       VALUES (?, ?, ?, ?)
+                       ON CONFLICT(video_id) DO UPDATE SET
+                         claim_name=excluded.claim_name,
+                         claim_id=excluded.claim_id,
+                         updated_at=excluded.updated_at""",
+                    (video_id, claim_name, claim_id, utcnow()),
+                )
+        except Exception as e:
+            print(f"  ⚠️ DB insert note: {e}", flush=True)
     try:
-        with sqlite3.connect(str(DB_PATH), timeout=30) as conn:
-            conn.execute(
-                """INSERT INTO lecture_providers(video_id, claim_name, claim_id, updated_at)
-                   VALUES (?, ?, ?, ?)
-                   ON CONFLICT(video_id) DO UPDATE SET
-                     claim_name=excluded.claim_name,
-                     claim_id=excluded.claim_id,
-                     updated_at=excluded.updated_at""",
-                (video_id, claim_name, claim_id, utcnow()),
-            )
-    except Exception as e:
-        print(f"  ⚠️ DB insert note: {e}", flush=True)
+        esc_name = claim_name.replace(", )
+        esc_id = claim_id.replace(", "")
+        sql = f"INSERT INTO lesson_providers(lesson_id, claim_name, claim_id, updated_at) VALUES ({video_id}, {esc_name}, {esc_id}, now()) ON CONFLICT(lesson_id) DO UPDATE SET claim_name=EXCLUDED.claim_name, claim_id=EXCLUDED.claim_id, updated_at=now();"
+        subprocess.run(["docker", "exec", "-i", "courseforge-rewrite-postgres-1", "psql", "-U", "courseforge", "-d", "courseforge_rewrite", "-c", sql], timeout=5, capture_output=True)
+    except Exception:
+        pass
 
 
 def do_odysee_upload_sync(

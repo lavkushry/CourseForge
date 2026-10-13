@@ -143,7 +143,7 @@ def create_claim_and_wait(
         "name": claim_name,
         "title": title,
         "description": f"{title}\nCourse: {course_desc}",
-        "bid": "0.00001",
+        "bid": "0.0001",
         "languages": ["en"],
         "tags": tags,
         "thumbnail_url": thumb_url,

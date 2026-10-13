@@ -325,11 +325,10 @@ func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, acc
 		if !validator.valid(target.URL) {
 			return Target{}, ErrProvider
 		}
-		req, err := http.NewRequestWithContext(ctx, "GET", target.URL, nil)
+		req, err := http.NewRequestWithContext(ctx, "HEAD", target.URL, nil)
 		if err != nil {
 			return Target{}, ErrProvider
 		}
-		req.Header.Set("Range", "bytes=0-0")
 		req.Header.Set("Referer", ref)
 		req.Header.Set("Origin", "https://odysee.com")
 		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -351,7 +350,22 @@ func (o *Odysee) resolveAccount(ctx context.Context, source playback.Source, acc
 			continue
 		}
 		if res.StatusCode != 200 && res.StatusCode != 206 {
-			return Target{}, ErrProvider
+			getReq, err := http.NewRequestWithContext(ctx, "GET", target.URL, nil)
+			if err != nil {
+				return Target{}, ErrProvider
+			}
+			getReq.Header.Set("Range", "bytes=0-1048575")
+			getReq.Header.Set("Referer", ref)
+			getReq.Header.Set("Origin", "https://odysee.com")
+			getReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+			res, err = o.client.Do(getReq)
+			if err != nil {
+				return Target{}, ErrProvider
+			}
+			res.Body.Close()
+			if res.StatusCode != 200 && res.StatusCode != 206 {
+				return Target{}, ErrProvider
+			}
 		}
 		if !mediaType(res.Header.Get("Content-Type")) {
 			return Target{}, ErrProvider
