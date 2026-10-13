@@ -22,6 +22,7 @@ import { PlanningView } from './planning/view';
 import { ReviewsView } from './reviews/view';
 import { TutorView } from './tutor/view';
 import { LabsView } from './labs/view';
+import { OmniSearch } from './search/omni';
 
 const api = new ApiClient();
 
@@ -65,6 +66,7 @@ let planningView: PlanningView | null = null;
 let reviewsView: ReviewsView | null = null;
 let tutorView: TutorView | null = null;
 let labsView: LabsView | null = null;
+let omniSearch: OmniSearch | null = null;
 let lessonCursor: string | null = null;
 let noteCursor: string | null = null;
 let noteSubmission: { lessonId: string; key: string; content: string; position: number } | null = null;
@@ -334,9 +336,13 @@ function renderApp(account: User): void {
         </div>
       </div>
       <div class="account lms-header-right">
-        <div class="lms-header-search" id="header-quick-search-wrap">
+        <button id="mobile-search-btn" type="button" class="lms-circle-icon-btn mobile-only-search-btn" aria-label="Search all pages" title="Search all pages (⌘K)">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
-          <input id="header-quick-search" type="search" placeholder="Search..." aria-label="Quick catalog filter" autocomplete="off" />
+        </button>
+        <div class="lms-header-search" id="header-quick-search-wrap" role="search" title="Click or press ⌘K to search all pages, courses, lectures, and tools">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
+          <input id="header-quick-search" type="search" placeholder="Search all pages..." aria-label="Quick catalog filter" autocomplete="off" />
+          <kbd class="omni-shortcut-kbd" aria-hidden="true">⌘K</kbd>
         </div>
         <button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" title="Switch between Normal Mode (Icon Rail) and Academy Studio Mode (Expanded Sidebar)">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -436,7 +442,26 @@ function renderApp(account: User): void {
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom" hidden>
-        <div class="classroom-heading"><div><button id="back" class="text-button">← All courses</button><p id="course-name" class="eyebrow"></p><span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span></div><div class="classroom-heading-actions"><div class="classroom-mode-switch" role="group" aria-label="Classroom workspace mode"><button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal Mode</button><button id="mode-studio-btn" type="button" class="mode-seg-btn">Academy Studio</button></div><button id="episodes" class="button" aria-haspopup="dialog">Lessons</button></div></div>
+        <div class="classroom-heading">
+          <div class="classroom-heading-left">
+            <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
+              <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              <span>← All courses</span>
+            </button>
+            <p id="course-name" class="eyebrow"></p>
+            <span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span>
+          </div>
+          <div class="classroom-heading-actions">
+            <div class="classroom-mode-switch" role="group" aria-label="Classroom workspace mode">
+              <button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal Mode</button>
+              <button id="mode-studio-btn" type="button" class="mode-seg-btn">Academy Studio</button>
+            </div>
+            <button id="episodes" class="button lms-playlist-pill" aria-haspopup="dialog">
+              <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <span>Lessons</span>
+            </button>
+          </div>
+        </div>
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
         <div class="classroom-grid">
           <div class="lesson-column">
@@ -530,7 +555,22 @@ function renderApp(account: User): void {
         </div>
         <section id="course-certificate-section" class="course-certificate-section" hidden></section>
       </section>
-      <dialog id="episode-dialog" class="episode-dialog" aria-labelledby="episode-heading"><div class="dialog-heading"><h2 id="episode-heading">Course lessons</h2><button id="close-episodes" class="button quiet">Close</button></div><ol id="drawer-lessons"></ol><button id="drawer-more-lessons" class="button quiet" hidden>More lessons</button><button id="drawer-more-learned" class="button quiet" hidden>More learned badges</button></dialog>
+      <dialog id="episode-dialog" class="episode-dialog magnetic-macos-drawer" aria-labelledby="episode-heading">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="dialog-heading">
+          <div class="dialog-title-group">
+            <h2 id="episode-heading">Course lessons</h2>
+            <span class="dialog-subtitle-badge">Interactive Syllabus</span>
+          </div>
+          <button id="close-episodes" class="button quiet close-drawer-btn">
+            <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Close</span>
+          </button>
+        </div>
+        <ol id="drawer-lessons"></ol>
+        <button id="drawer-more-lessons" class="button quiet" hidden>More lessons</button>
+        <button id="drawer-more-learned" class="button quiet" hidden>More learned badges</button>
+      </dialog>
       </main>
     </div>`;
   required('#account-name').textContent = account.name || account.email;
@@ -638,6 +678,15 @@ function renderApp(account: User): void {
     resume: (id, lessonId) => { void resumeLesson(id, lessonId); },
     notice: feedback,
     syllabus: (course) => { void openCourseSyllabus(course); },
+  });
+  omniSearch?.destroy();
+  omniSearch = new OmniSearch({
+    onSelectCourse: (courseId) => { void loadCourse(courseId, true); },
+    onSelectLesson: (courseId, lessonId) => { void resumeLesson(courseId, lessonId); },
+    onNavigateView: (view) => {
+      const btn = document.querySelector<HTMLButtonElement>(`#primary-nav [data-catalog-view="${view}"]`);
+      btn?.click();
+    },
   });
   required('#watermark').textContent = account.name || account.email;
   const video = required<HTMLVideoElement>('#lesson-video');
@@ -834,6 +883,21 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
           cs.value = quickSearch.value;
           cs.dispatchEvent(new Event('input', { bubbles: true }));
         }
+      }
+    }, { signal });
+    quickSearch.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        omniSearch?.open(quickSearch.value);
+      }
+    }, { signal });
+  }
+  on('#mobile-search-btn', () => omniSearch?.open());
+  const searchWrap = document.querySelector<HTMLElement>('#header-quick-search-wrap');
+  if (searchWrap) {
+    searchWrap.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement)?.tagName !== 'INPUT') {
+        omniSearch?.open();
       }
     }, { signal });
   }
@@ -1213,6 +1277,9 @@ async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise
   required<HTMLElement>('#catalog').hidden = false;
   setActiveNav(view);
   feedback('');
+  void api.request<{ courses: Course[] }>('/public/courses?limit=100', { signal: navigation.signal }).then(res => {
+    if (res?.courses) omniSearch?.setCourses(res.courses);
+  }).catch(() => {});
   await discovery?.activate(navigation.signal, view);
 }
 
@@ -1240,6 +1307,9 @@ async function loadCourse(id: string, preview = true): Promise<void> {
     learnedLessons = new Set(); learnedCursor = ''; learnedLoaded = false;
     selectedLesson = null;
     lessons = response.lessons;
+    if (response.course && response.lessons) {
+      omniSearch?.indexLessons(response.course, response.lessons);
+    }
     lessonCursor = null;
     hideAllWorkspaces();
     required<HTMLElement>('#classroom').hidden = false;

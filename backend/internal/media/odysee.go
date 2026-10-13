@@ -40,7 +40,25 @@ var claimID = regexp.MustCompile(`^[0-9a-fA-F]{40}$`)
 
 func NewOdysee(accounts []Account) *Odysee {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Odysee{Accounts: accounts, client: &http.Client{Timeout: 25 * time.Second, Transport: &http.Transport{Proxy: nil, MaxIdleConns: 8, MaxIdleConnsPerHost: 4, MaxConnsPerHost: 4, IdleConnTimeout: 90 * time.Second}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, cache: make(map[string]cached), slots: make(chan struct{}, 4), now: time.Now, ctx: ctx, cancel: cancel}
+	return &Odysee{
+		Accounts: accounts,
+		client: &http.Client{
+			Timeout: 25 * time.Second,
+			Transport: &http.Transport{
+				Proxy:               nil,
+				MaxIdleConns:        64,
+				MaxIdleConnsPerHost: 32,
+				MaxConnsPerHost:     32,
+				IdleConnTimeout:     90 * time.Second,
+			},
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		},
+		cache:  make(map[string]cached),
+		slots:  make(chan struct{}, 32),
+		now:    time.Now,
+		ctx:    ctx,
+		cancel: cancel,
+	}
 }
 func (o *Odysee) Close() { o.cancel(); o.client.CloseIdleConnections() }
 
@@ -66,15 +84,17 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 		return v.Target, nil
 	}
 	result := o.flights.DoChan(key, func() (any, error) {
-		select {
-		case o.slots <- struct{}{}:
-			defer func() { <-o.slots }()
-		default:
-			return Target{}, ErrProvider
-		}
 		// Independent bounded resolution survives cancellation by one range caller.
 		resolveCtx, stop := context.WithTimeout(o.ctx, 60*time.Second)
 		defer stop()
+		select {
+		case o.slots <- struct{}{}:
+			defer func() { <-o.slots }()
+		case <-time.After(3 * time.Second):
+			return Target{}, ErrProvider
+		case <-resolveCtx.Done():
+			return Target{}, ErrProvider
+		}
 		for _, account := range o.Accounts {
 			if account.Token == "" || account.Channel == "" {
 				continue
@@ -82,20 +102,20 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 			target, err := o.resolveAccount(resolveCtx, source, account)
 			if err == nil {
 				o.mu.Lock()
-				if len(o.cache) >= 512 {
+				if len(o.cache) >= 2048 {
 					for k, c := range o.cache {
 						if !o.now().Before(c.Expires) {
 							delete(o.cache, k)
 						}
 					}
-					if len(o.cache) >= 512 {
+					if len(o.cache) >= 2048 {
 						for k := range o.cache {
 							delete(o.cache, k)
 							break
 						}
 					}
 				}
-				o.cache[key] = cached{target, o.now().Add(120 * time.Second)}
+				o.cache[key] = cached{target, o.now().Add(30 * time.Minute)}
 				o.mu.Unlock()
 				return target, nil
 			}
@@ -116,7 +136,14 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 	}
 }
 func (o *Odysee) rpc(ctx context.Context, account Account, method string, params map[string]any) (map[string]any, error) {
-	for attempt := 0; attempt < 2; attempt++ {
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-time.After(time.Duration(100*attempt) * time.Millisecond):
+			case <-ctx.Done():
+				return nil, ErrProvider
+			}
+		}
 		body, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
 		req, err := http.NewRequestWithContext(ctx, "POST", "https://api.na-backend.odysee.com/api/v1/proxy?m="+method, strings.NewReader(string(body)))
 		if err != nil {
@@ -126,6 +153,9 @@ func (o *Odysee) rpc(ctx context.Context, account Account, method string, params
 		req.Header.Set("Content-Type", "application/json")
 		response, err := o.client.Do(req)
 		if err != nil {
+			if attempt < 2 {
+				continue
+			}
 			return nil, ErrProvider
 		}
 		var data struct {
@@ -139,12 +169,15 @@ func (o *Odysee) rpc(ctx context.Context, account Account, method string, params
 		err = d.Decode(&data)
 		response.Body.Close()
 		if response.StatusCode != 200 || err != nil {
+			if attempt < 2 {
+				continue
+			}
 			return nil, ErrProvider
 		}
 		if data.Error == nil && data.Result != nil {
 			return data.Result, nil
 		}
-		if attempt == 0 && method != "status" && data.Error != nil && data.Error.Data["name"] == "ComponentsNotStartedError" {
+		if attempt == 0 && method != "status" && data.Error != nil && data.Error.Data != nil && data.Error.Data["name"] == "ComponentsNotStartedError" {
 			if _, err = o.rpc(ctx, account, "status", map[string]any{}); err == nil {
 				continue
 			}

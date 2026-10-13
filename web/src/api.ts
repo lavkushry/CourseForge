@@ -8,8 +8,8 @@ import { parseCertificateResponse, parseVerification } from './certificates/cont
 import type { CertificateResponse, VerificationResult } from './certificates/contracts';
 import { parseLearningPaths, parsePath } from './paths/contracts';
 import type { LearningPath } from './paths/contracts';
-import { parseAdminOverview, parseAdminUsers } from './admin/contracts';
-import type { AdminOverview, AdminUser, AdminLearnerReport } from './admin/contracts';
+import { parseAdminOverview, parseAdminUsers, parseAdminUserDetail } from './admin/contracts';
+import type { AdminOverview, AdminUser, AdminUserDetail, AdminLearnerReport } from './admin/contracts';
 
 export class ApiError extends Error {
   constructor(
@@ -36,7 +36,7 @@ export function errorMessage(error: unknown): string {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | undefined;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | undefined;
   body?: unknown;
   signal?: AbortSignal | undefined;
   keepalive?: boolean | undefined;
@@ -302,14 +302,98 @@ export class ApiClient implements PlaybackTransport {
     return this.request('/admin/overview', signal ? { signal } : {}).then(parseAdminOverview);
   }
 
-  adminUsers(limit = 50, cursor = '', signal?: AbortSignal): Promise<{ users: AdminUser[]; next_cursor: string | null }> {
+  adminUsers(limit = 50, cursor = '', signal?: AbortSignal, q = ''): Promise<{ users: AdminUser[]; next_cursor: string | null; total?: number }> {
     const query = new URLSearchParams({ limit: String(limit) });
     if (cursor) query.set('cursor', cursor);
+    if (q.trim()) query.set('q', q.trim());
     return this.request(`/admin/users?${query}`, signal ? { signal } : {}).then(parseAdminUsers);
+  }
+
+  adminLearnerSummaries(limit = 100, cursor = '', q = '', signal?: AbortSignal): Promise<{ users: AdminUser[]; next_cursor: string | null; total?: number }> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (cursor) query.set('cursor', cursor);
+    if (q.trim()) query.set('q', q.trim());
+    return this.request(`/admin/learner-reports?${query}`, signal ? { signal } : {}).then(parseAdminUsers);
+  }
+
+  adminUserDetail(userId: string, signal?: AbortSignal): Promise<AdminUserDetail> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}`, signal ? { signal } : {}).then(parseAdminUserDetail);
+  }
+
+  adminSetEnrollment(userId: string, course: string, enrolled: boolean, signal?: AbortSignal): Promise<{ ok: boolean }> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}/enrollments`, {
+      method: 'PUT',
+      body: { course, enrolled },
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminUpdateAccount(
+    userId: string,
+    patch: { suspended?: boolean; role?: 'student' | 'admin'; current_password?: string },
+    signal?: AbortSignal,
+  ): Promise<{ ok: boolean }> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      body: patch,
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminSetRole(userId: string, role: 'student' | 'admin', currentPassword: string, signal?: AbortSignal): Promise<{ ok: boolean }> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}/role`, {
+      method: 'PUT',
+      body: { role, current_password: currentPassword },
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminRevokeSessions(userId: string, signal?: AbortSignal): Promise<{ ok: boolean }> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}/sessions`, {
+      method: 'DELETE',
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminIssueAccountLink(userId: string, signal?: AbortSignal): Promise<{ account_url: string; expires_at: string; kind: string }> {
+    return this.request(`/admin/users/${encodeURIComponent(userId)}/account-link`, {
+      method: 'POST',
+      body: {},
+      ...(signal ? { signal } : {}),
+    });
+  }
+
+  adminInviteStudent(name: string, email: string, course = '', signal?: AbortSignal): Promise<{ user_id: string; activation_url: string; expires_at: string }> {
+    return this.request('/admin/invitations', {
+      method: 'POST',
+      body: { name, email, ...(course ? { course } : {}) },
+      ...(signal ? { signal } : {}),
+    });
   }
 
   adminLearnerReport(userId: string, signal?: AbortSignal): Promise<AdminLearnerReport> {
     return this.request(`/admin/users/${encodeURIComponent(userId)}/learning-report`, signal ? { signal } : {});
+  }
+
+  adminLearnerReportSection(
+    userId: string,
+    section: string,
+    limit = 50,
+    signal?: AbortSignal,
+  ): Promise<{ section: string; items: Array<Record<string, unknown>>; next_cursor: string }> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    return this.request(`/admin/users/${encodeURIComponent(userId)}/reports/${encodeURIComponent(section)}?${query}`, signal ? { signal } : {});
+  }
+
+  adminAuditLog(limit = 50, signal?: AbortSignal): Promise<{ items: Array<Record<string, unknown>>; next_cursor: string }> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    return this.request(`/admin/audit?${query}`, signal ? { signal } : {});
+  }
+
+  adminAccessEvents(userId = '', limit = 50, signal?: AbortSignal): Promise<{ items: Array<Record<string, unknown>>; next_cursor: string }> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (userId) query.set('user_id', userId);
+    return this.request(`/admin/access-events?${query}`, signal ? { signal } : {});
   }
 
   // AI Endpoints

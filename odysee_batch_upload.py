@@ -22,7 +22,7 @@ MANIFEST_PATH = Path("/Users/lavkushkumar/Desktop/Courses/odysee_manifest.json")
 
 ODYSEE_ASYNQ = "https://api.na-backend.odysee.com/api/v1/asynqueries"
 ODYSEE_THUMB = "https://thumbs.odycdn.com/upload"
-CHUNK_SIZE = 50 * 1024 * 1024  # 50 MB per TUS chunk (matches Odysee frontend)
+CHUNK_SIZE = 100 * 1024 * 1024  # 50 MB per TUS chunk (matches Odysee frontend)
 
 
 def slugify(title: str) -> str:
@@ -176,7 +176,7 @@ def create_claim_and_wait(
         raise RuntimeError(f"Unexpected query_created response: {data}")
 
     # Poll asynqueries/{query_id} for completion
-    for delay in [2, 3, 5, 7, 10, 10, 15, 15, 15, 15]:
+    for delay in [1, 2, 2, 3, 4, 5, 7, 10, 12, 15]:
         time.sleep(delay)
         status_req = urllib.request.Request(
             f"{ODYSEE_ASYNQ}/{query_id}",

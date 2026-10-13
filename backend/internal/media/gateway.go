@@ -44,6 +44,12 @@ type Gateway struct {
 }
 
 var byteRange = regexp.MustCompile(`^bytes=(?:[0-9]{1,16}-[0-9]{0,16}|-[0-9]{1,16})$`)
+var mediaBufferPool = sync.Pool{
+	New: func() any {
+		b := make([]byte, 64<<10)
+		return &b
+	},
+}
 
 func New(authority Authority, resolver Resolver, c Config) *Gateway {
 	if c.MaxTransfers < 1 {
@@ -268,7 +274,9 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Flush each bounded read so slow learners cannot monopolize the gateway.
-	buf := make([]byte, 128<<10)
+	bufPtr := mediaBufferPool.Get().(*[]byte)
+	defer mediaBufferPool.Put(bufPtr)
+	buf := *bufPtr
 	for {
 		n, e := response.Body.Read(buf)
 		if n > 0 {
