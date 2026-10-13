@@ -27,3 +27,145 @@
   .player-enhanced .cinema-top-actions { padding: 2px 4px; }
   .player-enhanced .cinema-center-play { width: 56px; height: 56px; font-size: 26px; }
 }
+
+/* SYNAPSE-CRUCIBLE In-Situ Shadow Workbench & Property Crucible Styles */
+.crucible-dialog-overlay {
+  border: 1px solid rgba(255, 175, 150, 0.3);
+  border-radius: 12px;
+  background: rgba(14, 16, 22, 0.95);
+  backdrop-filter: blur(20px);
+  color: #f1f2f6;
+  max-width: 720px;
+  width: 90vw;
+  padding: 0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 120, 80, 0.15);
+  z-index: 1000;
+}
+.crucible-dialog-overlay::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+.crucible-modal-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 22px;
+  gap: 12px;
+}
+.crucible-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.crucible-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 140, 60, 0.2);
+  color: #ff987b;
+  border: 1px solid rgba(255, 140, 60, 0.4);
+  margin-bottom: 4px;
+}
+.crucible-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+.crucible-close-btn {
+  background: transparent;
+  border: none;
+  color: #a0a5b5;
+  font-size: 24px;
+  cursor: pointer;
+}
+.crucible-close-btn:hover { color: #fff; }
+.crucible-challenge-banner {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #ff987b;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #d1d5db;
+}
+.crucible-editor-wrap {
+  width: 100%;
+}
+.crucible-code-editor {
+  width: 100%;
+  height: 220px;
+  font-family: JetBrains Mono, Fira Code, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #090a0f;
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 10px;
+  resize: vertical;
+  outline: none;
+}
+.crucible-code-editor:focus {
+  border-color: #ff987b;
+}
+.crucible-actions-row {
+  display: flex;
+  gap: 10px;
+}
+.crucible-run-btn {
+  background: #ff7043;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.crucible-run-btn:hover { background: #ff5722; }
+.crucible-mentor-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f2f6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+}
+.crucible-mentor-btn:hover { background: rgba(255, 255, 255, 0.15); }
+.crucible-output-console {
+  background: #090a0f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: monospace;
+  font-size: 12px;
+}
+.crucible-console-head {
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.crucible-console-body {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #d1d5db;
+}
+.crucible-console-body.pass { color: #34d399; }
+.crucible-console-body.fail { color: #f87171; }
+.crucible-socratic-box {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(255, 175, 150, 0.1);
+  border: 1px solid rgba(255, 175, 150, 0.3);
+  color: #ffccbc;
+  font-style: italic;
+  font-family: system-ui, sans-serif;
+}

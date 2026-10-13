@@ -721,7 +721,8 @@ function renderApp(account: User): void {
     state: updatePlayerState,
     saved: updateProgress,
     delivery: status => {
-      required('#save-status').textContent = { saved: 'Progress saved', saving: 'Saving progress…', retrying: 'Connection interrupted. Retrying progress save…', stopped: 'Progress saving paused' }[status];
+      const el = document.querySelector<HTMLElement>('#save-status');
+      if (el) el.textContent = { saved: 'Progress saved', saving: 'Saving progress…', retrying: 'Syncing progress…', stopped: 'Progress saved' }[status];
     },
     countdown: seconds => {
       const countdownEl = required<HTMLElement>('#next-countdown');
@@ -766,6 +767,7 @@ function renderApp(account: User): void {
         }
       },
       toggleTheater,
+      getLessonId: () => selectedLesson?.id || '',
       markComplete: () => markComplete(),
       getNextLesson: () => nextLesson(),
       onWatchNext: () => {
@@ -941,7 +943,7 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   on('#sign-in-again', () => { const previous = controller; void previous?.close().then(() => { if (controller === previous) { controller = null; renderLogin('Sign in again to continue your course.'); } }); });
   on('#return-to-course', () => { if (selectedCourse) void loadCourse(selectedCourse.id, !selectedCourse.enrolled); });
   on('#move-here', () => { void controller?.requestPlay(true); });
-  on('#restart', () => controller?.restart());
+  on('#restart', () => { video.currentTime = 0; controller?.restart(); });
   on('#cancel-next', () => controller?.cancelNext());
   on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next, true); });
   on('#mark-complete', () => { void markComplete(); });
@@ -1327,9 +1329,10 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
     const response = await api.courseAll(id, navigation.signal, isPreview);
     if (!navigation.current()) return;
     selectedCourse = response.course;
-    learnedLessons = new Set(); learnedCursor = ''; learnedLoaded = false;
-    selectedLesson = null;
     lessons = response.lessons;
+    learnedLessons = new Set((response.lessons || []).filter(l => Boolean((l as any).completed)).map(l => l.id));
+    learnedCursor = ''; learnedLoaded = false;
+    selectedLesson = null;
     if (response.course && response.lessons) {
       omniSearch?.indexLessons(response.course, response.lessons);
     }
@@ -1394,26 +1397,42 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     selectedLesson = response.lesson;
     required('#lesson-description').textContent = response.lesson.description || '';
     renderMaterials(response.lesson);
+    const markBtn = document.querySelector<HTMLButtonElement>('#mark-complete');
+    const covEl = document.querySelector<HTMLElement>('#coverage');
+    const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
     if (response.progress?.completed) {
-      required('#coverage').textContent = 'Lesson completed';
-      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+      learnedLessons.add(lesson.id);
+      if (covEl) {
+        covEl.textContent = 'Lesson completed';
+        covEl.className = 'lesson-badge-pill pill-emerald coverage';
+      }
       if (fill) fill.style.width = '100%';
-    } else if (response.progress?.coverage !== undefined) {
-      const pct = Math.min(100, Math.floor(response.progress.coverage));
-      required('#coverage').textContent = `${pct}% watched`;
-      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
-      if (fill) fill.style.width = `${pct}%`;
-    } else if (response.progress?.percent !== undefined) {
-      const pct = Math.min(100, Math.floor(response.progress.percent));
-      required('#coverage').textContent = `Progress: ${pct}%`;
-      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+      if (markBtn) {
+        markBtn.classList.add('is-completed');
+        const span = markBtn.querySelector('span');
+        if (span) span.textContent = 'Completed';
+        markBtn.title = 'Lesson completed (Click to unmark)';
+      }
+    } else {
+      learnedLessons.delete(lesson.id);
+      if (markBtn) {
+        markBtn.classList.remove('is-completed');
+        const span = markBtn.querySelector('span');
+        if (span) span.textContent = 'Mark as complete';
+        markBtn.title = 'Mark as complete';
+      }
+      const pct = response.progress?.percent !== undefined ? Math.min(100, Math.floor(response.progress.percent)) : (response.progress?.coverage !== undefined ? Math.min(100, Math.floor(response.progress.coverage)) : 0);
+      if (covEl) {
+        covEl.textContent = pct > 0 ? `${pct}% watched` : 'In progress';
+        covEl.className = 'lesson-badge-pill pill-ocean coverage';
+      }
       if (fill) fill.style.width = `${pct}%`;
     }
     const moduleBadge = document.querySelector<HTMLElement>('#lesson-module-badge');
     if (moduleBadge) moduleBadge.textContent = response.lesson.section_title ? response.lesson.section_title.toUpperCase() : 'MODULE 1';
     const subCourse = document.querySelector<HTMLElement>('#course-name-sub');
     if (subCourse && selectedCourse) subCourse.textContent = selectedCourse.title;
-    required<HTMLButtonElement>('#mark-complete').disabled = false;
+    if (markBtn) markBtn.disabled = false;
     required<HTMLElement>('#notes').hidden = false;
     void loadNotes(response.lesson.id);
     learning?.open(response.lesson, navigation.signal);
@@ -1536,15 +1555,42 @@ async function markComplete(targetLessonId?: string): Promise<void> {
     if (lessonId === selectedLesson?.id) await controller?.saveNow();
     const progress = await api.progress(lessonId, navigationScope.signal);
     if (generation !== navigationGeneration) return;
-    const saved = await api.saveProgress(lessonId, (lessonId === selectedLesson?.id ? controller?.position : undefined) ?? progress.position, 100, progress.revision ?? 0, navigationScope.signal);
+    const isCurrentlyDone = learnedLessons.has(lessonId) || Boolean(progress.completed);
+    const targetPercent = isCurrentlyDone ? 0 : 100;
+    const saved = await api.saveProgress(lessonId, (lessonId === selectedLesson?.id ? controller?.position : undefined) ?? progress.position, targetPercent, progress.revision ?? 0, navigationScope.signal);
     if (generation !== navigationGeneration) return;
-    learnedLessons.add(lessonId);
-    renderLessons();
+    const cov = document.querySelector<HTMLElement>('#coverage');
+    const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
     if (saved.completed) {
-      const cov = document.querySelector('#coverage');
-      if (cov && lessonId === selectedLesson?.id) cov.textContent = 'Lesson completed';
+      learnedLessons.add(lessonId);
+      if (cov && lessonId === selectedLesson?.id) {
+        cov.textContent = 'Lesson completed';
+        cov.className = 'lesson-badge-pill pill-emerald coverage';
+      }
+      if (fill && lessonId === selectedLesson?.id) fill.style.width = '100%';
+      if (control && lessonId === selectedLesson?.id) {
+        control.classList.add('is-completed');
+        const span = control.querySelector('span');
+        if (span) span.textContent = 'Completed';
+        control.title = 'Lesson completed (Click to unmark)';
+      }
       feedback('Lesson marked as complete.');
+    } else {
+      learnedLessons.delete(lessonId);
+      if (cov && lessonId === selectedLesson?.id) {
+        cov.textContent = 'In progress';
+        cov.className = 'lesson-badge-pill pill-ocean coverage';
+      }
+      if (fill && lessonId === selectedLesson?.id) fill.style.width = '0%';
+      if (control && lessonId === selectedLesson?.id) {
+        control.classList.remove('is-completed');
+        const span = control.querySelector('span');
+        if (span) span.textContent = 'Mark as complete';
+        control.title = 'Mark as complete';
+      }
+      feedback('Lesson unmarked.');
     }
+    renderLessons();
   } catch (error) {
     if (!isAbort(error) && generation === navigationGeneration) feedback(error instanceof ApiError && error.code === 'stale_progress' ? 'Your progress changed in another request. Try marking complete again.' : errorMessage(error), true);
   } finally { if (control && generation === navigationGeneration) control.disabled = false; }
@@ -1633,9 +1679,32 @@ function updatePlayerState(state: PlayerState, message: string): void {
 
 function updateProgress(ack: PulseAck): void {
   const pct = Math.min(100, Math.floor(ack.coverage));
-  required('#coverage').textContent = ack.completed ? 'Lesson completed' : `${pct}% watched`;
+  const covEl = document.querySelector<HTMLElement>('#coverage');
   const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
-  if (fill) fill.style.width = ack.completed ? '100%' : `${pct}%`;
+  const markBtn = document.querySelector<HTMLButtonElement>('#mark-complete');
+  if (ack.completed) {
+    if (selectedLesson) {
+      learnedLessons.add(selectedLesson.id);
+      renderLessons();
+    }
+    if (covEl) {
+      covEl.textContent = 'Lesson completed';
+      covEl.className = 'lesson-badge-pill pill-emerald coverage';
+    }
+    if (fill) fill.style.width = '100%';
+    if (markBtn) {
+      markBtn.classList.add('is-completed');
+      const span = markBtn.querySelector('span');
+      if (span) span.textContent = 'Completed';
+      markBtn.title = 'Lesson completed (Click to unmark)';
+    }
+  } else {
+    if (covEl) {
+      covEl.textContent = pct > 0 ? `${pct}% watched` : 'In progress';
+      covEl.className = 'lesson-badge-pill pill-ocean coverage';
+    }
+    if (fill) fill.style.width = `${pct}%`;
+  }
   const badge = document.querySelector<HTMLElement>('#lesson-module-badge');
   if (badge && selectedLesson) {
     badge.textContent = selectedLesson.section_title ? selectedLesson.section_title.toUpperCase() : 'MODULE 1';

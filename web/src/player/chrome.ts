@@ -4,6 +4,7 @@ import { formatTime } from './controller';
 
 export interface ChromeActions {
   seek(position: number): void;
+  getLessonId?: () => string;
   nextLesson?: () => void;
   getNextLesson?: () => void;
   prevLesson?: () => void;
@@ -57,7 +58,15 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   episodes.setAttribute('aria-haspopup', 'dialog');
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
-  top.append(capture, episodes, theater, lock);
+  const workbench = document.createElement('button');
+  workbench.type = 'button'; workbench.className = 'cinema-button';
+  workbench.title = 'Open In-Situ Shadow Workbench & Crucible';
+  workbench.setAttribute('aria-label', 'Open Shadow Workbench');
+  workbench.append(svgIcon('code'));
+  workbench.addEventListener('click', () => {
+    openShadowWorkbenchModal(wrap, actions.getLessonId?.() || '');
+  }, { signal });
+  top.append(capture, episodes, workbench, theater, lock);
   media.append(top);
 
   const spacer = ui('span', 'cinema-spacer'); row.append(spacer);
@@ -200,4 +209,156 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     observer.disconnect(); clearTimeout(feedbackTimer); clearTimeout(clickTimer);
     if (dialog && previousParent?.isConnected) previousParent.append(dialog);
   }, { once: true });
+}
+
+
+async function openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
+  let existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const dialog = document.createElement('dialog');
+  dialog.id = 'shadow-workbench-dialog';
+  dialog.className = 'crucible-dialog-overlay';
+
+  const lid = lessonId || 'v_371b8c5eb793';
+  let starter = `package main
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+)
+
+type RateLimiter struct {
+	mu       sync.Mutex
+	capacity int
+	window   time.Duration
+	requests map[int64]int
+}
+
+func (rl *RateLimiter) Allow(now time.Time) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	return true
+}
+
+func main() {
+	fmt.Println("Crucible ready.")
+}`;
+  let title = 'SYNAPSE-CRUCIBLE: Shadow Workbench';
+  let challenge = 'What-if Challenge: Implement sliding window rate limiting. Run the Property Crucible to verify race freedom.';
+
+  try {
+    const res = await fetch(`/api/v1/ai/lessons/${lid}/shadow-workbench`).then(r => r.json());
+    if (res.workbenches && res.workbenches.length > 0) {
+      const wb = res.workbenches[0];
+      starter = wb.starter_code;
+      title = wb.title;
+      challenge = wb.what_if_challenge;
+    }
+  } catch (_) {}
+
+  dialog.innerHTML = `
+    <div class="crucible-modal-card">
+      <div class="crucible-modal-header">
+        <div class="crucible-header-left">
+          <span class="crucible-badge">SYNAPSE-CRUCIBLE</span>
+          <h3 class="crucible-title">${title}</h3>
+        </div>
+        <button type="button" class="crucible-close-btn">&times;</button>
+      </div>
+      <div class="crucible-challenge-banner">
+        <strong>Experiment:</strong> ${challenge}
+      </div>
+      <div class="crucible-editor-wrap">
+        <textarea class="crucible-code-editor" spellcheck="false">${starter}</textarea>
+      </div>
+      <div class="crucible-actions-row">
+        <button type="button" class="crucible-run-btn">Run Property Crucible</button>
+        <button type="button" class="crucible-mentor-btn">Ask Cognitive Mentor</button>
+      </div>
+      <div class="crucible-output-console" hidden>
+        <div class="crucible-console-head">Execution & Invariant Trace</div>
+        <pre class="crucible-console-body"></pre>
+        <div class="crucible-socratic-box" hidden></div>
+      </div>
+    </div>
+  `;
+
+  const closeBtn = dialog.querySelector<HTMLButtonElement>('.crucible-close-btn')!;
+  closeBtn.addEventListener('click', () => { dialog.close(); dialog.remove(); });
+
+  const runBtn = dialog.querySelector<HTMLButtonElement>('.crucible-run-btn')!;
+  const mentorBtn = dialog.querySelector<HTMLButtonElement>('.crucible-mentor-btn')!;
+  const textarea = dialog.querySelector<HTMLTextAreaElement>('.crucible-code-editor')!;
+  const consoleEl = dialog.querySelector<HTMLElement>('.crucible-output-console')!;
+  const consoleBody = dialog.querySelector<HTMLElement>('.crucible-console-body')!;
+  const socraticBox = dialog.querySelector<HTMLElement>('.crucible-socratic-box')!;
+
+  runBtn.addEventListener('click', async () => {
+    runBtn.disabled = true;
+    runBtn.textContent = 'Running Invariants…';
+    consoleEl.hidden = false;
+    consoleBody.textContent = 'Executing 5,000 concurrent property trials in isolated sandbox…';
+    socraticBox.hidden = true;
+
+    try {
+      const resp = await fetch(`/api/v1/ai/lessons/${lid}/crucible-run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: textarea.value, language: 'go' }),
+      }).then(r => r.json());
+
+      if (resp.passed) {
+        consoleBody.className = 'crucible-console-body pass';
+        consoleBody.textContent = `[SUCCESS ${resp.execution_duration_ms}ms]
+${resp.stdout}`;
+      } else {
+        consoleBody.className = 'crucible-console-body fail';
+        consoleBody.textContent = `[FAILED: ${resp.invariant_violated} (${resp.execution_duration_ms}ms)]
+${resp.stdout}`;
+        if (resp.socratic_prompt) {
+          socraticBox.hidden = false;
+          socraticBox.textContent = `Cognitive Mentor: ${resp.socratic_prompt}`;
+        }
+      }
+    } catch (err: any) {
+      consoleBody.textContent = `Execution error: ${err.message}`;
+    } finally {
+      runBtn.disabled = false;
+      runBtn.textContent = 'Run Property Crucible';
+    }
+  });
+
+  mentorBtn.addEventListener('click', async () => {
+    mentorBtn.disabled = true;
+    mentorBtn.textContent = 'Consulting Mentor…';
+    consoleEl.hidden = false;
+    socraticBox.hidden = false;
+    socraticBox.textContent = 'Cognitive Mentor analyzing invariants…';
+
+    try {
+      const resp = await fetch('/api/v1/ai/apprenticeship/turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: 'workbench_' + lid,
+          student_code: textarea.value,
+          user_message: 'How should I handle concurrency in this rate limiter?',
+        }),
+      }).then(r => r.json());
+      socraticBox.textContent = `Cognitive Mentor (Zero-Leakage Fading): ${resp.response}`;
+    } catch (err: any) {
+      socraticBox.textContent = `Mentor error: ${err.message}`;
+    } finally {
+      mentorBtn.disabled = false;
+      mentorBtn.textContent = 'Ask Cognitive Mentor';
+    }
+  });
+
+  wrap.append(dialog);
+  dialog.showModal();
 }

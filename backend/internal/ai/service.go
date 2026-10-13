@@ -68,6 +68,10 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("POST /api/v1/ai/lessons/{id}/classify-split", auth.Require(http.HandlerFunc(s.classifySplit)))
 	mux.HandleFunc("GET /api/v1/ai/associative-search", s.associativeSearch)
 	mux.HandleFunc("GET /api/v1/ai/lessons/{id}/checkpoints", s.lessonCheckpoints)
+	mux.Handle("GET /api/v1/ai/epistemic/profile", auth.Require(http.HandlerFunc(s.epistemicProfile)))
+	mux.HandleFunc("GET /api/v1/ai/lessons/{id}/shadow-workbench", s.lessonShadowWorkbench)
+	mux.HandleFunc("POST /api/v1/ai/lessons/{id}/crucible-run", s.lessonCrucibleRun)
+	mux.HandleFunc("POST /api/v1/ai/apprenticeship/turn", s.apprenticeshipTurn)
 }
 
 type TranscriptChunk struct {
