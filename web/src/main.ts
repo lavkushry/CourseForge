@@ -1317,13 +1317,14 @@ async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
 }
 
-async function loadCourse(id: string, preview = true, targetLessonId?: string, autoplay = true): Promise<void> {
+async function loadCourse(id: string, preview = false, targetLessonId?: string, autoplay = true): Promise<void> {
   const navigation = newNavigation();
   await controller?.close();
   if (!navigation.current()) return;
   try {
     feedback('Opening course…');
-    const response = await api.courseAll(id, navigation.signal, preview);
+    const isPreview = !user ? true : (user.role === 'admin' ? false : preview);
+    const response = await api.courseAll(id, navigation.signal, isPreview);
     if (!navigation.current()) return;
     selectedCourse = response.course;
     learnedLessons = new Set(); learnedCursor = ''; learnedLoaded = false;
@@ -1364,10 +1365,11 @@ async function loadCourse(id: string, preview = true, targetLessonId?: string, a
       const contId = targetLessonId || discovery?.getContinuation(id)?.id || response.resume_lesson_id;
       const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
       if (targetLesson) {
-        await loadLesson(targetLesson, autoplay);
+        await loadLesson(targetLesson, autoplay, true);
         return;
       }
     }
+    required('#lesson-title').textContent = 'Choose a lesson';
     required<HTMLElement>('#lesson-title').focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     feedback('');
@@ -1426,7 +1428,7 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
       pw.focus({ preventScroll: true });
       if (pw.getBoundingClientRect().top < 0) { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; window.scrollTo(0, 0); }
     }
-    if (autoplay && navigation.current() && controller?.state === 'ready') await controller.requestPlay();
+    if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
     feedback('');
   } catch (error) {
     if (!isAbort(error) && navigation.current()) {

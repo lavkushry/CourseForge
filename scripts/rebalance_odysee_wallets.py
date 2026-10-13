@@ -196,8 +196,8 @@ def main():
     print("=" * 80)
 
     # Step 1: Harvest any available Odysee Rewards (Method 3)
-    print("
-🎁 Step 1 (Method 3): Harvesting available Odysee API rewards across all accounts...")
+    print()
+    print("🎁 Step 1 (Method 3): Harvesting available Odysee API rewards across all accounts...")
     total_rewards = 0.0
     for acc in ACCOUNTS:
         total_rewards += harvest_rewards(acc)
@@ -205,14 +205,14 @@ def main():
         print("   No immediate rewards ready to claim (or already harvested).")
 
     # Step 2: Unlock any pending tips on all 5 accounts (Method 4)
-    print("
-🔍 Step 2 (Method 4): Unlocking any pending tips/supports across all 5 accounts...")
+    print()
+    print("🔍 Step 2 (Method 4): Unlocking any pending tips/supports across all 5 accounts...")
     for acc in ACCOUNTS:
         unlock_all_tips(acc)
 
     # Step 3: Read current available balances
-    print("
-📊 Step 3: Reading available balances...")
+    print()
+    print("📊 Step 3: Reading available balances...")
     balances = {}
     for acc in ACCOUNTS:
         bal = get_balance(acc["token"])
@@ -220,12 +220,12 @@ def main():
         print(f"   [{acc['name']}]: {bal:.6f} LBC")
 
     total_avail = sum(balances.values())
-    print(f"
-   Total Pooled Available: {total_avail:.6f} LBC (Capacity: {int(total_avail / 0.0001):,} video claims)")
+    print()
+    print(f"   Total Pooled Available: {total_avail:.6f} LBC (Capacity: {int(total_avail / 0.0001):,} video claims)")
 
     target = round(total_avail / len(ACCOUNTS), 4)
-    print(f"   Ideal Target Per Account: ~{target:.4f} LBC
-")
+    print(f"   Ideal Target Per Account: ~{target:.4f} LBC")
+    print()
 
     # Step 4: Rebalance from surplus accounts to deficit accounts (Method 4)
     print("🔄 Step 4 (Method 4): Rebalancing liquidity to accounts below 0.025 LBC threshold...")
@@ -256,8 +256,8 @@ def main():
 
     # Step 5: Final verification
     time.sleep(1)
-    print("
-" + "=" * 80)
+    print()
+    print("=" * 80)
     print("🏁 FINAL FUEL & LIQUIDITY STATUS ACROSS ALL 5 WORKERS")
     print("=" * 80)
     for acc in ACCOUNTS:
@@ -265,8 +265,8 @@ def main():
         final_bal = get_balance(acc["token"])
         claims_capacity = int(final_bal / 0.0001)
         print(f"   ✅ {acc['name']:<35} : {final_bal:.6f} LBC  (~{claims_capacity:,} claims)")
-    print("=" * 80 + "
-")
+    print("=" * 80)
+    print()
 
 
 if __name__ == "__main__":

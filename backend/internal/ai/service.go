@@ -245,11 +245,40 @@ Relevant Lecture Excerpts:
 	})
 }
 
+func extractSearchKeywords(q string) string {
+	stopWords := map[string]bool{
+		"what": true, "is": true, "an": true, "a": true, "the": true, "in": true, "of": true,
+		"for": true, "how": true, "why": true, "does": true, "do": true, "can": true,
+		"to": true, "and": true, "or": true, "with": true, "by": true, "on": true,
+		"at": true, "from": true, "explain": true, "describe": true, "tell": true,
+		"me": true, "about": true, "difference": true, "between": true, "vs": true,
+	}
+	words := strings.Fields(strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			return r
+		}
+		return ' '
+	}, q))
+	var result []string
+	for _, w := range words {
+		if !stopWords[strings.ToLower(w)] && len(w) > 1 {
+			result = append(result, w)
+		}
+	}
+	if len(result) == 0 {
+		return q
+	}
+	return strings.Join(result, " ")
+}
+
 func (s *Service) findRelevantCitations(ctx context.Context, courseID, lessonID, question string, limit int) []Citation {
 	var citations []Citation
 
 	// First try pgvector cosine similarity if embedding model responds
-	emb, err := s.generateEmbedding(ctx, question)
+	embCtx, embCancel := context.WithTimeout(ctx, 4*time.Second)
+	emb, err := s.generateEmbedding(embCtx, question)
+	embCancel()
+
 	if err == nil && len(emb) == 1024 {
 		vecStr := formatVector(emb)
 		query := `
@@ -277,17 +306,30 @@ func (s *Service) findRelevantCitations(ctx context.Context, courseID, lessonID,
 
 	// If vector returned few or no rows, fall back to PostgreSQL full-text search
 	if len(citations) < 2 {
+		dbCtx := ctx
+		var dbCancel context.CancelFunc
+		if ctx.Err() != nil {
+			dbCtx, dbCancel = context.WithTimeout(context.Background(), 5*time.Second)
+			defer dbCancel()
+		}
+
+		cleanKeywords := extractSearchKeywords(question)
 		query := `
 			SELECT t.id, t.lesson_id, COALESCE(l.title, ''), t.start_seconds, t.end_seconds, t.text
 			FROM transcript_chunks t
 			JOIN lessons l ON l.id = t.lesson_id
 			WHERE ($1 = '' OR l.course_id = $1)
 			  AND ($2 = '' OR l.id = $2)
-			  AND (t.search_document @@ plainto_tsquery('simple', $3) OR t.text ILIKE '%' || $3 || '%')
+			  AND (
+			       t.search_document @@ websearch_to_tsquery('simple', $3)
+			    OR (length($4) > 1 AND t.search_document @@ plainto_tsquery('simple', $4))
+			    OR (length($4) > 2 AND t.text ILIKE '%' || $4 || '%')
+			    OR t.text ILIKE '%' || $3 || '%'
+			  )
 			ORDER BY t.start_seconds ASC
-			LIMIT $4
+			LIMIT $5
 		`
-		rows, qErr := s.Pool.Query(ctx, query, courseID, lessonID, question, limit)
+		rows, qErr := s.Pool.Query(dbCtx, query, courseID, lessonID, question, cleanKeywords, limit)
 		if qErr == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -311,6 +353,13 @@ func (s *Service) findRelevantCitations(ctx context.Context, courseID, lessonID,
 
 	// If still empty and lessonID specified, fetch the first few chunks of the lesson
 	if len(citations) == 0 && lessonID != "" {
+		dbCtx := ctx
+		var dbCancel context.CancelFunc
+		if ctx.Err() != nil {
+			dbCtx, dbCancel = context.WithTimeout(context.Background(), 5*time.Second)
+			defer dbCancel()
+		}
+
 		query := `
 			SELECT t.id, t.lesson_id, COALESCE(l.title, ''), t.start_seconds, t.end_seconds, t.text
 			FROM transcript_chunks t
@@ -319,7 +368,7 @@ func (s *Service) findRelevantCitations(ctx context.Context, courseID, lessonID,
 			ORDER BY t.start_seconds ASC
 			LIMIT $2
 		`
-		rows, qErr := s.Pool.Query(ctx, query, lessonID, limit)
+		rows, qErr := s.Pool.Query(dbCtx, query, lessonID, limit)
 		if qErr == nil {
 			defer rows.Close()
 			for rows.Next() {

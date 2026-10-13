@@ -177,10 +177,7 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	lessons := make([]Lesson, 0)
 	var resumeLessonID string
 	if c.Enrolled || p.Role == "admin" {
-		_ = s.Pool.QueryRow(r.Context(), `SELECT lesson_id FROM watch_history WHERE user_id= AND course_id= ORDER BY watched_at DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
-		if resumeLessonID == "" {
-			_ = s.Pool.QueryRow(r.Context(), `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id= AND l.course_id= AND NOT p.completed ORDER BY p.updated_at DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
-		}
+		_ = s.Pool.QueryRow(r.Context(), `SELECT lesson_id FROM (SELECT lesson_id, watched_at AS last_time FROM watch_history WHERE user_id=$1 AND course_id=$2 UNION ALL SELECT p.lesson_id, p.updated_at AS last_time FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id=$1 AND l.course_id=$2 AND NOT p.completed) recent ORDER BY last_time DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
 		limit, cursor, ok := pageArgs(w, r)
 		if !ok {
 			return
