@@ -446,7 +446,7 @@ function renderApp(account: User): void {
           <div class="classroom-heading-left">
             <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-              <span>← All courses</span>
+              <span>All courses</span>
             </button>
             <p id="course-name" class="eyebrow"></p>
             <span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span>
