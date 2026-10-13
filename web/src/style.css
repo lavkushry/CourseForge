@@ -5946,15 +5946,38 @@ html[data-accent="rose"] {
     top: 0 !important;
     left: 0 !important;
     margin: 0 !important;
+    background: #090a0f !important;
   }
 
   .omni-search-shell {
     height: 100vh !important;
     max-height: 100vh !important;
+    background: #090a0f !important;
   }
 
   .omni-search-body {
-    max-height: calc(100vh - 160px) !important;
+    max-height: calc(100vh - 140px) !important;
+  }
+
+  .omni-item-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .omni-item-title {
+    font-size: 0.85rem !important;
+    white-space: normal !important;
+    line-height: 1.35 !important;
+  }
+
+  .omni-item-subtitle {
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .omni-jump-tag {
+    display: none !important;
   }
 }
 
