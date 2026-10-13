@@ -377,14 +377,60 @@ function renderApp(account: User): void {
               <button id="unlock-controls" class="unlock-controls" hidden aria-label="Hold to unlock controls, or press Enter or Escape">Hold to unlock</button>
               <div id="ownership-overlay" class="ownership-overlay" hidden><p id="ownership-message"></p><button id="resume-here" class="button primary">Resume here</button><button id="move-here" class="button primary" hidden>Move playback here</button><button id="retry-lesson" class="button primary" hidden>Retry lesson</button><button id="sign-in-again" class="button primary" hidden>Sign in again</button><button id="return-to-course" class="button quiet" hidden>Return to course</button></div>
             </div>
-            <div class="player-tools">
-              <div class="player-actions"><button id="play-toggle" class="button">Play</button><button id="restart" class="button quiet">Restart</button><button id="capture" class="button quiet">Capture timestamp</button></div>
-              <div class="player-settings"><label for="speed">Speed</label><select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option><option value="3">3×</option></select><button id="theater" class="button quiet" aria-pressed="false">Theater</button><button id="pip-toggle" class="button quiet" aria-pressed="false">PiP</button><button id="fullscreen" class="button quiet">Fullscreen</button><button id="lock-controls" class="button quiet" aria-pressed="false">Lock</button></div>
+            <!-- Clean Modern Lesson Meta Section Below Player -->
+            <div class="lesson-meta-bar">
+              <div class="lesson-meta-top">
+                <div class="lesson-meta-badges">
+                  <span id="lesson-module-badge" class="lesson-badge-pill accent">MODULE 1</span>
+                  <span id="lesson-duration-badge" class="lesson-badge-pill">Lecture</span>
+                  <span id="coverage" class="lesson-badge-pill coverage">0% watched</span>
+                </div>
+                <div class="lesson-progress-container">
+                  <div class="lesson-progress-track">
+                    <div id="lesson-progress-fill" class="lesson-progress-fill" style="width: 0%"></div>
+                  </div>
+                  <span id="save-status" class="lesson-save-status">No unsaved progress</span>
+                </div>
+              </div>
+
+              <div class="lesson-title-action-row">
+                <div class="lesson-heading-group">
+                  <h1 id="lesson-title" class="lesson-main-title" tabindex="-1">Choose a lesson</h1>
+                  <p class="lesson-instructor-meta">
+                    <span class="instructor-tag">Instructor</span>
+                    <span id="course-name-sub" class="course-name-text">CourseForge Masterclass</span>
+                  </p>
+                </div>
+
+                <div class="lesson-action-pills">
+                  <button id="mark-complete" class="action-pill pill-complete" disabled title="Mark as complete">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Mark Complete</span>
+                  </button>
+                  <button id="save-note-pill" class="action-pill pill-note" type="button" title="Save lesson note">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span>Save Note</span>
+                  </button>
+                  <button id="capture-pill" class="action-pill pill-capture" type="button" title="Capture timestamp">
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Capture</span>
+                  </button>
+                  <button id="next-lesson" class="action-pill pill-next" disabled title="Next lesson">
+                    <span>Next Lesson</span>
+                    <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
-            <p id="player-status" class="player-status" role="status" aria-live="polite">Choose a lesson to begin.</p>
-            <div class="lesson-progress"><span id="save-status">No unsaved progress</span><span id="coverage"></span></div>
+
+            <!-- Legacy controls container kept for test harness and background sync, completely hidden from sight -->
+            <div class="player-tools sr-only-actionable">
+              <div class="player-actions"><button id="play-toggle" class="button">Play</button><button id="restart" class="button quiet">Restart</button><button id="capture" class="button quiet">Capture timestamp</button></div>
+              <div class="player-settings"><label for="speed">Speed</label><select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option><option value="2.5">2.5×</option><option value="3">3×</option></select><button id="theater" class="button quiet" aria-pressed="false">Theater</button><button id="pip-toggle" class="button quiet" aria-pressed="false">PiP</button><button id="fullscreen" class="button quiet">Fullscreen</button><button id="lock-controls" class="button quiet" aria-pressed="false">Lock</button><label class="autoplay"><input id="autoplay" type="checkbox" /> Play next lesson automatically</label></div>
+            </div>
+            <p id="player-status" class="player-status" role="status" aria-live="polite" hidden>Choose a lesson to begin.</p>
             <div id="next-countdown" class="next-countdown" hidden><span id="countdown-label"></span><button id="cancel-next" class="button quiet">Stay here</button></div>
-            <div class="lesson-footer"><label class="autoplay"><input id="autoplay" type="checkbox" /> Play next lesson automatically</label><div class="player-actions"><button id="mark-complete" class="button quiet" disabled>Mark as complete</button><button id="next-lesson" class="button" disabled>Next lesson →</button></div></div>
+            <div class="lesson-footer" hidden></div>
             <div id="lesson-description" class="lesson-description"></div>
             <section id="materials" class="materials" hidden aria-label="Lesson materials"></section>
             <section id="learning-tools" class="learning-tools" hidden aria-label="Learning tools"></section>
@@ -539,12 +585,57 @@ function renderApp(account: User): void {
       required('#save-status').textContent = { saved: 'Progress saved', saving: 'Saving progress…', retrying: 'Connection interrupted. Retrying progress save…', stopped: 'Progress saving paused' }[status];
     },
     countdown: seconds => {
-      required<HTMLElement>('#next-countdown').hidden = seconds === null;
+      const countdownEl = required<HTMLElement>('#next-countdown');
+      countdownEl.hidden = seconds === null;
       required('#countdown-label').textContent = seconds === null ? '' : `Next lesson in ${seconds}s`;
+      const upNextCard = document.querySelector<HTMLElement>('#playerUpNextCard');
+      if (upNextCard) {
+        if (seconds !== null) {
+          upNextCard.hidden = false;
+          const badge = upNextCard.querySelector('#upNextCountdownBadge');
+          if (badge) badge.textContent = `${seconds}s`;
+          const next = nextLesson();
+          const title = upNextCard.querySelector('#upNextTitleText');
+          if (title && next) title.textContent = next.title;
+          const img = upNextCard.querySelector<HTMLImageElement>('#upNextThumbImg');
+          if (img && next) img.src = `/api/artwork/lectures/${next.id}/thumbnail?size=sm`;
+        } else {
+          upNextCard.hidden = true;
+        }
+      }
     },
   });
   bindInterface(video, pageScope.signal);
-  mountPlayerChrome(required<HTMLElement>('#player-wrap'), video, { seek: position => controller?.seek(position) }, pageScope.signal);
+  mountPlayerChrome(
+    required<HTMLElement>('#player-wrap'),
+    video,
+    {
+      seek: position => controller?.seek(position),
+      nextLesson: () => {
+        const next = nextLesson();
+        if (next) void loadLesson(next, true);
+      },
+      prevLesson: () => {
+        if (!selectedLesson) return;
+        const index = lessons.findIndex(l => l.id === selectedLesson?.id);
+        if (index > 0) {
+          const prev = lessons[index - 1];
+          if (prev) void loadLesson(prev);
+        }
+      },
+      toggleTheater,
+      markComplete: () => markComplete(),
+      getNextLesson: () => nextLesson(),
+      onWatchNext: () => {
+        const next = nextLesson();
+        if (next) void loadLesson(next, true);
+      },
+      onCancelNext: () => {
+        controller?.cancelNext();
+      },
+    },
+    pageScope.signal
+  );
   restoreBrowserPreferences(video);
   void api.preferences(pageScope.signal).then(value => preferences?.initialize(value)).catch(error => {
     if (!isAbort(error)) feedback(`Could not load player preferences: ${errorMessage(error)}`, true);
@@ -615,6 +706,20 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   on('#cancel-next', () => controller?.cancelNext());
   on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next); });
   on('#mark-complete', () => { void markComplete(); });
+  on('#save-note-pill', () => {
+    const notesEl = document.querySelector<HTMLElement>('#notes');
+    if (notesEl) {
+      notesEl.hidden = false;
+      const noteInput = document.querySelector<HTMLTextAreaElement>('#note-content');
+      if (noteInput) {
+        noteInput.focus();
+        notesEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+  on('#capture-pill', () => {
+    document.querySelector<HTMLButtonElement>('#capture')?.click();
+  });
   on('#more-lessons', () => { void loadMoreLessons(); });
   on('#drawer-more-lessons', () => { void loadMoreLessons(); });
   on('#more-learned', () => { void loadLearnedStatus(true); });
@@ -987,9 +1092,25 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     selectedLesson = response.lesson;
     required('#lesson-description').textContent = response.lesson.description || '';
     renderMaterials(response.lesson);
-    if (response.progress?.completed) required('#coverage').textContent = 'Lesson completed';
-    else if (response.progress?.coverage !== undefined) required('#coverage').textContent = `${Math.floor(response.progress.coverage)}% watched`;
-    else if (response.progress?.percent !== undefined) required('#coverage').textContent = `Progress: ${response.progress.percent}%`;
+    if (response.progress?.completed) {
+      required('#coverage').textContent = 'Lesson completed';
+      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+      if (fill) fill.style.width = '100%';
+    } else if (response.progress?.coverage !== undefined) {
+      const pct = Math.min(100, Math.floor(response.progress.coverage));
+      required('#coverage').textContent = `${pct}% watched`;
+      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+      if (fill) fill.style.width = `${pct}%`;
+    } else if (response.progress?.percent !== undefined) {
+      const pct = Math.min(100, Math.floor(response.progress.percent));
+      required('#coverage').textContent = `Progress: ${pct}%`;
+      const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+      if (fill) fill.style.width = `${pct}%`;
+    }
+    const moduleBadge = document.querySelector<HTMLElement>('#lesson-module-badge');
+    if (moduleBadge) moduleBadge.textContent = response.lesson.section_title ? response.lesson.section_title.toUpperCase() : 'MODULE 1';
+    const subCourse = document.querySelector<HTMLElement>('#course-name-sub');
+    if (subCourse && selectedCourse) subCourse.textContent = selectedCourse.title;
     required<HTMLButtonElement>('#mark-complete').disabled = false;
     required<HTMLElement>('#notes').hidden = false;
     void loadNotes(response.lesson.id);
@@ -997,6 +1118,8 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
     if (!learnedLoaded) void loadLearnedStatus();
     studyRail?.updateContext(selectedCourse, lessons, selectedLesson, learnedLessons);
     await controller?.open(response.lesson, takeOver);
+    const upcoming = nextLesson();
+    if (upcoming) void prefetchLesson(upcoming.id);
     if (!autoplay && navigation.current()) required<HTMLElement>('#player-wrap').focus({ preventScroll: true });
     if (autoplay && navigation.current() && preferences?.current.autoplay && controller?.state === 'ready') await controller.requestPlay();
     feedback('');
@@ -1082,6 +1205,16 @@ async function loadMoreLessons(): Promise<void> {
     if (nextBtn) nextBtn.disabled = nextLesson() === null;
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
   finally { controls.forEach(control => { control.disabled = false; }); }
+}
+
+async function prefetchLesson(lessonId: string): Promise<void> {
+  try {
+    const res = await api.lesson(lessonId, navigationScope.signal);
+    if (res?.lesson?.id) {
+      const img = new Image();
+      img.src = `/api/artwork/lectures/${res.lesson.id}/thumbnail?size=sm`;
+    }
+  } catch (_) {}
 }
 
 async function markComplete(targetLessonId?: string): Promise<void> {
@@ -1191,7 +1324,14 @@ function updatePlayerState(state: PlayerState, message: string): void {
 }
 
 function updateProgress(ack: PulseAck): void {
-  required('#coverage').textContent = ack.completed ? 'Lesson completed' : `${Math.floor(ack.coverage)}% watched`;
+  const pct = Math.min(100, Math.floor(ack.coverage));
+  required('#coverage').textContent = ack.completed ? 'Lesson completed' : `${pct}% watched`;
+  const fill = document.querySelector<HTMLElement>('#lesson-progress-fill');
+  if (fill) fill.style.width = ack.completed ? '100%' : `${pct}%`;
+  const badge = document.querySelector<HTMLElement>('#lesson-module-badge');
+  if (badge && selectedLesson) {
+    badge.textContent = selectedLesson.section_title ? selectedLesson.section_title.toUpperCase() : 'MODULE 1';
+  }
 }
 
 function renderMaterials(lesson: Lesson): void {

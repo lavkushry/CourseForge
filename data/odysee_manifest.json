@@ -10374,5 +10374,155 @@
     "odysee_url": "https://odysee.com/gauravsen-hld-2026-097-request-batching-and-conclusion:4d2e548a659a66aeb4f0d0f3e3af31f39506e9a7",
     "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-097-request-batching-and-conclusion/4d2e548a659a66aeb4f0d0f3e3af31f39506e9a7",
     "uploaded_at": "2026-10-13T03:38:16+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[098] Module 17 (3. High Level Design \u2014 5. Hotstar Live Video Streaming Design) - Live Streaming Requirement Breakdown.mp4": {
+    "video_id": "v_61eaa67452bc",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[098] Module 17 (3. High Level Design \u2014 5. Hotstar: Live Video Streaming Design) - Live Streaming Requirement Breakdown",
+    "claim_name": "gauravsen-hld-2026-098-live-streaming-requirement-breakdown",
+    "claim_id": "db9367ff462c76cfafc1e548d7ce2f7574f18190",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-098-live-streaming-requirement-breakdown:db9367ff462c76cfafc1e548d7ce2f7574f18190",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-098-live-streaming-requirement-breakdown/db9367ff462c76cfafc1e548d7ce2f7574f18190",
+    "uploaded_at": "2026-10-13T03:40:47+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[099] Module 17 (3. High Level Design \u2014 5. Hotstar Live Video Streaming Design) - Video Ingestion and Transformation.mp4": {
+    "video_id": "v_0713513336eb",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[099] Module 17 (3. High Level Design \u2014 5. Hotstar: Live Video Streaming Design) - Video Ingestion and Transformation",
+    "claim_name": "gauravsen-hld-2026-099-video-ingestion-and-transformation",
+    "claim_id": "42d82bc88ee8ba8f4ed61f6ae910d0b7c955936e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-099-video-ingestion-and-transformation:42d82bc88ee8ba8f4ed61f6ae910d0b7c955936e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-099-video-ingestion-and-transformation/42d82bc88ee8ba8f4ed61f6ae910d0b7c955936e",
+    "uploaded_at": "2026-10-13T03:42:45+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[100] Module 17 (3. High Level Design \u2014 5. Hotstar Live Video Streaming Design) - Transferring processed videos to end users.mp4": {
+    "video_id": "v_67d1488e681b",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[100] Module 17 (3. High Level Design \u2014 5. Hotstar: Live Video Streaming Design) - Transferring processed videos to end users",
+    "claim_name": "gauravsen-hld-2026-100-transferring-processed-videos-to-end-users",
+    "claim_id": "6d7c4e3dd4e9231b7ff3e6ae07a7d1edc3401bae",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-100-transferring-processed-videos-to-end-users:6d7c4e3dd4e9231b7ff3e6ae07a7d1edc3401bae",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-100-transferring-processed-videos-to-end-users/6d7c4e3dd4e9231b7ff3e6ae07a7d1edc3401bae",
+    "uploaded_at": "2026-10-13T03:45:14+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[101] Module 17 (3. High Level Design \u2014 5. Hotstar Live Video Streaming Design) - Virtual Advertising for live sports events.mp4": {
+    "video_id": "v_e9c9b5bc212e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[101] Module 17 (3. High Level Design \u2014 5. Hotstar: Live Video Streaming Design) - Virtual Advertising for live sports events",
+    "claim_name": "gauravsen-hld-2026-101-virtual-advertising-for-live-sports-events",
+    "claim_id": "479638c6993b7944873170406b138343a4be3adf",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-101-virtual-advertising-for-live-sports-events:479638c6993b7944873170406b138343a4be3adf",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-101-virtual-advertising-for-live-sports-events/479638c6993b7944873170406b138343a4be3adf",
+    "uploaded_at": "2026-10-13T03:46:58+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[102] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Google Docs Requirements.mp4": {
+    "video_id": "v_aa7ba3367a41",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[102] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Google Docs Requirements",
+    "claim_name": "gauravsen-hld-2026-102-google-docs-requirements",
+    "claim_id": "46193217a12a9c89e20f96725316b9456b50e596",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-102-google-docs-requirements:46193217a12a9c89e20f96725316b9456b50e596",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-102-google-docs-requirements/46193217a12a9c89e20f96725316b9456b50e596",
+    "uploaded_at": "2026-10-13T03:50:17+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[103] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Document Schema.mp4": {
+    "video_id": "v_0cacd51f9004",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[103] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Document Schema",
+    "claim_name": "gauravsen-hld-2026-103-document-schema",
+    "claim_id": "0a873f88e7f0735a55638004a6b99b380cff0528",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-103-document-schema:0a873f88e7f0735a55638004a6b99b380cff0528",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-103-document-schema/0a873f88e7f0735a55638004a6b99b380cff0528",
+    "uploaded_at": "2026-10-13T03:51:06+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[104] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Storing Documents.mp4": {
+    "video_id": "v_a91c0ab9ae99",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[104] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Storing Documents",
+    "claim_name": "gauravsen-hld-2026-104-storing-documents",
+    "claim_id": "266f3dedc67be169ede1406e648d8bc95e3d0512",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-104-storing-documents:266f3dedc67be169ede1406e648d8bc95e3d0512",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-104-storing-documents/266f3dedc67be169ede1406e648d8bc95e3d0512",
+    "uploaded_at": "2026-10-13T03:51:42+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[105] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Version History.mp4": {
+    "video_id": "v_4d04e5a5d8b6",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[105] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Version History",
+    "claim_name": "gauravsen-hld-2026-105-version-history",
+    "claim_id": "6c3d94fdeefafeb81aaed481b8efad5fc6dd216e",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-105-version-history:6c3d94fdeefafeb81aaed481b8efad5fc6dd216e",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-105-version-history/6c3d94fdeefafeb81aaed481b8efad5fc6dd216e",
+    "uploaded_at": "2026-10-13T03:52:36+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[106] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Avoiding Thundering Herds in Crons.mp4": {
+    "video_id": "v_08b993eae89f",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[106] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Avoiding Thundering Herds in Crons",
+    "claim_name": "gauravsen-hld-2026-106-avoiding-thundering-herds-in-crons",
+    "claim_id": "9cbb1c74ace4dc801edc36b1a3d04a233e7ac357",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-106-avoiding-thundering-herds-in-crons:9cbb1c74ace4dc801edc36b1a3d04a233e7ac357",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-106-avoiding-thundering-herds-in-crons/9cbb1c74ace4dc801edc36b1a3d04a233e7ac357",
+    "uploaded_at": "2026-10-13T03:52:58+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[107] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Compression and Caching.mp4": {
+    "video_id": "v_95a1cb11ae0d",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[107] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Compression and Caching",
+    "claim_name": "gauravsen-hld-2026-107-compression-and-caching",
+    "claim_id": "371a1d01705fbd3dd071ab022dbd224b30994454",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-107-compression-and-caching:371a1d01705fbd3dd071ab022dbd224b30994454",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-107-compression-and-caching/371a1d01705fbd3dd071ab022dbd224b30994454",
+    "uploaded_at": "2026-10-13T03:53:15+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[108] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Concurrent Writes with Locks.mp4": {
+    "video_id": "v_f6e65dd558f9",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[108] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Concurrent Writes with Locks",
+    "claim_name": "gauravsen-hld-2026-108-concurrent-writes-with-locks",
+    "claim_id": "cf66ae6fd68ccc34ec82ae5dbfcf0bf3e87de458",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-108-concurrent-writes-with-locks:cf66ae6fd68ccc34ec82ae5dbfcf0bf3e87de458",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-108-concurrent-writes-with-locks/cf66ae6fd68ccc34ec82ae5dbfcf0bf3e87de458",
+    "uploaded_at": "2026-10-13T03:55:11+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[109] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Operational Transform Overview.mp4": {
+    "video_id": "v_acae113e25d7",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[109] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Operational Transform Overview",
+    "claim_name": "gauravsen-hld-2026-109-operational-transform-overview",
+    "claim_id": "3515066f563914a895772911c0d6daf784ed2850",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-109-operational-transform-overview:3515066f563914a895772911c0d6daf784ed2850",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-109-operational-transform-overview/3515066f563914a895772911c0d6daf784ed2850",
+    "uploaded_at": "2026-10-13T03:56:26+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[110] Module 18 (3. High Level Design \u2014 6. Google Docs Collaborative editor design) - Permission Management.mp4": {
+    "video_id": "v_7f0c5cad822e",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[110] Module 18 (3. High Level Design \u2014 6. Google Docs: Collaborative editor design) - Permission Management",
+    "claim_name": "gauravsen-hld-2026-110-permission-management",
+    "claim_id": "cc012218367250e55747caf9b4d70ccdd7809bb2",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-110-permission-management:cc012218367250e55747caf9b4d70ccdd7809bb2",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-110-permission-management/cc012218367250e55747caf9b4d70ccdd7809bb2",
+    "uploaded_at": "2026-10-13T03:57:26+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[111] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Requirements of a cab aggregator.mp4": {
+    "video_id": "v_0d4e4c4b2195",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[111] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Requirements of a cab aggregator",
+    "claim_name": "gauravsen-hld-2026-111-requirements-of-a-cab-aggregator",
+    "claim_id": "5a62ae6c4b3c098685192c008ff58c7f0b980819",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-111-requirements-of-a-cab-aggregator:5a62ae6c4b3c098685192c008ff58c7f0b980819",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-111-requirements-of-a-cab-aggregator/5a62ae6c4b3c098685192c008ff58c7f0b980819",
+    "uploaded_at": "2026-10-13T04:00:55+00:00"
+  },
+  "Gaurav Sen System Design Simplified (HLD)/[112] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Static Pricing of Rides.mp4": {
+    "video_id": "v_9618352b2252",
+    "course": "Gaurav Sen System Design Simplified (HLD)",
+    "title": "[112] Module 19 (3. High Level Design \u2014 7. Design a Cab Aggregator App like Uber) - Static Pricing of Rides",
+    "claim_name": "gauravsen-hld-2026-112-static-pricing-of-rides",
+    "claim_id": "2a2d5c07904dae63a64571527f7f3c7e8c9853fb",
+    "odysee_url": "https://odysee.com/gauravsen-hld-2026-112-static-pricing-of-rides:2a2d5c07904dae63a64571527f7f3c7e8c9853fb",
+    "stream_url": "https://odysee.com/$/stream/gauravsen-hld-2026-112-static-pricing-of-rides/2a2d5c07904dae63a64571527f7f3c7e8c9853fb",
+    "uploaded_at": "2026-10-13T04:05:38+00:00"
   }
 }
