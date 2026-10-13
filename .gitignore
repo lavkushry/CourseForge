@@ -63,3 +63,6 @@ __pycache__/
 tree.txt
 ._*
 /odysee_manifest.json
+
+ACTIVE_TUNNEL_URL.txt
+/bin/

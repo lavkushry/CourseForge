@@ -31,9 +31,10 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   timeline.setAttribute('aria-label', 'Seek lesson');
   media.insertBefore(timeline, row);
 
-  const ui = (tag: string, className: string) => {
+  const ui = (tag: string, className: string, text = '') => {
     const node = document.createElement(tag);
-    node.className = className;
+    if (className) node.className = className;
+    if (text) node.textContent = text;
     return node;
   };
   const source = (selector: string) => document.querySelector<HTMLButtonElement>(selector);
@@ -103,7 +104,7 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   }, { signal });
 
   const speed = document.createElement('select');
-  speed.className = 'cinema-speed'; speed.setAttribute('aria-label', 'In-player playback speed');
+  speed.className = 'cinema-speed sr-only-speed'; speed.setAttribute('aria-label', 'In-player playback speed');
   for (const rate of [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]) {
     const option = document.createElement('option'); option.value = String(rate); option.textContent = `${rate}×`; speed.append(option);
   }
@@ -116,9 +117,183 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   }, { signal });
   video.addEventListener('ratechange', () => { speed.value = String(video.playbackRate); }, { signal });
   video.addEventListener('loadedmetadata', () => { speed.value = String(video.playbackRate); }, { signal });
+
+  const feedback = ui('span', 'cinema-seek-feedback'); feedback.hidden = true;
+  feedback.setAttribute('aria-live', 'polite'); wrap.append(feedback);
+  let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+  const showFeedback = (text: string) => {
+    feedback.textContent = text;
+    feedback.hidden = false;
+    clearTimeout(feedbackTimer);
+    feedbackTimer = setTimeout(() => { feedback.hidden = true; }, 1100);
+  };
+  video.addEventListener('seeked', () => {
+    showFeedback(formatTime(video.currentTime));
+  }, { signal });
+
+  // Modern Glassmorphic Settings Menu & iOS Toggles
+  const settingsBtn = document.createElement('button');
+  settingsBtn.type = 'button';
+  settingsBtn.className = 'cinema-button cinema-settings-btn';
+  settingsBtn.title = 'Player settings';
+  settingsBtn.setAttribute('aria-label', 'Player settings');
+  settingsBtn.setAttribute('aria-haspopup', 'dialog');
+  settingsBtn.setAttribute('aria-expanded', 'false');
+  settingsBtn.append(svgIcon('settings'));
+
+  const settingsPopover = ui('div', 'cinema-settings-popover');
+  settingsPopover.hidden = true;
+  settingsPopover.setAttribute('role', 'dialog');
+  settingsPopover.setAttribute('aria-label', 'Playback Settings');
+  wrap.append(settingsPopover);
+
+  const speedRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  let subtitlesEnabled = false;
+
+  const renderSettingsPopover = () => {
+    settingsPopover.replaceChildren();
+
+    // Section 1: Playback Speed
+    const speedSec = ui('div', 'popover-section');
+    const speedHeader = ui('div', 'popover-section-label', 'PLAYBACK SPEED');
+    const speedChips = ui('div', 'popover-chips-grid');
+    for (const rate of speedRates) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      const isCurrent = Math.abs(video.playbackRate - rate) < 0.05;
+      chip.className = 'popover-chip' + (isCurrent ? ' active' : '');
+      chip.textContent = `${rate}×`;
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        video.playbackRate = rate;
+        if (externalSpeed) {
+          externalSpeed.value = String(rate);
+          externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        speed.value = String(rate);
+        renderSettingsPopover();
+        showFeedback(`${rate}× Speed`);
+      }, { signal });
+      speedChips.append(chip);
+    }
+    speedSec.append(speedHeader, speedChips);
+    settingsPopover.append(speedSec);
+
+    // Section 2: Streaming Quality
+    const qualitySec = ui('div', 'popover-section');
+    const qualityHeader = ui('div', 'popover-section-label', 'STREAMING QUALITY');
+    const qualityChips = ui('div', 'popover-chips-grid');
+    const qualityOptions = ['Auto (1080p)', '1080p', '720p', '480p'];
+    for (const q of qualityOptions) {
+      const qChip = document.createElement('button');
+      qChip.type = 'button';
+      qChip.className = 'popover-chip' + (q.startsWith('Auto') ? ' active' : '');
+      qChip.textContent = q;
+      qChip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showFeedback(`Quality: ${q}`);
+      }, { signal });
+      qualityChips.append(qChip);
+    }
+    qualitySec.append(qualityHeader, qualityChips);
+    settingsPopover.append(qualitySec);
+
+    // Section 3: Subtitles / CC Toggle
+    const ccRow = ui('div', 'popover-switch-row');
+    const ccLabel = ui('span', 'switch-label', 'Subtitles / CC');
+    const ccSwitch = document.createElement('button');
+    ccSwitch.type = 'button';
+    ccSwitch.className = 'ios-switch' + (subtitlesEnabled ? ' is-on' : '');
+    ccSwitch.setAttribute('role', 'switch');
+    ccSwitch.setAttribute('aria-checked', String(subtitlesEnabled));
+    const ccThumb = ui('span', 'ios-switch-thumb');
+    ccSwitch.append(ccThumb);
+    ccSwitch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      subtitlesEnabled = !subtitlesEnabled;
+      const tracks = video.textTracks;
+      for (let i = 0; i < tracks.length; i++) {
+        const tr = tracks[i];
+        if (tr) tr.mode = subtitlesEnabled ? 'showing' : 'hidden';
+      }
+      renderSettingsPopover();
+      showFeedback(subtitlesEnabled ? 'Subtitles On' : 'Subtitles Off');
+    }, { signal });
+    ccRow.append(ccLabel, ccSwitch);
+    settingsPopover.append(ccRow);
+
+    // Section 4: Autoplay Next Toggle
+    const autoplayCheckbox = document.querySelector<HTMLInputElement>('#autoplay');
+    const isAuto = autoplayCheckbox?.checked ?? true;
+    const autoRow = ui('div', 'popover-switch-row');
+    const autoLabel = ui('span', 'switch-label', 'Autoplay Next');
+    const autoSwitch = document.createElement('button');
+    autoSwitch.type = 'button';
+    autoSwitch.className = 'ios-switch' + (isAuto ? ' is-on' : '');
+    autoSwitch.setAttribute('role', 'switch');
+    autoSwitch.setAttribute('aria-checked', String(isAuto));
+    const autoThumb = ui('span', 'ios-switch-thumb');
+    autoSwitch.append(autoThumb);
+    autoSwitch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (autoplayCheckbox) {
+        autoplayCheckbox.checked = !autoplayCheckbox.checked;
+        autoplayCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      renderSettingsPopover();
+      showFeedback(autoplayCheckbox?.checked ? 'Autoplay On' : 'Autoplay Off');
+    }, { signal });
+    autoRow.append(autoLabel, autoSwitch);
+    settingsPopover.append(autoRow);
+  };
+
+  const closeSettings = () => {
+    if (!settingsPopover.hidden) {
+      settingsPopover.hidden = true;
+      settingsBtn.setAttribute('aria-expanded', 'false');
+      settingsBtn.classList.remove('is-active');
+      pin();
+    }
+  };
+
+  const openSettings = () => {
+    renderSettingsPopover();
+    settingsPopover.hidden = false;
+    settingsBtn.setAttribute('aria-expanded', 'true');
+    settingsBtn.classList.add('is-active');
+    pin();
+  };
+
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (settingsPopover.hidden) {
+      openSettings();
+    } else {
+      closeSettings();
+    }
+  }, { signal });
+
+  document.addEventListener('click', (e) => {
+    if (!settingsPopover.hidden && !settingsPopover.contains(e.target as Node) && e.target !== settingsBtn) {
+      closeSettings();
+    }
+  }, { signal });
+
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsPopover.hidden) {
+      e.stopPropagation();
+      closeSettings();
+      settingsBtn.focus();
+    }
+  }, { signal });
+
+  video.addEventListener('ratechange', () => {
+    if (!settingsPopover.hidden) renderSettingsPopover();
+  }, { signal });
+
   const pip = delegate('Picture in picture', '#pip-toggle', 'pip');
   const full = delegate('Toggle fullscreen', '#fullscreen', 'fullscreen');
-  row.append(speed, pip, full);
+  row.append(speed, settingsBtn, pip, full);
 
   const center = ui('div', 'cinema-center-actions'); center.slot = 'centered-chrome';
   const play = delegate('Play lesson', '#play-toggle', 'play'); play.classList.add('cinema-center-play');
@@ -132,14 +307,6 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   };
   for (const event of ['play', 'pause', 'ended', 'emptied']) video.addEventListener(event, updatePlay, { signal });
   updatePlay();
-
-  const feedback = ui('span', 'cinema-seek-feedback'); feedback.hidden = true;
-  feedback.setAttribute('aria-live', 'polite'); wrap.append(feedback);
-  let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
-  video.addEventListener('seeked', () => {
-    feedback.textContent = formatTime(video.currentTime); feedback.hidden = false;
-    clearTimeout(feedbackTimer); feedbackTimer = setTimeout(() => { feedback.hidden = true; }, 900);
-  }, { signal });
 
   const dialog = document.querySelector<HTMLDialogElement>('#episode-dialog');
   const previousParent = dialog?.parentElement;
@@ -172,6 +339,8 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     pip.title = pipAvailable ? 'Picture in picture' : 'Picture in picture is unavailable in this browser';
     full.setAttribute('aria-pressed', String(document.fullscreenElement === wrap));
     full.title = document.fullscreenElement === wrap ? 'Exit fullscreen' : 'Fullscreen';
+    // Settings button is always available to configure preferences
+    settingsBtn.disabled = false;
     speed.disabled = video.readyState < 1;
     speed.value = externalSpeed?.value || String(video.playbackRate);
   };
@@ -201,16 +370,16 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     else clickTimer = setTimeout(() => { clickTimer = undefined; source('#play-toggle')?.click(); }, 250);
   }, { signal });
 
-  const pin = () => { media.setAttribute('autohide', wrap.contains(document.activeElement) || Boolean(dialog?.open) ? '-1' : '3'); };
+  const pin = () => { media.setAttribute('autohide', wrap.contains(document.activeElement) || Boolean(dialog?.open) || !settingsPopover.hidden ? '-1' : '3'); };
   wrap.addEventListener('focusin', pin, { signal });
   wrap.addEventListener('focusout', () => { queueMicrotask(() => { if (!signal.aborted) pin(); }); }, { signal });
   dialog?.addEventListener('close', pin, { signal });
   signal.addEventListener('abort', () => {
     observer.disconnect(); clearTimeout(feedbackTimer); clearTimeout(clickTimer);
+    settingsPopover.remove();
     if (dialog && previousParent?.isConnected) previousParent.append(dialog);
   }, { once: true });
 }
-
 
 async function openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
   let existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');

@@ -109,7 +109,20 @@ export class StudyRail {
     const root = this.options.root;
     root.replaceChildren();
 
-    // 1. Tab Bar
+    // 1. Tab Bar with smooth navigation chevrons
+    const tabsWrap = el('div', 'study-rail-tabs-wrap');
+    const scrollLeftBtn = el('button', 'tab-scroll-btn tab-scroll-left', '‹');
+    scrollLeftBtn.type = 'button';
+    scrollLeftBtn.title = 'Scroll tabs left';
+    scrollLeftBtn.setAttribute('aria-label', 'Scroll tabs left');
+    scrollLeftBtn.addEventListener('click', () => { tabBar.scrollBy({ left: -140, behavior: 'smooth' }); });
+
+    const scrollRightBtn = el('button', 'tab-scroll-btn tab-scroll-right', '›');
+    scrollRightBtn.type = 'button';
+    scrollRightBtn.title = 'Scroll tabs right';
+    scrollRightBtn.setAttribute('aria-label', 'Scroll tabs right');
+    scrollRightBtn.addEventListener('click', () => { tabBar.scrollBy({ left: 140, behavior: 'smooth' }); });
+
     const tabBar = el('div', 'study-rail-tabs');
     tabBar.setAttribute('role', 'tablist');
 
@@ -135,7 +148,15 @@ export class StudyRail {
       tabBar.append(btn);
     }
 
-    root.append(tabBar);
+    tabBar.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        tabBar.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    tabsWrap.append(scrollLeftBtn, tabBar, scrollRightBtn);
+    root.append(tabsWrap);
 
     // 2. Active Panel
     const panelWrap = el('div', 'study-rail-panel');

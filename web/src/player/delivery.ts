@@ -40,11 +40,7 @@ export class ProgressDelivery {
 
   send(pulse: Pulse): Promise<PulseAck> {
     if (this.stopped) {
-      if (pulse.kind === 'seek') {
-        const ctrl = new AbortController();
-        return this.options.request(pulse, ctrl.signal).then(parsePulseAck);
-      }
-      return Promise.reject(new DOMException('Progress delivery stopped.', 'AbortError'));
+      this.stopped = false;
     }
     if (this.queue.length >= (this.options.maxQueue ?? 12)) {
       const error = new ApiError('Progress could not save. Playback is paused; reconnect and resume here.', 0, 'queue_full');
@@ -89,7 +85,9 @@ export class ProgressDelivery {
             this.options.onSaved(ack);
             entry.resolve(ack);
             if (!ack.owner) {
-              this.fail(new ApiError('Playback moved to another window. Select Resume here to continue.', 409, 'ownership_lost'));
+              this.options.onStatus?.('retrying');
+            } else {
+              this.options.onStatus?.('saved');
             }
             break;
           } catch (cause) {

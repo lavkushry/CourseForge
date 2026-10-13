@@ -79,6 +79,7 @@ type Lesson struct {
 	Duration     float64 `json:"duration_seconds"`
 	SectionTitle string  `json:"section_title"`
 	FlowOrder    float64 `json:"flow_order"`
+	Completed    bool    `json:"completed,omitempty"`
 }
 type Progress struct {
 	LessonID          string     `json:"lesson_id"`
@@ -189,7 +190,7 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		rows, err := s.Pool.Query(r.Context(), "SELECT id,course_id,title,sort_order,duration_seconds,section_title,flow_order FROM lessons WHERE course_id=$1 AND (flow_order,sort_order,id)>($2,$3,$4) ORDER BY flow_order,sort_order,id LIMIT $5", c.ID, mark.Flow, mark.Order, mark.ID, limit+1)
+		rows, err := s.Pool.Query(r.Context(), "SELECT l.id,l.course_id,l.title,l.sort_order,l.duration_seconds,l.section_title,l.flow_order,COALESCE(pr.completed,false) FROM lessons l LEFT JOIN progress pr ON pr.lesson_id=l.id AND pr.user_id=$1 WHERE l.course_id=$2 AND (l.flow_order,l.sort_order,l.id)>($3,$4,$5) ORDER BY l.flow_order,l.sort_order,l.id LIMIT $6", p.UserID, c.ID, mark.Flow, mark.Order, mark.ID, limit+1)
 		if err != nil {
 			s.databaseError(w, err)
 			return
@@ -197,7 +198,7 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 		defer rows.Close()
 		for rows.Next() {
 			var l Lesson
-			if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder); err != nil {
+			if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder, &l.Completed); err != nil {
 				s.databaseError(w, err)
 				return
 			}

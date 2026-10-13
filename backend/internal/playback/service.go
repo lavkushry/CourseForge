@@ -353,6 +353,17 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	now := s.Now()
+	if !owner {
+		var otherSession string
+		_ = tx.QueryRow(ctx, "SELECT session_id FROM playback_leases WHERE user_id=$1 AND session_id!=$2 AND expires_at>now()", p.UserID, v.ID).Scan(&otherSession)
+		if otherSession == "" && b.Visible && b.Kind != "hidden" && b.Kind != "close" {
+			_, err = tx.Exec(ctx, "INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,$3)ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at", p.UserID, v.ID, now.Add(40*time.Second))
+			if err == nil {
+				owner = true
+			}
+		}
+	}
 	completed, err := isComplete(ctx, tx, p, v.LessonID)
 	if err != nil {
 		fail(w, err)
@@ -367,7 +378,6 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 		write(w, 200, ack)
 		return
 	}
-	now := s.Now()
 	if v.Duration > 0 {
 		b.Position = math.Min(b.Position, v.Duration)
 	}

@@ -18,7 +18,7 @@ def run():
     
     # 2. Disk Check
     df = subprocess.run(['df', '-h', '/'], capture_output=True, text=True)
-    df_line = [l for l in df.stdout.split('\n') if '/dev/' in l]
+    df_line = [l for l in df.stdout.splitlines() if '/dev/' in l]
     disk_info = df_line[0] if df_line else 'Unknown'
     
     # 3. Manifest Progress
@@ -41,9 +41,20 @@ def run():
     last_log = 'No log'
     if (ROOT / 'linux_pipeline.log').exists():
         tail = subprocess.run(['tail', '-n', '2', str(ROOT / 'linux_pipeline.log')], capture_output=True, text=True)
-        last_log = ' | '.join(l.strip() for l in tail.stdout.strip().split('\n') if l.strip())
+        last_log = ' | '.join(l.strip() for l in tail.stdout.strip().splitlines() if l.strip())
 
-    entry = f"[{now}] Status: {status} | Claims: {mapped_total}/{total_videos} | Active: {', '.join(courses_summary[:2])} | Disk: {disk_info} | Recent: {last_log}\n"
+    # 6. Active Web UI Cloudflare Tunnel
+    t_res = subprocess.run(
+        "journalctl --user -u courseforge-tunnel.service -n 50 --no-pager | grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' | tail -n 1",
+        shell=True, capture_output=True, text=True
+    )
+    tunnel_url = t_res.stdout.strip() or 'Unknown'
+    try:
+        (ROOT / 'ACTIVE_TUNNEL_URL.txt').write_text(tunnel_url)
+    except Exception:
+        pass
+
+    entry = f"[{now}] Status: {status} | Web UI: {tunnel_url} | Claims: {mapped_total}/{total_videos} | Active: {', '.join(courses_summary[:2])} | Disk: {disk_info} | Recent: {last_log}" + chr(10)
     with open(LOG, 'a') as f:
         f.write(entry)
     print(entry.strip())
