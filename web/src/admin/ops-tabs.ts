@@ -1,12 +1,15 @@
 import type { AdminHost } from './host';
-import {  el } from './helpers';
-
+import { el } from './helpers';
 
 export function renderAuditTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
   wrap.append(
     el('h2', '', 'Administrative Audit & Security Event Log'),
-    el('p', 'muted', 'Immutable record of student course access grants, revocations, account invitations, role changes, and session revocations.')
+    el(
+      'p',
+      'muted',
+      'Immutable record of student course access grants, revocations, account invitations, role changes, and session revocations.',
+    ),
   );
 
   const container = el('div', 'admin-section');
@@ -23,7 +26,8 @@ export function renderAuditTab(host: AdminHost): HTMLElement {
       container.append(el('p', 'muted', 'No administrative actions logged yet.'));
     } else {
       const tbl = el('table', 'admin-table');
-      tbl.innerHTML = '<thead><tr><th>Administrator</th><th>Action</th><th>Target Resource (User / Course)</th><th>Timestamp</th></tr></thead>';
+      tbl.innerHTML =
+        '<thead><tr><th>Administrator</th><th>Action</th><th>Target Resource (User / Course)</th><th>Timestamp</th></tr></thead>';
       const tb = el('tbody');
       for (const item of auditResp.items) {
         const tr = el('tr');
@@ -68,29 +72,70 @@ export function renderAiTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
   wrap.append(
     el('h2', '', 'AI Learning Engine & pgvector Health'),
-    el('p', 'muted', 'PostgreSQL pgvector extension, hosted Ollama embedding/chat pipelines, and background transcription workers.')
+    el(
+      'p',
+      'muted',
+      'PostgreSQL pgvector extension, hosted Ollama embedding/chat pipelines, and background transcription workers.',
+    ),
   );
 
   const stats = el('div', 'admin-metrics-grid');
   wrap.append(stats);
 
-  host.api.aiStatus().then(st => {
-    stats.replaceChildren(
-      host.metricCard('pgvector Database', st.pgvector_active ? 'Active · 0.8.1' : 'Offline', 'PostgreSQL cosine similarity HNSW indexing', 'database'),
-      host.metricCard('Vector Dimensions', `${st.vector_dimensions}-dim`, 'Embeddings matching qwen3-embedding:0.6b', 'target'),
-      host.metricCard('Indexed Vectors', String(st.embeddings_count), 'Embeddings stored in lesson_embeddings', 'check-circle'),
-      host.metricCard('Transcript Chunks', String(st.transcript_chunks), 'Total timestamped lecture segments', 'file'),
-      host.metricCard('Ollama Service', st.ollama_online ? 'Online · Port 11434' : 'Connecting', `Model: ${st.ollama_chat_model}`, 'sparkle'),
-      host.metricCard('Embedding Model', st.ollama_embedding_model, 'Fast local inference for RAG semantic search', 'zap')
-    );
-  }).catch(err => {
-    stats.replaceChildren(el('p', 'muted', 'Could not load AI engine status: ' + err.message));
-  });
+  host.api
+    .aiStatus()
+    .then(st => {
+      stats.replaceChildren(
+        host.metricCard(
+          'pgvector Database',
+          st.pgvector_active ? 'Active · 0.8.1' : 'Offline',
+          'PostgreSQL cosine similarity HNSW indexing',
+          'database',
+        ),
+        host.metricCard(
+          'Vector Dimensions',
+          `${st.vector_dimensions}-dim`,
+          'Embeddings matching qwen3-embedding:0.6b',
+          'target',
+        ),
+        host.metricCard(
+          'Indexed Vectors',
+          String(st.embeddings_count),
+          'Embeddings stored in lesson_embeddings',
+          'check-circle',
+        ),
+        host.metricCard(
+          'Transcript Chunks',
+          String(st.transcript_chunks),
+          'Total timestamped lecture segments',
+          'file',
+        ),
+        host.metricCard(
+          'Ollama Service',
+          st.ollama_online ? 'Online · Port 11434' : 'Connecting',
+          `Model: ${st.ollama_chat_model}`,
+          'sparkle',
+        ),
+        host.metricCard(
+          'Embedding Model',
+          st.ollama_embedding_model,
+          'Fast local inference for RAG semantic search',
+          'zap',
+        ),
+      );
+    })
+    .catch(err => {
+      stats.replaceChildren(el('p', 'muted', 'Could not load AI engine status: ' + err.message));
+    });
 
   const mappingSection = el('div', 'admin-section');
   mappingSection.append(
     el('h3', '', 'Course Video Mapping & Vector Pipeline Health'),
-    el('p', 'muted', 'Dynamic catalog mapping status, media claim verification, and continuous RAG embedding synchronization.')
+    el(
+      'p',
+      'muted',
+      'Dynamic catalog mapping status, media claim verification, and continuous RAG embedding synchronization.',
+    ),
   );
 
   const mappingTable = el('table', 'admin-table');
@@ -145,15 +190,25 @@ export function renderSystemTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
   wrap.append(
     el('h2', '', 'System Diagnostics & Health'),
-    el('p', 'muted', 'PostgreSQL cluster status, media gateways, and workers.')
+    el('p', 'muted', 'PostgreSQL cluster status, media gateways, and workers.'),
   );
 
   const stats = el('div', 'admin-metrics-grid');
   stats.append(
-    host.metricCard('Go Core API', 'Healthy · Port 18090/18091', 'Active HTTP Replicas with Connection Pooling', 'pulse'),
+    host.metricCard(
+      'Go Core API',
+      'Healthy · Port 18090/18091',
+      'Active HTTP Replicas with Connection Pooling',
+      'pulse',
+    ),
     host.metricCard('PostgreSQL 18.3', 'Connected · Port 15439', 'Repeatable-read transaction isolation', 'database'),
-    host.metricCard('Media Gateway', 'Online · Standalone Range Gateway', 'Encrypted signed leases with byte-range delivery', 'zap'),
-    host.metricCard('Vite Frontend', 'Vite 8 + TypeScript 5.9', 'Zero client runtime regressions', 'rocket')
+    host.metricCard(
+      'Media Gateway',
+      'Online · Standalone Range Gateway',
+      'Encrypted signed leases with byte-range delivery',
+      'zap',
+    ),
+    host.metricCard('Vite Frontend', 'Vite 8 + TypeScript 5.9', 'Zero client runtime regressions', 'rocket'),
   );
   wrap.append(stats);
   return wrap;

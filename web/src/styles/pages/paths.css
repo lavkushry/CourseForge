@@ -14,7 +14,7 @@
   align-items: start;
 }
 
-@media(max-width: 1024px) {
+@media (max-width: 1024px) {
   .paths-layout {
     grid-template-columns: 1fr;
   }
@@ -55,7 +55,8 @@
   gap: 0.4rem;
 }
 
-.path-nav-item:hover, .path-nav-item.active {
+.path-nav-item:hover,
+.path-nav-item.active {
   border-color: #a78bfa;
   background: #201e30;
 }

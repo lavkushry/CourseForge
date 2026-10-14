@@ -1,6 +1,6 @@
 .player-enhanced media-controller {
   --media-control-height: 48px;
-  --media-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --media-font-family: var(--font-sans);
   --media-focus-ring-color: #ff987b;
 }
 
@@ -20,8 +20,13 @@
   width: 100% !important;
   height: 54px !important;
   min-height: 54px !important;
-  padding: 0 16px 10px !important;
-  background: linear-gradient(to top, rgba(10, 11, 15, 0.92) 0%, rgba(10, 11, 15, 0.5) 75%, transparent 100%) !important;
+  padding: 0 max(16px, var(--safe-right)) max(10px, var(--safe-bottom)) max(16px, var(--safe-left)) !important;
+  background: linear-gradient(
+    to top,
+    rgba(10, 11, 15, 0.92) 0%,
+    rgba(10, 11, 15, 0.5) 75%,
+    transparent 100%
+  ) !important;
   box-sizing: border-box !important;
   gap: 4px !important;
 }
@@ -41,10 +46,10 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
+  width: var(--touch-min) !important;
+  height: var(--touch-min) !important;
+  min-width: var(--touch-min) !important;
+  min-height: var(--touch-min) !important;
   border-radius: 50% !important;
   background: rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: blur(8px) !important;
@@ -56,7 +61,9 @@
   padding: 0 !important;
   margin: 0 6px 0 0 !important;
   flex-shrink: 0 !important;
-  transition: transform 0.15s ease, background-color 0.15s ease !important;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease !important;
 }
 
 .player-enhanced media-play-button:hover {
@@ -114,7 +121,7 @@
   align-items: center !important;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.95) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   font-variant-numeric: tabular-nums !important;
@@ -144,7 +151,13 @@
   --media-range-thumb-width: 15px;
   --media-range-thumb-height: 15px;
   --media-range-thumb-border-radius: 50%;
-  --media-range-thumb-background: radial-gradient(circle at center, #111216 0%, #111216 2.5px, #ffffff 2.8px, #ffffff 100%);
+  --media-range-thumb-background: radial-gradient(
+    circle at center,
+    #111216 0%,
+    #111216 2.5px,
+    #ffffff 2.8px,
+    #ffffff 100%
+  );
   --media-range-thumb-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
@@ -187,8 +200,8 @@
 
 /* Hide PiP and screen-reader only buttons from control row */
 .player-enhanced .cinema-button.sr-only-actionable,
-.player-enhanced .cinema-button[aria-label="Picture in picture"],
-.player-enhanced .cinema-button[title="Picture in picture"] {
+.player-enhanced .cinema-button[aria-label='Picture in picture'],
+.player-enhanced .cinema-button[title='Picture in picture'] {
   display: none !important;
 }
 
@@ -208,14 +221,16 @@
   padding: 0 !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
-  transition: background-color 0.15s ease, transform 0.15s ease !important;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease !important;
 }
 
 .player-enhanced .cinema-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
-.player-enhanced .cinema-button[aria-pressed=true] {
+.player-enhanced .cinema-button[aria-pressed='true'] {
   color: #ff987b !important;
   background: rgba(255, 152, 123, 0.2) !important;
 }
@@ -230,7 +245,7 @@
   display: flex !important;
   justify-content: flex-end !important;
   width: 100% !important;
-  padding: 8px 12px !important;
+  padding: max(8px, var(--safe-top)) max(12px, var(--safe-right)) 8px max(12px, var(--safe-left)) !important;
   background: linear-gradient(to bottom, rgba(8, 9, 11, 0.75) 0%, transparent 100%) !important;
   gap: 6px !important;
 }
@@ -252,7 +267,9 @@
   font-size: 28px;
   pointer-events: auto;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .player-enhanced .cinema-center-play:hover {
@@ -284,7 +301,7 @@
   visibility: hidden;
 }
 
-@media(max-width:600px) {
+@media (max-width: 600px) {
   .player-enhanced .cinema-control-row {
     height: 46px !important;
     min-height: 46px !important;
@@ -335,7 +352,9 @@
   max-width: 720px;
   width: 90vw;
   padding: 0;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 120, 80, 0.15);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(255, 120, 80, 0.15);
   z-index: 1000;
 }
 .crucible-dialog-overlay::backdrop {
@@ -378,7 +397,9 @@
   font-size: 24px;
   cursor: pointer;
 }
-.crucible-close-btn:hover { color: #fff; }
+.crucible-close-btn:hover {
+  color: #fff;
+}
 .crucible-challenge-banner {
   background: rgba(255, 255, 255, 0.04);
   border-left: 3px solid #ff987b;
@@ -393,7 +414,10 @@
 .crucible-code-editor {
   width: 100%;
   height: 220px;
-  font-family: JetBrains Mono, Fira Code, monospace;
+  font-family:
+    JetBrains Mono,
+    Fira Code,
+    monospace;
   font-size: 12px;
   line-height: 1.5;
   background: #090a0f;
@@ -422,7 +446,9 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.crucible-run-btn:hover { background: #ff5722; }
+.crucible-run-btn:hover {
+  background: #ff5722;
+}
 .crucible-mentor-btn {
   background: rgba(255, 255, 255, 0.08);
   color: #f1f2f6;
@@ -433,7 +459,9 @@
   font-size: 13px;
   cursor: pointer;
 }
-.crucible-mentor-btn:hover { background: rgba(255, 255, 255, 0.15); }
+.crucible-mentor-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
 .crucible-output-console {
   background: #090a0f;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -454,8 +482,12 @@
   white-space: pre-wrap;
   color: #d1d5db;
 }
-.crucible-console-body.pass { color: #34d399; }
-.crucible-console-body.fail { color: #f87171; }
+.crucible-console-body.pass {
+  color: #34d399;
+}
+.crucible-console-body.fail {
+  color: #f87171;
+}
 .crucible-socratic-box {
   margin-top: 8px;
   padding: 8px 12px;
@@ -483,7 +515,9 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, 0.8),
+    0 0 1px 1px rgba(255, 255, 255, 0.08);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -607,26 +641,36 @@
   color: #ff6b4a;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (pointer: coarse) {
   .player-enhanced .cinema-speed {
-    min-width: 44px;
-    max-width: 52px;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    max-width: 56px;
     padding: 2px;
     font-size: 11px;
   }
   .player-enhanced media-volume-range {
     display: none !important;
   }
-  .player-enhanced .cinema-control-row {
-    padding: 0 4px;
-    gap: 2px;
+  .player-enhanced .cinema-control-row,
+  .player-enhanced media-control-bar {
+    height: calc(56px + var(--safe-bottom)) !important;
+    min-height: calc(56px + var(--safe-bottom)) !important;
+    padding: 0 max(8px, var(--safe-right)) max(8px, var(--safe-bottom)) max(8px, var(--safe-left)) !important;
+    gap: 2px !important;
   }
-  .player-enhanced .cinema-button {
-    min-width: 38px;
-    min-height: 38px;
-    width: 38px;
-    height: 38px;
-    padding: 0;
+  .player-enhanced media-play-button,
+  .player-enhanced .cinema-button,
+  .player-enhanced .cinema-settings-btn,
+  .player-enhanced media-mute-button {
+    min-width: var(--touch-min) !important;
+    min-height: var(--touch-min) !important;
+    width: var(--touch-min) !important;
+    height: var(--touch-min) !important;
+    padding: 0 !important;
+  }
+  .player-enhanced .cinema-settings-popover .popover-chip {
+    min-height: var(--touch-min);
   }
   .cinema-settings-popover {
     bottom: 46px;
@@ -654,7 +698,7 @@
     padding: 5px 10px;
     font-size: 11px;
     border-radius: 6px;
-    min-height: 32px;
+    min-height: var(--touch-min);
     display: inline-flex;
     align-items: center;
     justify-content: center;

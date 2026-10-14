@@ -24,10 +24,14 @@ export function dialog(options: DialogOptions): HTMLDialogElement {
   if (options.subtitle) {
     titleGroup.append(el('span', 'dialog-subtitle-badge', options.subtitle));
   }
-  const closeBtn = button('Close', () => {
-    options.onClose?.();
-    if (typeof node.close === 'function') node.close();
-  }, 'button quiet close-drawer-btn');
+  const closeBtn = button(
+    'Close',
+    () => {
+      options.onClose?.();
+      if (typeof node.close === 'function') node.close();
+    },
+    'button quiet close-drawer-btn',
+  );
   heading.append(titleGroup, closeBtn);
   node.append(heading);
   if (options.body) node.append(options.body);

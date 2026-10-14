@@ -8,12 +8,15 @@ async function openLesson(page: Page): Promise<void> {
   await page.getByLabel('Password', { exact: true }).fill('CourseForgeDemo2026!');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByRole('button', { name: 'Open course' }).click();
-  if (!await page.locator('#lesson-list').isVisible()) await page.locator('#episodes').click();
+  if (!(await page.locator('#lesson-list').isVisible())) await page.locator('#episodes').click();
   await page.locator('#lesson-list:visible button, #drawer-lessons:visible button').first().click();
   await expect(page.locator('#player-wrap')).toHaveAttribute('data-state', 'ready');
 }
 
-test('player contains complete controls and a usable separate timeline at every viewport', async ({ page, context }) => {
+test('player contains complete controls and a usable separate timeline at every viewport', async ({
+  page,
+  context,
+}) => {
   await installContractFixture(context);
   await openLesson(page);
   const player = page.locator('#player-wrap');
@@ -44,12 +47,17 @@ test('documented L shortcut seeks forward instead of locking the controls', asyn
   await expect(page.locator('#unlock-controls')).toBeHidden();
 });
 
-test('timeline scrubbing and in-player pause/restart decode real frames without losing controls', async ({ page, context }) => {
+test('timeline scrubbing and in-player pause/restart decode real frames without losing controls', async ({
+  page,
+  context,
+}) => {
   await installContractFixture(context);
   await openLesson(page);
   const player = page.locator('#player-wrap');
   await player.getByRole('button', { name: 'Play lesson', exact: true }).click();
-  await expect.poll(() => page.locator('video').evaluate(video => video.getVideoPlaybackQuality().totalVideoFrames)).toBeGreaterThan(0);
+  await expect
+    .poll(() => page.locator('video').evaluate(video => video.getVideoPlaybackQuality().totalVideoFrames))
+    .toBeGreaterThan(0);
   await page.locator('#play-toggle').click();
   const timeline = player.locator('media-time-range');
   const box = await timeline.boundingBox();
@@ -73,11 +81,18 @@ test('fullscreen keeps playback settings and course navigation inside the active
   if (!capability) {
     // iOS native fullscreen has its own browser UI; desktop-only commands must
     // not pretend the DOM fullscreen API exists on this profile.
-    await expect.poll(() => page.locator('video').evaluate(video => {
-      const native = video as HTMLVideoElement & { webkitDisplayingFullscreen?: boolean; webkitPresentationMode?: string };
-      if (native.webkitDisplayingFullscreen || native.webkitPresentationMode === 'fullscreen') return 'native';
-      return /fullscreen/i.test(document.querySelector('#notice')?.textContent || '') ? 'unavailable' : 'pending';
-    })).not.toBe('pending');
+    await expect
+      .poll(() =>
+        page.locator('video').evaluate(video => {
+          const native = video as HTMLVideoElement & {
+            webkitDisplayingFullscreen?: boolean;
+            webkitPresentationMode?: string;
+          };
+          if (native.webkitDisplayingFullscreen || native.webkitPresentationMode === 'fullscreen') return 'native';
+          return /fullscreen/i.test(document.querySelector('#notice')?.textContent || '') ? 'unavailable' : 'pending';
+        }),
+      )
+      .not.toBe('pending');
     return;
   }
   await expect.poll(() => page.evaluate(() => document.fullscreenElement?.id)).toBe('player-wrap');

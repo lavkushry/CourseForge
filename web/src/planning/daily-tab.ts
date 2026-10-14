@@ -87,10 +87,11 @@ export function renderDaily(host: PlanningHost): HTMLElement {
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   for (let i = 0; i < 7; i++) {
     const dayPill = document.createElement('div');
-    dayPill.className = i === 1 ? 'calendar-day-pill today-active' : (i < 1 ? 'calendar-day-pill day-complete' : 'calendar-day-pill');
+    dayPill.className =
+      i === 1 ? 'calendar-day-pill today-active' : i < 1 ? 'calendar-day-pill day-complete' : 'calendar-day-pill';
     const dName = document.createElement('span');
     dName.className = 'day-pill-name';
-    dName.textContent = dayNames[i] ?? "";
+    dName.textContent = dayNames[i] ?? '';
     const dDot = document.createElement('span');
     dDot.className = 'day-pill-dot';
     dayPill.append(dName, dDot);
@@ -238,9 +239,12 @@ export function renderDaily(host: PlanningHost): HTMLElement {
     repInput.type = 'number';
     repInput.min = '0';
     repInput.max = '600';
-    repInput.value = host.reportedMinutes[item.id] !== undefined
-      ? String(host.reportedMinutes[item.id])
-      : (item.actual_minutes > 0 ? String(item.actual_minutes) : '');
+    repInput.value =
+      host.reportedMinutes[item.id] !== undefined
+        ? String(host.reportedMinutes[item.id])
+        : item.actual_minutes > 0
+          ? String(item.actual_minutes)
+          : '';
 
     const saveTimeBtn = document.createElement('button');
     saveTimeBtn.type = 'button';
@@ -287,9 +291,23 @@ export function renderDaily(host: PlanningHost): HTMLElement {
     const recHeading = document.createElement('div');
     recHeading.className = 'recommended-heading-row';
     recHeading.append(
-      (() => { const s = document.createElement('span'); s.className = 'eyebrow'; s.textContent = 'TODAY’S RECOMMENDED CURRICULUM'; return s; })(),
-      (() => { const h3 = document.createElement('h3'); h3.textContent = 'Targeted Mastery Goals'; return h3; })(),
-      (() => { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Tailored to keep your momentum high and accelerate your software engineering mastery.'; return p; })(),
+      (() => {
+        const s = document.createElement('span');
+        s.className = 'eyebrow';
+        s.textContent = 'TODAY’S RECOMMENDED CURRICULUM';
+        return s;
+      })(),
+      (() => {
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Targeted Mastery Goals';
+        return h3;
+      })(),
+      (() => {
+        const p = document.createElement('p');
+        p.className = 'muted';
+        p.textContent = 'Tailored to keep your momentum high and accelerate your software engineering mastery.';
+        return p;
+      })(),
     );
     recSection.append(recHeading);
 

@@ -35,19 +35,29 @@ export class ProgressDelivery {
     this.clock = options.clock ?? browserClock;
   }
 
-  get pending(): number { return this.queue.length; }
-  get active(): boolean { return !this.stopped; }
+  get pending(): number {
+    return this.queue.length;
+  }
+  get active(): boolean {
+    return !this.stopped;
+  }
 
   send(pulse: Pulse): Promise<PulseAck> {
     if (this.stopped) {
       this.stopped = false;
     }
     if (this.queue.length >= (this.options.maxQueue ?? 12)) {
-      const error = new ApiError('Progress could not save. Playback is paused; reconnect and resume here.', 0, 'queue_full');
+      const error = new ApiError(
+        'Progress could not save. Playback is paused; reconnect and resume here.',
+        0,
+        'queue_full',
+      );
       this.fail(error);
       return Promise.reject(error);
     }
-    const result = new Promise<PulseAck>((resolve, reject) => this.queue.push({ pulse: { ...pulse }, resolve, reject }));
+    const result = new Promise<PulseAck>((resolve, reject) =>
+      this.queue.push({ pulse: { ...pulse }, resolve, reject }),
+    );
     this.options.onStatus?.('saving');
     void this.drain();
     return result;
@@ -57,7 +67,8 @@ export class ProgressDelivery {
     if (this.stopped) return;
     this.stopped = true;
     this.controller.abort();
-    for (const entry of this.queue.splice(0)) entry.reject(new DOMException('Progress delivery cancelled.', 'AbortError'));
+    for (const entry of this.queue.splice(0))
+      entry.reject(new DOMException('Progress delivery cancelled.', 'AbortError'));
     this.options.onStatus?.('stopped');
   }
 
@@ -91,10 +102,14 @@ export class ProgressDelivery {
             }
             break;
           } catch (cause) {
-            if (this.stopped || isAbort(cause) && this.controller.signal.aborted) break;
+            if (this.stopped || (isAbort(cause) && this.controller.signal.aborted)) break;
             const error = cause instanceof Error ? cause : new Error('Progress could not save.');
             attempts += 1;
-            if (error instanceof ContractError || error instanceof ApiError && error.terminal || attempts >= (this.options.maxAttempts ?? 5)) {
+            if (
+              error instanceof ContractError ||
+              (error instanceof ApiError && error.terminal) ||
+              attempts >= (this.options.maxAttempts ?? 5)
+            ) {
               this.fail(error);
               break;
             }
@@ -108,7 +123,8 @@ export class ProgressDelivery {
       }
       if (!this.stopped && this.queue.length === 0) this.options.onStatus?.('saved');
     } catch (error) {
-      if (!this.stopped && !isAbort(error)) this.fail(error instanceof Error ? error : new Error('Progress could not save.'));
+      if (!this.stopped && !isAbort(error))
+        this.fail(error instanceof Error ? error : new Error('Progress could not save.'));
     } finally {
       this.running = false;
     }

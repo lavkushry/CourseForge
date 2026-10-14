@@ -51,7 +51,11 @@
   font-weight: 650;
 }
 
-.hero-badge-match::before, .hero-chip-badge::before, .hero-tech-badge::before, .hero-chip::before, .hero-category-chip::before {
+.hero-badge-match::before,
+.hero-chip-badge::before,
+.hero-tech-badge::before,
+.hero-chip::before,
+.hero-category-chip::before {
   content: none;
   display: none;
 }
@@ -157,7 +161,10 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
-  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
   user-select: none;
 }
 
@@ -188,13 +195,18 @@
   border: 1px solid #232535;
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
 }
 
 .carousel-track .course-card:hover {
   transform: translateY(-7px) scale(1.02);
   border-color: rgba(167, 139, 250, 0.5);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(124, 58, 237, 0.2);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(124, 58, 237, 0.2);
 }
 
 /* Top 10 Styled Numeral Badges */
@@ -215,7 +227,10 @@
   z-index: 4;
   pointer-events: none;
   user-select: none;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   text-shadow: 0 4px 18px rgba(0, 0, 0, 0.9);
 }
 
@@ -271,14 +286,19 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
 }
 
 .history-card:hover {
   transform: translateY(-4px);
   border-color: rgba(139, 92, 246, 0.4);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(139, 92, 246, 0.15);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.65),
+    0 0 25px rgba(139, 92, 246, 0.15);
 }
 
 .history-card-thumb {
@@ -524,13 +544,15 @@
   letter-spacing: 0.05em;
 }
 
-.theme-toggle-row, .accent-toggle-row {
+.theme-toggle-row,
+.accent-toggle-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-.theme-choice-btn, .accent-choice-btn {
+.theme-choice-btn,
+.accent-choice-btn {
   padding: var(--space-2) var(--space-4);
   border-radius: 8px;
   font-size: 0.82rem;
@@ -542,7 +564,8 @@
   transition: all 0.15s ease;
 }
 
-.theme-choice-btn.active, .accent-choice-btn.active {
+.theme-choice-btn.active,
+.accent-choice-btn.active {
   background: rgba(139, 92, 246, 0.22);
   border-color: #8b5cf6;
   color: #fff;

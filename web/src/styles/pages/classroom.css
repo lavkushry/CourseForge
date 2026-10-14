@@ -7,7 +7,7 @@
 }
 
 .classroom-heading h1 {
-  font-size: clamp(1.6rem,3vw,2.05rem);
+  font-size: clamp(1.6rem, 3vw, 2.05rem);
   margin-bottom: 0;
 }
 
@@ -51,7 +51,7 @@ media-time-range {
 }
 
 media-time-display {
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 
 media-volume-range {
@@ -63,7 +63,7 @@ media-volume-range {
   top: 16px;
   right: 18px;
   color: #ffffff80;
-  font-size: .7rem;
+  font-size: 0.7rem;
   pointer-events: none;
   text-shadow: 0 1px 3px black;
   z-index: 2;
@@ -96,7 +96,8 @@ media-volume-range {
   border-bottom: 1px solid var(--line);
 }
 
-.player-actions,.player-settings {
+.player-actions,
+.player-settings {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -104,7 +105,7 @@ media-volume-range {
 }
 
 .player-settings label {
-  font-size: .72rem;
+  font-size: 0.72rem;
   margin: 0 var(--space-1);
   color: var(--muted);
 }
@@ -114,11 +115,11 @@ media-volume-range {
   border: 1px solid var(--line);
   background: #1e1f26;
   min-height: 42px;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .player-status {
-  font-size: .82rem;
+  font-size: 0.82rem;
   color: var(--muted);
   margin: 14px 0 var(--space-2);
   min-height: 22px;
@@ -128,7 +129,7 @@ media-volume-range {
   display: flex;
   justify-content: space-between;
   gap: 15px;
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--muted);
 }
 
@@ -144,7 +145,7 @@ media-volume-range {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: .75rem;
+  font-size: 0.75rem;
   color: #c2c4cd;
 }
 
@@ -156,7 +157,7 @@ media-volume-range {
 
 .lesson-description {
   line-height: 1.8;
-  font-size: .9rem;
+  font-size: 0.9rem;
   color: #b1b4be;
   white-space: pre-wrap;
 }
@@ -170,11 +171,11 @@ media-volume-range {
   border-radius: 8px;
   padding: 6px var(--space-4);
   margin-top: 14px;
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
 
 .shortcuts {
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--muted);
   margin: var(--space-6) 0;
 }
@@ -198,7 +199,8 @@ media-volume-range {
   overflow: hidden;
 }
 
-.lesson-sidebar h2,.lesson-sidebar>p {
+.lesson-sidebar h2,
+.lesson-sidebar > p {
   margin-left: 22px;
   margin-right: 22px;
 }
@@ -207,12 +209,13 @@ media-volume-range {
   margin-bottom: var(--space-1);
 }
 
-.lesson-sidebar>p {
-  font-size: .73rem;
+.lesson-sidebar > p {
+  font-size: 0.73rem;
   margin-bottom: var(--space-5);
 }
 
-.lesson-sidebar ol,.episode-dialog ol {
+.lesson-sidebar ol,
+.episode-dialog ol {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -243,7 +246,7 @@ media-volume-range {
 }
 
 .lesson-number {
-  font-size: .68rem;
+  font-size: 0.68rem;
   font-weight: 650;
   color: #8b8e9b;
   padding-top: 3px;
@@ -256,7 +259,7 @@ media-volume-range {
 }
 
 .lesson-choice strong {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.45;
 }
@@ -292,7 +295,7 @@ media-volume-range {
 }
 
 .episode-dialog {
-  max-width: min(600px,calc(100vw - 32px));
+  max-width: min(600px, calc(100vw - 32px));
   width: 600px;
   max-height: 80vh;
   padding: 0;
@@ -329,7 +332,7 @@ media-volume-range {
 }
 
 #note-form label {
-  font-size: .75rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 
@@ -341,7 +344,7 @@ media-volume-range {
   padding: var(--space-3);
   background: #101116;
   color: var(--text);
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
 
 #note-form button {
@@ -356,7 +359,7 @@ media-volume-range {
 .lesson-note p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: .85rem;
+  font-size: 0.85rem;
   margin: var(--space-2) 0;
 }
 
@@ -382,7 +385,7 @@ media-volume-range {
 
 .course-enrollment p {
   margin: 0;
-  font-size: .83rem;
+  font-size: 0.83rem;
 }
 
 .unlock-controls {
@@ -394,7 +397,7 @@ media-volume-range {
   color: white;
   border: 1px solid #ffffff55;
   padding: 10px 15px;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .controls-locked media-control-bar {
@@ -412,17 +415,17 @@ media-volume-range {
 
 .lesson-section h3 {
   margin: 0;
-  font-size: .68rem;
-  letter-spacing: .06em;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
   color: #c2c4ce;
 }
 
-
 /* Cinema Dark Theater Glow */
 
-
 .classroom.theater #player-wrap {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.9), 0 0 120px rgba(124, 58, 237, 0.15);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.9),
+    0 0 120px rgba(124, 58, 237, 0.15);
   border-radius: 14px;
 }
 
@@ -621,7 +624,7 @@ media-volume-range {
 
 .brief-desc-box {
   background: #0f1016;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 14px;
   line-height: 1.6;
@@ -664,7 +667,7 @@ media-volume-range {
 
 .note-card {
   background: #0f1016;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 10px var(--space-3);
 }
@@ -810,7 +813,10 @@ media-volume-range {
 
 /* Zen Study Studio Mode */
 
-body.in-zen-studio .site-header, body.in-zen-studio .catalog-footer, body.in-zen-studio .shortcuts, body.in-zen-studio .materials {
+body.in-zen-studio .site-header,
+body.in-zen-studio .catalog-footer,
+body.in-zen-studio .shortcuts,
+body.in-zen-studio .materials {
   display: none;
 }
 
@@ -846,7 +852,8 @@ body.in-zen-studio .classroom-grid {
   border-bottom: 1px solid var(--line);
 }
 
-.player-actions, .player-settings {
+.player-actions,
+.player-settings {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -855,7 +862,8 @@ body.in-zen-studio .classroom-grid {
 
 /* Make legacy test-harness .player-tools 100% invisible fixed bar with non-overlapping controls */
 
-.player-tools, .player-tools.sr-only-actionable {
+.player-tools,
+.player-tools.sr-only-actionable {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -879,7 +887,8 @@ body.in-zen-studio .classroom-grid {
   z-index: 999999;
 }
 
-.player-tools .player-actions, .player-tools .player-settings {
+.player-tools .player-actions,
+.player-tools .player-settings {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -887,7 +896,10 @@ body.in-zen-studio .classroom-grid {
   gap: 2px;
 }
 
-.player-tools button, .player-tools select, .player-tools label, .player-tools input {
+.player-tools button,
+.player-tools select,
+.player-tools label,
+.player-tools input {
   display: inline-flex;
   align-items: center;
   font-size: 6px;
@@ -915,18 +927,21 @@ body.in-zen-studio .classroom-grid {
 
 /* 2. Fix Theater Mode Alignment & Study Rail Stacking (media_1791870368027_970bae22.png) */
 
-.classroom.theater .classroom-grid, .theater .classroom-grid {
+.classroom.theater .classroom-grid,
+.theater .classroom-grid {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
 }
 
-.classroom.theater .lesson-column, .theater .lesson-column {
+.classroom.theater .lesson-column,
+.theater .lesson-column {
   max-width: 100%;
   width: 100%;
   margin: 0;
 }
 
-.classroom.theater .lesson-sidebar.study-rail, .theater .lesson-sidebar.study-rail {
+.classroom.theater .lesson-sidebar.study-rail,
+.theater .lesson-sidebar.study-rail {
   display: flex;
   position: static;
   width: 100%;
@@ -936,7 +951,16 @@ body.in-zen-studio .classroom-grid {
 
 /* 3. Unified Dark Glass Inputs & Selects Across All Panels */
 
-.planning-panel input:not([type="checkbox"]):not([type="radio"]), .planning-panel select, .library-panel input:not([type="checkbox"]), .library-panel select, .settings-panel select, .paths-panel input:not([type="checkbox"]), .new-path-dialog input, .new-path-dialog select, .form-input, .text-input {
+.planning-panel input:not([type='checkbox']):not([type='radio']),
+.planning-panel select,
+.library-panel input:not([type='checkbox']),
+.library-panel select,
+.settings-panel select,
+.paths-panel input:not([type='checkbox']),
+.new-path-dialog input,
+.new-path-dialog select,
+.form-input,
+.text-input {
   background: #121522;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
@@ -947,10 +971,18 @@ body.in-zen-studio .classroom-grid {
   min-height: 42px;
   outline: none;
   color-scheme: dark;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.planning-panel input:not([type="checkbox"]):focus, .planning-panel select:focus, .library-panel input:not([type="checkbox"]):focus, .library-panel select:focus, .settings-panel select:focus, .form-input:focus, .text-input:focus {
+.planning-panel input:not([type='checkbox']):focus,
+.planning-panel select:focus,
+.library-panel input:not([type='checkbox']):focus,
+.library-panel select:focus,
+.settings-panel select:focus,
+.form-input:focus,
+.text-input:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
@@ -1055,7 +1087,9 @@ body.in-zen-studio .classroom-grid {
   background: rgba(18, 19, 26, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.9),
+    0 0 1px rgba(255, 255, 255, 0.2);
   color: #f3f4f6;
   max-width: min(640px, calc(100vw - 32px));
   width: 640px;
@@ -1167,7 +1201,10 @@ body.in-zen-studio .classroom-grid {
 
 /* 1. Watermark Positioning: Anchor firmly to top-right corner of player wrap */
 
-#player-wrap .watermark, .player-enhanced .watermark, #watermark, .watermark {
+#player-wrap .watermark,
+.player-enhanced .watermark,
+#watermark,
+.watermark {
   position: absolute;
   top: auto;
   bottom: 65px;
@@ -1186,7 +1223,8 @@ body.in-zen-studio .classroom-grid {
 
 /* 2. Video Player: Maintain strict 16:9 aspect ratio without letterbox voids */
 
-#player-wrap, .player-wrap {
+#player-wrap,
+.player-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -1197,7 +1235,8 @@ body.in-zen-studio .classroom-grid {
   box-sizing: border-box;
 }
 
-#media-controller, media-controller {
+#media-controller,
+media-controller {
   display: block;
   width: 100%;
   height: 100%;
@@ -1205,7 +1244,8 @@ body.in-zen-studio .classroom-grid {
   background: #050609;
 }
 
-#lesson-video, .player-wrap video {
+#lesson-video,
+.player-wrap video {
   display: block;
   width: 100%;
   height: 100%;
@@ -1214,11 +1254,14 @@ body.in-zen-studio .classroom-grid {
   background: #000000;
 }
 
-#player-wrap:fullscreen, .player-wrap:fullscreen {
+#player-wrap:fullscreen,
+.player-wrap:fullscreen {
   aspect-ratio: auto;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   border-radius: 0;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  box-sizing: border-box;
 }
 
 /* 3. Classroom Layout: 100% Viewport width, no horizontal overflow or clipping */
@@ -1240,7 +1283,9 @@ body.in-zen-studio .classroom-grid {
   align-items: start;
 }
 
-#study-rail, .lesson-sidebar.study-rail, .study-rail {
+#study-rail,
+.lesson-sidebar.study-rail,
+.study-rail {
   display: flex;
   flex-direction: column;
   background: #14151d;
@@ -1265,7 +1310,9 @@ body.in-zen-studio .classroom-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  #study-rail, .lesson-sidebar.study-rail, .study-rail {
+  #study-rail,
+  .lesson-sidebar.study-rail,
+  .study-rail {
     position: static;
     width: 100%;
     max-width: 100%;
@@ -1367,7 +1414,8 @@ body.in-zen-studio .classroom-grid {
 /* 6. Legacy test-harness actionable controls (.player-tools):
    Exempt from standard 40px/44px user button sizing to prevent wrapping/overlapping in Playwright contracts */
 
-.player-tools, .player-tools.sr-only-actionable {
+.player-tools,
+.player-tools.sr-only-actionable {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -1386,7 +1434,8 @@ body.in-zen-studio .classroom-grid {
   z-index: 999999;
 }
 
-.player-tools .player-actions, .player-tools .player-settings {
+.player-tools .player-actions,
+.player-tools .player-settings {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -1394,7 +1443,13 @@ body.in-zen-studio .classroom-grid {
   gap: 2px;
 }
 
-.player-tools button, .player-tools .button, .player-tools select, .player-tools label, .player-tools input, .sr-only-actionable button, .sr-only-actionable .button {
+.player-tools button,
+.player-tools .button,
+.player-tools select,
+.player-tools label,
+.player-tools input,
+.sr-only-actionable button,
+.sr-only-actionable .button {
   display: inline-flex;
   align-items: center;
   font-size: 6px;
@@ -1417,7 +1472,9 @@ body.in-zen-studio .classroom-grid {
 
 /* 7. Absolute guarantee: [hidden] elements must ALWAYS be hidden */
 
-[hidden], [hidden="true"], [aria-hidden="true"].hidden {
+[hidden],
+[hidden='true'],
+[aria-hidden='true'].hidden {
   display: none;
 }
 
@@ -1443,7 +1500,8 @@ body.in-zen-studio .classroom-grid {
   animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.player-up-next-card[hidden], #playerUpNextCard[hidden] {
+.player-up-next-card[hidden],
+#playerUpNextCard[hidden] {
   display: none;
 }
 

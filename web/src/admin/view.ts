@@ -50,7 +50,10 @@ export class AdminView implements AdminHost {
       this.users = learnerResp.users;
       this.catalogCourses = coursesResp.courses;
     } catch (err) {
-      this.notice('Could not load administrator dashboard: ' + (err instanceof Error ? err.message : String(err)), true);
+      this.notice(
+        'Could not load administrator dashboard: ' + (err instanceof Error ? err.message : String(err)),
+        true,
+      );
     } finally {
       this.loading = false;
       this.render();
@@ -62,28 +65,31 @@ export class AdminView implements AdminHost {
     this.root.replaceChildren();
   }
 
-
   render(): void {
     this.root.replaceChildren();
     const layout = el('div', 'admin-layout');
-  
+
     // University LMS Admin Header
     const head = el('div', 'admin-header');
     const headLeft = el('div', 'admin-header-copy');
     headLeft.append(
       el('span', 'eyebrow', 'UNIVERSITY LMS · PLATFORM ADMINISTRATION & ACCESS CONTROL'),
       el('h1', '', 'CourseForge Command Center'),
-      el('p', 'muted', 'Granular student course access control, account security, real-time telemetry, and AI pipeline diagnostics.')
+      el(
+        'p',
+        'muted',
+        'Granular student course access control, account security, real-time telemetry, and AI pipeline diagnostics.',
+      ),
     );
-  
+
     const headRight = el('div', 'admin-header-actions');
     const totalCourses = this.catalogCourses.length || this.overviewData?.summary.courses || 29;
     const statsChip = el('div', 'admin-header-stat-pill');
     statsChip.append(
       svgIcon('shield'),
-      el('span', '', `${this.users.length} Accounts · ${totalCourses} Catalog Courses`)
+      el('span', '', `${this.users.length} Accounts · ${totalCourses} Catalog Courses`),
     );
-  
+
     const manageAccessQuickBtn = button(
       'Manage Student Access',
       () => {
@@ -91,21 +97,21 @@ export class AdminView implements AdminHost {
         this.render();
       },
       'button primary admin-cta-btn',
-      'key'
+      'key',
     );
-  
+
     const refreshBtn = button(
       'Refresh',
       () => {
         void this.refreshAll();
       },
       'button secondary admin-refresh-btn',
-      'refresh'
+      'refresh',
     );
-  
+
     headRight.append(statsChip, manageAccessQuickBtn, refreshBtn);
     head.append(headLeft, headRight);
-  
+
     // Tab Navigation (University LMS Pill Bar)
     const nav = el('nav', 'admin-nav');
     const tabs: Array<{ id: AdminTab; label: string; icon: IconName; badge?: string }> = [
@@ -132,9 +138,9 @@ export class AdminView implements AdminHost {
       });
       nav.append(btn);
     }
-  
+
     layout.append(head, nav);
-  
+
     const body = el('div', 'admin-content');
     if (this.loading) {
       body.append(el('p', 'muted', 'Loading administrator metrics…'));
@@ -166,7 +172,7 @@ export class AdminView implements AdminHost {
           break;
       }
     }
-  
+
     layout.append(body);
     this.root.append(layout);
   }
@@ -181,27 +187,20 @@ export class AdminView implements AdminHost {
     const iconBadge = el('span', 'metric-icon-badge');
     iconBadge.append(svgIcon(icon));
     top.append(iconBadge, el('span', '', title));
-    card.append(
-      top,
-      el('div', 'metric-value', value),
-      el('div', 'metric-sub', subtitle)
-    );
+    card.append(top, el('div', 'metric-value', value), el('div', 'metric-sub', subtitle));
     return card;
   }
-  
+
   miniKpi(label: string, value: string, icon: IconName): HTMLElement {
     const box = el('div', 'student-mini-kpi');
     const iconWrap = el('span', 'mini-kpi-icon');
     iconWrap.append(svgIcon(icon));
     const textWrap = el('div', 'mini-kpi-copy');
-    textWrap.append(
-      el('span', 'mini-kpi-label', label),
-      el('strong', 'mini-kpi-val', value)
-    );
+    textWrap.append(el('span', 'mini-kpi-label', label), el('strong', 'mini-kpi-val', value));
     box.append(iconWrap, textWrap);
     return box;
   }
-  
+
   async downloadCSV(type: 'player-activity' | 'playback'): Promise<void> {
     this.notice(`Generating ${type} CSV export…`);
     try {

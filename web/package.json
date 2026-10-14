@@ -10,9 +10,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -20,6 +19,7 @@
     "dev:staging": "node scripts/dev_staging.mjs"
   },
   "dependencies": {
+    "hls.js": "^1.6.13",
     "media-chrome": "4.19.3"
   },
   "devDependencies": {

@@ -2,7 +2,9 @@
    UNIFIED ALIGNED INPUTS, SELECTS, TEXTAREAS ACROSS ALL PAGES
    ========================================================================== */
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+select,
+textarea {
   min-height: 42px;
   border-radius: 10px;
   background: #141418;
@@ -11,18 +13,24 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, te
   font-size: 14px;
   padding: var(--space-2) 14px;
   box-sizing: border-box;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   color-scheme: dark;
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, select:focus, textarea:focus {
+input:not([type='checkbox']):not([type='radio']):not([type='range']):focus,
+select:focus,
+textarea:focus {
   border-color: var(--lms-accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
   outline: none;
 }
 
 @media (max-width: 640px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
     min-height: 44px;
     font-size: 15px;
   }
@@ -36,7 +44,54 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* 1. Primary & Secondary Standard Buttons: Desktop 38px–42px (min-height 40px), Mobile 44px touch min-height */
 
-.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn), button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn), a.button:not([hidden]), .hero-play:not([hidden]), .run-checks-btn:not([hidden]), .tutor-submit-btn:not([hidden]), .review-reveal-btn:not([hidden]), .dialog-actions .button:not([hidden]), #login-form button[type="submit"]:not([hidden]), #register-form button[type="submit"]:not([hidden]), .planning-form > .button:not([hidden]), .weekly-setup-card > button.button:not([hidden]), .habits-card > button.button:not([hidden]), .new-path-btn:not([hidden]), .ai-gen-path-btn:not([hidden]), .paths-sidebar-head .button:not([hidden]), #load-more:not([hidden]), .cert-view-btn:not([hidden]), .cert-claim-btn:not([hidden]), .admin-cta-btn:not([hidden]), .admin-refresh-btn:not([hidden]), .danger-btn:not([hidden]), #logout:not([hidden]), #enroll:not([hidden]), #back:not([hidden]), .save-pref-btn:not([hidden]), .clear-history-btn:not([hidden]), .auth-tab:not([hidden]) {
+.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(
+    .theme-choice-btn
+  ):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(
+    .mode-switch-pill
+  ):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(
+    .admin-tab-btn
+  ):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(
+    .sidebar-mode-exit
+  ):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(
+    .sr-only-actionable
+  ):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn),
+button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(
+    .theme-choice-btn
+  ):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(
+    .mode-switch-pill
+  ):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(
+    .admin-tab-btn
+  ):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(
+    .sidebar-mode-exit
+  ):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(
+    .sr-only-actionable
+  ):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn),
+a.button:not([hidden]),
+.hero-play:not([hidden]),
+.run-checks-btn:not([hidden]),
+.tutor-submit-btn:not([hidden]),
+.review-reveal-btn:not([hidden]),
+.dialog-actions .button:not([hidden]),
+#login-form button[type='submit']:not([hidden]),
+#register-form button[type='submit']:not([hidden]),
+.planning-form > .button:not([hidden]),
+.weekly-setup-card > button.button:not([hidden]),
+.habits-card > button.button:not([hidden]),
+.new-path-btn:not([hidden]),
+.ai-gen-path-btn:not([hidden]),
+.paths-sidebar-head .button:not([hidden]),
+#load-more:not([hidden]),
+.cert-view-btn:not([hidden]),
+.cert-claim-btn:not([hidden]),
+.admin-cta-btn:not([hidden]),
+.admin-refresh-btn:not([hidden]),
+.danger-btn:not([hidden]),
+#logout:not([hidden]),
+#enroll:not([hidden]),
+#back:not([hidden]),
+.save-pref-btn:not([hidden]),
+.clear-history-btn:not([hidden]),
+.auth-tab:not([hidden]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -52,7 +107,11 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   text-decoration: none;
   cursor: pointer;
   max-width: 100%;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* Secondary & Quiet Standard Buttons */
@@ -96,7 +155,57 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* 2. Action Pills & Filter Tags: 32px–36px height, 6px–14px padding, font size ~0.78rem–0.82rem */
 
-.action-pill:not([hidden]), button.action-pill:not([hidden]), .filter-pill:not([hidden]), button.filter-pill:not([hidden]), .mode-pill:not([hidden]), button.mode-pill:not([hidden]), .tutor-mode-btn:not([hidden]), button.tutor-mode-btn:not([hidden]), .theme-choice-btn:not([hidden]), button.theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), button.accent-choice-btn:not([hidden]), .budget-choice-pill:not([hidden]), button.budget-choice-pill:not([hidden]), .lms-playlist-pill:not([hidden]), button.lms-playlist-pill:not([hidden]), .study-rail-tab:not([hidden]), button.study-rail-tab:not([hidden]), .planning-tab:not([hidden]), button.planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), button.admin-tab-btn:not([hidden]), .mode-switch-pill:not([hidden]), button.mode-switch-pill:not([hidden]), .mode-seg-btn:not([hidden]), button.mode-seg-btn:not([hidden]), .suggestion-pill:not([hidden]), button.suggestion-pill:not([hidden]), .citation-link:not([hidden]), .citation-link-card:not([hidden]), button.citation-link-card:not([hidden]), .source-chip:not([hidden]), button.source-chip:not([hidden]), .omni-chip:not([hidden]), button.omni-chip:not([hidden]), .popover-chip:not([hidden]), button.popover-chip:not([hidden]), .note-seek-pill:not([hidden]), button.note-seek-pill:not([hidden]), .chapter-time-btn:not([hidden]), button.chapter-time-btn:not([hidden]), .transcript-seek-btn:not([hidden]), button.transcript-seek-btn:not([hidden]), .list-button:not([hidden]), button.list-button:not([hidden]), .history-resume-btn:not([hidden]), button.history-resume-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), button.sidebar-mode-exit:not([hidden]), .close-drawer-btn:not([hidden]), button.close-drawer-btn:not([hidden]) {
+.action-pill:not([hidden]),
+button.action-pill:not([hidden]),
+.filter-pill:not([hidden]),
+button.filter-pill:not([hidden]),
+.mode-pill:not([hidden]),
+button.mode-pill:not([hidden]),
+.tutor-mode-btn:not([hidden]),
+button.tutor-mode-btn:not([hidden]),
+.theme-choice-btn:not([hidden]),
+button.theme-choice-btn:not([hidden]),
+.accent-choice-btn:not([hidden]),
+button.accent-choice-btn:not([hidden]),
+.budget-choice-pill:not([hidden]),
+button.budget-choice-pill:not([hidden]),
+.lms-playlist-pill:not([hidden]),
+button.lms-playlist-pill:not([hidden]),
+.study-rail-tab:not([hidden]),
+button.study-rail-tab:not([hidden]),
+.planning-tab:not([hidden]),
+button.planning-tab:not([hidden]),
+.admin-tab-btn:not([hidden]),
+button.admin-tab-btn:not([hidden]),
+.mode-switch-pill:not([hidden]),
+button.mode-switch-pill:not([hidden]),
+.mode-seg-btn:not([hidden]),
+button.mode-seg-btn:not([hidden]),
+.suggestion-pill:not([hidden]),
+button.suggestion-pill:not([hidden]),
+.citation-link:not([hidden]),
+.citation-link-card:not([hidden]),
+button.citation-link-card:not([hidden]),
+.source-chip:not([hidden]),
+button.source-chip:not([hidden]),
+.omni-chip:not([hidden]),
+button.omni-chip:not([hidden]),
+.popover-chip:not([hidden]),
+button.popover-chip:not([hidden]),
+.note-seek-pill:not([hidden]),
+button.note-seek-pill:not([hidden]),
+.chapter-time-btn:not([hidden]),
+button.chapter-time-btn:not([hidden]),
+.transcript-seek-btn:not([hidden]),
+button.transcript-seek-btn:not([hidden]),
+.list-button:not([hidden]),
+button.list-button:not([hidden]),
+.history-resume-btn:not([hidden]),
+button.history-resume-btn:not([hidden]),
+.sidebar-mode-exit:not([hidden]),
+button.sidebar-mode-exit:not([hidden]),
+.close-drawer-btn:not([hidden]),
+button.close-drawer-btn:not([hidden]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -106,7 +215,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   max-height: 38px;
   padding: 6px 14px;
   border-radius: 99px;
-  font-size: 0.80rem;
+  font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.2;
   box-sizing: border-box;
@@ -118,7 +227,28 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* Theme choices, mode segment buttons, and tabs with rounded-rect aesthetics */
 
-.theme-choice-btn:not([hidden]), button.theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), button.accent-choice-btn:not([hidden]), .mode-seg-btn:not([hidden]), button.mode-seg-btn:not([hidden]), .study-rail-tab:not([hidden]), button.study-rail-tab:not([hidden]), .planning-tab:not([hidden]), button.planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), button.admin-tab-btn:not([hidden]), .close-drawer-btn:not([hidden]), button.close-drawer-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), button.sidebar-mode-exit:not([hidden]), .source-chip:not([hidden]), button.source-chip:not([hidden]), .list-button:not([hidden]), button.list-button:not([hidden]), .history-resume-btn:not([hidden]), button.history-resume-btn:not([hidden]) {
+.theme-choice-btn:not([hidden]),
+button.theme-choice-btn:not([hidden]),
+.accent-choice-btn:not([hidden]),
+button.accent-choice-btn:not([hidden]),
+.mode-seg-btn:not([hidden]),
+button.mode-seg-btn:not([hidden]),
+.study-rail-tab:not([hidden]),
+button.study-rail-tab:not([hidden]),
+.planning-tab:not([hidden]),
+button.planning-tab:not([hidden]),
+.admin-tab-btn:not([hidden]),
+button.admin-tab-btn:not([hidden]),
+.close-drawer-btn:not([hidden]),
+button.close-drawer-btn:not([hidden]),
+.sidebar-mode-exit:not([hidden]),
+button.sidebar-mode-exit:not([hidden]),
+.source-chip:not([hidden]),
+button.source-chip:not([hidden]),
+.list-button:not([hidden]),
+button.list-button:not([hidden]),
+.history-resume-btn:not([hidden]),
+button.history-resume-btn:not([hidden]) {
   border-radius: 8px;
 }
 
@@ -132,7 +262,7 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   height: auto;
   padding: 6px var(--space-3);
   border-radius: 8px;
-  font-size: 0.80rem;
+  font-size: 0.8rem;
   line-height: 1.35;
   box-sizing: border-box;
   white-space: normal;
@@ -142,7 +272,26 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* 3. Icon Buttons: 36px–40px diameter / square, centering outline SVGs with 18px–20px viewBox */
 
-.lms-circle-icon-btn:not([hidden]), button.lms-circle-icon-btn:not([hidden]), .cinema-button:not([hidden]), button.cinema-button:not([hidden]), .carousel-nav-btn:not([hidden]), button.carousel-nav-btn:not([hidden]), .tab-scroll-btn:not([hidden]), button.tab-scroll-btn:not([hidden]), .lms-rail-exit-btn:not([hidden]), button.lms-rail-exit-btn:not([hidden]), #rail-mode-expand:not([hidden]), #header-bell-btn:not([hidden]), #header-gear-btn:not([hidden]), #header-settings-btn:not([hidden]), #mobile-search-btn:not([hidden]), .syllabus-close-btn:not([hidden]), button.syllabus-close-btn:not([hidden]), .note-del-btn:not([hidden]), button.note-del-btn:not([hidden]), #omni-search-clear:not([hidden]) {
+.lms-circle-icon-btn:not([hidden]),
+button.lms-circle-icon-btn:not([hidden]),
+.cinema-button:not([hidden]),
+button.cinema-button:not([hidden]),
+.carousel-nav-btn:not([hidden]),
+button.carousel-nav-btn:not([hidden]),
+.tab-scroll-btn:not([hidden]),
+button.tab-scroll-btn:not([hidden]),
+.lms-rail-exit-btn:not([hidden]),
+button.lms-rail-exit-btn:not([hidden]),
+#rail-mode-expand:not([hidden]),
+#header-bell-btn:not([hidden]),
+#header-gear-btn:not([hidden]),
+#header-settings-btn:not([hidden]),
+#mobile-search-btn:not([hidden]),
+.syllabus-close-btn:not([hidden]),
+button.syllabus-close-btn:not([hidden]),
+.note-del-btn:not([hidden]),
+button.note-del-btn:not([hidden]),
+#omni-search-clear:not([hidden]) {
   width: 38px;
   height: 38px;
   min-width: 38px;
@@ -160,7 +309,25 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* Outline SVGs inside controls: strict 18px–20px */
 
-.lms-circle-icon-btn svg, .cinema-button svg, .carousel-nav-btn svg, .tab-scroll-btn svg, .lms-rail-exit-btn svg, .syllabus-close-btn svg, .note-del-btn svg, #omni-search-clear svg, #header-bell-btn svg, #header-gear-btn svg, #mobile-search-btn svg, .action-pill svg, .action-pill .svg-icon, .lms-playlist-pill svg, .lms-playlist-pill .svg-icon, .text-button svg, .text-button .svg-icon, .close-drawer-btn svg, .close-drawer-btn .svg-icon {
+.lms-circle-icon-btn svg,
+.cinema-button svg,
+.carousel-nav-btn svg,
+.tab-scroll-btn svg,
+.lms-rail-exit-btn svg,
+.syllabus-close-btn svg,
+.note-del-btn svg,
+#omni-search-clear svg,
+#header-bell-btn svg,
+#header-gear-btn svg,
+#mobile-search-btn svg,
+.action-pill svg,
+.action-pill .svg-icon,
+.lms-playlist-pill svg,
+.lms-playlist-pill .svg-icon,
+.text-button svg,
+.text-button .svg-icon,
+.close-drawer-btn svg,
+.close-drawer-btn .svg-icon {
   width: 18px;
   height: 18px;
   display: block;
@@ -169,7 +336,8 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
 
 /* 4. Structural Flex/Grid Layouts, Prevention of Card Button Overflow, Alignment Across Views */
 
-.course-card-footer, .history-card-footer {
+.course-card-footer,
+.history-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -183,7 +351,8 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   box-sizing: border-box;
 }
 
-.course-card-footer .button, .course-card-footer .list-button {
+.course-card-footer .button,
+.course-card-footer .list-button {
   font-size: 0.78rem;
   padding: 6px var(--space-3);
   min-height: 34px;
@@ -208,7 +377,18 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   word-break: break-word;
 }
 
-.tutor-ask-footer, .editor-footer-bar, .paths-sidebar-head, .library-controls-bar, .library-selects-row, .classroom-heading-actions, .lesson-action-pills, .planning-actions, .planning-form, .planning-tabs, .dialog-actions, .hero-actions {
+.tutor-ask-footer,
+.editor-footer-bar,
+.paths-sidebar-head,
+.library-controls-bar,
+.library-selects-row,
+.classroom-heading-actions,
+.lesson-action-pills,
+.planning-actions,
+.planning-form,
+.planning-tabs,
+.dialog-actions,
+.hero-actions {
   min-width: 0;
   box-sizing: border-box;
 }
@@ -281,7 +461,10 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   display: flex;
   flex-direction: column;
 }
@@ -323,7 +506,10 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   cursor: pointer;
 }
 
-.course-card .course-art, .continue-card .course-art, .library-card .course-art, .cover-button .course-art {
+.course-card .course-art,
+.continue-card .course-art,
+.library-card .course-art,
+.cover-button .course-art {
   position: relative;
   aspect-ratio: 16/9;
   border-radius: 16px 16px 0 0;
@@ -332,7 +518,8 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   width: 100%;
 }
 
-#featured-course, .featured-course {
+#featured-course,
+.featured-course {
   position: relative;
   min-height: 480px;
   border-radius: 16px;
@@ -360,7 +547,12 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   padding: 56px 48px;
 }
 
-.hero-kicker, .hero-metadata span, .hero-badge-match, .hero-chip, .hero-chip-badge, .hero-tech-badge {
+.hero-kicker,
+.hero-metadata span,
+.hero-badge-match,
+.hero-chip,
+.hero-chip-badge,
+.hero-tech-badge {
   text-transform: none;
   letter-spacing: 0.01em;
 }
@@ -465,5 +657,35 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, sele
   .course-grid {
     grid-template-columns: 1fr;
     gap: var(--space-4);
+  }
+}
+
+/* Touch devices / tablets: enforce 44px interactive targets (overrides compact desktop chrome). */
+@media (max-width: 1024px), (pointer: coarse) {
+  .lms-circle-icon-btn:not([hidden]),
+  button.lms-circle-icon-btn:not([hidden]),
+  .lms-nav-item:not([hidden]),
+  .mode-switch-pill:not([hidden]),
+  .cinema-button:not([hidden]),
+  .tab-scroll-btn:not([hidden]),
+  #header-bell-btn:not([hidden]),
+  #header-gear-btn:not([hidden]),
+  #mobile-search-btn:not([hidden]) {
+    width: var(--touch-min) !important;
+    height: var(--touch-min) !important;
+    min-width: var(--touch-min) !important;
+    min-height: var(--touch-min) !important;
+    max-width: var(--touch-min) !important;
+    max-height: var(--touch-min) !important;
+  }
+
+  .action-pill:not([hidden]),
+  .lms-playlist-pill:not([hidden]),
+  .mode-seg-btn:not([hidden]),
+  .study-rail-tab:not([hidden]),
+  .button:not([hidden]),
+  .text-button:not([hidden]),
+  .brand:not([hidden]) {
+    min-height: var(--touch-min) !important;
   }
 }

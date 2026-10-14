@@ -53,7 +53,12 @@ export class OmniSearch {
       this.toggle();
       return;
     }
-    if (e.key === '/' && !this.isOpen() && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+    if (
+      e.key === '/' &&
+      !this.isOpen() &&
+      document.activeElement?.tagName !== 'INPUT' &&
+      document.activeElement?.tagName !== 'TEXTAREA'
+    ) {
       e.preventDefault();
       this.open();
       return;
@@ -160,7 +165,10 @@ export class OmniSearch {
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         const filter = chip.getAttribute('data-filter');
-        this.activeChip = filter === 'course' || filter === 'lesson' || filter === 'path' || filter === 'tool' || filter === 'all' ? filter : 'all';
+        this.activeChip =
+          filter === 'course' || filter === 'lesson' || filter === 'path' || filter === 'tool' || filter === 'all'
+            ? filter
+            : 'all';
         this.selectedIndex = 0;
         this.renderResults();
       });
@@ -363,7 +371,12 @@ export class OmniSearch {
     if (this.activeChip === 'all' || this.activeChip === 'tool') {
       const tools = this.getStaticTools();
       for (const t of tools) {
-        if (!q || t.title.toLowerCase().includes(q) || t.subtitle.toLowerCase().includes(q) || t.badge.toLowerCase().includes(q)) {
+        if (
+          !q ||
+          t.title.toLowerCase().includes(q) ||
+          t.subtitle.toLowerCase().includes(q) ||
+          t.badge.toLowerCase().includes(q)
+        ) {
           results.push(t);
         }
       }
@@ -416,8 +429,14 @@ export class OmniSearch {
     if (this.activeChip === 'all' || this.activeChip === 'path') {
       const paths = [
         { name: 'Senior AI Engineer & LLM Architect', desc: 'Agentic workflows, prompt tuning, vector databases, RAG' },
-        { name: 'Distributed Systems & Cloud Backend Leader', desc: 'Go concurrency, PostgreSQL internals, message queues, microservices' },
-        { name: 'Full-Stack TypeScript & Cloud Studio Engineer', desc: 'Modern web architectures, Media Chrome, Web Audio API, reactive UI' },
+        {
+          name: 'Distributed Systems & Cloud Backend Leader',
+          desc: 'Go concurrency, PostgreSQL internals, message queues, microservices',
+        },
+        {
+          name: 'Full-Stack TypeScript & Cloud Studio Engineer',
+          desc: 'Modern web architectures, Media Chrome, Web Audio API, reactive UI',
+        },
       ];
       for (const p of paths) {
         if (!q || p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)) {

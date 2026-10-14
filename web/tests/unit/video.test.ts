@@ -12,9 +12,13 @@ describe('native precise seek', () => {
   it('bounds seek to the current media and ignores non-finite requests', () => {
     const element = { duration: 30, currentTime: 10, preload: '', playsInline: false };
     const adapter = new NativeVideoAdapter(element as unknown as HTMLVideoElement);
-    adapter.seek(Number.NaN); expect(element.currentTime).toBe(10);
-    adapter.seek(Number.POSITIVE_INFINITY); expect(element.currentTime).toBe(10);
-    adapter.seek(-5); expect(element.currentTime).toBe(0);
-    adapter.seek(100); expect(element.currentTime).toBe(30);
+    adapter.seek(Number.NaN);
+    expect(element.currentTime).toBe(10);
+    adapter.seek(Number.POSITIVE_INFINITY);
+    expect(element.currentTime).toBe(10);
+    adapter.seek(-5);
+    expect(element.currentTime).toBe(0);
+    adapter.seek(100);
+    expect(element.currentTime).toBe(30);
   });
 });

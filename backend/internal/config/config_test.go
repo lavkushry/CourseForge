@@ -71,7 +71,7 @@ func TestValidateRejectsUnsafeConfig(t *testing.T) {
 		PublicOrigin:        "https://academy.example",
 		MaxConnections:      16,
 		MinConnections:      2,
-		MaxConnLifetime:        time.Minute,
+		MaxConnLifetime:     time.Minute,
 		MaxConnIdleTime:     time.Minute,
 		HealthCheckPeriod:   time.Minute,
 		ReadHeaderTimeout:   time.Second,

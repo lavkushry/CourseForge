@@ -66,6 +66,7 @@ func (g *Gateway) Close() { g.client.CloseIdleConnections() }
 func (g *Gateway) Register(mux *http.ServeMux, id *identity.Service) {
 	mux.Handle("GET /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
 	mux.Handle("HEAD /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
+	g.RegisterHLS(mux, id)
 }
 func (g *Gateway) valid(raw string) bool {
 	if strings.HasPrefix(raw, "file://") {
@@ -102,8 +103,7 @@ func busy(w http.ResponseWriter) {
 }
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, no-store, no-transform")
-	w.Header().Set("Referrer-Policy", "no-referrer")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
+	setMediaSecurityHeaders(w)
 	p, ok := identity.FromContext(r.Context())
 	if !ok {
 		http.Error(w, "Sign in required.", http.StatusUnauthorized)

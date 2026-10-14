@@ -20,7 +20,9 @@ export class PreferenceStore {
     private readonly clock: Clock = browserClock,
   ) {}
 
-  get current(): PlayerPreferences { return { ...this.value }; }
+  get current(): PlayerPreferences {
+    return { ...this.value };
+  }
 
   initialize(preferences: PlayerPreferences): void {
     this.value = this.validate(preferences);
@@ -53,7 +55,10 @@ export class PreferenceStore {
   }
 
   private async persist(): Promise<void> {
-    if (this.running) { this.pending = true; return; }
+    if (this.running) {
+      this.pending = true;
+      return;
+    }
     this.running = true;
     const generation = this.generation;
     const controller = new AbortController();
@@ -62,10 +67,14 @@ export class PreferenceStore {
       const saved = await this.transport.savePreferences(this.current, controller.signal);
       if (generation === this.generation && !controller.signal.aborted) this.initialize(saved);
     } catch (error) {
-      if (generation === this.generation && !isAbort(error)) this.failed(error instanceof Error ? error : new Error('Preferences could not save.'));
+      if (generation === this.generation && !isAbort(error))
+        this.failed(error instanceof Error ? error : new Error('Preferences could not save.'));
     } finally {
       this.running = false;
-      if (this.pending && !controller.signal.aborted) { this.pending = false; void this.persist(); }
+      if (this.pending && !controller.signal.aborted) {
+        this.pending = false;
+        void this.persist();
+      }
     }
   }
 }

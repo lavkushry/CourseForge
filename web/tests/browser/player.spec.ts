@@ -4,12 +4,12 @@ import { installContractFixture } from './fixture';
 
 test.afterEach(async ({ page, context }) => {
   for (const current of context.pages()) {
-    if (!current.isClosed() && await current.locator('#back').isVisible()) {
+    if (!current.isClosed() && (await current.locator('#back').isVisible())) {
       await current.locator('#back').click();
       await expect(current.locator('#catalog')).toBeVisible();
     }
   }
-  if (!page.isClosed() && await page.getByRole('button', { name: 'Sign out', exact: true }).isVisible()) {
+  if (!page.isClosed() && (await page.getByRole('button', { name: 'Sign out', exact: true }).isVisible())) {
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
   }
@@ -22,18 +22,26 @@ async function openLesson(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByRole('button', { name: 'Open course' }).click();
   if (await page.locator('#lesson-list').isVisible()) await page.locator('#lesson-list button').first().click();
-  else { await page.getByRole('button', { name: 'Lessons', exact: true }).click(); await page.locator('#drawer-lessons button').first().click(); }
+  else {
+    await page.getByRole('button', { name: 'Lessons', exact: true }).click();
+    await page.locator('#drawer-lessons button').first().click();
+  }
   await expect(page.locator('#player-wrap')).toHaveAttribute('data-state', 'ready');
 }
 
-test('decodes real media, seeks, preserves speed, toggles theater and captures timestamps', async ({ page, context }) => {
+test('decodes real media, seeks, preserves speed, toggles theater and captures timestamps', async ({
+  page,
+  context,
+}) => {
   await installContractFixture(context);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await openLesson(page);
   await page.locator('#play-toggle').click();
   await expect.poll(() => page.locator('video').evaluate(video => video.currentTime)).toBeGreaterThan(0.5);
-  await expect.poll(() => page.locator('video').evaluate(video => video.getVideoPlaybackQuality().totalVideoFrames)).toBeGreaterThan(0);
+  await expect
+    .poll(() => page.locator('video').evaluate(video => video.getVideoPlaybackQuality().totalVideoFrames))
+    .toBeGreaterThan(0);
   await page.locator('#speed').selectOption('1.5');
   await expect.poll(() => page.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
   await page.locator('#player-wrap').focus();
@@ -51,7 +59,10 @@ test('decodes real media, seeks, preserves speed, toggles theater and captures t
   expect(errors).toEqual([]);
 });
 
-test('published preview permits enrollment before protected lesson playback, including mobile', async ({ page, context }) => {
+test('published preview permits enrollment before protected lesson playback, including mobile', async ({
+  page,
+  context,
+}) => {
   await installContractFixture(context, { enrolled: false });
   await page.goto('/');
   await page.getByLabel('Email address').fill('learner@example.test');
@@ -62,7 +73,10 @@ test('published preview permits enrollment before protected lesson playback, inc
   await page.getByRole('button', { name: 'Enroll in this course' }).click();
   await expect(page.locator('#course-enrollment')).toBeHidden();
   if (await page.locator('#lesson-list').isVisible()) await page.locator('#lesson-list button').first().click();
-  else { await page.getByRole('button', { name: 'Lessons', exact: true }).click(); await page.locator('#drawer-lessons button').first().click(); }
+  else {
+    await page.getByRole('button', { name: 'Lessons', exact: true }).click();
+    await page.locator('#drawer-lessons button').first().click();
+  }
   await expect(page.locator('#player-wrap')).toHaveAttribute('data-state', 'ready');
 });
 
@@ -98,7 +112,9 @@ test('offline pauses, releases and reconnect requires explicit reclaim', async (
 test('autoplay disabled stays on ended media; enabling waits until ended and countdown', async ({ page, context }) => {
   await installContractFixture(context);
   await openLesson(page);
-  await page.locator('video').evaluate(video => { video.currentTime = 29.5; });
+  await page.locator('video').evaluate(video => {
+    video.currentTime = 29.5;
+  });
   await page.locator('#play-toggle').click();
   await expect.poll(() => page.locator('video').evaluate(video => video.ended)).toBe(true);
   await expect(page.locator('#next-countdown')).toBeHidden();
@@ -106,7 +122,9 @@ test('autoplay disabled stays on ended media; enabling waits until ended and cou
   await expect(page.locator('#lesson-title')).toContainText('Lesson 1');
   await page.getByLabel('Play next lesson automatically').check();
   await page.locator('#restart').click();
-  await page.locator('video').evaluate(video => { video.currentTime = 28; });
+  await page.locator('video').evaluate(video => {
+    video.currentTime = 28;
+  });
   await page.locator('#play-toggle').click();
   await expect(page.locator('#lesson-title')).toContainText('Lesson 1');
   await expect(page.locator('#next-countdown')).toBeHidden();
@@ -119,7 +137,9 @@ test('canceling next countdown preserves the current lesson and drawer focus ret
   await installContractFixture(context);
   await openLesson(page);
   await page.getByLabel('Play next lesson automatically').check();
-  await page.locator('video').evaluate(video => { video.currentTime = 29.5; });
+  await page.locator('video').evaluate(video => {
+    video.currentTime = 29.5;
+  });
   await page.locator('#play-toggle').click();
   await expect(page.locator('#next-countdown')).toBeVisible();
   await page.getByRole('button', { name: 'Stay here' }).click();
@@ -132,7 +152,10 @@ test('canceling next countdown preserves the current lesson and drawer focus ret
   await expect(page.getByRole('button', { name: 'Lessons', exact: true })).toBeFocused();
 });
 
-test('note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay', async ({ page, context }) => {
+test('note retry after lost acknowledgement is duplicate-safe and explicit completion does not autoplay', async ({
+  page,
+  context,
+}) => {
   const state = await installContractFixture(context);
   await openLesson(page);
   state.dropNextNote = true;
@@ -160,7 +183,10 @@ test('second window needs explicit takeover and stale first window loses its lea
   await second.goto('/');
   await second.getByRole('button', { name: 'Open course' }).click();
   if (await second.locator('#lesson-list').isVisible()) await second.locator('#lesson-list button').first().click();
-  else { await second.getByRole('button', { name: 'Lessons', exact: true }).click(); await second.locator('#drawer-lessons button').first().click(); }
+  else {
+    await second.getByRole('button', { name: 'Lessons', exact: true }).click();
+    await second.locator('#drawer-lessons button').first().click();
+  }
   await expect(second.locator('#player-wrap')).toHaveAttribute('data-state', 'conflict');
   await second.getByRole('button', { name: 'Move playback here' }).click();
   await expect(second.locator('#player-wrap')).toHaveAttribute('data-state', 'ready');

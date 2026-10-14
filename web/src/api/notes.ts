@@ -10,9 +10,7 @@ export function notes(
 ): Promise<{ notes: Note[]; next_cursor?: string | null }> {
   const query = new URLSearchParams({ limit: '30' });
   if (cursor) query.set('cursor', cursor);
-  return client
-    .request(`/lessons/${encodeURIComponent(id)}/notes?${query}`, signal ? { signal } : {})
-    .then(parseNotes);
+  return client.request(`/lessons/${encodeURIComponent(id)}/notes?${query}`, signal ? { signal } : {}).then(parseNotes);
 }
 
 export function createNote(
@@ -33,12 +31,7 @@ export function createNote(
     .then(parseNote);
 }
 
-export function deleteNote(
-  client: HttpClient,
-  lessonId: string,
-  noteId: string,
-  signal?: AbortSignal,
-): Promise<void> {
+export function deleteNote(client: HttpClient, lessonId: string, noteId: string, signal?: AbortSignal): Promise<void> {
   return client.request(`/lessons/${encodeURIComponent(lessonId)}/notes/${encodeURIComponent(noteId)}`, {
     method: 'DELETE',
     ...(signal ? { signal } : {}),

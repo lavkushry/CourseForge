@@ -152,7 +152,8 @@ export function renderRoadmap(host: PlanningHost): HTMLElement {
   } else {
     const empty = document.createElement('p');
     empty.className = 'muted';
-    empty.textContent = 'Select a learning goal above or enter your dream role to generate a dynamic masterclass roadmap.';
+    empty.textContent =
+      'Select a learning goal above or enter your dream role to generate a dynamic masterclass roadmap.';
     content.append(empty);
   }
 
