@@ -1,5 +1,5 @@
 import type { Course, Lesson } from '../contracts';
-import { ContractError, parseCourse, parseLesson } from '../validation';
+import { ContractError, parseLesson } from '../validation';
 
 export interface SavedItem { id: string; item_type: 'course' | 'lecture'; course_id: string; title: string }
 export interface ContinueItem extends Lesson { position: number; percent: number; completed: boolean }

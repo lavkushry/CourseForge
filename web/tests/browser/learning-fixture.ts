@@ -80,7 +80,7 @@ export async function installLearningFixture(context: BrowserContext) {
       return json(route, { detail: "CSRF required." }, 403);
     const body =
       method === "POST" ? (req.postDataJSON() as Record<string, unknown>) : {};
-    let lesson = /^\/lessons\/([^/]+)/.exec(path)?.[1] || "";
+    const lesson = /^\/lessons\/([^/]+)/.exec(path)?.[1] || "";
     if (method === "POST") {
       const key = req.headers()["idempotency-key"] || "";
       if (!key) return json(route, { detail: "Command key required." }, 422);

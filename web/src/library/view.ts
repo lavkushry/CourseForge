@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { Course } from '../contracts';
-import { ApiClient, ApiError, errorMessage } from '../api';
+import type { ApiClient} from '../api';
 import { artwork, toTitleCase } from '../discovery/view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -49,7 +49,7 @@ export class LibraryView {
       this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
       this.loading = false;
       this.render();
-    }).catch(err => {
+    }).catch(_err => {
       this.loading = false;
       this.render();
     });

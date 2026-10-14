@@ -159,7 +159,8 @@ export class OmniSearch {
       chip.addEventListener('click', () => {
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        this.activeChip = (chip.getAttribute('data-filter') as any) || 'all';
+        const filter = chip.getAttribute('data-filter');
+        this.activeChip = filter === 'course' || filter === 'lesson' || filter === 'path' || filter === 'tool' || filter === 'all' ? filter : 'all';
         this.selectedIndex = 0;
         this.renderResults();
       });

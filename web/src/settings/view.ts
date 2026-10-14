@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { AuthResponse } from '../contracts';
-import { ApiClient } from '../api';
+import type { ApiClient } from '../api';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);

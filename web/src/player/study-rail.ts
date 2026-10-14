@@ -1,7 +1,8 @@
 import { svgIcon } from '../icons';
-import type { Course, Lesson, Material, Note } from '../contracts';
-import { ApiClient, ApiError, errorMessage } from '../api';
-import { LearningApi } from '../learning/api';
+import type { Course, Lesson, Note } from '../contracts';
+import type { ApiClient} from '../api';
+import {  errorMessage } from '../api';
+import type { LearningApi } from '../learning/api';
 import type { QuizResult, TutorSource } from '../learning/contracts';
 import { formatTime } from './controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
