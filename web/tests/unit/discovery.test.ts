@@ -22,3 +22,45 @@ describe('untrusted discovery responses', () => {
     for (const cover_url of ['https://tracker.example/cover', '//tracker.example/cover', '/api/v1/auth/me', 'javascript:alert(1)']) expect(courseCover({ ...course, cover_url })).toBeNull();
   });
 });
+
+import { toTitleCase, cleanLessonTitle, formatModuleBadge, createSvgThumbnailDataUri } from '../../src/discovery/view';
+
+describe('dribbble LMS title and badge refinement helpers', () => {
+  it('formats titles in clean Title Case preserving acronyms', () => {
+    expect(toTitleCase('AI & AGENTS')).toBe('AI & Agents');
+    expect(toTitleCase('STUDIO LECTURE')).toBe('Studio Lecture');
+    expect(toTitleCase('3d design')).toBe('3D Design');
+    expect(toTitleCase('cinema 4d')).toBe('Cinema 4D');
+    expect(toTitleCase('GENAI FOUNDATIONS')).toBe('GenAI Foundations');
+    expect(toTitleCase('UI/UX DESIGN')).toBe('UI/UX Design');
+  });
+
+  it('strips redundant bracketed index and module prefix noise from lesson titles', () => {
+    expect(cleanLessonTitle('[002] Module 00 (Python) - Introduction to Python')).toBe('Introduction to Python');
+    expect(cleanLessonTitle('[001] [HD] 1. Setting up Environment')).toBe('Setting up Environment');
+    expect(cleanLessonTitle('Lecture 01: Getting Started')).toBe('Getting Started');
+    expect(cleanLessonTitle('[418] Module 06 - Live lesson 1')).toBe('Live lesson 1');
+    expect(cleanLessonTitle('[061] Module 09 (2. Concepts — 7. Observability in Distributed Systems) - Conclusion to Observability')).toBe('Conclusion to Observability');
+    expect(cleanLessonTitle('[Module 05 Study 31] NOTES')).toBe('NOTES');
+    expect(cleanLessonTitle('Lesson 1 — Playback and progress')).toBe('Lesson 1 — Playback and progress');
+    expect(cleanLessonTitle('Lesson 2')).toBe('Lesson 2');
+  });
+
+  it('shortens module badges concisely to Title Case Module X / Week X', () => {
+    expect(formatModuleBadge('MODULE 1 — PYTHON & GENAI FOUNDATIONS')).toBe('Module 1');
+    expect(formatModuleBadge('Module 02: Advanced Concepts')).toBe('Module 2');
+    expect(formatModuleBadge('Week 09 (Apache Spark...)')).toBe('Week 9');
+    expect(formatModuleBadge('Milestone 01 (Lending Club...)')).toBe('Milestone 1');
+    expect(formatModuleBadge('Chapter 03: Distributed Systems')).toBe('Chapter 3');
+    expect(formatModuleBadge('Distributed Systems Foundations')).toBe('Distributed Systems');
+    expect(formatModuleBadge(undefined)).toBe('Module 1');
+    expect(formatModuleBadge('')).toBe('Module 1');
+  });
+
+  it('generates rich topic-themed SVG thumbnail posters', () => {
+    const uri = createSvgThumbnailDataUri('Introduction to Python', 'Engineering');
+    expect(uri.startsWith('data:image/svg+xml;utf8,')).toBe(true);
+    expect(decodeURIComponent(uri)).toContain('<svg');
+    expect(decodeURIComponent(uri)).toContain('Introduction to Python');
+  });
+});

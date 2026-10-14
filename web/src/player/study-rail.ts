@@ -4,6 +4,7 @@ import { ApiClient, ApiError, errorMessage } from '../api';
 import { LearningApi } from '../learning/api';
 import type { QuizResult, TutorSource } from '../learning/contracts';
 import { formatTime } from './controller';
+import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -239,7 +240,7 @@ export class StudyRail {
       const completedCount = secLessons.filter(l => this.learnedLessons.has(l.id)).length;
 
       summary.append(
-        el('strong', 'rail-sec-title', secTitle),
+        el('strong', 'rail-sec-title', toTitleCase(secTitle)),
         el('span', 'rail-sec-meta', `${completedCount}/${secLessons.length}`),
       );
       details.append(summary);
@@ -260,7 +261,7 @@ export class StudyRail {
         else icon.append(svgIcon('circle'));
         const info = el('div', 'rail-item-info');
         info.append(
-          el('span', 'rail-item-title', l.title),
+          el('span', 'rail-item-title', cleanLessonTitle(l.title)),
           el('span', 'rail-item-time', formatTime(l.duration_seconds)),
         );
 
@@ -288,8 +289,8 @@ export class StudyRail {
     }
 
     panel.append(
-      el('span', 'eyebrow', this.activeLesson.section_title || 'MODULE OVERVIEW'),
-      el('h3', 'brief-title', this.activeLesson.title),
+      el('span', 'eyebrow', formatModuleBadge(this.activeLesson.section_title)),
+      el('h3', 'brief-title', cleanLessonTitle(this.activeLesson.title)),
       el('p', 'brief-duration', `Duration: ${formatTime(this.activeLesson.duration_seconds)}`),
     );
 

@@ -1,4 +1,5 @@
 import { icon, type IconName } from '../icons';
+import { cleanLessonTitle } from '../discovery/view';
 import type { Course, Lesson } from '../contracts';
 
 export interface OmniSearchOptions {
@@ -398,7 +399,7 @@ export class OmniSearch {
           results.push({
             id: `lesson-${lesson.id}`,
             type: 'lesson',
-            title: lesson.title,
+            title: cleanLessonTitle(lesson.title),
             subtitle: `In ${course.title} · ${Math.round((lesson.duration_seconds || 0) / 60)}m`,
             badge: 'Lecture',
             badgeClass: 'pill-emerald',

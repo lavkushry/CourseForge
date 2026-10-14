@@ -2,6 +2,7 @@ import { svgIcon } from '../icons';
 import type { HistoryItem } from '../contracts';
 import { ApiClient } from '../api';
 import { formatTime } from '../player/controller';
+import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -108,7 +109,7 @@ export class HistoryView {
       const thumb = el('div', 'history-card-thumb');
       const thumbGlow = el('div', 'history-thumb-glow');
       const watermarkPill = el('span', 'history-watermark', 'COURSEFORGE');
-      const thumbBadge = el('span', 'history-thumb-badge', item.section_title ? item.section_title.slice(0, 24) : 'LECTURE');
+      const thumbBadge = el('span', 'history-thumb-badge', formatModuleBadge(item.section_title));
       const durBadge = el('span', 'history-dur-badge', formatTime(item.duration_seconds));
       const playOverlay = el('div', 'history-thumb-play');
       playOverlay.append(svgIcon('play'));
@@ -127,8 +128,8 @@ export class HistoryView {
 
       // 2. Card Body Content
       const body = el('div', 'history-card-body');
-      const courseBadge = el('span', 'history-course-badge', (item.course_id || 'MASTERCLASS').toUpperCase().replace(/-/g, ' '));
-      const title = el('h3', 'history-lesson-title', item.title);
+      const courseBadge = el('span', 'history-course-badge', toTitleCase((item.course_id || 'Masterclass').replace(/-/g, ' ')));
+      const title = el('h3', 'history-lesson-title', cleanLessonTitle(item.title));
       title.title = item.title;
       const section = el('p', 'history-section-name', item.section_title || 'Core Lecture');
 

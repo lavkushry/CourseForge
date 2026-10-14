@@ -2,16 +2,15 @@
 """
 Automated Odysee Multi-Wallet Autonomous Fuel Daemon (Method 3 + Method 4):
 1. Method 3 (Reward Claimer):
-   - Audits each worker account against Odysee's Rewards API (https://api.odysee.com/reward/list).
-   - Automatically claims all eligible welcome, watch, streaming, and referral rewards via https://api.odysee.com/reward/claim.
-   - Injects free on-chain LBC directly into the worker wallets.
+   - Audits each worker account against Odysee's Rewards API.
+   - Automatically claims all eligible welcome, watch, streaming rewards.
 
 2. Method 4 (Liquidity Rebalancer & Tip Recycler):
+   - Trims channel bids to 0.001 LBC to keep maximum LBC liquid and spendable.
    - Audits all 5 worker channels for incoming tips/supports via support_list.
    - Executes support_abandon to unlock tips straight into liquid available spendable balance.
-   - Balances funds across all 5 workers: transfers micro-tips from surplus accounts (> 0.04 LBC)
-     to low-balance workers (< 0.025 LBC), then immediately unlocks them.
-   - Keeps all 5 concurrent upload workers fully fueled 24/7.
+   - Balances funds across all 5 workers: transfers micro-tips from surplus accounts
+     to low-balance workers, then immediately unlocks them.
 """
 from __future__ import annotations
 
@@ -101,6 +100,24 @@ def get_balance(auth_token: str) -> float:
         return 0.0
 
 
+def trim_channel_bids(acc: dict):
+    """Ensure channel bids are trimmed to 0.001 so excess LBC is liquid."""
+    try:
+        token = acc["token"]
+        ch_id = acc["channel_id"]
+        res = rpc_call(token, "channel_list", {})
+        items = (res.get("result") or {}).get("items") or []
+        for ch in items:
+            if ch.get("claim_id") == ch_id:
+                amt = float(ch.get("amount", "0.0"))
+                if amt > 0.0015:
+                    print(f"  ✂️ [{acc['name']}] Trimming channel bid from {amt} down to 0.001 LBC...")
+                    rpc_call(token, "channel_update", {"claim_id": ch_id, "bid": "0.001"})
+                    time.sleep(1)
+    except Exception:
+        pass
+
+
 def harvest_rewards(acc: dict) -> float:
     """Method 3: Automatically claim any pending/available rewards on Odysee API."""
     token = acc["token"]
@@ -131,8 +148,6 @@ def harvest_rewards(acc: dict) -> float:
                         txid = (c_res.get("data", {}).get("transaction_id") or "")[:10]
                         claimed_total += amt
                         print(f"  🎁 [{name}] Method 3 Reward Claimed: '{r_title}' -> +{amt:.4f} LBC (tx: {txid}...)")
-                except urllib.error.HTTPError:
-                    pass
                 except Exception:
                     pass
     except Exception as e:
@@ -195,6 +210,10 @@ def main():
     print("💰 ODYSEE MULTI-WALLET AUTONOMOUS FUEL & REBALANCE DAEMON (METHOD 3 + 4)")
     print("=" * 80)
 
+    # Step 0: Ensure channel bids are trimmed
+    for acc in ACCOUNTS:
+        trim_channel_bids(acc)
+
     # Step 1: Harvest any available Odysee Rewards (Method 3)
     print()
     print("🎁 Step 1 (Method 3): Harvesting available Odysee API rewards across all accounts...")
@@ -221,38 +240,35 @@ def main():
 
     total_avail = sum(balances.values())
     print()
-    print(f"   Total Pooled Available: {total_avail:.6f} LBC (Capacity: {int(total_avail / 0.0001):,} video claims)")
+    print(f"   Total Pooled Available: {total_avail:.6f} LBC")
 
     target = round(total_avail / len(ACCOUNTS), 4)
     print(f"   Ideal Target Per Account: ~{target:.4f} LBC")
     print()
 
-    # Step 4: Rebalance from surplus accounts to deficit accounts (Method 4)
-    print("🔄 Step 4 (Method 4): Rebalancing liquidity to accounts below 0.025 LBC threshold...")
-    surplus_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] > target + 0.01]
-    low_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] < 0.025]
+    # Step 4: Rebalance from surplus accounts to deficit accounts
+    print("🔄 Step 4 (Method 4): Rebalancing liquidity across workers...")
+    surplus_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] > target + 0.0005]
+    low_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] < target - 0.0005]
 
-    if not low_accs:
-        print("   ✅ All workers have healthy balances (>= 0.025 LBC). No rebalancing required.")
-    else:
-        for low in low_accs:
-            needed = target - balances[low["id"]]
-            if needed <= 0.005:
+    for low in low_accs:
+        needed = target - balances[low["id"]]
+        if needed <= 0.001:
+            continue
+        for sur in surplus_accs:
+            avail_sur = balances[sur["id"]] - target
+            if avail_sur <= 0.0005:
                 continue
-            for sur in surplus_accs:
-                avail_sur = balances[sur["id"]] - target
-                if avail_sur <= 0.005:
-                    continue
-                to_send = min(needed, avail_sur)
-                if to_send >= 0.01:
-                    ok = send_tip(sur, low, to_send)
-                    if ok:
-                        balances[sur["id"]] -= to_send
-                        time.sleep(2)
-                        unlock_all_tips(low)
-                        needed -= to_send
-                        if needed <= 0.005:
-                            break
+            to_send = round(min(needed, avail_sur), 4)
+            if to_send >= 0.001:
+                ok = send_tip(sur, low, to_send)
+                if ok:
+                    balances[sur["id"]] -= to_send
+                    time.sleep(2)
+                    unlock_all_tips(low)
+                    needed -= to_send
+                    if needed <= 0.001:
+                        break
 
     # Step 5: Final verification
     time.sleep(1)
@@ -263,7 +279,7 @@ def main():
     for acc in ACCOUNTS:
         unlock_all_tips(acc)
         final_bal = get_balance(acc["token"])
-        claims_capacity = int(final_bal / 0.0001)
+        claims_capacity = int(final_bal / 0.00005)
         print(f"   ✅ {acc['name']:<35} : {final_bal:.6f} LBC  (~{claims_capacity:,} claims)")
     print("=" * 80)
     print()

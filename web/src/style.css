@@ -4113,6 +4113,8 @@ html[data-accent="rose"] {
   letter-spacing: 0.01em !important;
   line-height: 1.25 !important;
   text-decoration: none !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
   transition: transform 0.15s ease, filter 0.15s ease !important;
 }
 
@@ -4154,6 +4156,16 @@ html[data-accent="rose"] {
   align-items: center !important;
   gap: 12px !important;
   margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.lesson-progress-container .lesson-progress-track {
+  width: 90px !important;
+  height: 5px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 99px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
 }
 
 .lesson-save-status,
@@ -4161,21 +4173,25 @@ html[data-accent="rose"] {
   display: inline-flex !important;
   align-items: center !important;
   gap: 7px !important;
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   font-weight: 500 !important;
   color: #81c784 !important;
   letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
 }
 
 .lesson-save-status::before,
 #save-status::before {
   content: "" !important;
   display: inline-block !important;
-  width: 7px !important;
-  height: 7px !important;
+  width: 6px !important;
+  height: 6px !important;
   border-radius: 50% !important;
   background: #81c784 !important;
-  box-shadow: 0 0 6px rgba(129, 199, 132, 0.75) !important;
+  box-shadow: 0 0 6px rgba(129, 199, 132, 0.8) !important;
+  flex-shrink: 0 !important;
 }
 
 .lesson-meta-bar {
@@ -7072,3 +7088,356 @@ button.note-del-btn:not([hidden]),
   display: none !important;
 }
 
+
+
+/* ==========================================================================
+   DRIBBBLE 27155177 LMS THUMBNAILS, CARDS & UP-NEXT RESPONSIVE SUITE
+   ========================================================================== */
+
+/* 1. Floating category pill over thumbnails */
+.thumb-category-pill {
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 4 !important;
+  padding: 4px 12px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+  color: #ff987b !important;
+  background: rgba(22, 23, 31, 0.88) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 152, 123, 0.25) !important;
+  pointer-events: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* 2. Sleek Dribbble Course Card Container */
+.course-card {
+  background: #15161b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.course-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45) !important;
+}
+
+.thumb-duration-badge {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  z-index: 4 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: #f3f4f6 !important;
+  background: rgba(15, 16, 22, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  pointer-events: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.cover-button {
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 16px 16px 0 0 !important;
+  border: none !important;
+  padding: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  background: transparent !important;
+  cursor: pointer !important;
+}
+
+.course-card .course-art,
+.continue-card .course-art,
+.library-card .course-art,
+.cover-button .course-art {
+  position: relative !important;
+  aspect-ratio: 16/9 !important;
+  border-radius: 16px 16px 0 0 !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  width: 100% !important;
+}
+
+#featured-course,
+.featured-course {
+  position: relative !important;
+  min-height: 480px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45) !important;
+  background: #15161b !important;
+}
+
+.hero-art {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  z-index: 1 !important;
+}
+
+.hero-content {
+  position: relative !important;
+  z-index: 3 !important;
+  max-width: 62% !important;
+  padding: 56px 48px !important;
+}
+
+.hero-kicker,
+.hero-metadata span,
+.hero-badge-match,
+.hero-chip,
+.hero-chip-badge,
+.hero-tech-badge {
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+.course-art img.course-cover {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.course-card-body {
+  padding: 18px 20px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  gap: 8px !important;
+}
+
+.course-card h2 {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: #f3f4f6 !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.course-description {
+  font-size: 0.84rem !important;
+  line-height: 1.5 !important;
+  color: #9ca3af !important;
+  margin: 0 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+.course-meta {
+  font-size: 0.78rem !important;
+  color: #81c784 !important;
+  font-weight: 500 !important;
+  margin: 4px 0 0 !important;
+}
+
+.course-badge {
+  align-self: flex-start !important;
+  padding: 3px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  color: #b39ddb !important;
+  background: #281e3a !important;
+  border: 1px solid rgba(179, 157, 219, 0.15) !important;
+}
+
+/* 3. Continue Learning Card */
+.continue-card {
+  background: #15161b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+.continue-open {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  border-radius: 16px 16px 0 0 !important;
+  overflow: hidden !important;
+}
+
+.continue-open .course-art {
+  aspect-ratio: 16/9 !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+/* 4. Responsive Grid Across All Sizes */
+.course-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+  gap: 24px !important;
+}
+
+@media (max-width: 1024px) {
+  .course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .course-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* 5. Sleek In-Player Up Next Card */
+.player-up-next-card {
+  position: absolute !important;
+  z-index: 20 !important;
+  right: 20px !important;
+  bottom: 75px !important;
+  width: min(340px, calc(100% - 40px)) !important;
+  background: rgba(18, 19, 26, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  display: flex !important;
+  gap: 12px !important;
+  align-items: center !important;
+  color: #ffffff !important;
+  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.player-up-next-card[hidden],
+#playerUpNextCard[hidden] {
+  display: none !important;
+}
+
+.up-next-thumb-wrap {
+  position: relative !important;
+  width: 100px !important;
+  aspect-ratio: 16/9 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background: #12131a !important;
+  flex-shrink: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.up-next-thumb-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.up-next-countdown-badge {
+  position: absolute !important;
+  bottom: 4px !important;
+  right: 4px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #ff987b !important;
+}
+
+.up-next-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.up-next-eyebrow {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #ff987b !important;
+  text-transform: none !important;
+}
+
+.up-next-title {
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.up-next-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: 2px !important;
+}
+
+.btn-up-next-watch {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  background: #ff7952 !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.btn-up-next-watch .svg-icon {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.btn-up-next-cancel {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #9ca3af !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  cursor: pointer !important;
+}
+
+.btn-up-next-cancel:hover {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}

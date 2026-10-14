@@ -32,22 +32,147 @@ function duration(seconds: number | undefined): string {
   const minutes = Math.max(1, Math.round(seconds / 60));
   return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes} min`;
 }
+
+export function toTitleCase(str: string): string {
+  if (!str) return '';
+  return str.replace(/\w\S*/g, (txt, idx) => {
+    const upper = txt.toUpperCase();
+    if (upper === 'GENAI') return 'GenAI';
+    if (upper === 'UI/UX') return 'UI/UX';
+    if (['AI', 'LLM', 'SQL', 'DSA', 'ML', 'API', 'HLD', 'LLD', 'AWS', 'GCP', '3D', '4D', 'HD', 'UI', 'UX', 'CSS', 'HTML', 'JS', 'TS', 'CC'].includes(upper) || /^\d+[A-Z]+$/.test(upper)) {
+      return upper;
+    }
+    const lower = txt.toLowerCase();
+    if (idx > 0 && ['and', 'or', 'of', 'in', 'to', 'for', 'with', 'on', 'at', 'by', 'the', 'a', 'an'].includes(lower)) {
+      return lower;
+    }
+    return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+  });
+}
+
+export function cleanLessonTitle(raw: string): string {
+  if (!raw) return '';
+  let t = raw.trim();
+  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s\-]+)\]\s*)+/i, '');
+  const modMatch = t.match(/^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s*[-—:]\s*(.+)$/i);
+  if (modMatch && modMatch[1] && modMatch[1].trim().length >= 2) {
+    t = modMatch[1].trim();
+  }
+  const numMatch = t.match(/^[0-9]{1,3}\s*[\.\-—]\s*(.+)$/);
+  if (numMatch && numMatch[1] && numMatch[1].trim().length >= 2) {
+    t = numMatch[1].trim();
+  }
+  return t || raw.trim();
+}
+
+export function formatModuleBadge(sectionTitle?: string): string {
+  if (!sectionTitle || !sectionTitle.trim()) return 'Module 1';
+  const clean = sectionTitle.trim();
+  const match = clean.match(/^(module|week|milestone|section|part|unit|chapter|class|phase|level|day)\s*0*(\d+)/i);
+  if (match && match[1] && match[2]) {
+    const type = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+    const num = match[2];
+    return `${type} ${num}`;
+  }
+  const parts = clean.split(/\s*[-—:]\s*/);
+  const p0 = parts[0];
+  if (parts.length > 1 && p0 && p0.length >= 3 && p0.length <= 20) {
+    return toTitleCase(p0.trim());
+  }
+  if (clean.length <= 24) {
+    return toTitleCase(clean);
+  }
+  const words = clean.split(/\s+/);
+  if (words.length > 1 && words[0]) {
+    let acc = words[0];
+    for (let i = 1; i < words.length; i++) {
+      if (`${acc} ${words[i]}`.length <= 20) {
+        acc += ` ${words[i]}`;
+      } else {
+        break;
+      }
+    }
+    if (acc.length >= 3 && acc.length <= 20) return toTitleCase(acc);
+  }
+  return 'Module 1';
+}
+
+function escapeXml(unsafe: string): string {
+  return unsafe.replace(/[<>&'"]/g, c => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case "'": return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
+export function createSvgThumbnailDataUri(title: string, category?: string): string {
+  const hash = [...(title || '')].reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) >>> 0, 17);
+  const themes = [
+    { bg1: '#1a1024', bg2: '#2a163e', accent: '#b39ddb', glow: 'rgba(179,157,219,0.3)', cat: 'AI & Agents' },
+    { bg1: '#11221c', bg2: '#16382a', accent: '#81c784', glow: 'rgba(129,199,132,0.3)', cat: 'Engineering' },
+    { bg1: '#261418', bg2: '#3f1a23', accent: '#ff987b', glow: 'rgba(255,152,123,0.3)', cat: 'System Design' },
+    { bg1: '#12202a', bg2: '#163445', accent: '#80deea', glow: 'rgba(128,222,234,0.3)', cat: 'Cloud & Data' },
+    { bg1: '#261d12', bg2: '#422e17', accent: '#ffb74d', glow: 'rgba(255,183,77,0.3)', cat: 'Architecture' },
+  ];
+  const theme = themes[hash % themes.length] || { bg1: '#1a1024', bg2: '#2a163e', accent: '#b39ddb', glow: 'rgba(179,157,219,0.3)', cat: 'Masterclass' };
+  const catLabel = escapeXml(toTitleCase(category || theme.cat));
+  const cleanTitle = escapeXml(cleanLessonTitle(title || 'CourseForge Masterclass'));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
+    <defs>
+      <linearGradient id="g_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${theme.bg1}"/>
+        <stop offset="100%" stop-color="${theme.bg2}"/>
+      </linearGradient>
+      <radialGradient id="r_${hash}" cx="85%" cy="20%" r="65%">
+        <stop offset="0%" stop-color="${theme.glow}"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+      <pattern id="grid_${hash}" width="32" height="32" patternUnits="userSpaceOnUse">
+        <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="640" height="360" rx="16" fill="url(#g_${hash})"/>
+    <rect width="640" height="360" rx="16" fill="url(#grid_${hash})"/>
+    <rect width="640" height="360" rx="16" fill="url(#r_${hash})"/>
+    <rect x="1" y="1" width="638" height="358" rx="15" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+    <circle cx="530" cy="180" r="120" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>
+    <circle cx="530" cy="180" r="80" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>
+    <circle cx="320" cy="170" r="32" fill="rgba(255,255,255,0.08)"/>
+    <polygon points="314,157 332,170 314,183" fill="#ffffff"/>
+    <text x="32" y="300" fill="#f3f4f6" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="700">${cleanTitle.slice(0, 38)}</text>
+    <text x="32" y="328" fill="rgba(255,255,255,0.4)" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11" font-weight="700" letter-spacing="1.5">COURSEFORGE MASTERCLASS</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export function artwork(course: Course, eager = false): HTMLElement {
   const art = node('div', 'course-art');
   const hash = [...course.id].reduce((sum, letter) => (sum * 31 + letter.charCodeAt(0)) >>> 0, 17);
   art.style.setProperty('--art-hue', String(hash % 360));
   art.setAttribute('aria-hidden', 'true');
   const orb = node('span', 'art-orb');
-  const label = node('span', 'art-label', course.category || 'CourseForge Collection');
+  const label = node('span', 'art-label', toTitleCase(course.category || 'CourseForge Collection'));
   const glyph = node('span', 'art-glyph', course.title.trim().slice(0, 1).toUpperCase());
   art.append(orb, glyph, label);
   const url = courseCover(course);
-  if (url) {
-    const image = node('img', 'course-cover'); image.src = url; image.alt = ''; image.loading = eager ? 'eager' : 'lazy'; image.decoding = 'async';
-    if (eager) image.fetchPriority = 'high';
-    image.addEventListener('error', () => image.remove(), { once: true });
-    art.append(image);
-  }
+  const fallbackSrc = createSvgThumbnailDataUri(course.title, course.category);
+  const image = node('img', 'course-cover');
+  image.alt = '';
+  image.loading = eager ? 'eager' : 'lazy';
+  image.decoding = 'async';
+  if (eager) image.fetchPriority = 'high';
+  image.src = url || fallbackSrc;
+  image.addEventListener('error', () => {
+    if (image.src !== fallbackSrc) {
+      image.src = fallbackSrc;
+    }
+  }, { once: true });
+  art.append(image);
   return art;
 }
 
@@ -205,20 +330,20 @@ export class DiscoveryView {
     const art = artwork(course, true); art.classList.add('hero-art');
     const content = node('div', 'hero-content');
     content.append(
-      node('p', 'hero-kicker', 'COURSEFORGE ORIGINAL MASTERCLASS'),
+      node('p', 'hero-kicker', 'CourseForge Original Masterclass'),
       node('h2', 'hero-title', course.title),
       node('p', 'hero-description', course.description || 'Find a new perspective. Learn something that stays with you.')
     );
     const metadata = node('div', 'hero-metadata');
-    const matchBadge = node('span', 'hero-badge-match', '98% MATCH');
-    const yearChip = node('span', 'hero-chip', '2026 EDITION');
-    const levelBadge = node('span', 'hero-chip-badge', 'PRO');
+    const matchBadge = node('span', 'hero-badge-match', '98% Match');
+    const yearChip = node('span', 'hero-chip', '2026 Edition');
+    const levelBadge = node('span', 'hero-chip-badge', 'Pro');
     const durationChip = node('span', 'hero-chip', `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} lessons`} · ${duration(course.duration_seconds)}`);
-    const uhdBadge = node('span', 'hero-tech-badge', '4K ULTRA HD');
-    const dolbyBadge = node('span', 'hero-tech-badge', 'DOLBY AUDIO');
+    const uhdBadge = node('span', 'hero-tech-badge', '4K Ultra HD');
+    const dolbyBadge = node('span', 'hero-tech-badge', 'Dolby Audio');
     const ccBadge = node('span', 'hero-tech-badge', 'CC');
     metadata.append(matchBadge, yearChip, levelBadge, durationChip, uhdBadge, dolbyBadge, ccBadge);
-    if (course.category) metadata.append(node('span', 'hero-category-chip', course.category));
+    if (course.category) metadata.append(node('span', 'hero-category-chip', toTitleCase(course.category || 'Saved')));
     content.append(metadata);
     const actions = node('div', 'hero-actions');
     actions.append(
@@ -258,10 +383,15 @@ export class DiscoveryView {
       openCourse();
     });
     const cover = action('', openCourse, 'cover-button');
-    cover.setAttribute('aria-label', `Explore ${course.title}`); const artPlay = node('span', 'art-play'); artPlay.append(svgIcon('play')); cover.append(artwork(course), artPlay);
+    cover.setAttribute('aria-label', `Explore ${course.title}`);
+    const artPlay = node('span', 'art-play');
+    artPlay.append(svgIcon('play'));
+    const catPill = node('span', 'thumb-category-pill', toTitleCase(course.category || 'Masterclass'));
+    const durBadge = node('span', 'thumb-duration-badge', duration(course.duration_seconds));
+    cover.append(artwork(course), catPill, durBadge, artPlay);
     card.append(cover);
     const body = node('div', 'course-card-body');
-    const badge = node('span', 'course-badge', course.enrolled ? 'YOUR COURSE' : course.category || 'DISCOVER');
+    const badge = node('span', 'course-badge', course.enrolled ? 'Enrolled' : toTitleCase(course.category || 'Discover'));
     body.append(badge, node('h2', '', course.title), node('p', 'course-description', course.description || 'A new perspective is waiting. Explore the lessons inside.'));
     const metadata = node('p', 'course-meta', `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`} · ${duration(course.duration_seconds)}`);
     body.append(metadata);
@@ -277,18 +407,25 @@ export class DiscoveryView {
     const card = node('article', 'continue-card');
     const open = action('', () => this.options.resume(item.course_id, item.id), 'continue-open');
     open.setAttribute('aria-label', `Resume ${item.title}`);
-    const contPlay = node('span', 'continue-play'); contPlay.append(svgIcon('play')); open.append(artwork({ id: item.course_id, title: item.title }), contPlay);
+    const contPlay = node('span', 'continue-play');
+    contPlay.append(svgIcon('play'));
+    const thumbPill = node('span', 'thumb-category-pill', 'In Progress');
+    const durBadge = node('span', 'thumb-duration-badge', duration(item.duration_seconds));
+    open.append(artwork({ id: item.course_id, title: item.title, category: 'In Progress' }), thumbPill, durBadge, contPlay);
     const body = node('div', 'continue-body');
-    body.append(node('span', 'eyebrow', 'CONTINUE LEARNING'), node('h3', '', item.title), node('p', 'muted', `${Math.floor(item.position / 60)}:${String(Math.floor(item.position % 60)).padStart(2, '0')} / ${duration(item.duration_seconds)}`));
+    body.append(node('span', 'eyebrow', 'Continue Learning'), node('h3', '', cleanLessonTitle(item.title)), node('p', 'muted', `${Math.floor(item.position / 60)}:${String(Math.floor(item.position % 60)).padStart(2, '0')} / ${duration(item.duration_seconds)}`));
     const progress = node('progress', 'watch-progress'); progress.max = 100; progress.value = item.percent; progress.setAttribute('aria-label', `${item.percent}% complete`);
     body.append(progress); card.append(open, body); return card;
   }
   private savedCard(item: SavedItem): HTMLElement {
-    const course: Course = { id: item.course_id, title: item.title, category: item.item_type === 'lecture' ? 'Saved lesson' : 'Saved course' };
+    const course: Course = { id: item.course_id, title: item.title, category: item.item_type === 'lecture' ? 'Saved Lesson' : 'Saved Course' };
     const card = node('article', 'course-card');
     const open = () => item.item_type === 'lecture' ? this.options.resume(item.course_id, item.id) : this.options.open(item.id, true);
-    const cover = action('', open, 'cover-button'); cover.setAttribute('aria-label', `Explore ${item.title}`); cover.append(artwork(course));
-    const body = node('div', 'course-card-body'); body.append(node('span', 'course-badge', course.category), node('h2', '', item.title));
+    const cover = action('', open, 'cover-button');
+    cover.setAttribute('aria-label', `Explore ${item.title}`);
+    const catPill = node('span', 'thumb-category-pill', toTitleCase(course.category || 'Saved'));
+    cover.append(artwork(course), catPill);
+    const body = node('div', 'course-card-body'); body.append(node('span', 'course-badge', toTitleCase(course.category || 'Saved')), node('h2', '', item.title));
     const footer = node('div', 'course-card-footer');
     const remove = action('Remove', () => {
       remove.disabled = true;

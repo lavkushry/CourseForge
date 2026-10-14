@@ -3,7 +3,7 @@ import { SettingsView } from './settings/view';
 import './style.css';
 import { LearningApi } from './learning/api';
 import { LearningView } from './learning/view';
-import { DiscoveryView, artwork } from './discovery/view';
+import { DiscoveryView, artwork, cleanLessonTitle, formatModuleBadge, toTitleCase, createSvgThumbnailDataUri } from './discovery/view';
 import type { CatalogView } from './discovery/view';
 import { svgIcon } from './icons';
 import { ApiClient, ApiError, errorMessage, isAbort } from './api';
@@ -488,15 +488,32 @@ function renderApp(account: User): void {
               <span id="watermark" class="watermark" aria-hidden="true"></span>
               <button id="unlock-controls" class="unlock-controls" hidden aria-label="Hold to unlock controls, or press Enter or Escape">Hold to unlock</button>
               <div id="ownership-overlay" class="ownership-overlay" hidden><p id="ownership-message"></p><button id="resume-here" class="button primary">Resume here</button><button id="move-here" class="button primary" hidden>Move playback here</button><button id="retry-lesson" class="button primary" hidden>Retry lesson</button><button id="sign-in-again" class="button primary" hidden>Sign in again</button><button id="return-to-course" class="button quiet" hidden>Return to course</button></div>
+              <div id="playerUpNextCard" class="player-up-next-card" hidden role="region" aria-label="Next episode countdown">
+                <div class="up-next-thumb-wrap">
+                  <img id="upNextThumbImg" alt="" />
+                  <span class="up-next-countdown-badge" id="upNextCountdownBadge">10s</span>
+                </div>
+                <div class="up-next-content">
+                  <span class="up-next-eyebrow">Up Next</span>
+                  <h4 class="up-next-title" id="upNextTitleText">Next Lesson</h4>
+                  <div class="up-next-actions">
+                    <button type="button" class="btn-up-next-watch" id="upNextWatchBtn">
+                      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      <span>Watch Now</span>
+                    </button>
+                    <button type="button" class="btn-up-next-cancel" id="upNextCancelBtn">Cancel</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <!-- Clean Modern Lesson Meta Section Below Player -->
             <div class="lesson-meta-bar">
               <div class="lesson-meta-top">
                 <div class="lesson-meta-badges">
-                  <span id="lesson-module-badge" class="lesson-badge-pill pill-terracotta">MODULE 1</span>
+                  <span id="lesson-module-badge" class="lesson-badge-pill pill-terracotta">Module 1</span>
                   <span id="lesson-category-badge" class="lesson-badge-pill pill-purple">Engineering</span>
                   <span id="lesson-duration-badge" class="lesson-badge-pill pill-emerald">Studio Lecture</span>
-                  <span id="coverage" class="lesson-badge-pill pill-ocean coverage">0% watched</span>
+                  <span id="coverage" class="lesson-badge-pill pill-ocean coverage">In Progress</span>
                 </div>
                 <div class="lesson-progress-container">
                   <div class="lesson-progress-track">
@@ -736,9 +753,26 @@ function renderApp(account: User): void {
           if (badge) badge.textContent = `${seconds}s`;
           const next = nextLesson();
           const title = upNextCard.querySelector('#upNextTitleText');
-          if (title && next) title.textContent = next.title;
+          if (title && next) title.textContent = cleanLessonTitle(next.title);
           const img = upNextCard.querySelector<HTMLImageElement>('#upNextThumbImg');
-          if (img) img.style.display = 'none';
+          if (img && next) {
+            img.style.display = 'block';
+            img.src = createSvgThumbnailDataUri(next.title, selectedCourse?.category || 'Lecture');
+          }
+          const watchBtn = upNextCard.querySelector<HTMLButtonElement>('#upNextWatchBtn');
+          if (watchBtn && next) {
+            watchBtn.onclick = () => {
+              void loadLesson(next, true, true);
+            };
+          }
+          const cancelBtn = upNextCard.querySelector<HTMLButtonElement>('#upNextCancelBtn');
+          if (cancelBtn) {
+            cancelBtn.onclick = () => {
+              const stay = document.querySelector<HTMLButtonElement>('#cancel-next');
+              if (stay) stay.click();
+              upNextCard.hidden = true;
+            };
+          }
         } else {
           upNextCard.hidden = true;
         }
@@ -1357,7 +1391,7 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
     if (cSec) cSec.textContent = response.course.category || 'Masterclass';
     if (cCur) cCur.textContent = response.course.title;
     const catBadge = document.querySelector<HTMLElement>('#lesson-category-badge');
-    if (catBadge) catBadge.textContent = response.course.category || 'Engineering';
+    if (catBadge) catBadge.textContent = toTitleCase(response.course.category || 'Engineering');
     required('#lesson-description').textContent = response.course.description || '';
     required<HTMLElement>('#materials').hidden = true;
     required<HTMLElement>('#notes').hidden = true;
@@ -1398,7 +1432,7 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
   noteSubmission = null;
   required<HTMLTextAreaElement>('#note-content').value = '';
   required<HTMLElement>('#notes').hidden = true;
-  required('#lesson-title').textContent = lesson.title;
+  required('#lesson-title').textContent = cleanLessonTitle(lesson.title);
   required<HTMLVideoElement>('#lesson-video').setAttribute('aria-label', lesson.title);
   required('#coverage').textContent = '';
   renderLessons();
@@ -1435,13 +1469,13 @@ async function loadLesson(lesson: Lesson, autoplay = false, takeOver = false): P
       }
       const pct = response.progress?.percent !== undefined ? Math.min(100, Math.floor(response.progress.percent)) : (response.progress?.coverage !== undefined ? Math.min(100, Math.floor(response.progress.coverage)) : 0);
       if (covEl) {
-        covEl.textContent = pct > 0 ? `${pct}% watched` : 'In progress';
+        covEl.textContent = pct > 0 ? (pct === 100 ? 'Lesson completed' : `${pct}% Watched`) : 'In Progress';
         covEl.className = 'lesson-badge-pill pill-ocean coverage';
       }
       if (fill) fill.style.width = `${pct}%`;
     }
     const moduleBadge = document.querySelector<HTMLElement>('#lesson-module-badge');
-    if (moduleBadge) moduleBadge.textContent = response.lesson.section_title ? response.lesson.section_title.toUpperCase() : 'MODULE 1';
+    if (moduleBadge) moduleBadge.textContent = formatModuleBadge(response.lesson.section_title);
     const subCourse = document.querySelector<HTMLElement>('#course-name-sub');
     if (subCourse && selectedCourse) subCourse.textContent = selectedCourse.title;
     if (markBtn) markBtn.disabled = false;
@@ -1492,13 +1526,13 @@ function renderLessons(): void {
     lessons.forEach((lesson, index) => {
       if (lesson.section_title && lesson.section_title !== section) {
         section = lesson.section_title;
-        const group = element('li', 'lesson-section'); group.append(element('h3', '', section)); drawerList.append(group);
+        const group = element('li', 'lesson-section'); group.append(element('h3', '', toTitleCase(section))); drawerList.append(group);
       }
       const item = element('li');
       const choice = button('', () => { closeEpisodes(); void loadLesson(lesson, true, true); }, 'lesson-choice');
       const number = element('span', 'lesson-number', String(index + 1).padStart(2, '0'));
       const details = element('span', 'lesson-choice-info');
-      details.append(element('strong', '', lesson.title), element('span', 'muted', formatTime(lesson.duration_seconds)));
+      details.append(element('strong', '', cleanLessonTitle(lesson.title)), element('span', 'muted', formatTime(lesson.duration_seconds)));
       if (learnedLessons.has(lesson.id)) details.append(element('span', 'learned-badge', '✓ Learned'));
       choice.append(number, details);
       if (lesson.id === selectedLesson?.id) choice.setAttribute('aria-current', 'true');
@@ -1708,14 +1742,14 @@ function updateProgress(ack: PulseAck): void {
     }
   } else {
     if (covEl) {
-      covEl.textContent = pct > 0 ? `${pct}% watched` : 'In progress';
+      covEl.textContent = pct > 0 ? (pct === 100 ? 'Lesson completed' : `${pct}% Watched`) : 'In Progress';
       covEl.className = 'lesson-badge-pill pill-ocean coverage';
     }
     if (fill) fill.style.width = `${pct}%`;
   }
   const badge = document.querySelector<HTMLElement>('#lesson-module-badge');
   if (badge && selectedLesson) {
-    badge.textContent = selectedLesson.section_title ? selectedLesson.section_title.toUpperCase() : 'MODULE 1';
+    badge.textContent = formatModuleBadge(selectedLesson.section_title);
   }
 }
 

@@ -1,7 +1,7 @@
 import { svgIcon } from '../icons';
 import type { Course } from '../contracts';
 import { ApiClient, ApiError, errorMessage } from '../api';
-import { artwork } from '../discovery/view';
+import { artwork, toTitleCase } from '../discovery/view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -240,14 +240,18 @@ export class LibraryView {
       const coverBtn = el('button', 'cover-button');
       coverBtn.type = 'button';
       coverBtn.setAttribute('aria-label', `View syllabus for ${c.title}`);
-      coverBtn.append(artwork(c), (() => { const sp = el('span', 'art-play'); sp.append(svgIcon('play')); return sp; })());
+      const artPlay = el('span', 'art-play');
+      artPlay.append(svgIcon('play'));
+      const catPill = el('span', 'thumb-category-pill', toTitleCase(c.category || 'Masterclass'));
+      const durBadge = el('span', 'thumb-duration-badge', formatDuration(c.duration_seconds || 0));
+      coverBtn.append(artwork(c), catPill, durBadge, artPlay);
       coverBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
       card.append(coverBtn);
 
       // Body
       const body = el('div', 'course-card-body');
       body.append(
-        el('span', 'course-badge', c.category || 'MASTERCLASS'),
+        el('span', 'course-badge', toTitleCase(c.category || 'Masterclass')),
         el('h2', '', c.title),
         el('p', 'course-description', c.description || 'Master deep technical principles with source-verified video lectures and hands-on practice.'),
         el('p', 'course-meta', `${c.lesson_count || 0} lectures · ${formatDuration(c.duration_seconds || 0)} · ${c.instructor || 'CourseForge Faculty'}`),
