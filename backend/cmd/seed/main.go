@@ -3,13 +3,14 @@ package main
 
 import (
 	"context"
-	"courseforge/backend/internal/config"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/store"
 	"errors"
 	"fmt"
 	"os"
 	"time"
+
+	"courseforge/backend/internal/config"
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/store"
 )
 
 func main() {
@@ -52,13 +53,15 @@ func run() error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-	for _, user := range []struct{ id, email, name, role string }{{"fixture_learner", "learner@example.test", "Demo learner", "student"}, {"fixture_admin", "admin@example.test", "Demo administrator", "admin"},{"fixture_unverified","unverified@example.test","Pending learner","student"}} {
+	for _, user := range []struct{ id, email, name, role string }{{"fixture_learner", "learner@example.test", "Demo learner", "student"}, {"fixture_admin", "admin@example.test", "Demo administrator", "admin"}, {"fixture_unverified", "unverified@example.test", "Pending learner", "student"}} {
 		_, err = tx.Exec(ctx, `INSERT INTO users(id,email,name,password_hash,role,verified)VALUES($1,$2,$3,$4,$5,true)ON CONFLICT(id)DO NOTHING`, user.id, user.email, user.name, hash, user.role)
 		if err != nil {
 			return err
 		}
 	}
-	if _,err=tx.Exec(ctx,`UPDATE users SET verified=false WHERE id='fixture_unverified'`);err!=nil{return err}
+	if _, err = tx.Exec(ctx, `UPDATE users SET verified=false WHERE id='fixture_unverified'`); err != nil {
+		return err
+	}
 	_, err = tx.Exec(ctx, `INSERT INTO courses(id,title,description,published)VALUES('fixture-course','CourseForge demonstration','Synthetic lessons for isolated rewrite testing.',true)ON CONFLICT DO NOTHING`)
 	if err != nil {
 		return err
@@ -69,7 +72,10 @@ func run() error {
 			return err
 		}
 	}
-	_,err=tx.Exec(ctx,`INSERT INTO courses(id,title,published)VALUES('fixture-other','Other published course',true),('fixture-unpublished','Unpublished course',false)ON CONFLICT DO NOTHING;INSERT INTO lessons(id,course_id,title,duration_seconds)VALUES('fixture-other-lesson','fixture-other','Other lesson',30),('fixture-unpublished-lesson','fixture-unpublished','Unpublished lesson',30)ON CONFLICT DO NOTHING`);if err!=nil{return err}
+	_, err = tx.Exec(ctx, `INSERT INTO courses(id,title,published)VALUES('fixture-other','Other published course',true),('fixture-unpublished','Unpublished course',false)ON CONFLICT DO NOTHING;INSERT INTO lessons(id,course_id,title,duration_seconds)VALUES('fixture-other-lesson','fixture-other','Other lesson',30),('fixture-unpublished-lesson','fixture-unpublished','Unpublished lesson',30)ON CONFLICT DO NOTHING`)
+	if err != nil {
+		return err
+	}
 	_, err = tx.Exec(ctx, `INSERT INTO enrollments(user_id,course_id)VALUES('fixture_learner','fixture-course')ON CONFLICT DO NOTHING`)
 	if err != nil {
 		return err

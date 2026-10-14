@@ -1,11 +1,12 @@
 package administration
 
 import (
-	"courseforge/backend/internal/httpx"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
+
+	"courseforge/backend/internal/httpx"
 )
 
 func httpxError(w http.ResponseWriter, message string) {

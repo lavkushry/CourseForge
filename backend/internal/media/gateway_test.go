@@ -2,18 +2,19 @@ package media
 
 import (
 	"context"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/playback"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
-	"os"
-	"path/filepath"
 	"time"
+
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/playback"
 )
 
 type testAuthority struct {
@@ -117,7 +118,7 @@ func TestRedirectCannotEscapeConfiguredProvider(t *testing.T) {
 	var escaped atomic.Int64
 	hostile := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { escaped.Add(1) }))
 	defer hostile.Close()
-	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, hostile.URL, 302) }))
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, hostile.URL, http.StatusFound) }))
 	defer upstream.Close()
 	a := &testAuthority{}
 	a.active.Store(true)
@@ -244,7 +245,6 @@ func TestDefaultURLRestrictions(t *testing.T) {
 		t.Fatal("valid source rejected")
 	}
 }
-
 
 func TestLocalFileRangeStreaming(t *testing.T) {
 	tmpDir := t.TempDir()

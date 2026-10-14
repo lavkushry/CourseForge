@@ -3,11 +3,6 @@ package planning
 import (
 	"bytes"
 	"context"
-	"courseforge/backend/internal/api"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/learning"
-	"courseforge/backend/internal/playback"
-	"courseforge/backend/internal/testutil"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,6 +12,12 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"courseforge/backend/internal/api"
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/learning"
+	"courseforge/backend/internal/playback"
+	"courseforge/backend/internal/testutil"
 )
 
 type fixture struct {
@@ -505,7 +506,7 @@ func TestFocusAnalyticsSplitsMidnightDSTAndExcludesBreakAndCancel(t *testing.T) 
 	f.at(time.Date(2026, 11, 1, 6, 59, 30, 0, time.UTC))
 	session := f.start(t, "alice", "midnight", 2)
 	f.advance(90)
-	session = f.action(t, "alice", "midnight-finish", session, "finish")
+	f.action(t, "alice", "midnight-finish", session, "finish")
 	// Crossing the fall-back hour consumes60 real seconds, not a negative hour.
 	f.at(time.Date(2026, 11, 1, 8, 59, 30, 0, time.UTC))
 	session = f.start(t, "alice", "dst", 2)
@@ -513,12 +514,12 @@ func TestFocusAnalyticsSplitsMidnightDSTAndExcludesBreakAndCancel(t *testing.T) 
 	f.action(t, "alice", "dst-finish", session, "finish")
 	w = f.call("alice", "POST", "/api/v1/focus/sessions", "break", map[string]any{"mode": "break", "duration_minutes": 1})
 	expect(t, w, 201)
-	session = read[Focus](t, w)
+	breakSession := read[Focus](t, w)
 	f.advance(30)
-	f.action(t, "alice", "break-finish", session, "finish")
-	session = f.start(t, "alice", "cancel", 1)
+	f.action(t, "alice", "break-finish", breakSession, "finish")
+	cancelSession := f.start(t, "alice", "cancel", 1)
 	f.advance(30)
-	f.action(t, "alice", "cancel-action", session, "cancel")
+	f.action(t, "alice", "cancel-action", cancelSession, "cancel")
 	w = f.call("alice", "GET", "/api/v1/focus/analytics/2026-10-26", "", nil)
 	expect(t, w, 200)
 	analytics := read[struct {

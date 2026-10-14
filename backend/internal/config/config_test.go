@@ -13,7 +13,9 @@ func validEnv(t *testing.T) {
 	t.Setenv("CF_REGISTRATION_OPEN", "false")
 	t.Setenv("CF_REGISTRATION_MODE", "")
 	t.Setenv("CF_MEDIA_MODE", "embedded")
+	t.Setenv("CF_HTTP_ADDR", ":8080")
 }
+
 func TestSafeDefaultsAndExplicitRegistration(t *testing.T) {
 	validEnv(t)
 	c, err := FromEnv()
@@ -34,8 +36,18 @@ func TestSafeDefaultsAndExplicitRegistration(t *testing.T) {
 		t.Fatal("explicit registration mode not respected", err)
 	}
 }
+
 func TestInvalidOriginsResourceBudgetsAndModes(t *testing.T) {
-	for _, entry := range []struct{ key, value string }{{"CF_PUBLIC_ORIGIN", "https://academy.example/path"}, {"CF_PUBLIC_ORIGIN", "https://user:secret@academy.example"}, {"CF_DB_MAX_CONNS", "10000"}, {"CF_PASSWORD_CONCURRENCY", "10000"}, {"CF_REGISTRATION_MODE", "mistyped-value"}, {"CF_MEDIA_MODE", "mistyped-value"}, {"CF_COOKIE_SECURE", "false"}} {
+	for _, entry := range []struct{ key, value string }{
+		{"CF_PUBLIC_ORIGIN", "https://academy.example/path"},
+		{"CF_PUBLIC_ORIGIN", "https://user:secret@academy.example"},
+		{"CF_DB_MAX_CONNS", "10000"},
+		{"CF_PASSWORD_CONCURRENCY", "10000"},
+		{"CF_REGISTRATION_MODE", "mistyped-value"},
+		{"CF_MEDIA_MODE", "mistyped-value"},
+		{"CF_COOKIE_SECURE", "false"},
+		{"CF_DATABASE_URL", ""},
+	} {
 		t.Run(entry.key+entry.value, func(t *testing.T) {
 			validEnv(t)
 			t.Setenv(entry.key, entry.value)
@@ -43,5 +55,41 @@ func TestInvalidOriginsResourceBudgetsAndModes(t *testing.T) {
 				t.Fatal("invalid deployment configuration accepted")
 			}
 		})
+	}
+}
+
+func TestValidateRejectsUnsafeConfig(t *testing.T) {
+	c := Config{
+		Address:             ":8080",
+		DatabaseURL:         "postgresql://fixture@localhost/synthetic",
+		PublicOrigin:        "https://academy.example",
+		MaxConnections:      24,
+		PasswordConcurrency: 2,
+		CookieSecure:        true,
+		RegistrationMode:    "invite",
+		MediaMode:           "embedded",
+		RequestTimeout:      1,
+	}
+	if err := c.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	c.CookieSecure = false
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected HTTPS cookie secure rejection")
+	}
+	c.CookieSecure = true
+	c.MediaMode = "other"
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected media mode rejection")
+	}
+	c.MediaMode = "embedded"
+	c.RegistrationMode = "closed"
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected registration mode rejection")
+	}
+	c.RegistrationMode = "invite"
+	c.DatabaseURL = ""
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected database url rejection")
 	}
 }

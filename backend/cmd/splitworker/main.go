@@ -43,19 +43,19 @@ type ChapterSplit struct {
 }
 
 type ProgressStats struct {
-	Status              string    `json:"status"`
-	TotalLessons        int       `json:"total_lessons"`
-	CompletedLessons    int       `json:"completed_lessons"`
-	RemainingLessons    int       `json:"remaining_lessons"`
-	PercentComplete     float64   `json:"percent_complete"`
-	ProcessedInSession  int       `json:"processed_in_session"`
-	ElapsedSeconds      float64   `json:"elapsed_seconds"`
-	SecondsPerLesson    float64   `json:"seconds_per_lesson"`
-	EtaSeconds          float64   `json:"eta_seconds"`
-	EtaFormatted        string    `json:"eta_formatted"`
-	CurrentLessonID     string    `json:"current_lesson_id"`
-	CurrentLessonTitle  string    `json:"current_lesson_title"`
-	LastUpdated         time.Time `json:"last_updated"`
+	Status             string    `json:"status"`
+	TotalLessons       int       `json:"total_lessons"`
+	CompletedLessons   int       `json:"completed_lessons"`
+	RemainingLessons   int       `json:"remaining_lessons"`
+	PercentComplete    float64   `json:"percent_complete"`
+	ProcessedInSession int       `json:"processed_in_session"`
+	ElapsedSeconds     float64   `json:"elapsed_seconds"`
+	SecondsPerLesson   float64   `json:"seconds_per_lesson"`
+	EtaSeconds         float64   `json:"eta_seconds"`
+	EtaFormatted       string    `json:"eta_formatted"`
+	CurrentLessonID    string    `json:"current_lesson_id"`
+	CurrentLessonTitle string    `json:"current_lesson_title"`
+	LastUpdated        time.Time `json:"last_updated"`
 }
 
 func main() {
@@ -261,7 +261,7 @@ func classifyChapters(ctx context.Context, client *http.Client, ollamaURL, model
 		ch := chunks[i]
 		m := int(ch.StartSeconds) / 60
 		s := int(ch.StartSeconds) % 60
-		sample.WriteString(fmt.Sprintf("[%02d:%02d] %s\n", m, s, ch.Text))
+		fmt.Fprintf(&sample, "[%02d:%02d] %s\n", m, s, ch.Text)
 		count++
 	}
 

@@ -2,10 +2,12 @@ package paths
 
 import (
 	"context"
+	"time"
+
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/planning"
+
 	"github.com/jackc/pgx/v5"
-	"time"
 )
 
 // PlanningAdapter performs bounded SQL within the planner's supplied transaction.

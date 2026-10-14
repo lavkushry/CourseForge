@@ -8,6 +8,7 @@ import (
 
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
+
 	"github.com/jackc/pgx/v5"
 )
 

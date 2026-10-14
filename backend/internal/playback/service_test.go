@@ -3,16 +3,18 @@ package playback
 import (
 	"bytes"
 	"context"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/testutil"
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
+
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/testutil"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type fixture struct {

@@ -3,15 +3,17 @@ package paths
 import (
 	"bytes"
 	"context"
-	"courseforge/backend/internal/httpx"
-	"courseforge/backend/internal/identity"
 	"encoding/json"
 	"errors"
-	"github.com/jackc/pgx/v5"
 	"math"
 	"net/http"
 	"strings"
 	"time"
+
+	"courseforge/backend/internal/httpx"
+	"courseforge/backend/internal/identity"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Question struct {

@@ -18,6 +18,7 @@ import (
 	"courseforge/backend/internal/paths"
 	"courseforge/backend/internal/publication"
 	"courseforge/backend/internal/store"
+
 	"github.com/jackc/pgx/v5"
 )
 

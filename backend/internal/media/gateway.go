@@ -98,7 +98,7 @@ func (g *Gateway) valid(raw string) bool {
 }
 func busy(w http.ResponseWriter) {
 	w.Header().Set("Retry-After", "5")
-	http.Error(w, "Media is temporarily unavailable. Retry shortly.", 503)
+	http.Error(w, "Media is temporarily unavailable. Retry shortly.", http.StatusServiceUnavailable)
 }
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, no-store, no-transform")
@@ -106,13 +106,13 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	p, ok := identity.FromContext(r.Context())
 	if !ok {
-		http.Error(w, "Sign in required.", 401)
+		http.Error(w, "Sign in required.", http.StatusUnauthorized)
 		return
 	}
 	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
 	if err != nil {
 		if errors.Is(err, playback.ErrDenied) {
-			http.Error(w, "Playback access ended.", 403)
+			http.Error(w, "Playback access ended.", http.StatusForbidden)
 		} else {
 			busy(w)
 		}
@@ -124,7 +124,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !byteRange.MatchString(rangeValue) {
 		w.Header().Set("Accept-Ranges", "bytes")
-		http.Error(w, "One byte range is supported.", 416)
+		http.Error(w, "One byte range is supported.", http.StatusRequestedRangeNotSatisfiable)
 		return
 	}
 	select {

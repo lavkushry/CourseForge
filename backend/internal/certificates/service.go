@@ -15,6 +15,7 @@ import (
 
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -278,7 +279,7 @@ func validCode(raw string) (string, bool) {
 		return "", false
 	}
 	for _, ch := range code {
-		if !(ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' || ch == '_' || ch == '-') {
+		if (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z') && (ch < '0' || ch > '9') && ch != '_' && ch != '-' {
 			return "", false
 		}
 	}

@@ -3,18 +3,20 @@ package paths
 import (
 	"bytes"
 	"context"
-	"courseforge/backend/internal/httpx"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/jobs"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
-	"golang.org/x/text/cases"
 	"net/http"
 	"sort"
 	"strings"
 	"unicode/utf16"
+
+	"courseforge/backend/internal/httpx"
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/jobs"
+
+	"github.com/jackc/pgx/v5"
+	"golang.org/x/text/cases"
 )
 
 // StablePathID retains the legacy owner/courses/casefolded-goal namespace,

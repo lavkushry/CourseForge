@@ -238,7 +238,7 @@ func (s *Service) recommendations(w http.ResponseWriter, r *http.Request) {
 		if a.relevance != b.relevance {
 			return a.relevance > b.relevance
 		}
-		if strings.ToLower(a.StepTitle) != strings.ToLower(b.StepTitle) {
+		if !strings.EqualFold(a.StepTitle, b.StepTitle) {
 			return strings.ToLower(a.StepTitle) < strings.ToLower(b.StepTitle)
 		}
 		if a.Slug != b.Slug {
