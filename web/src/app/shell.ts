@@ -1,18 +1,22 @@
-import type { AppContext } from './context';
-import { errorMessage, isAbort } from '../api';
-import { el as element, required } from '../components';
-import type { Course, User } from '../contracts';
-import { artwork, cleanLessonTitle, createSvgThumbnailDataUri } from '../discovery/view';
-import { PreferenceStore } from '../player/preferences';
-import { PlayerController } from '../player/controller';
-import { NativeVideoAdapter } from '../player/video';
-import { mountPlayerChrome } from '../player/chrome';
-import { mountPlayerGestures } from '../player/gestures';
-import { PlayerTelemetry } from '../player/telemetry';
-import * as playbackApi from '../api/playback';
+import type { AppContext } from "./context";
+import { errorMessage, isAbort } from "../api";
+import { el as element, required } from "../components";
+import type { Course, User } from "../contracts";
+import {
+  artwork,
+  cleanLessonTitle,
+  createSvgThumbnailDataUri,
+} from "../discovery/view";
+import { PreferenceStore } from "../player/preferences";
+import { PlayerController } from "../player/controller";
+import { NativeVideoAdapter } from "../player/video";
+import { mountPlayerChrome } from "../player/chrome";
+import { mountPlayerGestures } from "../player/gestures";
+import { PlayerTelemetry } from "../player/telemetry";
+import * as playbackApi from "../api/playback";
 
 export function installShell(ctx: AppContext): void {
-  ctx.renderLogin = function renderLogin(message = ''): void {
+  ctx.renderLogin = function renderLogin(message = ""): void {
     ctx.pageScope.abort();
     ctx.pageScope = new AbortController();
     ctx.certificates = null;
@@ -28,6 +32,8 @@ export function installShell(ctx: AppContext): void {
     ctx.tutorView = null;
     ctx.labsView?.deactivate();
     ctx.labsView = null;
+    ctx.careerView?.deactivate();
+    ctx.careerView = null;
     ctx.syllabusDialog?.close();
     ctx.syllabusDialog = null;
     ctx.studyRail = null;
@@ -35,7 +41,7 @@ export function installShell(ctx: AppContext): void {
     ctx.preferences = null;
     ctx.user = null;
     ctx.learnedLessons.clear();
-    ctx.learnedCursor = '';
+    ctx.learnedCursor = "";
     ctx.learnedLoaded = false;
     ctx.app.innerHTML = `
     <main class="login-page">
@@ -87,82 +93,98 @@ export function installShell(ctx: AppContext): void {
     </main>`;
     ctx.feedback(message, Boolean(message));
 
-    const tabLogin = required<HTMLButtonElement>('#auth-tab-login');
-    const tabRegister = required<HTMLButtonElement>('#auth-tab-register');
-    const loginForm = required<HTMLFormElement>('#login-form');
-    const registerForm = required<HTMLFormElement>('#register-form');
-    const authEyebrow = required<HTMLElement>('#auth-eyebrow');
-    const authTitle = required<HTMLElement>('#auth-title');
-    const authDesc = required<HTMLElement>('#auth-desc');
+    const tabLogin = required<HTMLButtonElement>("#auth-tab-login");
+    const tabRegister = required<HTMLButtonElement>("#auth-tab-register");
+    const loginForm = required<HTMLFormElement>("#login-form");
+    const registerForm = required<HTMLFormElement>("#register-form");
+    const authEyebrow = required<HTMLElement>("#auth-eyebrow");
+    const authTitle = required<HTMLElement>("#auth-title");
+    const authDesc = required<HTMLElement>("#auth-desc");
 
-    function setAuthMode(mode: 'login' | 'register'): void {
-      ctx.feedback('');
-      if (mode === 'login') {
-        tabLogin.classList.add('active');
-        tabLogin.setAttribute('aria-selected', 'true');
-        tabRegister.classList.remove('active');
-        tabRegister.setAttribute('aria-selected', 'false');
+    function setAuthMode(mode: "login" | "register"): void {
+      ctx.feedback("");
+      if (mode === "login") {
+        tabLogin.classList.add("active");
+        tabLogin.setAttribute("aria-selected", "true");
+        tabRegister.classList.remove("active");
+        tabRegister.setAttribute("aria-selected", "false");
         loginForm.hidden = false;
         registerForm.hidden = true;
-        authEyebrow.textContent = 'Your next chapter starts here';
-        authTitle.textContent = 'Welcome back.';
-        authDesc.textContent = 'Big ideas. Small steps. Sign in to pick up where you left off.';
-        required<HTMLInputElement>('#email').focus();
+        authEyebrow.textContent = "Your next chapter starts here";
+        authTitle.textContent = "Welcome back.";
+        authDesc.textContent =
+          "Big ideas. Small steps. Sign in to pick up where you left off.";
+        required<HTMLInputElement>("#email").focus();
       } else {
-        tabRegister.classList.add('active');
-        tabRegister.setAttribute('aria-selected', 'true');
-        tabLogin.classList.remove('active');
-        tabLogin.setAttribute('aria-selected', 'false');
+        tabRegister.classList.add("active");
+        tabRegister.setAttribute("aria-selected", "true");
+        tabLogin.classList.remove("active");
+        tabLogin.setAttribute("aria-selected", "false");
         loginForm.hidden = true;
         registerForm.hidden = false;
-        authEyebrow.textContent = 'Join CourseForge today';
-        authTitle.textContent = 'Start learning.';
-        authDesc.textContent = 'Unlimited access to elite engineering and AI courses.';
-        required<HTMLInputElement>('#register-name').focus();
+        authEyebrow.textContent = "Join CourseForge today";
+        authTitle.textContent = "Start learning.";
+        authDesc.textContent =
+          "Unlimited access to elite engineering and AI courses.";
+        required<HTMLInputElement>("#register-name").focus();
       }
     }
 
-    tabLogin.addEventListener('click', () => setAuthMode('login'), { signal: ctx.pageScope.signal });
-    tabRegister.addEventListener('click', () => setAuthMode('register'), { signal: ctx.pageScope.signal });
-    required<HTMLButtonElement>('#switch-to-signup').addEventListener('click', () => setAuthMode('register'), {
+    tabLogin.addEventListener("click", () => setAuthMode("login"), {
       signal: ctx.pageScope.signal,
     });
-    required<HTMLButtonElement>('#switch-to-signin').addEventListener('click', () => setAuthMode('login'), {
+    tabRegister.addEventListener("click", () => setAuthMode("register"), {
       signal: ctx.pageScope.signal,
     });
+    required<HTMLButtonElement>("#switch-to-signup").addEventListener(
+      "click",
+      () => setAuthMode("register"),
+      {
+        signal: ctx.pageScope.signal,
+      },
+    );
+    required<HTMLButtonElement>("#switch-to-signin").addEventListener(
+      "click",
+      () => setAuthMode("login"),
+      {
+        signal: ctx.pageScope.signal,
+      },
+    );
 
     const setupToggle = (btnId: string, inputId: string) => {
       const btn = required<HTMLButtonElement>(btnId);
       const input = required<HTMLInputElement>(inputId);
       btn.addEventListener(
-        'click',
+        "click",
         () => {
-          const isPass = input.type === 'password';
-          input.type = isPass ? 'text' : 'password';
-          btn.textContent = isPass ? 'Hide' : 'Show';
+          const isPass = input.type === "password";
+          input.type = isPass ? "text" : "password";
+          btn.textContent = isPass ? "Hide" : "Show";
         },
         { signal: ctx.pageScope.signal },
       );
     };
-    setupToggle('#toggle-login-password', '#password');
-    setupToggle('#toggle-register-password', '#register-password');
+    setupToggle("#toggle-login-password", "#password");
+    setupToggle("#toggle-register-password", "#register-password");
 
     loginForm.addEventListener(
-      'submit',
-      event => {
+      "submit",
+      (event) => {
         event.preventDefault();
-        const submit = required<HTMLButtonElement>('#login-form button[type="submit"]');
+        const submit = required<HTMLButtonElement>(
+          '#login-form button[type="submit"]',
+        );
         submit.disabled = true;
-        ctx.feedback('Signing in…');
-        const email = required<HTMLInputElement>('#email').value.trim();
-        const password = required<HTMLInputElement>('#password').value;
+        ctx.feedback("Signing in…");
+        const email = required<HTMLInputElement>("#email").value.trim();
+        const password = required<HTMLInputElement>("#password").value;
         void ctx.api
           .login(email, password)
-          .then(auth => {
-            required<HTMLInputElement>('#password').value = '';
+          .then((auth) => {
+            required<HTMLInputElement>("#password").value = "";
             ctx.renderApp(auth.user);
           })
-          .catch(error => {
+          .catch((error) => {
             submit.disabled = false;
             ctx.feedback(errorMessage(error), true);
           });
@@ -171,22 +193,25 @@ export function installShell(ctx: AppContext): void {
     );
 
     registerForm.addEventListener(
-      'submit',
-      event => {
+      "submit",
+      (event) => {
         event.preventDefault();
-        const submit = required<HTMLButtonElement>('#register-form button[type="submit"]');
+        const submit = required<HTMLButtonElement>(
+          '#register-form button[type="submit"]',
+        );
         submit.disabled = true;
-        ctx.feedback('Creating account…');
-        const name = required<HTMLInputElement>('#register-name').value.trim();
-        const email = required<HTMLInputElement>('#register-email').value.trim();
-        const password = required<HTMLInputElement>('#register-password').value;
+        ctx.feedback("Creating account…");
+        const name = required<HTMLInputElement>("#register-name").value.trim();
+        const email =
+          required<HTMLInputElement>("#register-email").value.trim();
+        const password = required<HTMLInputElement>("#register-password").value;
         void ctx.api
           .register(name, email, password)
-          .then(auth => {
-            required<HTMLInputElement>('#register-password').value = '';
+          .then((auth) => {
+            required<HTMLInputElement>("#register-password").value = "";
             ctx.renderApp(auth.user);
           })
-          .catch(error => {
+          .catch((error) => {
             submit.disabled = false;
             ctx.feedback(errorMessage(error), true);
           });
@@ -194,41 +219,47 @@ export function installShell(ctx: AppContext): void {
       { signal: ctx.pageScope.signal },
     );
 
-    const previewGrid = document.querySelector<HTMLElement>('#guest-preview-grid');
+    const previewGrid = document.querySelector<HTMLElement>(
+      "#guest-preview-grid",
+    );
     if (previewGrid) {
       void ctx.api
-        .request<{ courses: Course[] }>('/public/courses?limit=30', { signal: ctx.pageScope.signal })
-        .then(res => {
+        .request<{ courses: Course[] }>("/public/courses?limit=30", {
+          signal: ctx.pageScope.signal,
+        })
+        .then((res) => {
           if (!res || !Array.isArray(res.courses)) return;
           previewGrid.replaceChildren();
           for (const course of res.courses) {
-            const card = element('article', 'guest-card');
+            const card = element("article", "guest-card");
             card.tabIndex = 0;
-            card.setAttribute('role', 'button');
-            card.setAttribute('aria-label', `Course: ${course.title}`);
+            card.setAttribute("role", "button");
+            card.setAttribute("aria-label", `Course: ${course.title}`);
 
             const art = artwork(course);
-            const body = element('div', 'guest-card-body');
+            const body = element("div", "guest-card-body");
             body.append(
-              element('span', 'eyebrow', course.category || 'Engineering'),
-              element('h3', '', course.title),
+              element("span", "eyebrow", course.category || "Engineering"),
+              element("h3", "", course.title),
               element(
-                'p',
-                'guest-card-meta',
-                `${course.lesson_count ?? 0} lectures · ${course.instructor || 'CourseForge Faculty'}`,
+                "p",
+                "guest-card-meta",
+                `${course.lesson_count ?? 0} lectures · ${course.instructor || "CourseForge Faculty"}`,
               ),
             );
             card.append(art, body);
 
             const selectCourse = () => {
-              setAuthMode('register');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              ctx.feedback(`Create an account to start streaming "${course.title}".`);
+              setAuthMode("register");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              ctx.feedback(
+                `Create an account to start streaming "${course.title}".`,
+              );
             };
 
-            card.addEventListener('click', selectCourse);
-            card.addEventListener('keydown', (e: KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+            card.addEventListener("click", selectCourse);
+            card.addEventListener("keydown", (e: KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 selectCourse();
               }
@@ -246,7 +277,7 @@ export function installShell(ctx: AppContext): void {
     ctx.pageScope = new AbortController();
     ctx.user = account;
     ctx.learnedLessons.clear();
-    ctx.learnedCursor = '';
+    ctx.learnedCursor = "";
     ctx.learnedLoaded = false;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
@@ -346,11 +377,15 @@ export function installShell(ctx: AppContext): void {
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
           <span class="lms-nav-label">Roadmaps</span>
         </button>
+        <button id="nav-career" data-catalog-view="career" class="lms-nav-item lms-secondary-mobile">
+          <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
+          <span class="lms-nav-label">Career</span>
+        </button>
         <button id="nav-settings" data-catalog-view="settings" class="lms-nav-item lms-secondary-mobile">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span class="lms-nav-label">Settings</span>
         </button>
-        ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin" class="lms-nav-item lms-secondary-mobile"><span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="lms-nav-label">Admin</span></button>' : ''}
+        ${account.role === "admin" ? '<button id="nav-admin" data-catalog-view="admin" class="lms-nav-item lms-secondary-mobile"><span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="lms-nav-label">Admin</span></button>' : ""}
         <button id="mobile-more-btn" type="button" class="lms-nav-item mobile-more-trigger" aria-label="More menu options">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg></span>
           <span class="lms-nav-label">Menu</span>
@@ -379,6 +414,7 @@ export function installShell(ctx: AppContext): void {
       <section id="tutor-panel" class="tutor-panel" hidden></section>
       <section id="labs-panel" class="labs-panel" hidden></section>
       <section id="paths-panel" class="paths-panel" hidden></section>
+      <section id="career-panel" class="career-panel-host" hidden></section>
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom" hidden>
@@ -530,51 +566,60 @@ export function installShell(ctx: AppContext): void {
       </dialog>
       </main>
     </div>`;
-    required('#account-name').textContent = account.name || account.email;
-    required('.account-avatar').textContent = (account.name || account.email).slice(0, 1).toUpperCase();
+    required("#account-name").textContent = account.name || account.email;
+    required(".account-avatar").textContent = (account.name || account.email)
+      .slice(0, 1)
+      .toUpperCase();
     ctx.discovery?.deactivate();
     ctx.learning?.close();
     ctx.bootstrapFeatureViews(account);
 
-    required('#watermark').textContent = account.name || account.email;
-    const video = required<HTMLVideoElement>('#lesson-video');
-    video.setAttribute('aria-label', 'Lesson video');
-    video.setAttribute('controlsList', 'nodownload noremoteplayback');
+    required("#watermark").textContent = account.name || account.email;
+    const video = required<HTMLVideoElement>("#lesson-video");
+    video.setAttribute("aria-label", "Lesson video");
+    video.setAttribute("controlsList", "nodownload noremoteplayback");
     // Load the enhancement only after sign-in. Native controls stay available if
     // its independent asset fails, and the sign-in page does not download it.
-    void import('media-chrome')
-      .then(() => customElements.whenDefined('media-controller'))
+    void import("media-chrome")
+      .then(() => customElements.whenDefined("media-controller"))
       .then(() => {
         if (video.isConnected) video.controls = false;
       })
       .catch(() => {
         if (video.isConnected) {
           video.controls = true;
-          ctx.feedback('Browser video controls are enabled.');
+          ctx.feedback("Browser video controls are enabled.");
         }
       });
     ctx.preferences?.dispose();
     ctx.preferences = new PreferenceStore(
       ctx.api,
-      value => {
-        required<HTMLSelectElement>('#speed').value = String(value.speed);
-        required<HTMLInputElement>('#autoplay').checked = value.autoplay;
+      (value) => {
+        required<HTMLSelectElement>("#speed").value = String(value.speed);
+        required<HTMLInputElement>("#autoplay").checked = value.autoplay;
         ctx.controller?.preferencesChanged(value);
       },
-      error => ctx.feedback(`Player preferences could not save: ${errorMessage(error)}`, true),
+      (error) =>
+        ctx.feedback(
+          `Player preferences could not save: ${errorMessage(error)}`,
+          true,
+        ),
     );
     const videoAdapter = new NativeVideoAdapter(video);
-    let selectedQuality: number | 'auto' = 'auto';
+    let selectedQuality: number | "auto" = "auto";
     const telemetry = new PlayerTelemetry({
-      post: (sample, signal) => playbackApi.postTelemetry(ctx.api, sample, signal),
+      post: (sample, signal) =>
+        playbackApi.postTelemetry(ctx.api, sample, signal),
     });
     ctx.controller = new PlayerController({
       video: videoAdapter,
       transport: ctx.api,
-      preferences: () => ctx.preferences?.current ?? { autoplay: false, speed: 1 },
-      preferencesLoaded: value => ctx.preferences?.initialize(value),
-      speedChanged: speed => {
-        if (ctx.preferences?.current.speed !== speed) ctx.preferences?.update({ speed });
+      preferences: () =>
+        ctx.preferences?.current ?? { autoplay: false, speed: 1 },
+      preferencesLoaded: (value) => ctx.preferences?.initialize(value),
+      speedChanged: (speed) => {
+        if (ctx.preferences?.current.speed !== speed)
+          ctx.preferences?.update({ speed });
       },
       visible: () => !document.hidden,
       online: () => navigator.onLine,
@@ -584,53 +629,62 @@ export function installShell(ctx: AppContext): void {
         if (next) void ctx.loadLesson(next, true, true);
       },
       state: (state, message) => {
-        if (state === 'ready') telemetry.markReady();
-        if (state === 'error') telemetry.markError();
+        if (state === "ready") telemetry.markReady();
+        if (state === "error") telemetry.markError();
         ctx.updatePlayerState(state, message);
       },
-      sessionOpened: id => telemetry.open(id),
+      sessionOpened: (id) => telemetry.open(id),
       sessionClosed: () => {
         void telemetry.flush();
       },
       saved: ctx.updateProgress,
-      delivery: status => {
-        const el = document.querySelector<HTMLElement>('#save-status');
+      delivery: (status) => {
+        const el = document.querySelector<HTMLElement>("#save-status");
         if (el)
           el.textContent = {
-            saved: 'Progress saved',
-            saving: 'Saving progress…',
-            retrying: 'Syncing progress…',
-            stopped: 'Progress saved',
+            saved: "Progress saved",
+            saving: "Saving progress…",
+            retrying: "Syncing progress…",
+            stopped: "Progress saved",
           }[status];
       },
-      countdown: seconds => {
-        const countdownEl = required<HTMLElement>('#next-countdown');
+      countdown: (seconds) => {
+        const countdownEl = required<HTMLElement>("#next-countdown");
         countdownEl.hidden = seconds === null;
-        required('#countdown-label').textContent = seconds === null ? '' : `Next lesson in ${seconds}s`;
-        const upNextCard = document.querySelector<HTMLElement>('#playerUpNextCard');
+        required("#countdown-label").textContent =
+          seconds === null ? "" : `Next lesson in ${seconds}s`;
+        const upNextCard =
+          document.querySelector<HTMLElement>("#playerUpNextCard");
         if (upNextCard) {
           if (seconds !== null) {
             upNextCard.hidden = false;
-            const badge = upNextCard.querySelector('#upNextCountdownBadge');
+            const badge = upNextCard.querySelector("#upNextCountdownBadge");
             if (badge) badge.textContent = `${seconds}s`;
             const next = ctx.nextLesson();
-            const title = upNextCard.querySelector('#upNextTitleText');
+            const title = upNextCard.querySelector("#upNextTitleText");
             if (title && next) title.textContent = cleanLessonTitle(next.title);
-            const img = upNextCard.querySelector<HTMLImageElement>('#upNextThumbImg');
+            const img =
+              upNextCard.querySelector<HTMLImageElement>("#upNextThumbImg");
             if (img && next) {
-              img.style.display = 'block';
-              img.src = createSvgThumbnailDataUri(next.title, ctx.selectedCourse?.category || 'Lecture');
+              img.style.display = "block";
+              img.src = createSvgThumbnailDataUri(
+                next.title,
+                ctx.selectedCourse?.category || "Lecture",
+              );
             }
-            const watchBtn = upNextCard.querySelector<HTMLButtonElement>('#upNextWatchBtn');
+            const watchBtn =
+              upNextCard.querySelector<HTMLButtonElement>("#upNextWatchBtn");
             if (watchBtn && next) {
               watchBtn.onclick = () => {
                 void ctx.loadLesson(next, true, true);
               };
             }
-            const cancelBtn = upNextCard.querySelector<HTMLButtonElement>('#upNextCancelBtn');
+            const cancelBtn =
+              upNextCard.querySelector<HTMLButtonElement>("#upNextCancelBtn");
             if (cancelBtn) {
               cancelBtn.onclick = () => {
-                const stay = document.querySelector<HTMLButtonElement>('#cancel-next');
+                const stay =
+                  document.querySelector<HTMLButtonElement>("#cancel-next");
                 if (stay) stay.click();
                 upNextCard.hidden = true;
               };
@@ -642,12 +696,12 @@ export function installShell(ctx: AppContext): void {
       },
     });
     ctx.bindInterface(video, ctx.pageScope.signal);
-    const playerWrap = required<HTMLElement>('#player-wrap');
+    const playerWrap = required<HTMLElement>("#player-wrap");
     mountPlayerChrome(
       playerWrap,
       video,
       {
-        seek: position => {
+        seek: (position) => {
           video.currentTime = Math.max(0, position);
           ctx.controller?.seek(position);
         },
@@ -657,14 +711,16 @@ export function installShell(ctx: AppContext): void {
         },
         prevLesson: () => {
           if (!ctx.selectedLesson) return;
-          const index = ctx.lessons.findIndex(l => l.id === ctx.selectedLesson?.id);
+          const index = ctx.lessons.findIndex(
+            (l) => l.id === ctx.selectedLesson?.id,
+          );
           if (index > 0) {
             const prev = ctx.lessons[index - 1];
             if (prev) void ctx.loadLesson(prev, true, true);
           }
         },
         toggleTheater: ctx.toggleTheater,
-        getLessonId: () => ctx.selectedLesson?.id || '',
+        getLessonId: () => ctx.selectedLesson?.id || "",
         markComplete: () => ctx.markComplete(),
         getNextLesson: () => ctx.nextLesson(),
         onWatchNext: () => {
@@ -676,11 +732,14 @@ export function installShell(ctx: AppContext): void {
         },
         getChapters: () => ctx.studyRail?.getChapters() || [],
         onOpenChapters: () => {
-          ctx.studyRail?.setTab('transcript');
+          ctx.studyRail?.setTab("transcript");
         },
-        getQualityLevels: () => videoAdapter.getLevels().map(l => ({ index: l.index, label: l.label })),
+        getQualityLevels: () =>
+          videoAdapter
+            .getLevels()
+            .map((l) => ({ index: l.index, label: l.label })),
         getSelectedQuality: () => selectedQuality,
-        setQuality: level => {
+        setQuality: (level) => {
           selectedQuality = level;
           videoAdapter.setQuality(level);
         },
@@ -692,37 +751,49 @@ export function installShell(ctx: AppContext): void {
       video,
       {
         togglePlay: () => {
-          required<HTMLButtonElement>('#play-toggle').click();
+          required<HTMLButtonElement>("#play-toggle").click();
         },
-        seek: position => {
+        seek: (position) => {
           ctx.controller?.seek(position);
         },
       },
       ctx.pageScope.signal,
     );
-    video.addEventListener('playing', () => telemetry.markPlaying(), { signal: ctx.pageScope.signal });
-    video.addEventListener('waiting', () => telemetry.markWaiting(), { signal: ctx.pageScope.signal });
-    video.addEventListener('pause', () => telemetry.markPaused(), { signal: ctx.pageScope.signal });
-    video.addEventListener('error', () => telemetry.markError(), { signal: ctx.pageScope.signal });
+    video.addEventListener("playing", () => telemetry.markPlaying(), {
+      signal: ctx.pageScope.signal,
+    });
+    video.addEventListener("waiting", () => telemetry.markWaiting(), {
+      signal: ctx.pageScope.signal,
+    });
+    video.addEventListener("pause", () => telemetry.markPaused(), {
+      signal: ctx.pageScope.signal,
+    });
+    video.addEventListener("error", () => telemetry.markError(), {
+      signal: ctx.pageScope.signal,
+    });
     ctx.pageScope.signal.addEventListener(
-      'abort',
+      "abort",
       () => {
         void telemetry.flush();
       },
       { once: true },
     );
     try {
-      const savedTheme = localStorage.getItem('courseforge_theme');
+      const savedTheme = localStorage.getItem("courseforge_theme");
       if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-      const savedAccent = localStorage.getItem('courseforge_accent');
+      const savedAccent = localStorage.getItem("courseforge_accent");
       if (savedAccent) document.documentElement.dataset.accent = savedAccent;
     } catch {}
     ctx.restoreBrowserPreferences(video);
     void ctx.api
       .preferences(ctx.pageScope.signal)
-      .then(value => ctx.preferences?.initialize(value))
-      .catch(error => {
-        if (!isAbort(error)) ctx.feedback(`Could not load player preferences: ${errorMessage(error)}`, true);
+      .then((value) => ctx.preferences?.initialize(value))
+      .catch((error) => {
+        if (!isAbort(error))
+          ctx.feedback(
+            `Could not load player preferences: ${errorMessage(error)}`,
+            true,
+          );
       });
     void ctx.loadCatalog();
   };

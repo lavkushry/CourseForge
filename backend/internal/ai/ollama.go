@@ -54,6 +54,12 @@ func formatVector(v []float32) string {
 	return sb.String()
 }
 
+// Complete runs a bounded chat completion against the configured Ollama model.
+// Callers must treat failures as unavailable and apply their own fallbacks.
+func (s *Service) Complete(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	return s.generateCompletion(ctx, systemPrompt, userPrompt)
+}
+
 func (s *Service) generateCompletion(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	reqBody, _ := json.Marshal(map[string]any{
 		"model":  s.ChatModel,
