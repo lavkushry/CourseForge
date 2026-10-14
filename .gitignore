@@ -66,3 +66,13 @@ tree.txt
 
 ACTIVE_TUNNEL_URL.txt
 /bin/
+
+# local artifacts (refactor/ui-structure)
+/*.png
+/*.jpg
+*.db
+*.sqlite3
+*.log
+__pycache__/
+.venv/
+temp_videos/
