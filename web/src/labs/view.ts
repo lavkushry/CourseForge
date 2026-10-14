@@ -1,5 +1,5 @@
 import { svgIcon } from '../icons';
-import type { ApiClient} from '../api';
+import type { ApiClient } from '../api';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -30,7 +30,8 @@ export class LabsView {
       title: 'SQL: Dense Rank & Sliding Window Aggregations',
       category: 'Data Engineering',
       level: 'Intermediate',
-      description: 'Calculate employee salary rankings per department and rolling 3-month moving average sales using SQL CTEs and Window Functions without self-joins.',
+      description:
+        'Calculate employee salary rankings per department and rolling 3-month moving average sales using SQL CTEs and Window Functions without self-joins.',
       filename: 'solution.sql',
       starterCode: `-- Calculate rolling 3-month sales and rank per department
 WITH RankedSalaries AS (
@@ -48,7 +49,8 @@ SELECT * FROM RankedSalaries WHERE rank <= 3;`,
       title: 'PySpark: High-Performance Broadcast Hash Join',
       category: 'Big Data & Spark',
       level: 'Advanced',
-      description: 'Optimize a skewed 100M-row transaction dataset joined against a small 50k-row lookup dimension table by preventing shuffle skew with broadcast joins.',
+      description:
+        'Optimize a skewed 100M-row transaction dataset joined against a small 50k-row lookup dimension table by preventing shuffle skew with broadcast joins.',
       filename: 'spark_join.py',
       starterCode: `from pyspark.sql import SparkSession
 from pyspark.sql.functions import broadcast, col
@@ -72,7 +74,8 @@ optimized_df.write.mode("overwrite").parquet("/output/sales_summary")`,
       title: 'Agentic AI: Stateful Tool-Calling with Structured Output',
       category: 'AI & Agents',
       level: 'Advanced',
-      description: 'Construct an autonomous agent loop that verifies query parameters, invokes an external API tool, and handles backpressure and error retries.',
+      description:
+        'Construct an autonomous agent loop that verifies query parameters, invokes an external API tool, and handles backpressure and error retries.',
       filename: 'agent_tool.py',
       starterCode: `from typing import Dict, Any
 import json
@@ -112,7 +115,11 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     pageHead.append(
       el('span', 'eyebrow', 'HANDS-ON PRACTICE SANDBOX'),
       el('h1', '', 'Verified Engineering Labs'),
-      el('p', 'muted', 'Write and test real production code. Verify SQL queries, distributed Spark pipelines, and AI agent implementations.'),
+      el(
+        'p',
+        'muted',
+        'Write and test real production code. Verify SQL queries, distributed Spark pipelines, and AI agent implementations.',
+      ),
     );
     this.options.root.append(pageHead);
 
@@ -126,11 +133,7 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     for (const c of this.challenges) {
       const card = el('button', this.activeLab.id === c.id ? 'lab-picker-card active' : 'lab-picker-card');
       card.type = 'button';
-      card.append(
-        el('span', 'tag', c.category),
-        el('strong', '', c.title),
-        el('span', 'muted', c.level),
-      );
+      card.append(el('span', 'tag', c.category), el('strong', '', c.title), el('span', 'muted', c.level));
       card.addEventListener('click', () => {
         this.activeLab = c;
         this.testOutput = '';
@@ -155,7 +158,11 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     const editorShell = el('div', 'code-editor-shell');
     const editorTop = el('div', 'editor-tab-bar');
     editorTop.append(
-      (() => { const s = el('span', 'editor-file-tab'); s.append(svgIcon('file'), ` ${this.activeLab.filename}`); return s; })(),
+      (() => {
+        const s = el('span', 'editor-file-tab');
+        s.append(svgIcon('file'), ` ${this.activeLab.filename}`);
+        return s;
+      })(),
       el('span', 'editor-lang-tag', this.activeLab.filename.endsWith('.py') ? 'Python 3.12' : 'PostgreSQL 18'),
     );
 
@@ -165,7 +172,11 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     textarea.spellcheck = false;
 
     const editorFooter = el('div', 'editor-footer-bar');
-    const runBtn = el('button', 'button primary run-checks-btn', this.running ? 'Running Checks…' : 'Run Verified Checks');
+    const runBtn = el(
+      'button',
+      'button primary run-checks-btn',
+      this.running ? 'Running Checks…' : 'Run Verified Checks',
+    );
     runBtn.type = 'button';
     runBtn.disabled = this.running;
 
@@ -180,10 +191,7 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
       }, 700);
     });
 
-    editorFooter.append(
-      el('span', 'muted', 'Instant automated verification in sandbox container'),
-      runBtn,
-    );
+    editorFooter.append(el('span', 'muted', 'Instant automated verification in sandbox container'), runBtn);
 
     editorShell.append(editorTop, textarea, editorFooter);
     editorCol.append(editorShell);
@@ -191,10 +199,7 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     // Test Output Drawer
     if (this.testOutput) {
       const outputBox = el('div', 'labs-output-box');
-      outputBox.append(
-        el('h4', '', 'Execution Output & Check Results'),
-        el('pre', 'output-log-text', this.testOutput),
-      );
+      outputBox.append(el('h4', '', 'Execution Output & Check Results'), el('pre', 'output-log-text', this.testOutput));
       editorCol.append(outputBox);
     }
 

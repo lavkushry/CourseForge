@@ -1,4 +1,4 @@
-import type { ApiClient} from '../api';
+import type { ApiClient } from '../api';
 import { ApiError } from '../api';
 import { PlanningApi } from './api';
 import { Commands } from '../learning/api';
@@ -43,11 +43,7 @@ export class PlanningView implements PlanningHost {
   roadmapData: unknown = null;
   roadmapLoading = false;
 
-  constructor(
-    rootOrOptions: HTMLElement | PlanningViewOptions,
-    apiClient?: ApiClient,
-    hooks?: PlanningHooks,
-  ) {
+  constructor(rootOrOptions: HTMLElement | PlanningViewOptions, apiClient?: ApiClient, hooks?: PlanningHooks) {
     if (rootOrOptions instanceof HTMLElement) {
       this.root = rootOrOptions;
       this.api = apiClient!;
@@ -93,7 +89,10 @@ export class PlanningView implements PlanningHost {
     this.root.hidden = true;
   }
 
-  async open(tab: 'daily' | 'weekly' | 'focus' | 'habits' | 'roadmap' = 'daily', externalSignal?: AbortSignal): Promise<void> {
+  async open(
+    tab: 'daily' | 'weekly' | 'focus' | 'habits' | 'roadmap' = 'daily',
+    externalSignal?: AbortSignal,
+  ): Promise<void> {
     if (this.abortController) {
       this.abortController.abort();
     }
@@ -193,7 +192,9 @@ export class PlanningView implements PlanningHost {
       btn.type = 'button';
       btn.className = this.activeTab === t.id ? 'planning-tab active' : 'planning-tab';
       btn.textContent = t.label;
-      btn.onclick = () => { void this.open(t.id); };
+      btn.onclick = () => {
+        void this.open(t.id);
+      };
       nav.append(btn);
     }
     wrap.append(nav);
@@ -221,5 +222,4 @@ export class PlanningView implements PlanningHost {
 
     this.root.append(wrap);
   }
-
 }

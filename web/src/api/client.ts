@@ -186,10 +186,7 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
     return certificatesApi.verifyCertificate(this, code, signal);
   }
 
-  learningPaths(
-    cursor = '',
-    signal?: AbortSignal,
-  ): Promise<{ paths: LearningPath[]; next_cursor: string | null }> {
+  learningPaths(cursor = '', signal?: AbortSignal): Promise<{ paths: LearningPath[]; next_cursor: string | null }> {
     return pathsApi.learningPaths(this, cursor, signal);
   }
 
@@ -197,12 +194,7 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
     return pathsApi.learningPath(this, id, signal);
   }
 
-  createLearningPath(
-    goal: string,
-    courseIds: string[],
-    weeks: number,
-    signal?: AbortSignal,
-  ): Promise<LearningPath> {
+  createLearningPath(goal: string, courseIds: string[], weeks: number, signal?: AbortSignal): Promise<LearningPath> {
     return pathsApi.createLearningPath(this, goal, courseIds, weeks, signal);
   }
 

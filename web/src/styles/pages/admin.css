@@ -106,7 +106,8 @@
   font-size: 0.88rem;
 }
 
-.admin-table th, .admin-table td {
+.admin-table th,
+.admin-table td {
   padding: 0.8rem 1rem;
   text-align: left;
   border-bottom: 1px solid #1f212e;
@@ -266,7 +267,8 @@
   transition: all 0.15s ease;
 }
 
-.mode-pill:hover, .mode-pill.active {
+.mode-pill:hover,
+.mode-pill.active {
   background: var(--panel);
   border-color: var(--accent);
   color: var(--text);
@@ -481,7 +483,7 @@
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #E5E5EA;
+  color: #e5e5ea;
   font-size: 0.82rem;
   font-weight: 650;
 }
@@ -505,14 +507,14 @@
 }
 
 .admin-layout .button.primary:hover {
-  background: #FF5510;
+  background: #ff5510;
   transform: translateY(-1px);
 }
 
 .admin-layout .button.secondary {
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #E5E5EA;
+  color: #e5e5ea;
   border-radius: 999px;
   font-weight: 600;
   display: inline-flex;
@@ -521,7 +523,7 @@
 }
 
 .admin-layout .button.secondary:hover {
-  background: #2A2A2A;
+  background: #2a2a2a;
   color: #fff;
 }
 
@@ -531,7 +533,8 @@
   font-size: 0.78rem;
 }
 
-.admin-layout .button svg, .student-access-dialog .button svg {
+.admin-layout .button svg,
+.student-access-dialog .button svg {
   width: 15px;
   height: 15px;
   flex-shrink: 0;
@@ -652,7 +655,7 @@
 
 .mini-kpi-label {
   font-size: 0.7rem;
-  color: #8E8E93;
+  color: #8e8e93;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -678,7 +681,7 @@
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #A1A1AA;
+  color: #a1a1aa;
   font-size: 0.82rem;
   font-weight: 650;
   display: inline-flex;
@@ -721,7 +724,7 @@
 }
 
 .course-access-item {
-  background: #1C1C1C;
+  background: #1c1c1c;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 14px;
@@ -733,7 +736,7 @@
 }
 
 .course-access-item.is-enrolled {
-  background: linear-gradient(145deg, rgba(16, 185, 129, 0.09) 0%, #1C1C1C 100%);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.09) 0%, #1c1c1c 100%);
   border-color: rgba(16, 185, 129, 0.35);
 }
 
@@ -765,12 +768,12 @@
 
 .access-chip.restricted {
   background: rgba(255, 255, 255, 0.07);
-  color: #8E8E93;
+  color: #8e8e93;
 }
 
 .access-chip-lectures {
   font-size: 0.72rem;
-  color: #8E8E93;
+  color: #8e8e93;
 }
 
 .course-access-title {
@@ -781,13 +784,13 @@
 
 .course-access-id {
   font-size: 0.7rem;
-  color: #71717A;
+  color: #71717a;
 }
 
 .course-toggle-enrolled {
   background: rgba(16, 185, 129, 0.16);
   border: 1px solid rgba(16, 185, 129, 0.45);
-  color: #34D399;
+  color: #34d399;
   border-radius: 999px;
   width: 100%;
   justify-content: center;
@@ -797,7 +800,7 @@
 .course-toggle-enrolled:hover {
   background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.45);
-  color: #FCA5A5;
+  color: #fca5a5;
 }
 
 .course-toggle-grant {
@@ -824,7 +827,7 @@
 }
 
 .security-control-card {
-  background: #1C1C1C;
+  background: #1c1c1c;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 18px;
@@ -912,23 +915,26 @@
 }
 
 .student-access-dialog .button.primary:hover {
-  background: #FF5510;
-  border-color: #FF5510;
+  background: #ff5510;
+  border-color: #ff5510;
 }
 
 .student-access-dialog .button.secondary {
   background: #222222;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #E5E5EA;
+  color: #e5e5ea;
 }
 
 .student-access-dialog .button.secondary:hover {
-  background: #2C2C2C;
+  background: #2c2c2c;
   color: #fff;
 }
 
 @media (max-width: 1024px) {
-  #planning-panel form, .planning-daily-form, .planning-weekly-budgets, .planning-weekly-days {
+  #planning-panel form,
+  .planning-daily-form,
+  .planning-weekly-budgets,
+  .planning-weekly-days {
     grid-template-columns: 1fr;
     max-width: 100%;
   }

@@ -27,11 +27,7 @@ export function issueCertificate(
     .then(parseCertificateResponse);
 }
 
-export function verifyCertificate(
-  client: HttpClient,
-  code: string,
-  signal?: AbortSignal,
-): Promise<VerificationResult> {
+export function verifyCertificate(client: HttpClient, code: string, signal?: AbortSignal): Promise<VerificationResult> {
   return client
     .request(`/certificates/verify/${encodeURIComponent(code)}`, signal ? { signal } : {})
     .then(parseVerification);

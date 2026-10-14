@@ -49,7 +49,7 @@
   gap: var(--space-3);
   padding: var(--space-3) 14px;
   background: #0f1016;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
 }
 
@@ -103,7 +103,7 @@
 
 .weekday-card {
   background: #0f1016;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 10px var(--space-2);
   text-align: center;
@@ -204,7 +204,9 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .momentum-stat-card:hover {
@@ -387,7 +389,7 @@
   padding: 26px;
 }
 
-.weekly-setup-card > label[for="week-containing"] {
+.weekly-setup-card > label[for='week-containing'] {
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -417,7 +419,9 @@
   background: #0b0d15;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .weekday-box:hover {
@@ -432,7 +436,7 @@
   line-height: 1.3;
 }
 
-.weekday-box input[type="number"] {
+.weekday-box input[type='number'] {
   width: 100%;
   text-align: center;
   font-size: 1.15rem;
@@ -522,7 +526,8 @@
   border: 1px solid rgba(139, 92, 246, 0.35);
 }
 
-.focus-actions-row, .focus-start-row {
+.focus-actions-row,
+.focus-start-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -562,12 +567,13 @@
   display: block;
 }
 
-.habits-card > input[type="text"], .habits-card > select {
+.habits-card > input[type='text'],
+.habits-card > select {
   max-width: 360px;
   width: 100%;
 }
 
-.habits-card > input[type="checkbox"] {
+.habits-card > input[type='checkbox'] {
   width: 20px;
   height: 20px;
   accent-color: #8b5cf6;
@@ -617,12 +623,25 @@
 
 /* 6. Universal Glass Form Controls & Cards (Settings, Planning, Labs, Auth) */
 
-input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="number"], input[type="date"], select, textarea {
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+input[type='number'],
+input[type='date'],
+select,
+textarea {
   box-sizing: border-box;
   font-family: inherit;
 }
 
-.form-input, .settings-panel select, .planning-panel input:not([type="checkbox"]):not([type="radio"]), .planning-panel select, .login-panel input, .new-path-dialog input, .new-path-dialog select {
+.form-input,
+.settings-panel select,
+.planning-panel input:not([type='checkbox']):not([type='radio']),
+.planning-panel select,
+.login-panel input,
+.new-path-dialog input,
+.new-path-dialog select {
   background: #111422;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
@@ -633,10 +652,16 @@ input[type="text"], input[type="email"], input[type="password"], input[type="sea
   outline: none;
   color-scheme: dark;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.form-input:focus, .settings-panel select:focus, .planning-panel input:not([type="checkbox"]):not([type="radio"]):focus, .planning-panel select:focus, .login-panel input:focus {
+.form-input:focus,
+.settings-panel select:focus,
+.planning-panel input:not([type='checkbox']):not([type='radio']):focus,
+.planning-panel select:focus,
+.login-panel input:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
 }

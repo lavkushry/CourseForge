@@ -37,7 +37,7 @@
 
 .lab-picker-card:hover {
   background: #1e1f29;
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .lab-picker-card.active {
@@ -52,7 +52,7 @@
 
 .code-editor-shell {
   background: #0a0b10;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   overflow: hidden;
   margin-top: 14px;
@@ -64,7 +64,7 @@
   align-items: center;
   padding: 10px var(--space-4);
   background: #12131b;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.78rem;
 }
 
@@ -90,14 +90,14 @@
   align-items: center;
   padding: 10px var(--space-4);
   background: #12131b;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.75rem;
 }
 
 .labs-output-box {
   margin-top: var(--space-4);
   background: #0c0d12;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 14px var(--space-4);
 }
@@ -119,7 +119,7 @@
 
 /* Responsive adjustments */
 
-@media(max-width: 1024px) {
+@media (max-width: 1024px) {
   .classroom-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -190,7 +190,7 @@
   border: 0;
   padding: var(--space-4);
   color: #e5e7eb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.88rem;
   line-height: 1.6;
   resize: vertical;

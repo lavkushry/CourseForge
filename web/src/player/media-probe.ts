@@ -3,14 +3,24 @@ import { ApiError, isAbort } from '../api';
 // HTML video exposes a MediaError rather than the gateway's HTTP status. A HEAD
 // request distinguishes expired access from a retryable provider outage without
 // downloading video bytes. The gateway remains the sole authorization boundary.
-export async function probeMedia(path: string, signal: AbortSignal, fetcher: typeof fetch = globalThis.fetch.bind(globalThis)): Promise<void> {
+export async function probeMedia(
+  path: string,
+  signal: AbortSignal,
+  fetcher: typeof fetch = globalThis.fetch.bind(globalThis),
+): Promise<void> {
   const scope = new AbortController();
   const abort = () => scope.abort();
   signal.addEventListener('abort', abort, { once: true });
   const timer = setTimeout(() => scope.abort(), 20_000);
   if (signal.aborted) scope.abort();
   try {
-    const response = await fetcher(path, { method: 'HEAD', credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal: scope.signal });
+    const response = await fetcher(path, {
+      method: 'HEAD',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      redirect: 'error',
+      signal: scope.signal,
+    });
     if (scope.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
     if (response.ok) return;
     const messages: Record<number, string> = {
@@ -25,11 +35,18 @@ export async function probeMedia(path: string, signal: AbortSignal, fetcher: typ
       504: 'The video source took too long to respond. Your saved progress is safe.',
     };
     const retry = Number(response.headers.get('Retry-After'));
-    throw new ApiError(messages[response.status] || 'This video could not open. Retry the lesson or return to the course.', response.status, response.status === 409 ? 'playback_conflict' : 'media_unavailable', Number.isFinite(retry) ? Math.max(0, Math.min(30_000, retry * 1000)) : 0);
+    throw new ApiError(
+      messages[response.status] || 'This video could not open. Retry the lesson or return to the course.',
+      response.status,
+      response.status === 409 ? 'playback_conflict' : 'media_unavailable',
+      Number.isFinite(retry) ? Math.max(0, Math.min(30_000, retry * 1000)) : 0,
+    );
   } catch (error) {
-    if (isAbort(error) && !signal.aborted) throw new ApiError('The video source took too long to respond. Retry this lesson.', 504, 'media_timeout');
+    if (isAbort(error) && !signal.aborted)
+      throw new ApiError('The video source took too long to respond. Retry this lesson.', 504, 'media_timeout');
     throw error;
   } finally {
-    clearTimeout(timer); signal.removeEventListener('abort', abort);
+    clearTimeout(timer);
+    signal.removeEventListener('abort', abort);
   }
 }

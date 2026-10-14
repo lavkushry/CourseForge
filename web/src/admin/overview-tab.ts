@@ -4,17 +4,36 @@ import { button, el, initialsOf, isSyntheticEmail } from './helpers';
 
 export function renderOverviewTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
-  if (!host.overviewData) return emptyState({ title: 'No overview data available.', description: 'Refresh the command center once metrics are ready.' });
+  if (!host.overviewData)
+    return emptyState({
+      title: 'No overview data available.',
+      description: 'Refresh the command center once metrics are ready.',
+    });
   const s = host.overviewData.summary;
 
   const grid = el('div', 'admin-metrics-grid');
   grid.append(
-    host.metricCard('Total Students', String(s.students), `${s.verified_students} verified · ${s.suspended_students} suspended`, 'users'),
-    host.metricCard('Active Courses', String(s.courses), `${s.available_lectures} / ${s.lectures} lectures ready`, 'book'),
+    host.metricCard(
+      'Total Students',
+      String(s.students),
+      `${s.verified_students} verified · ${s.suspended_students} suspended`,
+      'users',
+    ),
+    host.metricCard(
+      'Active Courses',
+      String(s.courses),
+      `${s.available_lectures} / ${s.lectures} lectures ready`,
+      'book',
+    ),
     host.metricCard('Completed Lessons', String(s.completed_lessons), 'Durable learner progress', 'check-circle'),
     host.metricCard('Active Sessions', String(s.active_sessions), 'Currently signed-in learners', 'zap'),
-    host.metricCard('Total Watch Time', `${Math.round(s.watched_seconds / 3600)} hrs`, `${s.watched_seconds.toLocaleString()} seconds accepted`, 'clock'),
-    host.metricCard('Total Enrollments', String(s.enrollments), 'Active course access grants', 'key')
+    host.metricCard(
+      'Total Watch Time',
+      `${Math.round(s.watched_seconds / 3600)} hrs`,
+      `${s.watched_seconds.toLocaleString()} seconds accepted`,
+      'clock',
+    ),
+    host.metricCard('Total Enrollments', String(s.enrollments), 'Active course access grants', 'key'),
   );
   wrap.append(grid);
 
@@ -24,7 +43,11 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
   const spotCopy = el('div', '');
   spotCopy.append(
     el('h2', '', 'Student Access & Course Enrollment Control'),
-    el('p', 'muted', 'Grant or revoke access to any of the 29 courses, invite new students, manage roles, or revoke active sessions.')
+    el(
+      'p',
+      'muted',
+      'Grant or revoke access to any of the 29 courses, invite new students, manage roles, or revoke active sessions.',
+    ),
   );
   const openDirectoryBtn = button(
     'Open Full Access Directory →',
@@ -33,7 +56,7 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
       host.render();
     },
     'button primary',
-    'users'
+    'users',
   );
   spotHead.append(spotCopy, openDirectoryBtn);
   accessSpotlight.append(spotHead);
@@ -45,12 +68,13 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
     for (const u of previewUsers) {
       const card = el('div', 'admin-student-quick-card');
       const top = el('div', 'quick-student-top');
-      const avatar = el('div', `admin-user-avatar${u.role === 'admin' ? ' is-admin' : ''}`, initialsOf(u.name, u.email));
-      const info = el('div', 'quick-student-info');
-      info.append(
-        el('strong', '', u.name || 'Student'),
-        el('span', 'muted', u.email)
+      const avatar = el(
+        'div',
+        `admin-user-avatar${u.role === 'admin' ? ' is-admin' : ''}`,
+        initialsOf(u.name, u.email),
       );
+      const info = el('div', 'quick-student-info');
+      info.append(el('strong', '', u.name || 'Student'), el('span', 'muted', u.email));
       const roleBadge = el('span', `badge-${u.role}`, u.role.toUpperCase());
       top.append(avatar, info, roleBadge);
 
@@ -60,7 +84,7 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
       const accessLabels = el('div', 'quick-student-access-labels');
       accessLabels.append(
         el('span', '', u.role === 'admin' ? 'Full Admin Access' : 'Course Access Granted'),
-        el('strong', '', `${enrolledCount} / ${totalCatalog} Courses`)
+        el('strong', '', `${enrolledCount} / ${totalCatalog} Courses`),
       );
       const barTrack = el('div', 'admin-access-progress-track');
       const barFill = el('div', 'admin-access-progress-fill');
@@ -73,13 +97,13 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
         'Manage Courses & Access',
         () => void host.openStudentAccessModal(u, 'courses'),
         'button primary small-btn',
-        'key'
+        'key',
       );
       const secBtn = button(
         'Security',
         () => void host.openStudentAccessModal(u, 'security'),
         'button secondary small-btn',
-        'shield'
+        'shield',
       );
       actions.append(manageBtn, secBtn);
 
@@ -94,7 +118,13 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
   const recent = el('div', 'admin-section');
   recent.append(el('h2', '', 'Recent Activity Sessions'));
   if (!host.overviewData.recent_activity_sessions.length) {
-    recent.append(emptyState({ className: 'admin-empty-state', title: 'No activity sessions recorded yet.', description: 'Learner playback sessions will appear here.' }));
+    recent.append(
+      emptyState({
+        className: 'admin-empty-state',
+        title: 'No activity sessions recorded yet.',
+        description: 'Learner playback sessions will appear here.',
+      }),
+    );
   } else {
     const table = el('table', 'admin-table');
     const thead = el('thead');

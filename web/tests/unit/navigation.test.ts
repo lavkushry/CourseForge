@@ -8,12 +8,14 @@ describe('autoplay navigation', () => {
   it('never navigates when autoplay is disabled, including a completed lesson', async () => {
     const next = vi.fn();
     const navigator = new EndNavigation(next, vi.fn(), clock);
-    navigator.preference(false); navigator.ended(true);
+    navigator.preference(false);
+    navigator.ended(true);
     await vi.advanceTimersByTimeAsync(60_000);
     expect(next).not.toHaveBeenCalled();
   });
   it('requires an ended event, then waits a cancellable five seconds', async () => {
-    const next = vi.fn(); const countdown = vi.fn();
+    const next = vi.fn();
+    const countdown = vi.fn();
     const navigator = new EndNavigation(next, countdown, clock);
     navigator.preference(true);
     await vi.advanceTimersByTimeAsync(20_000);
@@ -27,7 +29,8 @@ describe('autoplay navigation', () => {
   it('disabling autoplay during a countdown cancels navigation', async () => {
     const next = vi.fn();
     const navigator = new EndNavigation(next, vi.fn(), clock);
-    navigator.preference(true); navigator.ended(true);
+    navigator.preference(true);
+    navigator.ended(true);
     await vi.advanceTimersByTimeAsync(2000);
     navigator.preference(false);
     await vi.advanceTimersByTimeAsync(10_000);

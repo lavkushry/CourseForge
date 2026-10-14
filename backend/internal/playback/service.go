@@ -14,9 +14,10 @@ var ErrDenied = errors.New("playback access denied")
 var ErrConflict = errors.New("another window owns playback")
 
 type Service struct {
-	Pool     *pgxpool.Pool
-	Identity *identity.Service
-	Now      func() time.Time
+	Pool           *pgxpool.Pool
+	Identity       *identity.Service
+	Now            func() time.Time
+	telemetryLimit *telemetryLimiter
 }
 type Preferences struct {
 	Autoplay bool    `json:"autoplay"`
@@ -58,6 +59,8 @@ func (s *Service) Register(mux *http.ServeMux) {
 		{"POST /api/v1/playback/sessions/{id}/release", s.release},
 		{"GET /api/v1/player/preferences", s.getPreferences},
 		{"PUT /api/v1/player/preferences", s.putPreferences},
+		{"POST /api/v1/player/telemetry", s.postTelemetry},
+		{"GET /api/v1/admin/player/telemetry", s.telemetryAggregate},
 	}
 	for _, r := range routes {
 		mux.Handle(r.pattern, s.Identity.Require(r.handler))

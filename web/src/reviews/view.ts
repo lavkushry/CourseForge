@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
-import type { ApiClient} from '../api';
-import {  errorMessage } from '../api';
+import type { ApiClient } from '../api';
+import { errorMessage } from '../api';
 import { LearningApi } from '../learning/api';
 import type { Card } from '../learning/contracts';
 
@@ -33,16 +33,19 @@ export class ReviewsView {
     this.loading = true;
     this.render();
 
-    void this.learningApi.cards('', true, signal).then(res => {
-      this.cards = res.items;
-      this.activeCard = this.cards[0] || null;
-      this.answerRevealed = false;
-      this.loading = false;
-      this.render();
-    }).catch(() => {
-      this.loading = false;
-      this.render();
-    });
+    void this.learningApi
+      .cards('', true, signal)
+      .then(res => {
+        this.cards = res.items;
+        this.activeCard = this.cards[0] || null;
+        this.answerRevealed = false;
+        this.loading = false;
+        this.render();
+      })
+      .catch(() => {
+        this.loading = false;
+        this.render();
+      });
   }
 
   deactivate(): void {
@@ -58,7 +61,11 @@ export class ReviewsView {
     pageHead.append(
       el('span', 'eyebrow', 'SPACED REPETITION WORKSPACE'),
       el('h1', '', 'Retain What You Learn'),
-      el('p', 'muted', 'Review active concept flashcards with the SM-2 spaced repetition algorithm. Practice a few minutes daily to never forget.'),
+      el(
+        'p',
+        'muted',
+        'Review active concept flashcards with the SM-2 spaced repetition algorithm. Practice a few minutes daily to never forget.',
+      ),
     );
     root.append(pageHead);
 
@@ -73,9 +80,17 @@ export class ReviewsView {
     if (!this.activeCard) {
       const emptyCard = el('div', 'catalog-empty reviews-empty-card');
       emptyCard.append(
-        (() => { const s = el('span', 'empty-symbol'); s.append(svgIcon('party')); return s; })(),
+        (() => {
+          const s = el('span', 'empty-symbol');
+          s.append(svgIcon('party'));
+          return s;
+        })(),
         el('h2', '', 'You are all caught up!'),
-        el('p', 'muted', `Reviewed ${this.completedToday} cards today. No more flashcards due right now. Complete quizzes in your lectures to schedule new concepts.`),
+        el(
+          'p',
+          'muted',
+          `Reviewed ${this.completedToday} cards today. No more flashcards due right now. Complete quizzes in your lectures to schedule new concepts.`,
+        ),
       );
       container.append(emptyCard);
       root.append(container);
@@ -92,10 +107,7 @@ export class ReviewsView {
     cardEl.append(cardHeader);
 
     const questionBox = el('div', 'review-question-box');
-    questionBox.append(
-      el('span', 'eyebrow', 'QUESTION'),
-      el('h2', 'review-question-text', this.activeCard.question),
-    );
+    questionBox.append(el('span', 'eyebrow', 'QUESTION'), el('h2', 'review-question-text', this.activeCard.question));
     cardEl.append(questionBox);
 
     if (!this.answerRevealed) {
@@ -108,10 +120,7 @@ export class ReviewsView {
       cardEl.append(revealBtn);
     } else {
       const answerBox = el('div', 'review-answer-box');
-      answerBox.append(
-        el('span', 'eyebrow', 'VERIFIED ANSWER'),
-        el('p', 'review-answer-text', this.activeCard.answer),
-      );
+      answerBox.append(el('span', 'eyebrow', 'VERIFIED ANSWER'), el('p', 'review-answer-text', this.activeCard.answer));
       cardEl.append(answerBox);
 
       // Recall Grading Buttons

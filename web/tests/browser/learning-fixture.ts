@@ -1,19 +1,13 @@
-import type { BrowserContext, Route } from "@playwright/test";
-import type {
-  Bookmark,
-  Card,
-  Grade,
-  QuizResult,
-  ReviewAttempt,
-} from "../../src/learning/contracts";
+import type { BrowserContext, Route } from '@playwright/test';
+import type { Bookmark, Card, Grade, QuizResult, ReviewAttempt } from '../../src/learning/contracts';
 
 // Isolated behavioral simulation for the prewritten learning UI contract. This
 // never contacts providers and does not establish Go/database correctness.
 export async function installLearningFixture(context: BrowserContext) {
-  const now = "2026-10-12T12:00:00Z";
-  const bookmarks: Bookmark[] = [1, 2, 3].map((n) => ({
+  const now = '2026-10-12T12:00:00Z';
+  const bookmarks: Bookmark[] = [1, 2, 3].map(n => ({
     id: `bm-${n}`,
-    lesson_id: "fixture-lesson-1",
+    lesson_id: 'fixture-lesson-1',
     label: `Saved idea ${n}`,
     position: n,
     created_at: now,
@@ -50,56 +44,43 @@ export async function installLearningFixture(context: BrowserContext) {
   const json = (route: Route, data: unknown, status = 200) =>
     route.fulfill({
       status,
-      contentType: "application/json",
+      contentType: 'application/json',
       body: JSON.stringify(data),
     });
   const page = (route: Route, items: unknown[], key: string, url: URL) => {
-    const offset = Number(url.searchParams.get("cursor") || 0);
+    const offset = Number(url.searchParams.get('cursor') || 0);
     return json(route, {
       [key]: items.slice(offset, offset + 2),
-      next_cursor: items.length > offset + 2 ? String(offset + 2) : "",
+      next_cursor: items.length > offset + 2 ? String(offset + 2) : '',
     });
   };
-  await context.route("**/api/v1/**", async (route) => {
+  await context.route('**/api/v1/**', async route => {
     const req = route.request();
     const url = new URL(req.url());
-    const path = url.pathname.replace("/api/v1", "");
+    const path = url.pathname.replace('/api/v1', '');
     const method = req.method();
-    if (
-      !/\/(bookmarks|quiz|quizzes)(\/|$)/.test(path) &&
-      !/^\/(bookmarks|reviews)(\/|$)/.test(path)
-    )
+    if (!/\/(bookmarks|quiz|quizzes)(\/|$)/.test(path) && !/^\/(bookmarks|reviews)(\/|$)/.test(path))
       return route.fallback();
     if (state.denied)
-      return json(
-        route,
-        { detail: "Your sign-in expired.", code: "unauthenticated" },
-        state.denialStatus,
-      );
-    if (method !== "GET" && req.headers()["x-csrf-token"] !== "synthetic-csrf")
-      return json(route, { detail: "CSRF required." }, 403);
-    const body =
-      method === "POST" ? (req.postDataJSON() as Record<string, unknown>) : {};
-    const lesson = /^\/lessons\/([^/]+)/.exec(path)?.[1] || "";
-    if (method === "POST") {
-      const key = req.headers()["idempotency-key"] || "";
-      if (!key) return json(route, { detail: "Command key required." }, 422);
+      return json(route, { detail: 'Your sign-in expired.', code: 'unauthenticated' }, state.denialStatus);
+    if (method !== 'GET' && req.headers()['x-csrf-token'] !== 'synthetic-csrf')
+      return json(route, { detail: 'CSRF required.' }, 403);
+    const body = method === 'POST' ? (req.postDataJSON() as Record<string, unknown>) : {};
+    const lesson = /^\/lessons\/([^/]+)/.exec(path)?.[1] || '';
+    if (method === 'POST') {
+      const key = req.headers()['idempotency-key'] || '';
+      if (!key) return json(route, { detail: 'Command key required.' }, 422);
       const fingerprint = `${path}:${JSON.stringify(body)}`;
       const previous = commands.get(key);
       if (previous && previous.fingerprint !== fingerprint)
-        return json(
-          route,
-          { detail: "Command changed.", code: "idempotency_conflict" },
-          409,
-        );
-      if (path.endsWith("/bookmarks"))
-        bookmarkPosts.push({ key, position: Number(body.position) });
-      if (path.endsWith("/quiz/attempts")) quizPosts.push(key);
-      if (path.endsWith("/grade")) gradePosts.push(key);
-      if (path.endsWith("/complete")) completePosts.push(key);
+        return json(route, { detail: 'Command changed.', code: 'idempotency_conflict' }, 409);
+      if (path.endsWith('/bookmarks')) bookmarkPosts.push({ key, position: Number(body.position) });
+      if (path.endsWith('/quiz/attempts')) quizPosts.push(key);
+      if (path.endsWith('/grade')) gradePosts.push(key);
+      if (path.endsWith('/complete')) completePosts.push(key);
       if (previous) return json(route, previous.result, 201);
       let output: unknown;
-      if (path.endsWith("/bookmarks")) {
+      if (path.endsWith('/bookmarks')) {
         const b = {
           id: `bm-new-${bookmarks.length}`,
           lesson_id: lesson,
@@ -109,21 +90,17 @@ export async function installLearningFixture(context: BrowserContext) {
         };
         bookmarks.push(b);
         output = b;
-      } else if (path.endsWith("/quiz/attempts")) {
+      } else if (path.endsWith('/quiz/attempts')) {
         if (state.staleQuiz || body.revision !== state.revision) {
           state.staleQuiz = false;
           state.revision++;
-          return json(
-            route,
-            { detail: "The quiz changed.", code: "stale_revision" },
-            409,
-          );
+          return json(route, { detail: 'The quiz changed.', code: 'stale_revision' }, 409);
         }
         const answers = body.answers as Record<string, number>;
         const passed = answers.q1 === 0 && answers.q2 === 1;
         const graded: QuizResult = {
           attempt_id: `qa-${quizAttempts.length}`,
-          quiz_id: "quiz-1",
+          quiz_id: 'quiz-1',
           lesson_id: lesson,
           revision: state.revision,
           score: passed ? 100 : 50,
@@ -132,31 +109,31 @@ export async function installLearningFixture(context: BrowserContext) {
           total_count: 2,
           passing_threshold: 70,
           completed_at: now,
-          suggested_review: "Review the cited moments.",
+          suggested_review: 'Review the cited moments.',
           feedback: [
             {
-              question_id: "q1",
+              question_id: 'q1',
               correct: answers.q1 === 0,
               chosen_index: answers.q1 ?? 0,
               correct_index: 0,
-              explanation: "A lease protects playback ownership.",
+              explanation: 'A lease protects playback ownership.',
               source_start: 4,
-              concept: "Ownership",
+              concept: 'Ownership',
             },
             {
-              question_id: "q2",
+              question_id: 'q2',
               correct: answers.q2 === 1,
               chosen_index: answers.q2 ?? 0,
               correct_index: 1,
-              explanation: "Durable acknowledgement confirms saved progress.",
+              explanation: 'Durable acknowledgement confirms saved progress.',
               source_start: 8,
-              concept: "Durability",
+              concept: 'Durability',
             },
           ],
         };
         quizAttempts.unshift(graded);
         output = graded;
-      } else if (path === "/reviews/cards") {
+      } else if (path === '/reviews/cards') {
         const c: Card = {
           id: `card-${cards.length}`,
           course_id: String(body.course_id),
@@ -171,19 +148,15 @@ export async function installLearningFixture(context: BrowserContext) {
         };
         cards.push(c);
         output = c;
-      } else if (path.endsWith("/grade")) {
-        const card = cards.find((c) => path === `/reviews/${c.id}/grade`);
-        if (!card) return json(route, { detail: "Missing card." }, 404);
+      } else if (path.endsWith('/grade')) {
+        const card = cards.find(c => path === `/reviews/${c.id}/grade`);
+        if (!card) return json(route, { detail: 'Missing card.' }, 404);
         if (body.expected_revision !== card.revision)
-          return json(
-            route,
-            { detail: "Card schedule changed.", code: "stale_revision" },
-            409,
-          );
+          return json(route, { detail: 'Card schedule changed.', code: 'stale_revision' }, 409);
         card.revision++;
         card.repetitions++;
         card.interval_days = 1;
-        card.due_at = "2099-10-13T12:00:00Z";
+        card.due_at = '2099-10-13T12:00:00Z';
         const accepted: Grade = {
           attempt_id: `ra-${reviewAttempts.length}`,
           card_id: card.id,
@@ -201,110 +174,107 @@ export async function installLearningFixture(context: BrowserContext) {
           schedule: { due_at: card.due_at, interval_days: 1 },
         });
         output = accepted;
-      } else if (path === "/reviews/complete") {
+      } else if (path === '/reviews/complete') {
         state.completions++;
         output = {
           session_id: `rs-${state.completions}`,
-          status: "completed",
+          status: 'completed',
           cards_reviewed: (body.attempt_ids as string[]).length,
           habit_credited: true,
           completed_at: now,
         };
-      } else return json(route, { detail: "Unknown learning write." }, 404);
+      } else return json(route, { detail: 'Unknown learning write.' }, 404);
       commands.set(key, { fingerprint, result: output });
-      const drop = path.endsWith("/bookmarks")
-        ? "dropBookmark"
-        : path.endsWith("/quiz/attempts")
-          ? "dropQuiz"
-          : path.endsWith("/grade")
-            ? "dropGrade"
-            : path.endsWith("/complete")
-              ? "dropComplete"
+      const drop = path.endsWith('/bookmarks')
+        ? 'dropBookmark'
+        : path.endsWith('/quiz/attempts')
+          ? 'dropQuiz'
+          : path.endsWith('/grade')
+            ? 'dropGrade'
+            : path.endsWith('/complete')
+              ? 'dropComplete'
               : null;
       if (drop && state[drop]) {
         state[drop] = false;
-        return route.abort("failed");
+        return route.abort('failed');
       }
       return json(route, output, 201);
     }
-    if (path.endsWith("/bookmarks")) {
+    if (path.endsWith('/bookmarks')) {
       if (state.bookmarkDelay) {
         const delay = state.bookmarkDelay;
         state.bookmarkDelay = 0;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
       return page(
         route,
-        bookmarks.filter((b) => b.lesson_id === lesson),
-        "bookmarks",
+        bookmarks.filter(b => b.lesson_id === lesson),
+        'bookmarks',
         url,
       ).catch(() => undefined);
     }
-    if (path.startsWith("/bookmarks/") && method === "DELETE") {
-      const index = bookmarks.findIndex((b) => path === `/bookmarks/${b.id}`);
+    if (path.startsWith('/bookmarks/') && method === 'DELETE') {
+      const index = bookmarks.findIndex(b => path === `/bookmarks/${b.id}`);
       if (index >= 0) bookmarks.splice(index, 1);
       return json(route, { ok: true });
     }
-    if (path.endsWith("/quizzes/status"))
+    if (path.endsWith('/quizzes/status'))
       return json(route, {
         status: Object.fromEntries(
-          quizAttempts
-            .filter((a) => a.passed)
-            .map((a) => [a.lesson_id, { passed: true, score: a.score }]),
+          quizAttempts.filter(a => a.passed).map(a => [a.lesson_id, { passed: true, score: a.score }]),
         ),
-        next_cursor: "",
+        next_cursor: '',
       });
-    if (path.endsWith("/quiz"))
+    if (path.endsWith('/quiz'))
       return json(
         route,
-        state.quizPending || lesson !== "fixture-lesson-1"
-          ? { state: "pending", lesson_id: lesson, questions: [] }
+        state.quizPending || lesson !== 'fixture-lesson-1'
+          ? { state: 'pending', lesson_id: lesson, questions: [] }
           : {
-              state: "ready",
-              quiz_id: "quiz-1",
+              state: 'ready',
+              quiz_id: 'quiz-1',
               lesson_id: lesson,
               revision: state.revision,
               questions: [
                 {
-                  id: "q1",
-                  question: "What protects playback ownership?",
-                  options: ["A lease", "A browser label"],
-                  concept: "Ownership",
+                  id: 'q1',
+                  question: 'What protects playback ownership?',
+                  options: ['A lease', 'A browser label'],
+                  concept: 'Ownership',
                 },
                 {
-                  id: "q2",
-                  question: "When is progress saved?",
-                  options: ["Before the request", "After acknowledgement"],
-                  concept: "Durability",
+                  id: 'q2',
+                  question: 'When is progress saved?',
+                  options: ['Before the request', 'After acknowledgement'],
+                  concept: 'Durability',
                 },
               ],
               status: {
                 attempts: quizAttempts.length,
-                passed: quizAttempts.some((a) => a.passed),
+                passed: quizAttempts.some(a => a.passed),
                 last_score: quizAttempts[0]?.score ?? null,
               },
             },
       );
-    if (path.endsWith("/quiz/attempts"))
+    if (path.endsWith('/quiz/attempts'))
       return page(
         route,
-        quizAttempts.filter((a) => a.lesson_id === lesson),
-        "attempts",
+        quizAttempts.filter(a => a.lesson_id === lesson),
+        'attempts',
         url,
       );
-    if (path === "/reviews/cards" || path === "/reviews/due")
+    if (path === '/reviews/cards' || path === '/reviews/due')
       return page(
         route,
         cards.filter(
-          (c) =>
-            c.course_id === url.searchParams.get("course") &&
-            (path.endsWith("/cards") || c.due_at !== "2099-10-13T12:00:00Z"),
+          c =>
+            c.course_id === url.searchParams.get('course') &&
+            (path.endsWith('/cards') || c.due_at !== '2099-10-13T12:00:00Z'),
         ),
-        "cards",
+        'cards',
         url,
       );
-    if (path === "/reviews/history")
-      return page(route, reviewAttempts, "attempts", url);
+    if (path === '/reviews/history') return page(route, reviewAttempts, 'attempts', url);
     return route.fallback();
   });
   return state;

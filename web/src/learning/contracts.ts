@@ -1,4 +1,4 @@
-import { ApiError } from "../api";
+import { ApiError } from '../api';
 
 export interface Bookmark {
   id: string;
@@ -14,9 +14,9 @@ export interface Question {
   concept: string;
 }
 export type LessonQuiz =
-  | { state: "pending"; lesson_id: string; questions: Question[] }
+  | { state: 'pending'; lesson_id: string; questions: Question[] }
   | {
-      state: "ready";
+      state: 'ready';
       lesson_id: string;
       quiz_id: string;
       revision: number;
@@ -76,7 +76,7 @@ export interface ReviewAttempt {
 }
 export interface ReviewCompletion {
   session_id: string;
-  status: "completed";
+  status: 'completed';
   cards_reviewed: number;
   habit_credited: boolean;
   completed_at: string;
@@ -86,44 +86,32 @@ export interface Page<T> {
   cursor: string;
 }
 const invalid = (): never => {
-  throw new ApiError(
-    "Learning data could not be read. Please reload.",
-    502,
-    "invalid_learning_response",
-  );
+  throw new ApiError('Learning data could not be read. Please reload.', 502, 'invalid_learning_response');
 };
 export function record(v: unknown): Record<string, unknown> {
-  return v !== null && typeof v === "object" && !Array.isArray(v)
-    ? (v as Record<string, unknown>)
-    : invalid();
+  return v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : invalid();
 }
 function str(v: unknown): string {
-  return typeof v === "string" ? v : invalid();
+  return typeof v === 'string' ? v : invalid();
 }
 function num(v: unknown, min = 0, max = Number.MAX_SAFE_INTEGER): number {
-  return typeof v === "number" && Number.isFinite(v) && v >= min && v <= max
-    ? v
-    : invalid();
+  return typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max ? v : invalid();
 }
 function integer(v: unknown, min = 0, max = Number.MAX_SAFE_INTEGER): number {
   const n = num(v, min, max);
   return Number.isInteger(n) ? n : invalid();
 }
 function bool(v: unknown): boolean {
-  return typeof v === "boolean" ? v : invalid();
+  return typeof v === 'boolean' ? v : invalid();
 }
 function array<T>(v: unknown, parse: (v: unknown) => T, max = 100): T[] {
   return Array.isArray(v) && v.length <= max ? v.map(parse) : invalid();
 }
-export function page<T>(
-  v: unknown,
-  key: string,
-  parse: (v: unknown) => T,
-): Page<T> {
+export function page<T>(v: unknown, key: string, parse: (v: unknown) => T): Page<T> {
   const r = record(v);
   return {
     items: array(r[key], parse),
-    cursor: r.next_cursor == null ? "" : str(r.next_cursor),
+    cursor: r.next_cursor == null ? '' : str(r.next_cursor),
   };
 }
 export function bookmark(v: unknown): Bookmark {
@@ -139,12 +127,11 @@ export function bookmark(v: unknown): Bookmark {
 export function quiz(v: unknown): LessonQuiz {
   const r = record(v);
   const lesson_id = str(r.lesson_id);
-  if (r.state === "pending")
-    return { state: "pending", lesson_id, questions: [] };
-  if (r.state !== "ready") return invalid();
+  if (r.state === 'pending') return { state: 'pending', lesson_id, questions: [] };
+  if (r.state !== 'ready') return invalid();
   const questions = array(
     r.questions,
-    (v) => {
+    v => {
       const q = record(v);
       return {
         id: str(q.id),
@@ -157,13 +144,13 @@ export function quiz(v: unknown): LessonQuiz {
   );
   if (
     !questions.length ||
-    questions.some((q) => !q.id || q.options.length < 2) ||
-    new Set(questions.map((q) => q.id)).size !== questions.length
+    questions.some(q => !q.id || q.options.length < 2) ||
+    new Set(questions.map(q => q.id)).size !== questions.length
   )
     return invalid();
   const s = record(r.status);
   return {
-    state: "ready",
+    state: 'ready',
     lesson_id,
     quiz_id: str(r.quiz_id),
     revision: integer(r.revision, 1),
@@ -191,7 +178,7 @@ export function result(v: unknown): QuizResult {
     completed_at: str(r.completed_at),
     feedback: array(
       r.feedback,
-      (v) => {
+      v => {
         const f = record(v);
         return {
           question_id: str(f.question_id),
@@ -250,10 +237,10 @@ export function reviewAttempt(v: unknown): ReviewAttempt {
 }
 export function completion(v: unknown): ReviewCompletion {
   const r = record(v);
-  if (r.status !== "completed") return invalid();
+  if (r.status !== 'completed') return invalid();
   return {
     session_id: str(r.session_id),
-    status: "completed",
+    status: 'completed',
     cards_reviewed: integer(r.cards_reviewed, 1, 100),
     habit_credited: bool(r.habit_credited),
     completed_at: str(r.completed_at),
@@ -271,7 +258,7 @@ export function courseStatus(v: unknown): { passed: string[]; cursor: string } {
       passed.push(lesson);
     }
   }
-  return { passed, cursor: r.next_cursor == null ? "" : str(r.next_cursor) };
+  return { passed, cursor: r.next_cursor == null ? '' : str(r.next_cursor) };
 }
 
 export interface TutorSource {
@@ -294,22 +281,22 @@ export function tutorResponse(v: unknown): TutorResponse {
   const sources: TutorSource[] = [];
   if (Array.isArray(r.sources)) {
     for (const item of r.sources) {
-      if (typeof item === "object" && item !== null) {
+      if (typeof item === 'object' && item !== null) {
         const s = item as Record<string, unknown>;
         sources.push({
-          lesson_id: typeof s.lesson_id === "string" ? s.lesson_id : "",
-          lesson_title: typeof s.lesson_title === "string" ? s.lesson_title : "",
-          course_id: typeof s.course_id === "string" ? s.course_id : "",
-          start_seconds: typeof s.start_seconds === "number" ? s.start_seconds : 0,
-          end_seconds: typeof s.end_seconds === "number" ? s.end_seconds : 0,
-          text: typeof s.text === "string" ? s.text : "",
+          lesson_id: typeof s.lesson_id === 'string' ? s.lesson_id : '',
+          lesson_title: typeof s.lesson_title === 'string' ? s.lesson_title : '',
+          course_id: typeof s.course_id === 'string' ? s.course_id : '',
+          start_seconds: typeof s.start_seconds === 'number' ? s.start_seconds : 0,
+          end_seconds: typeof s.end_seconds === 'number' ? s.end_seconds : 0,
+          text: typeof s.text === 'string' ? s.text : '',
         });
       }
     }
   }
   return {
-    answer: typeof r.answer === "string" ? r.answer : "",
+    answer: typeof r.answer === 'string' ? r.answer : '',
     sources,
-    mode: typeof r.mode === "string" ? r.mode : "explain",
+    mode: typeof r.mode === 'string' ? r.mode : 'explain',
   };
 }

@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { Course } from '../contracts';
-import type { ApiClient} from '../api';
+import type { ApiClient } from '../api';
 import { artwork, toTitleCase } from '../discovery/view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -45,14 +45,17 @@ export class LibraryView {
     this.loading = true;
     this.render();
 
-    void this.options.api.courses('', signal).then(res => {
-      this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
-      this.loading = false;
-      this.render();
-    }).catch(_err => {
-      this.loading = false;
-      this.render();
-    });
+    void this.options.api
+      .courses('', signal)
+      .then(res => {
+        this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
+        this.loading = false;
+        this.render();
+      })
+      .catch(_err => {
+        this.loading = false;
+        this.render();
+      });
   }
 
   deactivate(): void {
@@ -191,11 +194,12 @@ export class LibraryView {
 
     // Filter by Search Query
     if (this.searchQuery) {
-      filtered = filtered.filter(c =>
-        c.title.toLowerCase().includes(this.searchQuery) ||
-        c.instructor?.toLowerCase().includes(this.searchQuery) ||
-        c.category?.toLowerCase().includes(this.searchQuery) ||
-        c.tags?.some(t => t.toLowerCase().includes(this.searchQuery)),
+      filtered = filtered.filter(
+        c =>
+          c.title.toLowerCase().includes(this.searchQuery) ||
+          c.instructor?.toLowerCase().includes(this.searchQuery) ||
+          c.category?.toLowerCase().includes(this.searchQuery) ||
+          c.tags?.some(t => t.toLowerCase().includes(this.searchQuery)),
       );
     }
 
@@ -225,7 +229,11 @@ export class LibraryView {
     if (filtered.length === 0) {
       const empty = el('div', 'catalog-empty');
       empty.append(
-        (() => { const s = el('span', 'empty-symbol'); s.append(svgIcon('book')); return s; })(),
+        (() => {
+          const s = el('span', 'empty-symbol');
+          s.append(svgIcon('book'));
+          return s;
+        })(),
         el('h2', '', 'No matching courses found'),
         el('p', 'muted', 'Try clearing your filters or searching for different topics.'),
       );
@@ -253,8 +261,17 @@ export class LibraryView {
       body.append(
         el('span', 'course-badge', toTitleCase(c.category || 'Masterclass')),
         el('h2', '', c.title),
-        el('p', 'course-description', c.description || 'Master deep technical principles with source-verified video lectures and hands-on practice.'),
-        el('p', 'course-meta', `${c.lesson_count || 0} lectures · ${formatDuration(c.duration_seconds || 0)} · ${c.instructor || 'CourseForge Faculty'}`),
+        el(
+          'p',
+          'course-description',
+          c.description ||
+            'Master deep technical principles with source-verified video lectures and hands-on practice.',
+        ),
+        el(
+          'p',
+          'course-meta',
+          `${c.lesson_count || 0} lectures · ${formatDuration(c.duration_seconds || 0)} · ${c.instructor || 'CourseForge Faculty'}`,
+        ),
       );
 
       // Footer
@@ -264,7 +281,11 @@ export class LibraryView {
       syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
 
       const isSaved = this.options.isSaved(c.id);
-      const saveBtn = el('button', isSaved ? 'button list-button' : 'button quiet list-button', isSaved ? 'In My List' : '+ My List');
+      const saveBtn = el(
+        'button',
+        isSaved ? 'button list-button' : 'button quiet list-button',
+        isSaved ? 'In My List' : '+ My List',
+      );
       saveBtn.type = 'button';
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;

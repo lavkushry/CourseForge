@@ -22,7 +22,9 @@ export function course(
 ): Promise<{ course: Course; lessons: Lesson[]; next_cursor?: string | null; resume_lesson_id?: string | null }> {
   const query = new URLSearchParams({ limit: '100' });
   if (cursor) query.set('cursor', cursor);
-  return client.request(`/courses/${encodeURIComponent(id)}?${query}`, signal ? { signal } : {}).then(parseCourseDetail);
+  return client
+    .request(`/courses/${encodeURIComponent(id)}?${query}`, signal ? { signal } : {})
+    .then(parseCourseDetail);
 }
 
 export function publicCourse(

@@ -8,16 +8,16 @@
 }
 
 .course-badge {
-  font-size: .55rem;
+  font-size: 0.55rem;
   font-weight: 750;
-  letter-spacing: .13em;
+  letter-spacing: 0.13em;
   color: #ffad92;
   margin-bottom: 10px;
   display: block;
 }
 
 .course-description {
-  font-size: .78rem;
+  font-size: 0.78rem;
   line-height: 1.65;
   color: var(--muted);
   display: -webkit-box;
@@ -28,7 +28,7 @@
 }
 
 .course-meta {
-  font-size: .67rem;
+  font-size: 0.67rem;
   color: #a9acb5;
   margin-bottom: 18px;
 }
@@ -49,7 +49,7 @@
 .row-heading h2 {
   margin: 0;
   font-size: 1.5rem;
-  letter-spacing: -.045em;
+  letter-spacing: -0.045em;
 }
 
 #coverage {
@@ -59,7 +59,7 @@
 .material-link {
   display: block;
   padding: 10px 0;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .dialog-heading {

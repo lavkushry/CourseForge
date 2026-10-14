@@ -30,10 +30,13 @@ export class SyllabusDialog {
     }
     this.dialog = existing;
 
-    this.dialog.addEventListener('click', (e) => {
+    this.dialog.addEventListener('click', e => {
       const rect = this.dialog.getBoundingClientRect();
-      const inDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-                        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      const inDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
       if (!inDialog && e.target === this.dialog) {
         this.close();
       }
@@ -60,7 +63,8 @@ export class SyllabusDialog {
     const content = el('div', 'syllabus-content');
 
     // Close button
-    const closeBtn = el('button', 'syllabus-close-btn'); closeBtn.append(svgIcon('close'));
+    const closeBtn = el('button', 'syllabus-close-btn');
+    closeBtn.append(svgIcon('close'));
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Close course details');
     closeBtn.addEventListener('click', () => this.close());
@@ -70,13 +74,17 @@ export class SyllabusDialog {
     const art = artwork(course);
     const heroOverlay = el('div', 'syllabus-hero-overlay');
 
-    const badge = el('span', 'eyebrow', course.category ? `COURSEFORGE · ${course.category}` : 'COURSEFORGE MASTERCLASS');
+    const badge = el(
+      'span',
+      'eyebrow',
+      course.category ? `COURSEFORGE · ${course.category}` : 'COURSEFORGE MASTERCLASS',
+    );
     const title = el('h1', 'syllabus-title', course.title);
-    
+
     const metaRow = el('div', 'syllabus-meta-row');
     const totalDuration = lessons.reduce((sum, l) => sum + (l.duration_seconds || 0), 0);
     const completedCount = lessons.filter(l => learnedLessons.has(l.id)).length;
-    
+
     metaRow.append(
       el('span', 'meta-chip quality', '1080p HD'),
       el('span', 'meta-chip', `${lessons.length} Lectures`),
@@ -86,7 +94,11 @@ export class SyllabusDialog {
 
     const ctaRow = el('div', 'syllabus-cta-row');
     const startLesson = lessons[0];
-    const playBtn = el('button', 'button primary syllabus-play-cta', completedCount > 0 ? 'Continue Learning' : 'Start Course');
+    const playBtn = el(
+      'button',
+      'button primary syllabus-play-cta',
+      completedCount > 0 ? 'Continue Learning' : 'Start Course',
+    );
     playBtn.type = 'button';
     if (startLesson) {
       playBtn.addEventListener('click', () => {
@@ -114,10 +126,7 @@ export class SyllabusDialog {
 
     if (course.description) {
       const descSection = el('section', 'syllabus-desc-section');
-      descSection.append(
-        el('h2', '', 'About this Masterclass'),
-        el('p', 'syllabus-desc-text', course.description),
-      );
+      descSection.append(el('h2', '', 'About this Masterclass'), el('p', 'syllabus-desc-text', course.description));
       if (course.tags && course.tags.length > 0) {
         const tagCloud = el('div', 'syllabus-tag-cloud');
         for (const t of course.tags) {
