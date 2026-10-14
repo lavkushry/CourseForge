@@ -32,17 +32,26 @@ type Service struct {
 	WorkerToken string
 	Lease       time.Duration
 	Generator   Generator
+	Embedder    TextEmbedder
 	Qdrant      *qdrantClient
+	FSRS        *FSRSScheduler
+	Freshness   *FreshnessScanner
 }
 
 func New(pool *pgxpool.Pool) *Service {
 	token := strings.TrimSpace(os.Getenv("CF_KNOWLEDGE_WORKER_TOKEN"))
-	return &Service{
+	svc := &Service{
 		Pool:        pool,
 		WorkerToken: token,
 		Lease:       2 * time.Minute,
 		Qdrant:      newQdrantFromEnv(),
+		FSRS:        NewFSRSScheduler(),
+		Freshness:   NewFreshnessScanner(),
 	}
+	if EmbedderModeFromEnv() == "hash" {
+		svc.Embedder = HashEmbedder{Dim: 384}
+	}
+	return svc
 }
 
 func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
@@ -51,6 +60,16 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}", auth.Require(http.HandlerFunc(s.getLessonHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/chapters", auth.Require(http.HandlerFunc(s.getChaptersHTTP)))
 	mux.Handle("POST /api/v1/knowledge/lessons/{id}/ask", auth.Require(http.HandlerFunc(s.askHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/concepts", auth.Require(http.HandlerFunc(s.getConceptsHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/recall", auth.Require(http.HandlerFunc(s.getRecallHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/summaries", auth.Require(http.HandlerFunc(s.getSummariesHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/flashcards", auth.Require(http.HandlerFunc(s.getFlashcardsHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/freshness", auth.Require(http.HandlerFunc(s.getFreshnessHTTP)))
+	mux.Handle("POST /api/v1/knowledge/lessons/{id}/feedback", auth.Require(http.HandlerFunc(s.postFeedbackHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/hotspots", auth.Require(http.HandlerFunc(s.getHotspotsHTTP)))
+	mux.Handle("POST /api/v1/knowledge/lessons/{id}/hotspots/{hid}/annotations", auth.Require(http.HandlerFunc(s.postHotspotAnnotationHTTP)))
+	mux.Handle("GET /api/v1/knowledge/review-queue", auth.Require(http.HandlerFunc(s.getReviewQueueHTTP)))
+	mux.Handle("POST /api/v1/knowledge/review/{cardID}", auth.Require(http.HandlerFunc(s.postReviewHTTP)))
 
 	mux.Handle("POST /api/v1/knowledge/worker/claim", s.requireWorker(s.claimHTTP))
 	mux.Handle("POST /api/v1/knowledge/worker/jobs/{id}/heartbeat", s.requireWorker(s.heartbeatHTTP))

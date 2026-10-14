@@ -1,11 +1,25 @@
 import { clockToMs, formatKnowledgeClock } from './api';
-import type { AskResponse, KnowledgeChapter, LessonKnowledge } from './types';
+import type {
+  AskResponse,
+  ConfusionHotspot,
+  KnowledgeChapter,
+  KnowledgeConcept,
+  LessonKnowledge,
+  RecallQuestion,
+  ReviewQueueItem,
+} from './types';
 // Styles live in panel.css; import that stylesheet when mounting the panel.
 
 export type KnowledgePanelOptions = {
   chapters?: KnowledgeChapter[];
+  concepts?: KnowledgeConcept[];
+  recall?: RecallQuestion[];
+  reviewQueue?: ReviewQueueItem[];
+  hotspots?: ConfusionHotspot[];
+  isAdmin?: boolean;
   onSeek?: (ms: number) => void;
   onAsk?: (question: string) => Promise<AskResponse>;
+  onReview?: (cardId: string, rating: number) => Promise<void>;
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -41,6 +55,19 @@ export function renderKnowledgePanel(data: LessonKnowledge, options: KnowledgePa
   }
 
   root.append(renderAskBox(options.onAsk, options.onSeek));
+
+  if (options.recall?.length) {
+    root.append(renderRecall(options.recall, options.onSeek));
+  }
+  if (options.reviewQueue?.length) {
+    root.append(renderReviewQueue(options.reviewQueue, options.onReview, options.onSeek));
+  }
+  if (options.concepts?.length) {
+    root.append(renderConcepts(options.concepts));
+  }
+  if (options.isAdmin && options.hotspots?.length) {
+    root.append(renderHotspots(options.hotspots, options.onSeek));
+  }
 
   const list = el('ul', 'knowledge-panel__list');
   for (const segment of data.segments) {
@@ -82,6 +109,113 @@ function renderChapters(chapters: KnowledgeChapter[], onSeek?: (ms: number) => v
     body.append(el('p', 'knowledge-panel__chapter-title', chapter.title));
     if (chapter.summary) {
       body.append(el('p', 'knowledge-panel__text', chapter.summary));
+    }
+    item.append(body);
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
+function renderRecall(questions: RecallQuestion[], onSeek?: (ms: number) => void): HTMLElement {
+  const section = el('div', 'knowledge-panel__recall');
+  section.append(el('h3', 'knowledge-panel__subtitle', 'Pause & recall'));
+  const list = el('ul', 'knowledge-panel__list');
+  for (const q of questions) {
+    const item = el('li', 'knowledge-panel__item');
+    item.append(seekTime(formatKnowledgeClock(q.segment_end_ms), q.segment_end_ms, onSeek));
+    const body = el('div');
+    body.append(el('p', 'knowledge-panel__text', q.prompt));
+    if (q.answer) {
+      const reveal = el('button', 'knowledge-panel__ask-submit', 'Reveal') as HTMLButtonElement;
+      reveal.type = 'button';
+      const answer = el('p', 'knowledge-panel__text', q.answer);
+      answer.hidden = true;
+      reveal.addEventListener('click', () => {
+        answer.hidden = !answer.hidden;
+        reveal.textContent = answer.hidden ? 'Reveal' : 'Hide';
+      });
+      body.append(reveal, answer);
+    }
+    item.append(body);
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
+function renderReviewQueue(
+  items: ReviewQueueItem[],
+  onReview?: (cardId: string, rating: number) => Promise<void>,
+  onSeek?: (ms: number) => void,
+): HTMLElement {
+  const section = el('div', 'knowledge-panel__review');
+  section.append(el('h3', 'knowledge-panel__subtitle', 'Review queue'));
+  const list = el('ul', 'knowledge-panel__list');
+  for (const item of items) {
+    const row = el('li', 'knowledge-panel__item');
+    row.append(seekTime(formatKnowledgeClock(item.card.source_start_ms), item.card.source_start_ms, onSeek));
+    const body = el('div');
+    body.append(el('p', 'knowledge-panel__chapter-title', item.card.front));
+    body.append(el('p', 'knowledge-panel__text', item.card.back));
+    if (onReview) {
+      const ratings = el('div', 'knowledge-panel__tags');
+      for (const [label, rating] of [
+        ['Again', 1],
+        ['Hard', 2],
+        ['Good', 3],
+        ['Easy', 4],
+      ] as const) {
+        const btn = el('button', 'knowledge-panel__tag', label) as HTMLButtonElement;
+        btn.type = 'button';
+        btn.addEventListener('click', () => {
+          void onReview(item.card.id, rating).then(() => row.remove());
+        });
+        ratings.append(btn);
+      }
+      body.append(ratings);
+    }
+    row.append(body);
+    list.append(row);
+  }
+  section.append(list);
+  return section;
+}
+
+function renderConcepts(concepts: KnowledgeConcept[]): HTMLElement {
+  const section = el('div', 'knowledge-panel__concepts');
+  section.append(el('h3', 'knowledge-panel__subtitle', 'Concepts'));
+  const list = el('ul', 'knowledge-panel__list');
+  for (const c of concepts) {
+    const item = el('li', 'knowledge-panel__item');
+    item.append(el('span', 'knowledge-panel__meta', String(c.ordinal + 1)));
+    const body = el('div');
+    body.append(el('p', 'knowledge-panel__chapter-title', c.title));
+    if (c.summary) body.append(el('p', 'knowledge-panel__text', c.summary));
+    item.append(body);
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
+function renderHotspots(hotspots: ConfusionHotspot[], onSeek?: (ms: number) => void): HTMLElement {
+  const section = el('div', 'knowledge-panel__hotspots');
+  section.append(el('h3', 'knowledge-panel__subtitle', 'Confusion hotspots'));
+  const list = el('ul', 'knowledge-panel__list');
+  for (const h of hotspots) {
+    const item = el('li', 'knowledge-panel__item');
+    item.append(seekTime(formatKnowledgeClock(h.bucket_ms), h.bucket_ms, onSeek));
+    const body = el('div');
+    body.append(
+      el(
+        'p',
+        'knowledge-panel__text',
+        `Score ${h.score.toFixed(1)} · Q ${h.question_count} · rewind ${h.rewind_count} · drop ${h.dropoff_count} · quiz ${h.quiz_error_count}`,
+      ),
+    );
+    for (const ann of h.annotations ?? []) {
+      body.append(el('p', 'knowledge-panel__meta', `${ann.author_type}: ${ann.body}`));
     }
     item.append(body);
     list.append(item);

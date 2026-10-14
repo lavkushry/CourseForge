@@ -52,7 +52,8 @@ def load_settings() -> Settings:
         qdrant_url=_env("CF_QDRANT_URL", "http://127.0.0.1:6333").rstrip("/"),
         qdrant_collection=collection,
         enable_qdrant=_env("CF_KNOWLEDGE_ENABLE_QDRANT", "false").lower() in {"1", "true", "yes"},
-        embedder=_env("CF_KNOWLEDGE_EMBEDDER", "sentence-transformers") or "sentence-transformers",
+        # Default: Ollama EMBED_MODEL (same as Go). Use hash only for offline/tests.
+        embedder=_env("CF_KNOWLEDGE_EMBEDDER", "ollama") or "ollama",
         reranker=_env("CF_KNOWLEDGE_RERANKER", "cross-encoder") or "cross-encoder",
-        embed_dim=int(_env("CF_KNOWLEDGE_EMBED_DIM", "384") or "384"),
+        embed_dim=int(_env("CF_KNOWLEDGE_EMBED_DIM", "0") or "0"),
     )

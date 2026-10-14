@@ -53,7 +53,11 @@
 }
 
 .knowledge-panel__chapters,
-.knowledge-panel__ask {
+.knowledge-panel__ask,
+.knowledge-panel__recall,
+.knowledge-panel__review,
+.knowledge-panel__concepts,
+.knowledge-panel__hotspots {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -175,12 +179,22 @@
 }
 
 .knowledge-panel__tag {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
   color: var(--muted);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 2px var(--space-2);
   font-size: var(--text-xs);
   background: var(--surface);
+}
+
+.knowledge-panel__tag:hover,
+.knowledge-panel__tag:focus-visible {
+  border-color: var(--lms-accent);
+  color: var(--lms-accent);
+  outline: none;
 }
 
 html[data-theme='light'] .knowledge-panel {

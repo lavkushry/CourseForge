@@ -87,4 +87,82 @@ export interface AskResponse {
   broadened?: boolean;
 }
 
+export interface KnowledgeConcept {
+  id: string;
+  lesson_id?: string;
+  slug: string;
+  title: string;
+  summary: string;
+  ordinal: number;
+}
+
+export interface KnowledgeConceptPrereq {
+  concept_id: string;
+  prereq_concept_id: string;
+  confidence: number;
+  source: string;
+}
+
+export interface RecallQuestion {
+  id: string;
+  lesson_id?: string;
+  concept_id?: string | null;
+  segment_end_ms: number;
+  prompt: string;
+  answer?: string;
+}
+
+export interface KnowledgeFlashcard {
+  id: string;
+  lesson_id?: string;
+  concept_id?: string | null;
+  front: string;
+  back: string;
+  source_start_ms: number;
+  source_end_ms: number;
+}
+
+export interface ReviewQueueItem {
+  card: KnowledgeFlashcard;
+  state: {
+    stability: number;
+    difficulty: number;
+    reps: number;
+    lapses: number;
+    state: string;
+  };
+  due_at: string;
+}
+
+export interface ConfusionHotspot {
+  id: string;
+  lesson_id: string;
+  bucket_ms: number;
+  question_count: number;
+  rewind_count: number;
+  dropoff_count: number;
+  quiz_error_count: number;
+  score: number;
+  annotations?: HotspotAnnotation[];
+}
+
+export interface HotspotAnnotation {
+  id: string;
+  hotspot_id: string;
+  author_type: string;
+  author_id?: string | null;
+  body: string;
+  created_at?: string;
+}
+
+export interface FreshnessFlag {
+  id: string;
+  lesson_id: string;
+  start_ms: number;
+  end_ms: number;
+  matched_text: string;
+  reason: string;
+  severity: string;
+}
+
 export const QDRANT_COLLECTION = 'courseforge_knowledge';

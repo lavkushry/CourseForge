@@ -72,15 +72,18 @@ class IngestWorker:
             # Assign stable chunk ids before Qdrant upsert / Postgres index.
             for chunk in chunks:
                 chunk["id"] = f"kc_{lesson_id}_{chunk['ordinal']}"
+            embedder_name = getattr(self.embedder, "name", "")
+            embed_dim = self.embedder.dimension() or (len(vectors[0]) if vectors else 0)
             if self.settings.enable_qdrant and vectors:
-                self._upsert_qdrant(lesson_id, chunks, vectors)
+                self._upsert_qdrant(lesson_id, chunks, vectors, embedder_name, embed_dim)
             self.api.store_index(
                 job_id,
                 worker_id,
                 fence,
                 chapters=chapters,
                 chunks=chunks,
-                embedder=getattr(self.embedder, "name", ""),
+                embedder=embedder_name,
+                embed_dim=embed_dim,
             )
         self.api.complete(
             job_id,
@@ -96,7 +99,8 @@ class IngestWorker:
                 "asr_engine": bundle.asr_engine,
                 "scene_engine": bundle.scene_engine,
                 "ocr_engine": bundle.ocr_engine,
-                "embedder": getattr(self.embedder, "name", ""),
+                "embedder": embedder_name,
+                "embed_dim": embed_dim,
             },
         )
 
@@ -105,6 +109,8 @@ class IngestWorker:
         lesson_id: str,
         chunks: list[dict[str, Any]],
         vectors: list[list[float]],
+        embedder: str = "",
+        embed_dim: int = 0,
     ) -> None:
         try:
             from qdrant_client import QdrantClient  # type: ignore
@@ -112,14 +118,21 @@ class IngestWorker:
             log.warning("qdrant client unavailable: %s", exc)
             return
         client = QdrantClient(url=self.settings.qdrant_url, timeout=30, check_compatibility=False)
-        dim = len(vectors[0]) if vectors else self.embedder.dimension()
-        ensure_knowledge_collection(client, dimension=dim, collection=self.settings.qdrant_collection)
+        dim = embed_dim or (len(vectors[0]) if vectors else self.embedder.dimension())
+        ensure_knowledge_collection(
+            client,
+            dimension=dim,
+            collection=self.settings.qdrant_collection,
+            embedder=embedder,
+        )
         upsert_chunks(
             client,
             lesson_id=lesson_id,
             chunks=chunks,
             vectors=vectors,
             collection=self.settings.qdrant_collection,
+            embedder=embedder,
+            embed_dim=dim,
         )
 
     def poll_once(self) -> bool:

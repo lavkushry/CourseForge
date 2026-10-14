@@ -32,6 +32,9 @@ func New(pool *pgxpool.Pool) *Service {
 	}
 	embedModel := os.Getenv("OLLAMA_EMBED_MODEL")
 	if embedModel == "" {
+		embedModel = os.Getenv("EMBED_MODEL")
+	}
+	if embedModel == "" {
 		embedModel = "qwen3-embedding:0.6b"
 	}
 	chatModel := os.Getenv("OLLAMA_CHAT_MODEL")

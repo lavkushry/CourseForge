@@ -95,6 +95,130 @@ func (s *Service) askHTTP(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, 200, out)
 }
 
+func (s *Service) getConceptsHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	concepts, prereqs, err := s.ListConcepts(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{
+		"lesson_id": r.PathValue("id"),
+		"concepts":  concepts,
+		"prereqs":   prereqs,
+	})
+}
+
+func (s *Service) getRecallHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListRecall(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{
+		"lesson_id": r.PathValue("id"),
+		"questions": items,
+	})
+}
+
+func (s *Service) getSummariesHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListSummaries(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"lesson_id": r.PathValue("id"), "summaries": items})
+}
+
+func (s *Service) getFlashcardsHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListFlashcards(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"lesson_id": r.PathValue("id"), "flashcards": items})
+}
+
+func (s *Service) getFreshnessHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListFreshness(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"lesson_id": r.PathValue("id"), "flags": items})
+}
+
+func (s *Service) postFeedbackHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	var req FeedbackEventRequest
+	if !decodeJSON(w, r, 8<<10, &req) {
+		return
+	}
+	out, err := s.RecordFeedback(r.Context(), p, r.PathValue("id"), req)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, out)
+}
+
+func (s *Service) getHotspotsHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListHotspots(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"lesson_id": r.PathValue("id"), "hotspots": items})
+}
+
+func (s *Service) postHotspotAnnotationHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	var req struct {
+		AuthorType string `json:"author_type"`
+		Body       string `json:"body"`
+	}
+	if !decodeJSON(w, r, 8<<10, &req) {
+		return
+	}
+	out, err := s.AnnotateHotspot(r.Context(), p, r.PathValue("id"), r.PathValue("hid"), req.AuthorType, req.Body)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 201, out)
+}
+
+func (s *Service) getReviewQueueHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ReviewQueue(r.Context(), p, 20)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"items": items})
+}
+
+func (s *Service) postReviewHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	var req struct {
+		Rating int `json:"rating"`
+	}
+	if !decodeJSON(w, r, 4<<10, &req) {
+		return
+	}
+	out, err := s.ReviewCard(r.Context(), p, r.PathValue("cardID"), FSRSRating(req.Rating))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, out)
+}
+
 func (s *Service) claimHTTP(w http.ResponseWriter, r *http.Request) {
 	var req ClaimRequest
 	if !decodeJSON(w, r, 4<<10, &req) {
@@ -192,6 +316,7 @@ func (s *Service) indexHTTP(w http.ResponseWriter, r *http.Request) {
 		Chapters []Chapter `json:"chapters"`
 		Chunks   []Chunk   `json:"chunks"`
 		Embedder string    `json:"embedder"`
+		EmbedDim int       `json:"embed_dim"`
 	}
 	if !decodeJSON(w, r, 8<<20, &req) {
 		return
@@ -200,6 +325,7 @@ func (s *Service) indexHTTP(w http.ResponseWriter, r *http.Request) {
 		Chapters: req.Chapters,
 		Chunks:   req.Chunks,
 		Embedder: req.Embedder,
+		EmbedDim: req.EmbedDim,
 	})
 	if err != nil {
 		failure(w, err)

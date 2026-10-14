@@ -18,6 +18,7 @@ def build_index_artifacts(
     *,
     embedder: Embedder | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[list[float]]]:
+    # Tests inject HashEmbedder; production workers pass OllamaEmbedder.
     embedder = embedder or HashEmbedder()
     chapters = chapters_as_payload(text_tiling_chapters(segments, embedder))
     chunks = chunks_as_payload(build_multimodal_chunks(segments, keyframes))

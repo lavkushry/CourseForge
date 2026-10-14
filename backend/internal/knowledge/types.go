@@ -46,8 +46,98 @@ type Document struct {
 	ChapterCount  int       `json:"chapter_count"`
 	ChunkCount    int       `json:"chunk_count"`
 	Embedder      string    `json:"embedder,omitempty"`
+	EmbedDim      int       `json:"embed_dim,omitempty"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type Concept struct {
+	ID       string `json:"id"`
+	LessonID string `json:"lesson_id,omitempty"`
+	Slug     string `json:"slug"`
+	Title    string `json:"title"`
+	Summary  string `json:"summary"`
+	Ordinal  int    `json:"ordinal"`
+}
+
+type ConceptPrereq struct {
+	ConceptID       string  `json:"concept_id"`
+	PrereqConceptID string  `json:"prereq_concept_id"`
+	Confidence      float64 `json:"confidence"`
+	Source          string  `json:"source"`
+}
+
+type RecallQuestion struct {
+	ID           string  `json:"id"`
+	LessonID     string  `json:"lesson_id,omitempty"`
+	ConceptID    *string `json:"concept_id,omitempty"`
+	SegmentEndMs int     `json:"segment_end_ms"`
+	Prompt       string  `json:"prompt"`
+	Answer       string  `json:"answer,omitempty"`
+}
+
+type Flashcard struct {
+	ID            string  `json:"id"`
+	LessonID      string  `json:"lesson_id,omitempty"`
+	ConceptID     *string `json:"concept_id,omitempty"`
+	Front         string  `json:"front"`
+	Back          string  `json:"back"`
+	SourceStartMs int     `json:"source_start_ms"`
+	SourceEndMs   int     `json:"source_end_ms"`
+}
+
+type Summary struct {
+	ID            string  `json:"id"`
+	LessonID      string  `json:"lesson_id,omitempty"`
+	ConceptID     *string `json:"concept_id,omitempty"`
+	Kind          string  `json:"kind"`
+	Text          string  `json:"text"`
+	SourceStartMs int     `json:"source_start_ms"`
+	SourceEndMs   int     `json:"source_end_ms"`
+}
+
+type ReviewQueueItem struct {
+	Card  Flashcard `json:"card"`
+	State FSRSCard  `json:"state"`
+	DueAt time.Time `json:"due_at"`
+}
+
+type FeedbackEventRequest struct {
+	Kind    string          `json:"kind"`
+	TimeMs  int             `json:"time_ms"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type ConfusionHotspot struct {
+	ID             string              `json:"id"`
+	LessonID       string              `json:"lesson_id"`
+	BucketMs       int                 `json:"bucket_ms"`
+	QuestionCount  int                 `json:"question_count"`
+	RewindCount    int                 `json:"rewind_count"`
+	DropoffCount   int                 `json:"dropoff_count"`
+	QuizErrorCount int                 `json:"quiz_error_count"`
+	Score          float64             `json:"score"`
+	UpdatedAt      time.Time           `json:"updated_at"`
+	Annotations    []HotspotAnnotation `json:"annotations,omitempty"`
+}
+
+type HotspotAnnotation struct {
+	ID         string    `json:"id"`
+	HotspotID  string    `json:"hotspot_id"`
+	AuthorType string    `json:"author_type"`
+	AuthorID   *string   `json:"author_id,omitempty"`
+	Body       string    `json:"body"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+type FreshnessFlag struct {
+	ID          string `json:"id"`
+	LessonID    string `json:"lesson_id"`
+	StartMs     int    `json:"start_ms"`
+	EndMs       int    `json:"end_ms"`
+	MatchedText string `json:"matched_text"`
+	Reason      string `json:"reason"`
+	Severity    string `json:"severity"`
 }
 
 type Word struct {
@@ -129,6 +219,7 @@ type IndexPayload struct {
 	Chapters []Chapter `json:"chapters"`
 	Chunks   []Chunk   `json:"chunks"`
 	Embedder string    `json:"embedder"`
+	EmbedDim int       `json:"embed_dim,omitempty"`
 }
 
 type ClaimRequest struct {

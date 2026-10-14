@@ -57,6 +57,7 @@ class KnowledgeAPI:
         chapters: list[dict[str, Any]],
         chunks: list[dict[str, Any]],
         embedder: str = "",
+        embed_dim: int = 0,
     ) -> dict[str, Any]:
         response = self._client.put(
             f"/api/v1/knowledge/worker/jobs/{job_id}/index",
@@ -66,6 +67,7 @@ class KnowledgeAPI:
                 "chapters": chapters,
                 "chunks": chunks,
                 "embedder": embedder,
+                "embed_dim": embed_dim,
             },
         )
         response.raise_for_status()

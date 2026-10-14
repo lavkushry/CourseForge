@@ -120,18 +120,41 @@ func (s *Service) hybridOnce(ctx context.Context, lessonID, query string, limit 
 	bm25, _ := s.searchBM25(ctx, lessonID, query, limit)
 	var dense []Chunk
 	if s.Qdrant != nil {
-		vec := s.queryEmbed(query)
+		vec, embedderName, dim := s.queryEmbed(ctx, lessonID, query)
 		if len(vec) > 0 {
-			dense, _ = s.Qdrant.search(ctx, lessonID, vec, limit)
+			dense, _ = s.Qdrant.search(ctx, lessonID, vec, limit, embedderName, dim)
 		}
 	}
 	fused := reciprocalRankFusion(bm25, dense)
 	return lexicalRerank(query, fused)
 }
 
-func (s *Service) queryEmbed(text string) []float32 {
-	// Matches Python HashEmbedder so dense search aligns when ST is unavailable.
-	return HashEmbed(text, 384)
+// queryEmbed uses the configured semantic embedder (Ollama EMBED_MODEL by default).
+// HashEmbed is only used when CF_KNOWLEDGE_EMBEDDER=hash (offline/test).
+func (s *Service) queryEmbed(ctx context.Context, lessonID, text string) ([]float32, string, int) {
+	emb := resolveEmbedder(s.Embedder)
+	if emb == nil {
+		return nil, "", 0
+	}
+	// Refuse mixing: if the lesson was indexed with a different embedder, skip dense.
+	if lessonID != "" && s.Pool != nil {
+		var stored string
+		var storedDim int
+		_ = s.Pool.QueryRow(ctx, `SELECT embedder, embed_dim FROM knowledge_documents WHERE lesson_id=$1`, lessonID).
+			Scan(&stored, &storedDim)
+		if stored != "" && !SameEmbedder(stored, emb.Name()) {
+			return nil, "", 0
+		}
+	}
+	vec, err := emb.Embed(ctx, text)
+	if err != nil || len(vec) == 0 {
+		return nil, "", 0
+	}
+	dim := emb.Dimension()
+	if dim == 0 {
+		dim = len(vec)
+	}
+	return vec, emb.Name(), dim
 }
 
 func groundedFallback(citations []AskCitation) string {

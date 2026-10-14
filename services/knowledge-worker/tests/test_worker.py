@@ -40,8 +40,11 @@ class FakeAPI:
         chapters: list[dict[str, Any]],
         chunks: list[dict[str, Any]],
         embedder: str = "",
+        embed_dim: int = 0,
     ) -> dict[str, Any]:
-        self.indexed.append({"chapters": chapters, "chunks": chunks, "embedder": embedder})
+        self.indexed.append(
+            {"chapters": chapters, "chunks": chunks, "embedder": embedder, "embed_dim": embed_dim}
+        )
         return {"chapter_count": len(chapters), "chunk_count": len(chunks)}
 
     def complete(self, job_id: str, worker_id: str, fence: int, result: dict[str, Any] | None = None) -> None:

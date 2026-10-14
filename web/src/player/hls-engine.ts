@@ -1,3 +1,6 @@
+// Captions/subtitles are applied via native HTML <track> elements on the
+// video element (see video.ts applyCaptions), not via HLS.js subtitle tracks.
+// The light build is therefore safe and keeps the adaptive-playback chunk smaller.
 import type HlsType from 'hls.js';
 import { bufferedEnd } from './media-buffer';
 
@@ -53,7 +56,7 @@ function mapLevels(hls: HlsType): QualityLevel[] {
 }
 
 export async function createHlsEngine(events: Partial<HlsEngineEvents> = {}): Promise<HlsEngine> {
-  const mod = await import('hls.js');
+  const mod = await import('hls.js/dist/hls.light.mjs');
   const Hls = mod.default;
   if (!Hls.isSupported()) {
     throw new Error('HLS.js is not supported in this browser.');

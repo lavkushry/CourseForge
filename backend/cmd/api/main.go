@@ -114,6 +114,12 @@ func run() error {
 		Knowledge:    knowledge.New(pool),
 	}
 	deps.Knowledge.Generator = deps.AI
+	if knowledge.EmbedderModeFromEnv() != "hash" {
+		deps.Knowledge.Embedder = knowledge.AIEmbedder{
+			Model: deps.AI.EmbeddingModel,
+			Fn:    deps.AI.Embed,
+		}
+	}
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)
 		if err != nil {

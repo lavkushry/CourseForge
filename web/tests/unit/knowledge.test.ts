@@ -3,10 +3,15 @@ import {
   askLessonKnowledge,
   clockToMs,
   fetchLessonChapters,
+  fetchLessonConcepts,
+  fetchLessonHotspots,
   fetchLessonKnowledge,
+  fetchLessonRecall,
+  fetchReviewQueue,
   formatKnowledgeClock,
   parseCitationLabels,
   QDRANT_COLLECTION,
+  submitReview,
 } from '../../src/knowledge';
 import type { AskResponse, LessonKnowledge } from '../../src/knowledge';
 
@@ -64,5 +69,33 @@ describe('living video knowledge', () => {
       '/api/v1/knowledge/lessons/lesson/ask',
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  it('fetches learning endpoints for recall, review, concepts, and hotspots', async () => {
+    const conceptsFetcher = vi.fn(async () => ({
+      concepts: [{ id: 'c1', slug: 'intro', title: 'Intro', summary: 'hi', ordinal: 0 }],
+      prereqs: [],
+    }));
+    await expect(fetchLessonConcepts(conceptsFetcher, 'lesson')).resolves.toMatchObject({
+      concepts: [expect.objectContaining({ slug: 'intro' })],
+    });
+
+    const recallFetcher = vi.fn(async () => ({
+      questions: [{ id: 'q1', segment_end_ms: 1000, prompt: 'What?', answer: 'A' }],
+    }));
+    await expect(fetchLessonRecall(recallFetcher, 'lesson')).resolves.toHaveLength(1);
+
+    const queueFetcher = vi.fn(async () => ({ items: [] }));
+    await expect(fetchReviewQueue(queueFetcher)).resolves.toEqual([]);
+
+    const reviewFetcher = vi.fn(async () => ({ reps: 1 }));
+    await submitReview(reviewFetcher, 'card1', 3);
+    expect(reviewFetcher).toHaveBeenCalledWith(
+      '/api/v1/knowledge/review/card1',
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    const hotFetcher = vi.fn(async () => ({ hotspots: [{ id: 'h1', lesson_id: 'lesson', bucket_ms: 0, score: 1 }] }));
+    await expect(fetchLessonHotspots(hotFetcher, 'lesson')).resolves.toHaveLength(1);
   });
 });

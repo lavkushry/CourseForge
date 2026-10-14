@@ -37,22 +37,92 @@ func newQdrantFromEnv() *qdrantClient {
 	}
 }
 
-func (c *qdrantClient) search(ctx context.Context, lessonID string, vector []float32, limit int) ([]Chunk, error) {
+type collectionMeta struct {
+	Embedder string `json:"embedder"`
+	Dim      int    `json:"dim"`
+}
+
+func (c *qdrantClient) getCollectionMeta(ctx context.Context) (collectionMeta, error) {
+	var meta collectionMeta
+	if c == nil {
+		return meta, nil
+	}
+	url := fmt.Sprintf("%s/collections/%s", c.base, c.collection)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return meta, err
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return meta, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return meta, nil
+	}
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode != http.StatusOK {
+		return meta, fmt.Errorf("qdrant collection status %d", resp.StatusCode)
+	}
+	var parsed struct {
+		Result struct {
+			Config struct {
+				Params struct {
+					Vectors struct {
+						Size int `json:"size"`
+					} `json:"vectors"`
+				} `json:"params"`
+			} `json:"config"`
+			PayloadSchema map[string]any `json:"payload_schema"`
+			// Collection-level metadata written by the worker.
+			Metadata map[string]any `json:"metadata"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return meta, err
+	}
+	meta.Dim = parsed.Result.Config.Params.Vectors.Size
+	if parsed.Result.Metadata != nil {
+		meta.Embedder = asString(parsed.Result.Metadata["embedder"])
+		if d := asInt(parsed.Result.Metadata["dim"]); d > 0 {
+			meta.Dim = d
+		}
+	}
+	return meta, nil
+}
+
+func (c *qdrantClient) search(ctx context.Context, lessonID string, vector []float32, limit int, embedder string, dim int) ([]Chunk, error) {
 	if c == nil || len(vector) == 0 || lessonID == "" {
 		return nil, nil
 	}
 	if limit < 1 {
 		limit = 6
 	}
+	if embedder != "" {
+		meta, err := c.getCollectionMeta(ctx)
+		if err == nil && meta.Embedder != "" && !SameEmbedder(meta.Embedder, embedder) {
+			return nil, fmt.Errorf("embedder mismatch: collection=%s query=%s", meta.Embedder, embedder)
+		}
+		if dim > 0 && meta.Dim > 0 && meta.Dim != dim {
+			return nil, fmt.Errorf("embed dim mismatch: collection=%d query=%d", meta.Dim, dim)
+		}
+		if dim > 0 && len(vector) != dim {
+			return nil, fmt.Errorf("vector dim %d != expected %d", len(vector), dim)
+		}
+	}
+	must := []map[string]any{
+		{"key": "lesson_id", "match": map[string]any{"value": lessonID}},
+	}
+	if embedder != "" {
+		must = append(must, map[string]any{
+			"key": "embedder", "match": map[string]any{"value": embedder},
+		})
+	}
 	body := map[string]any{
 		"vector":       vector,
 		"limit":        limit,
 		"with_payload": true,
-		"filter": map[string]any{
-			"must": []map[string]any{
-				{"key": "lesson_id", "match": map[string]any{"value": lessonID}},
-			},
-		},
+		"filter":       map[string]any{"must": must},
 	}
 	raw, _ := json.Marshal(body)
 	url := fmt.Sprintf("%s/collections/%s/points/search", c.base, c.collection)
@@ -84,6 +154,11 @@ func (c *qdrantClient) search(ctx context.Context, lessonID string, vector []flo
 		p := hit.Payload
 		if p == nil {
 			continue
+		}
+		if embedder != "" {
+			if pe := asString(p["embedder"]); pe != "" && !SameEmbedder(pe, embedder) {
+				continue
+			}
 		}
 		chunk := Chunk{
 			ID:      asString(p["chunk_id"]),

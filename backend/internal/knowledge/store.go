@@ -376,10 +376,10 @@ func (s *Service) StoreIngest(ctx context.Context, id, workerID string, fence in
 			word_count=EXCLUDED.word_count, segment_count=EXCLUDED.segment_count, keyframe_count=EXCLUDED.keyframe_count,
 			updated_at=now()
 		RETURNING lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
-			chapter_count,chunk_count,embedder,created_at,updated_at`,
+			chapter_count,chunk_count,embedder,embed_dim,created_at,updated_at`,
 		lessonID, id, asr, scene, ocr, len(payload.Words), len(payload.Segments), len(payload.Keyframes),
 	).Scan(&doc.LessonID, &doc.JobID, &doc.Status, &doc.ASREngine, &doc.SceneEngine, &doc.OCREngine,
-		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder,
+		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder, &doc.EmbedDim,
 		&doc.CreatedAt, &doc.UpdatedAt)
 	if err != nil {
 		return Document{}, err
@@ -392,7 +392,11 @@ func (s *Service) StoreIndex(ctx context.Context, id, workerID string, fence int
 		return Document{}, ErrInvalid
 	}
 	embedder := strings.TrimSpace(payload.Embedder)
-	if len(embedder) > 64 {
+	if len(embedder) > 128 {
+		return Document{}, ErrInvalid
+	}
+	embedDim := payload.EmbedDim
+	if embedDim < 0 || embedDim > 8192 {
 		return Document{}, ErrInvalid
 	}
 	tx, err := s.Pool.Begin(ctx)
@@ -480,13 +484,13 @@ func (s *Service) StoreIndex(ctx context.Context, id, workerID string, fence int
 	var doc Document
 	err = tx.QueryRow(ctx, `
 		UPDATE knowledge_documents SET
-			chapter_count=$2, chunk_count=$3, embedder=$4, updated_at=now()
+			chapter_count=$2, chunk_count=$3, embedder=$4, embed_dim=$5, updated_at=now()
 		WHERE lesson_id=$1
 		RETURNING lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
-			chapter_count,chunk_count,embedder,created_at,updated_at`,
-		lessonID, len(payload.Chapters), len(payload.Chunks), embedder,
+			chapter_count,chunk_count,embedder,embed_dim,created_at,updated_at`,
+		lessonID, len(payload.Chapters), len(payload.Chunks), embedder, embedDim,
 	).Scan(&doc.LessonID, &doc.JobID, &doc.Status, &doc.ASREngine, &doc.SceneEngine, &doc.OCREngine,
-		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder,
+		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder, &doc.EmbedDim,
 		&doc.CreatedAt, &doc.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Document{}, ErrDenied
@@ -494,7 +498,14 @@ func (s *Service) StoreIndex(ctx context.Context, id, workerID string, fence int
 	if err != nil {
 		return Document{}, err
 	}
-	return doc, tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return Document{}, err
+	}
+	// Concept graph / recall / flashcards / freshness — best-effort after index commit.
+	if matErr := s.materializeLearning(ctx, lessonID); matErr != nil {
+		return doc, matErr
+	}
+	return doc, nil
 }
 
 func (s *Service) GetLesson(ctx context.Context, p identity.Principal, lessonID string) (LessonKnowledge, error) {
@@ -509,12 +520,12 @@ func (s *Service) GetLesson(ctx context.Context, p identity.Principal, lessonID 
 	var out LessonKnowledge
 	err = tx.QueryRow(ctx, `
 		SELECT lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
-			chapter_count,chunk_count,embedder,created_at,updated_at
+			chapter_count,chunk_count,embedder,embed_dim,created_at,updated_at
 		FROM knowledge_documents WHERE lesson_id=$1`, lessonID).Scan(
 		&out.Document.LessonID, &out.Document.JobID, &out.Document.Status, &out.Document.ASREngine,
 		&out.Document.SceneEngine, &out.Document.OCREngine, &out.Document.WordCount, &out.Document.SegmentCount,
 		&out.Document.KeyframeCount, &out.Document.ChapterCount, &out.Document.ChunkCount, &out.Document.Embedder,
-		&out.Document.CreatedAt, &out.Document.UpdatedAt)
+		&out.Document.EmbedDim, &out.Document.CreatedAt, &out.Document.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		out.Document = Document{LessonID: lessonID, Status: "pending"}
 		out.Words = []Word{}

@@ -1,8 +1,8 @@
 from knowledge_worker.chaptering import text_tiling_chapters
 from knowledge_worker.chunking import build_multimodal_chunks
-from knowledge_worker.embedder import HashEmbedder, cosine
+from knowledge_worker.embedder import HashEmbedder, build_embedder, cosine
 from knowledge_worker.index_pipeline import build_index_artifacts
-from knowledge_worker.qdrant_store import ensure_knowledge_collection
+from knowledge_worker.qdrant_store import EmbedderMismatchError, ensure_knowledge_collection
 from knowledge_worker.reranker import LexicalReranker
 from knowledge_worker.retrieve import (
     RankedHit,
@@ -131,18 +131,45 @@ def test_qdrant_collection_is_courseforge_knowledge():
     class FakeClient:
         def __init__(self) -> None:
             self.created = None
+            self.meta = {}
 
         def collection_exists(self, name: str) -> bool:
-            return False
+            return self.created is not None
 
-        def create_collection(self, collection_name: str, vectors_config) -> None:
+        def create_collection(self, collection_name: str, vectors_config, metadata=None) -> None:
             self.created = collection_name
+            self.meta = metadata or {}
+
+        def get_collection(self, name: str):
+            class Info:
+                metadata = self.meta
+
+            return Info()
 
     client = FakeClient()
-    ensure_knowledge_collection(client, dimension=8)
+    ensure_knowledge_collection(client, dimension=8, embedder="ollama:qwen3-embedding:0.6b")
     assert client.created == "courseforge_knowledge"
+    assert client.meta.get("embedder") == "ollama:qwen3-embedding:0.6b"
     try:
         ensure_knowledge_collection(client, dimension=8, collection="courseforge_chunks")
         raise AssertionError("should refuse legacy collection")
+    except ValueError:
+        pass
+    try:
+        ensure_knowledge_collection(
+            client, dimension=8, embedder="hash"
+        )
+        raise AssertionError("should refuse embedder mix")
+    except EmbedderMismatchError:
+        pass
+
+
+def test_build_embedder_hash_is_explicit_fallback():
+    emb = build_embedder("hash", dim=16)
+    assert emb.name == "hash"
+    assert emb.dimension() == 16
+    try:
+        build_embedder("not-a-real-embedder")
+        raise AssertionError("unknown kind must not silently become hash")
     except ValueError:
         pass

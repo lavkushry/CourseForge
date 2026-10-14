@@ -352,6 +352,150 @@ func TestHashEmbedStable(t *testing.T) {
 	}
 }
 
+func TestLearningGraphRecallFeedbackAndFreshness(t *testing.T) {
+	f := setup(t)
+	f.s.Embedder = HashEmbedder{Dim: 32}
+	f.s.Qdrant = nil
+
+	created := f.call("admin", "POST", "/api/v1/knowledge/jobs", "learn1", EnqueueRequest{
+		LessonID: "lesson",
+		Payload:  json.RawMessage(`{}`),
+	})
+	expect(t, created, 202)
+	claim := f.worker("POST", "/api/v1/knowledge/worker/claim", ClaimRequest{WorkerID: "w1", LeaseSec: 60})
+	expect(t, claim, 200)
+	leased := read[Job](t, claim)
+
+	ingest := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/ingest", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"ingest": IngestPayload{
+			ASREngine: "mock", SceneEngine: "mock", OCREngine: "mock",
+			Segments: []Segment{
+				{Ordinal: 0, StartMs: 0, EndMs: 4000, Text: "docker containers package applications"},
+				{Ordinal: 1, StartMs: 4000, EndMs: 8000, Text: "run docker-compose up for local stacks"},
+			},
+			Keyframes: []Keyframe{
+				{Ordinal: 0, TimeMs: 4500, Path: "kf0.jpg", OCR: &OCRHit{Text: "docker-compose up -d", Tags: []string{"command"}}},
+			},
+		},
+	})
+	expect(t, ingest, 200)
+
+	index := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/index", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"embedder":  "hash",
+		"embed_dim": 32,
+		"chapters": []Chapter{
+			{Ordinal: 0, StartMs: 0, EndMs: 4000, Title: "Containers", Summary: "docker containers"},
+			{Ordinal: 1, StartMs: 4000, EndMs: 8000, Title: "Compose", Summary: "local stacks"},
+		},
+		"chunks": []Chunk{
+			{ID: "kc_1", Ordinal: 0, StartMs: 0, EndMs: 4000, Text: "docker containers package applications", Source: "transcript"},
+			{ID: "kc_2", Ordinal: 1, StartMs: 4000, EndMs: 8000, Text: "run docker-compose up for local stacks", Source: "multimodal"},
+		},
+	})
+	expect(t, index, 200)
+
+	concepts := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/concepts", "", nil)
+	expect(t, concepts, 200)
+	var conceptBody struct {
+		Concepts []Concept       `json:"concepts"`
+		Prereqs  []ConceptPrereq `json:"prereqs"`
+	}
+	if err := json.Unmarshal(concepts.Body.Bytes(), &conceptBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(conceptBody.Concepts) != 2 || len(conceptBody.Prereqs) != 1 {
+		t.Fatalf("concepts=%d prereqs=%d", len(conceptBody.Concepts), len(conceptBody.Prereqs))
+	}
+
+	recall := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/recall", "", nil)
+	expect(t, recall, 200)
+	var recallBody struct {
+		Questions []RecallQuestion `json:"questions"`
+	}
+	if err := json.Unmarshal(recall.Body.Bytes(), &recallBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(recallBody.Questions) != 2 || recallBody.Questions[0].Prompt == "" {
+		t.Fatalf("unexpected recall %+v", recallBody.Questions)
+	}
+
+	fresh := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/freshness", "", nil)
+	expect(t, fresh, 200)
+	var freshBody struct {
+		Flags []FreshnessFlag `json:"flags"`
+	}
+	if err := json.Unmarshal(fresh.Body.Bytes(), &freshBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(freshBody.Flags) == 0 {
+		t.Fatal("expected freshness flags for docker-compose")
+	}
+
+	fb := f.call("alice", "POST", "/api/v1/knowledge/lessons/lesson/feedback", "", FeedbackEventRequest{
+		Kind: "rewind", TimeMs: 4500, Payload: json.RawMessage(`{}`),
+	})
+	expect(t, fb, 200)
+
+	denied := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/hotspots", "", nil)
+	expect(t, denied, 404)
+	hotspots := f.call("admin", "GET", "/api/v1/knowledge/lessons/lesson/hotspots", "", nil)
+	expect(t, hotspots, 200)
+	var hotBody struct {
+		Hotspots []ConfusionHotspot `json:"hotspots"`
+	}
+	if err := json.Unmarshal(hotspots.Body.Bytes(), &hotBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(hotBody.Hotspots) != 1 || hotBody.Hotspots[0].RewindCount < 1 {
+		t.Fatalf("unexpected hotspots %+v", hotBody.Hotspots)
+	}
+
+	ann := f.call("admin", "POST", "/api/v1/knowledge/lessons/lesson/hotspots/"+hotBody.Hotspots[0].ID+"/annotations", "", map[string]any{
+		"author_type": "creator",
+		"body":        "Add a callout about docker compose v2.",
+	})
+	expect(t, ann, 201)
+
+	queue := f.call("alice", "GET", "/api/v1/knowledge/review-queue", "", nil)
+	expect(t, queue, 200)
+	var queueBody struct {
+		Items []ReviewQueueItem `json:"items"`
+	}
+	if err := json.Unmarshal(queue.Body.Bytes(), &queueBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(queueBody.Items) == 0 {
+		t.Fatal("expected review queue items from flashcards")
+	}
+	reviewed := f.call("alice", "POST", "/api/v1/knowledge/review/"+queueBody.Items[0].Card.ID, "", map[string]any{"rating": 3})
+	expect(t, reviewed, 200)
+	card := read[FSRSCard](t, reviewed)
+	if card.Reps < 1 || card.State == "" {
+		t.Fatalf("unexpected review state %+v", card)
+	}
+
+	bridge, err := f.s.ListConceptsForSkillGap(context.Background(), "lesson")
+	if err != nil || len(bridge) != 2 {
+		t.Fatalf("skill gap bridge %+v err=%v", bridge, err)
+	}
+}
+
+func TestQueryEmbedRespectsHashFallback(t *testing.T) {
+	t.Setenv("CF_KNOWLEDGE_EMBEDDER", "hash")
+	s := &Service{Embedder: AIEmbedder{Model: "unused", Fn: func(ctx context.Context, text string) ([]float32, error) {
+		t.Fatal("ollama must not be called in hash mode")
+		return nil, nil
+	}}}
+	vec, name, dim := s.queryEmbed(context.Background(), "", "hello world")
+	if name != "hash" || dim != 384 || len(vec) != 384 {
+		t.Fatalf("name=%s dim=%d len=%d", name, dim, len(vec))
+	}
+}
+
 func TestReciprocalRankFusionPrefersOverlap(t *testing.T) {
 	bm25 := []Chunk{{ID: "a", Text: "a"}, {ID: "b", Text: "b"}}
 	dense := []Chunk{{ID: "b", Text: "b"}, {ID: "c", Text: "c"}}
