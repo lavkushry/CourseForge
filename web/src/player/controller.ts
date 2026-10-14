@@ -1,5 +1,13 @@
 import { ApiError, errorMessage, isAbort } from '../api';
-import type { Lesson, PlaybackTransport, PlayerPreferences, Pulse, PulseAck, PulseKind } from '../contracts';
+import type {
+  Lesson,
+  PlaybackSession,
+  PlaybackTransport,
+  PlayerPreferences,
+  Pulse,
+  PulseAck,
+  PulseKind,
+} from '../contracts';
 import { browserClock } from './clock';
 import type { Clock, Timer } from './clock';
 import { ProgressDelivery } from './delivery';
@@ -7,9 +15,10 @@ import type { DeliveryStatus } from './delivery';
 import { EndNavigation } from './navigation';
 import { SessionOwnership } from './ownership';
 import { PlayerRecovery } from './recovery';
-import type { VideoPort, VideoSnapshot } from './video';
+import type { LoadMediaOptions, VideoPort, VideoSnapshot } from './video';
 
-export type PlayerState = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'suspended' | 'lost' | 'conflict' | 'error' | 'unauthenticated';
+export type PlayerState =
+  'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'suspended' | 'lost' | 'conflict' | 'error' | 'unauthenticated';
 
 interface ControllerOptions {
   video: VideoPort;
@@ -25,6 +34,8 @@ interface ControllerOptions {
   saved(ack: PulseAck): void;
   delivery(status: DeliveryStatus): void;
   countdown(seconds: number | null): void;
+  sessionOpened?(sessionId: string): void;
+  sessionClosed?(): void;
   clock?: Clock;
 }
 
@@ -60,10 +71,18 @@ export class PlayerController {
     this.navigation = new EndNavigation(options.next, options.countdown, this.clock);
   }
 
-  get state(): PlayerState { return this.status; }
-  get owns(): boolean { return this.current?.ownership.owns ?? false; }
-  get lesson(): Lesson | null { return this.current?.lesson ?? null; }
-  get position(): number { return this.current ? this.samplePosition(this.current) : 0; }
+  get state(): PlayerState {
+    return this.status;
+  }
+  get owns(): boolean {
+    return this.current?.ownership.owns ?? false;
+  }
+  get lesson(): Lesson | null {
+    return this.current?.lesson ?? null;
+  }
+  get position(): number {
+    return this.current ? this.samplePosition(this.current) : 0;
+  }
 
   async open(lesson: Lesson, takeOver = false, startPosition?: number): Promise<void> {
     const generation = ++this.generation;
@@ -75,10 +94,23 @@ export class PlayerController {
     if (generation !== this.generation) return;
     const scope = new AbortController();
     const current: CurrentLesson = {
-      generation, scope, lesson, ownership: new SessionOwnership(this.options.transport),
-      delivery: null, recovery: null, sequence: 0, heartbeat: undefined, watchdog: undefined,
+      generation,
+      scope,
+      lesson,
+      ownership: new SessionOwnership(this.options.transport),
+      delivery: null,
+      recovery: null,
+      sequence: 0,
+      heartbeat: undefined,
+      watchdog: undefined,
       baseline: { time: this.clock.now(), video: this.options.video.snapshot(), running: false },
-      position: 0, lastAdvance: this.clock.now(), wantsPlay: false, reloading: true, loaded: false, claiming: false, suspension: null,
+      position: 0,
+      lastAdvance: this.clock.now(),
+      wantsPlay: false,
+      reloading: true,
+      loaded: false,
+      claiming: false,
+      suspension: null,
     };
     this.current = current;
     try {
@@ -87,22 +119,37 @@ export class PlayerController {
       current.position = session.position;
       current.sequence = session.sequence;
       this.options.preferencesLoaded(session.preferences);
+      this.options.sessionOpened?.(session.id);
       this.navigation.preference(session.preferences.autoplay);
       this.createDelivery(current);
       this.bindVideo(current);
       current.recovery = new PlayerRecovery({
         allowed: () => this.canPlay(current),
         reload: signal => this.reload(current, signal),
-        onAttempt: attempt => { if (this.isCurrent(current)) this.setState('loading', `Reconnecting video (${attempt}/3)…`); },
+        onAttempt: attempt => {
+          if (this.isCurrent(current)) this.setState('loading', `Reconnecting video (${attempt}/3)…`);
+        },
         onFailure: error => this.failure(current, error),
         clock: this.clock,
       });
-      await this.options.video.load(session.media_url, session.position, session.preferences.speed, lesson.captions ?? [], scope.signal);
+      await this.options.video.load(
+        session.media_url,
+        session.position,
+        session.preferences.speed,
+        lesson.captions ?? [],
+        scope.signal,
+        mediaOptions(session),
+      );
       if (!this.isCurrent(current)) return;
       current.loaded = true;
       current.reloading = false;
       this.resetBaseline(current);
-      this.setState('ready', session.position > 2 ? `Resume from ${formatTime(session.position)}, or restart this lesson.` : 'Ready when you are.');
+      this.setState(
+        'ready',
+        session.position > 2
+          ? `Resume from ${formatTime(session.position)}, or restart this lesson.`
+          : 'Ready when you are.',
+      );
       this.schedulePulse(current);
       this.watchdog(current);
     } catch (error) {
@@ -112,7 +159,10 @@ export class PlayerController {
         this.setState('conflict', 'Your account is playing in another window. Move playback here to continue.');
       } else if (current.recovery && current.ownership.owns && !(error instanceof ApiError && error.terminal)) {
         await current.recovery.recover(error instanceof Error ? error : new Error('The video source could not open.'));
-        if (this.isCurrent(current) && current.loaded) { this.schedulePulse(current); this.watchdog(current); }
+        if (this.isCurrent(current) && current.loaded) {
+          this.schedulePulse(current);
+          this.watchdog(current);
+        }
       } else this.failure(current, error);
     }
   }
@@ -137,7 +187,10 @@ export class PlayerController {
       await this.open(current.lesson, true, session ? this.samplePosition(current) : undefined);
       return;
     }
-    if (!session) { await this.open(current.lesson, takeOver); return; }
+    if (!session) {
+      await this.open(current.lesson, takeOver);
+      return;
+    }
     current.claiming = true;
     try {
       if (current.suspension) await current.suspension;
@@ -172,7 +225,11 @@ export class PlayerController {
     }
   }
 
-  pause(): void { this.navigation.cancel(); if (this.current) this.current.wantsPlay = false; this.options.video.pause(); }
+  pause(): void {
+    this.navigation.cancel();
+    if (this.current) this.current.wantsPlay = false;
+    this.options.video.pause();
+  }
 
   seek(position: number): void {
     this.navigation.cancel();
@@ -180,14 +237,18 @@ export class PlayerController {
     this.options.video.seek(position);
   }
 
-  restart(): void { this.seek(0); }
+  restart(): void {
+    this.seek(0);
+  }
 
   preferencesChanged(value: PlayerPreferences): void {
     this.navigation.preference(value.autoplay);
     if (this.current && this.options.video.snapshot().rate !== value.speed) this.options.video.speed(value.speed);
   }
 
-  cancelNext(): void { this.navigation.cancel(); }
+  cancelNext(): void {
+    this.navigation.cancel();
+  }
 
   async saveNow(): Promise<void> {
     if (this.current?.ownership.owns) await this.emit(this.current, 'heartbeat');
@@ -207,11 +268,20 @@ export class PlayerController {
     current.baseline.running = false;
     this.options.video.pause();
     this.clearTimers(current);
-    if (!this.requiresRecoveryAction()) this.setState('suspended', reason === 'offline' ? 'You’re offline. Reconnect, then select Resume here.' : 'Playback paused while this page was hidden. Select Resume here.');
+    if (!this.requiresRecoveryAction())
+      this.setState(
+        'suspended',
+        reason === 'offline'
+          ? 'You’re offline. Reconnect, then select Resume here.'
+          : 'Playback paused while this page was hidden. Select Resume here.',
+      );
     // Give a reachable server a brief chance to commit the final sample. Neither
     // an unavailable server nor a lost acknowledgement can fabricate watch credit.
     const cleanup = async () => {
-      await this.bounded(pending.catch(() => null), 1500);
+      await this.bounded(
+        pending.catch(() => null),
+        1500,
+      );
       current.delivery?.stop();
       await current.ownership.release(true).catch(() => undefined);
     };
@@ -237,7 +307,8 @@ export class PlayerController {
       onSaved: ack => {
         if (!this.isCurrent(current)) return;
         this.options.saved(ack);
-        if (!ack.owner) this.ownershipLost(current, 'Playback moved to another window. Select Resume here to continue.');
+        if (!ack.owner)
+          this.ownershipLost(current, 'Playback moved to another window. Select Resume here to continue.');
       },
       onError: error => {
         if (!this.isCurrent(current)) return;
@@ -245,16 +316,23 @@ export class PlayerController {
         if (terminal) this.failure(current, error);
         else this.ownershipLost(current, errorMessage(error));
       },
-      onStatus: status => { if (this.isCurrent(current)) this.options.delivery(status); },
+      onStatus: status => {
+        if (this.isCurrent(current)) this.options.delivery(status);
+      },
       clock: this.clock,
     });
   }
 
   private bindVideo(current: CurrentLesson): void {
     const video = this.options.video;
-    const on = (event: Parameters<VideoPort['on']>[0], callback: () => void) => video.on(event, () => {
-      if (this.isCurrent(current) && !current.reloading) callback();
-    }, current.scope.signal);
+    const on = (event: Parameters<VideoPort['on']>[0], callback: () => void) =>
+      video.on(
+        event,
+        () => {
+          if (this.isCurrent(current) && !current.reloading) callback();
+        },
+        current.scope.signal,
+      );
     on('play', () => {
       if (!this.canPlay(current)) {
         video.pause();
@@ -266,18 +344,30 @@ export class PlayerController {
       this.navigation.cancel();
     });
     on('playing', () => {
-      if (!this.canPlay(current)) { video.pause(); return; }
+      if (!this.canPlay(current)) {
+        video.pause();
+        return;
+      }
       current.wantsPlay = true;
       this.setState('playing', '');
       this.fire(current, 'playing');
     });
     on('pause', () => {
       current.wantsPlay = false;
-      if (current.ownership.owns) { this.fire(current, 'pause'); if (this.status !== 'error') this.setState('paused', 'Paused. Your saved position updates after server acknowledgement.'); }
+      if (current.ownership.owns) {
+        this.fire(current, 'pause');
+        if (this.status !== 'error')
+          this.setState('paused', 'Paused. Your saved position updates after server acknowledgement.');
+      }
     });
-    on('seeking', () => { this.navigation.cancel(); this.fire(current, 'seek'); });
+    on('seeking', () => {
+      this.navigation.cancel();
+      this.fire(current, 'seek');
+    });
     on('seeked', () => this.resetBaseline(current));
-    on('waiting', () => { current.baseline.running = false; });
+    on('waiting', () => {
+      current.baseline.running = false;
+    });
     on('ended', () => {
       current.wantsPlay = false;
       this.fire(current, 'ended');
@@ -300,7 +390,9 @@ export class PlayerController {
     });
     on('error', () => {
       current.baseline.running = false;
-      void current.recovery?.recover(new Error('The video connection stopped. Select Resume here if reconnection fails.'));
+      void current.recovery?.recover(
+        new Error('The video connection stopped. Select Resume here if reconnection fails.'),
+      );
     });
   }
 
@@ -312,7 +404,14 @@ export class PlayerController {
     current.reloading = true;
     current.baseline.running = false;
     try {
-      await this.options.video.load(session.media_url, position, this.options.preferences().speed, current.lesson.captions ?? [], signal);
+      await this.options.video.load(
+        session.media_url,
+        position,
+        this.options.preferences().speed,
+        current.lesson.captions ?? [],
+        signal,
+        mediaOptions(session),
+      );
       if (!this.isCurrent(current) || signal.aborted) return;
       current.loaded = true;
       current.reloading = false;
@@ -325,31 +424,45 @@ export class PlayerController {
   }
 
   private emit(current: CurrentLesson, kind: PulseKind, visible = this.options.visible()): Promise<PulseAck | null> {
-    if (!current.delivery || (!current.delivery.active && kind !== 'seek') || (!current.ownership.owns && kind !== 'seek')) return Promise.resolve(null);
+    if (
+      !current.delivery ||
+      (!current.delivery.active && kind !== 'seek') ||
+      (!current.ownership.owns && kind !== 'seek')
+    )
+      return Promise.resolve(null);
     const now = this.clock.now();
     const snapshot = this.options.video.snapshot();
     const position = this.samplePosition(current);
     const wall = Math.max(0, (now - current.baseline.time) / 1000);
     const advance = position - current.baseline.video.position;
     const rate = current.baseline.video.rate;
-    const elapsed = current.baseline.running && this.options.online() && kind !== 'seek' && advance > 0 && advance <= wall * rate + 1
-      ? Math.max(0, Math.min(20, wall, advance / rate)) : 0;
+    const elapsed =
+      current.baseline.running && this.options.online() && kind !== 'seek' && advance > 0 && advance <= wall * rate + 1
+        ? Math.max(0, Math.min(20, wall, advance / rate))
+        : 0;
     const pulse: Pulse = {
-      sequence: ++current.sequence, kind, position,
+      sequence: ++current.sequence,
+      kind,
+      position,
       playing: !snapshot.paused && snapshot.ready && this.options.online() && visible,
-      visible, elapsed_seconds: elapsed, playback_rate: snapshot.rate,
+      visible,
+      elapsed_seconds: elapsed,
+      playback_rate: snapshot.rate,
     };
     current.baseline = { time: now, video: { ...snapshot, position }, running: pulse.playing && kind !== 'seek' };
     return current.delivery.send(pulse);
   }
 
-  private fire(current: CurrentLesson, kind: PulseKind): void { void this.emit(current, kind).catch(() => undefined); }
+  private fire(current: CurrentLesson, kind: PulseKind): void {
+    void this.emit(current, kind).catch(() => undefined);
+  }
 
   private resetBaseline(current: CurrentLesson): void {
     const snapshot = this.options.video.snapshot();
     current.position = snapshot.position;
     current.baseline = {
-      time: this.clock.now(), video: snapshot,
+      time: this.clock.now(),
+      video: snapshot,
       running: this.canPlay(current) && !snapshot.paused && snapshot.ready,
     };
     current.lastAdvance = this.clock.now();
@@ -363,12 +476,15 @@ export class PlayerController {
   private schedulePulse(current: CurrentLesson): void {
     if (current.heartbeat !== undefined) this.clock.clearTimeout(current.heartbeat);
     if (!this.isCurrent(current) || !current.ownership.owns) return;
-    current.heartbeat = this.clock.setTimeout(() => {
-      current.heartbeat = undefined;
-      if (!this.isCurrent(current) || !current.ownership.owns) return;
-      this.fire(current, 'heartbeat');
-      this.schedulePulse(current);
-    }, 9000 + this.clock.random() * 2000);
+    current.heartbeat = this.clock.setTimeout(
+      () => {
+        current.heartbeat = undefined;
+        if (!this.isCurrent(current) || !current.ownership.owns) return;
+        this.fire(current, 'heartbeat');
+        this.schedulePulse(current);
+      },
+      9000 + this.clock.random() * 2000,
+    );
   }
 
   private watchdog(current: CurrentLesson): void {
@@ -403,7 +519,10 @@ export class PlayerController {
         this.setState('conflict', 'Playback is open in another window. Move playback here to continue.');
       }
     } else {
-      const message = error instanceof ApiError && error.terminal ? errorMessage(error) : `${errorMessage(error)} Select Retry lesson to try again, or return to the course.`;
+      const message =
+        error instanceof ApiError && error.terminal
+          ? errorMessage(error)
+          : `${errorMessage(error)} Select Retry lesson to try again, or return to the course.`;
       this.setState('error', message);
     }
   }
@@ -432,15 +551,22 @@ export class PlayerController {
     current.recovery?.stop();
     this.clearTimers(current);
     this.options.video.unload();
-    await this.bounded(pending.catch(() => null), keepalive ? 0 : 1500);
+    await this.bounded(
+      pending.catch(() => null),
+      keepalive ? 0 : 1500,
+    );
     current.delivery?.stop();
     await current.ownership.release(keepalive).catch(() => undefined);
+    this.options.sessionClosed?.();
   }
 
   private bounded<T>(promise: Promise<T>, delay: number): Promise<T | undefined> {
     return new Promise(resolve => {
       const timer = this.clock.setTimeout(() => resolve(undefined), delay);
-      void promise.then(value => { this.clock.clearTimeout(timer); resolve(value); });
+      void promise.then(value => {
+        this.clock.clearTimeout(timer);
+        resolve(value);
+      });
     });
   }
 
@@ -456,7 +582,17 @@ export class PlayerController {
     return this.current === current && this.generation === current.generation && !current.scope.signal.aborted;
   }
 
-  private setState(state: PlayerState, message: string): void { this.status = state; this.options.state(state, message); }
+  private setState(state: PlayerState, message: string): void {
+    this.status = state;
+    this.options.state(state, message);
+  }
+}
+
+function mediaOptions(session: PlaybackSession): LoadMediaOptions {
+  return {
+    ...(session.hls_url ? { hlsUrl: session.hls_url } : {}),
+    ...(session.poster_url ? { posterUrl: session.poster_url } : {}),
+  };
 }
 
 export function formatTime(seconds: number): string {

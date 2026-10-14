@@ -28,7 +28,7 @@
 }
 
 .filter-pill {
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: #181922;
   color: #cfd2dc;
   font-size: 0.8rem;
@@ -41,7 +41,7 @@
 
 .filter-pill:hover {
   background: #252632;
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .filter-pill.active {

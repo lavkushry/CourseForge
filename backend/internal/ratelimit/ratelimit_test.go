@@ -18,8 +18,11 @@ func TestTokenBucketAllowsBurstThenLimits(t *testing.T) {
 		Burst:   2,
 		Now:     func() time.Time { return now },
 	})
-	if !l.Allow("1.1.1.1") || !l.Allow("1.1.1.1") {
-		t.Fatal("burst not granted")
+	if !l.Allow("1.1.1.1") {
+		t.Fatal("first burst token not granted")
+	}
+	if !l.Allow("1.1.1.1") {
+		t.Fatal("second burst token not granted")
 	}
 	if l.Allow("1.1.1.1") {
 		t.Fatal("expected limit after burst")

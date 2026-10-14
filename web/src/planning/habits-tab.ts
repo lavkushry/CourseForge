@@ -74,7 +74,11 @@ export function renderHabits(host: PlanningHost): HTMLElement {
 
   card.append(tzLabel, tzInput, goalLabel, goalSelect, remLabel, remCheck, saveHabitsBtn);
 
-  if (host.currentHabits && !host.currentHabits.reminder_delivery_available && host.currentHabits.preferences.reminder_email) {
+  if (
+    host.currentHabits &&
+    !host.currentHabits.reminder_delivery_available &&
+    host.currentHabits.preferences.reminder_email
+  ) {
     const warn = document.createElement('p');
     warn.className = 'habit-warning-text';
     warn.textContent = 'Delivery is not available at this time.';

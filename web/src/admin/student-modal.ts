@@ -3,7 +3,11 @@ import type { AdminHost } from './host';
 import { button, el, initialsOf, type StudentModalTab } from './helpers';
 import type { AdminUser } from './contracts';
 
-export async function openStudentAccessModal(host: AdminHost, user: AdminUser, initialTab: StudentModalTab = 'courses'): Promise<void> {
+export async function openStudentAccessModal(
+  host: AdminHost,
+  user: AdminUser,
+  initialTab: StudentModalTab = 'courses',
+): Promise<void> {
   const dialog = el('dialog', 'learner-dialog student-access-dialog');
   const modalShell = el('div', 'student-access-modal-shell');
   dialog.append(modalShell);
@@ -25,7 +29,11 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     // Modal Top Header
     const header = el('div', 'student-modal-header');
     const identity = el('div', 'student-modal-identity');
-    const avatar = el('div', `admin-user-avatar large${user.role === 'admin' ? ' is-admin' : ''}`, initialsOf(user.name, user.email));
+    const avatar = el(
+      'div',
+      `admin-user-avatar large${user.role === 'admin' ? ' is-admin' : ''}`,
+      initialsOf(user.name, user.email),
+    );
     const meta = el('div', 'student-modal-meta');
     const titleRow = el('div', 'student-modal-title-row');
     titleRow.append(
@@ -34,12 +42,12 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
       el(
         'span',
         user.suspended ? 'badge-suspended' : user.verified ? 'badge-verified' : 'badge-unverified',
-        user.suspended ? 'Suspended' : user.verified ? 'Verified' : 'Pending Activation'
-      )
+        user.suspended ? 'Suspended' : user.verified ? 'Verified' : 'Pending Activation',
+      ),
     );
     meta.append(
       titleRow,
-      el('p', 'muted', `${user.email} · ID: ${user.id} · Joined ${new Date(user.created_at).toLocaleDateString()}`)
+      el('p', 'muted', `${user.email} · ID: ${user.id} · Joined ${new Date(user.created_at).toLocaleDateString()}`),
     );
     identity.append(avatar, meta);
 
@@ -56,7 +64,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
       host.miniKpi('Granted Courses', `${enrolledIds.size} / ${totalCatalog}`, 'book'),
       host.miniKpi('Completed Lessons', String(user.completed_lessons ?? 0), 'check-circle'),
       host.miniKpi('Accepted Watch Time', `${Math.round((user.watched_seconds || 0) / 60)} min`, 'clock'),
-      host.miniKpi('Measured Focus', `${Math.round((user.measured_focus_seconds || 0) / 60)} min`, 'target')
+      host.miniKpi('Measured Focus', `${Math.round((user.measured_focus_seconds || 0) / 60)} min`, 'target'),
     );
 
     // Sub-Tab Navigation
@@ -74,7 +82,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
           renderModal();
         },
         `student-subnav-btn${activeSubTab === st.id ? ' active' : ''}`,
-        st.icon
+        st.icon,
       );
       btn.dataset.modalTab = st.id;
       subNav.append(btn);
@@ -122,10 +130,14 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
       { id: 'restricted', label: `Restricted (${Math.max(0, host.catalogCourses.length - enrolledIds.size)})` },
     ];
     for (const f of filters) {
-      const p = button(f.label, () => {
-        courseFilter = f.id;
-        renderModal();
-      }, `admin-filter-pill${courseFilter === f.id ? ' active' : ''}`);
+      const p = button(
+        f.label,
+        () => {
+          courseFilter = f.id;
+          renderModal();
+        },
+        `admin-filter-pill${courseFilter === f.id ? ' active' : ''}`,
+      );
       filterGroup.append(p);
     }
 
@@ -136,9 +148,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         grantAllBtn.disabled = true;
         try {
           const missing = host.catalogCourses.filter(c => !enrolledIds.has(c.id));
-          await Promise.all(
-            missing.map(c => host.api.adminSetEnrollment(user.id, c.id, true))
-          );
+          await Promise.all(missing.map(c => host.api.adminSetEnrollment(user.id, c.id, true)));
           for (const c of missing) enrolledIds.add(c.id);
           syncEnrollmentCount();
           host.notice(`Granted all ${host.catalogCourses.length} courses to ${user.name}!`);
@@ -151,7 +161,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         }
       },
       'button primary small-btn',
-      'check-circle'
+      'check-circle',
     );
 
     const revokeAllBtn = button(
@@ -160,9 +170,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         revokeAllBtn.disabled = true;
         try {
           const current = Array.from(enrolledIds);
-          await Promise.all(
-            current.map(cid => host.api.adminSetEnrollment(user.id, cid, false))
-          );
+          await Promise.all(current.map(cid => host.api.adminSetEnrollment(user.id, cid, false)));
           enrolledIds.clear();
           syncEnrollmentCount();
           host.notice(`Revoked all course enrollments for ${user.name}.`);
@@ -175,7 +183,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         }
       },
       'button secondary small-btn admin-suspend-btn',
-      'ban'
+      'ban',
     );
 
     bulkGroup.append(grantAllBtn, revokeAllBtn);
@@ -211,13 +219,17 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         const info = el('div', 'course-access-info');
         const topChips = el('div', 'course-access-chips');
         topChips.append(
-          el('span', isEnrolled ? 'access-chip granted' : 'access-chip restricted', isEnrolled ? 'ACCESS GRANTED' : 'RESTRICTED'),
-          el('span', 'access-chip-lectures', `${course.lesson_count || 0} Lectures`)
+          el(
+            'span',
+            isEnrolled ? 'access-chip granted' : 'access-chip restricted',
+            isEnrolled ? 'ACCESS GRANTED' : 'RESTRICTED',
+          ),
+          el('span', 'access-chip-lectures', `${course.lesson_count || 0} Lectures`),
         );
         info.append(
           topChips,
           el('strong', 'course-access-title', course.title),
-          el('code', 'course-access-id', course.id)
+          el('code', 'course-access-id', course.id),
         );
 
         const toggleBtn = button(
@@ -242,7 +254,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
             }
           },
           `button small-btn ${isEnrolled ? 'course-toggle-enrolled' : 'course-toggle-grant'}`,
-          isEnrolled ? 'check-circle' : 'key'
+          isEnrolled ? 'check-circle' : 'key',
         );
 
         card.append(info, toggleBtn);
@@ -261,11 +273,21 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     const suspendCard = el('div', 'security-control-card');
     suspendCard.append(
       el('div', 'security-card-head', ''),
-      el('p', 'muted', 'Suspending an account immediately blocks sign-in, revokes all active browser sessions, and terminates active video playback leases.')
+      el(
+        'p',
+        'muted',
+        'Suspending an account immediately blocks sign-in, revokes all active browser sessions, and terminates active video playback leases.',
+      ),
     );
     suspendCard.firstElementChild!.append(svgIcon('ban'), el('h3', '', 'Account Access Lock & Suspension'));
     if (user.role === 'admin') {
-      suspendCard.append(el('p', 'muted', 'Administrator accounts cannot be suspended directly. Demote the account to Student first if needed.'));
+      suspendCard.append(
+        el(
+          'p',
+          'muted',
+          'Administrator accounts cannot be suspended directly. Demote the account to Student first if needed.',
+        ),
+      );
     } else {
       const suspendBtn = button(
         user.suspended ? 'Restore Student Account Access' : 'Suspend Student Account',
@@ -283,7 +305,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
           }
         },
         `button ${user.suspended ? 'primary' : 'admin-suspend-btn'}`,
-        user.suspended ? 'check-circle' : 'ban'
+        user.suspended ? 'check-circle' : 'ban',
       );
       suspendCard.append(suspendBtn);
     }
@@ -292,7 +314,11 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     const sessionCard = el('div', 'security-control-card');
     sessionCard.append(
       el('div', 'security-card-head', ''),
-      el('p', 'muted', 'Force sign-out across all active desktop and mobile devices. The student will be required to authenticate again.')
+      el(
+        'p',
+        'muted',
+        'Force sign-out across all active desktop and mobile devices. The student will be required to authenticate again.',
+      ),
     );
     sessionCard.firstElementChild!.append(svgIcon('log-out'), el('h3', '', 'Active Device Sessions'));
     const revokeSessBtn = button(
@@ -309,7 +335,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         }
       },
       'button secondary',
-      'log-out'
+      'log-out',
     );
     sessionCard.append(revokeSessBtn);
 
@@ -317,9 +343,13 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     const linkCard = el('div', 'security-control-card');
     linkCard.append(
       el('div', 'security-card-head', ''),
-      el('p', 'muted', user.verified
-        ? 'Generate a signed 1-hour one-time password recovery URL for this student.'
-        : 'Generate a signed 24-hour one-time account activation URL for this pending student.')
+      el(
+        'p',
+        'muted',
+        user.verified
+          ? 'Generate a signed 1-hour one-time password recovery URL for this student.'
+          : 'Generate a signed 24-hour one-time account activation URL for this pending student.',
+      ),
     );
     linkCard.firstElementChild!.append(svgIcon('link'), el('h3', '', 'One-Time Recovery / Activation Link'));
     const issueLinkBtn = button(
@@ -337,17 +367,22 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         }
       },
       'button primary',
-      'link'
+      'link',
     );
     linkCard.append(issueLinkBtn);
     if (generatedLink) {
       const linkBox = el('div', 'admin-generated-link-banner');
       linkBox.append(
         el('code', 'link-code-box', generatedLink.url),
-        button('Copy URL', () => {
-          void navigator.clipboard?.writeText(generatedLink!.url);
-          host.notice('One-time account URL copied to clipboard!');
-        }, 'button secondary small-btn', 'copy')
+        button(
+          'Copy URL',
+          () => {
+            void navigator.clipboard?.writeText(generatedLink!.url);
+            host.notice('One-time account URL copied to clipboard!');
+          },
+          'button secondary small-btn',
+          'copy',
+        ),
       );
       linkCard.append(linkBox);
     }
@@ -356,7 +391,11 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     const roleCard = el('div', 'security-control-card');
     roleCard.append(
       el('div', 'security-card-head', ''),
-      el('p', 'muted', 'Promote a verified student to Administrator or demote an Administrator to Student. Requires your current administrator password.')
+      el(
+        'p',
+        'muted',
+        'Promote a verified student to Administrator or demote an Administrator to Student. Requires your current administrator password.',
+      ),
     );
     roleCard.firstElementChild!.append(svgIcon('shield'), el('h3', '', 'Role & Privilege Assignment'));
     const roleForm = el('form', 'security-role-form');
@@ -378,7 +417,7 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
     roleSubmit.append(svgIcon('shield'), el('span', '', 'Update Account Role'));
 
     roleForm.append(roleSelect, passInput, roleSubmit);
-    roleForm.addEventListener('submit', async (ev) => {
+    roleForm.addEventListener('submit', async ev => {
       ev.preventDefault();
       const targetRole = roleSelect.value as 'student' | 'admin';
       const pwd = passInput.value;
@@ -421,7 +460,8 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         progSec.append(el('p', 'muted', 'No lesson progress recorded for this student yet.'));
       } else {
         const tbl = el('table', 'admin-table');
-        tbl.innerHTML = '<thead><tr><th>Lesson</th><th>Course</th><th>Progress</th><th>Status</th><th>Updated</th></tr></thead>';
+        tbl.innerHTML =
+          '<thead><tr><th>Lesson</th><th>Course</th><th>Progress</th><th>Status</th><th>Updated</th></tr></thead>';
         const tb = el('tbody');
         for (const item of prog.items) {
           const tr = el('tr');
@@ -445,7 +485,8 @@ export async function openStudentAccessModal(host: AdminHost, user: AdminUser, i
         sessSec.append(el('p', 'muted', 'No login sessions recorded.'));
       } else {
         const tbl = el('table', 'admin-table');
-        tbl.innerHTML = '<thead><tr><th>Device / Browser</th><th>IP Address</th><th>Last Seen</th><th>State</th></tr></thead>';
+        tbl.innerHTML =
+          '<thead><tr><th>Device / Browser</th><th>IP Address</th><th>Last Seen</th><th>State</th></tr></thead>';
         const tb = el('tbody');
         for (const sItem of sess.items) {
           const tr = el('tr');

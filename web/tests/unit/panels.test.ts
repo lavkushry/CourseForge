@@ -85,9 +85,7 @@ describe('Learning Paths contracts', () => {
           title: 'Infrastructure as Code Foundations',
           objectives: ['Deploy terraform state', 'Configure VPC peering'],
           completed: true,
-          sources: [
-            { lesson_id: 'l_10', course_id: 'c1', start: 120, title: 'Terraform Modules' },
-          ],
+          sources: [{ lesson_id: 'l_10', course_id: 'c1', start: 120, title: 'Terraform Modules' }],
           prerequisites: [],
         },
         {
@@ -114,7 +112,17 @@ describe('Learning Paths contracts', () => {
   it('parses learning paths collection and cursor with default revision fallback', () => {
     const raw = {
       paths: [
-        { id: 'p1', goal: 'Goal 1', course_ids: ['c1'], steps: [], provenance: 'legacy_import', completed_steps: 0, completion_percent: 0, created_at: '', updated_at: '' },
+        {
+          id: 'p1',
+          goal: 'Goal 1',
+          course_ids: ['c1'],
+          steps: [],
+          provenance: 'legacy_import',
+          completed_steps: 0,
+          completion_percent: 0,
+          created_at: '',
+          updated_at: '',
+        },
       ],
       next_cursor: 'cursor_xyz',
     };
@@ -149,11 +157,15 @@ describe('Admin Contracts', () => {
         active_sessions: 5,
       },
       recent_activity_sessions: [
-        { name: 'Learner One', email: 'one@example.com', title: 'Intro to Go', activity_seconds: 400, last_active: '2026-10-12T15:00:00Z' },
+        {
+          name: 'Learner One',
+          email: 'one@example.com',
+          title: 'Intro to Go',
+          activity_seconds: 400,
+          last_active: '2026-10-12T15:00:00Z',
+        },
       ],
-      funnels: [
-        { title: 'Full Stack Go', enrolled: 50, started: 35 },
-      ],
+      funnels: [{ title: 'Full Stack Go', enrolled: 50, started: 35 }],
       activity_basis: 'heartbeat_v2',
       completion_basis: 'watch_or_mark',
       server_now: '2026-10-12T18:00:00Z',
@@ -169,8 +181,24 @@ describe('Admin Contracts', () => {
   it('parses admin user directory listing', () => {
     const raw = {
       users: [
-        { id: 'u_1', email: 'admin@example.com', name: 'Admin Boss', role: 'admin', verified: true, suspended: false, created_at: '2026-01-01T00:00:00Z' },
-        { id: 'u_2', email: 'student@example.com', name: 'Student One', role: 'student', verified: true, suspended: false, created_at: '2026-02-01T00:00:00Z' },
+        {
+          id: 'u_1',
+          email: 'admin@example.com',
+          name: 'Admin Boss',
+          role: 'admin',
+          verified: true,
+          suspended: false,
+          created_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: 'u_2',
+          email: 'student@example.com',
+          name: 'Student One',
+          role: 'student',
+          verified: true,
+          suspended: false,
+          created_at: '2026-02-01T00:00:00Z',
+        },
       ],
       next_cursor: null,
     };

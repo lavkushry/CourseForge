@@ -1,6 +1,9 @@
 import type { HttpClient } from './http';
 
-export function aiStatus(client: HttpClient, signal?: AbortSignal): Promise<{
+export function aiStatus(
+  client: HttpClient,
+  signal?: AbortSignal,
+): Promise<{
   pgvector_active: boolean;
   vector_dimensions: number;
   embeddings_count: number;

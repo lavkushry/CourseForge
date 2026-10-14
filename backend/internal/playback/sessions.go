@@ -103,7 +103,21 @@ func (s *Service) open(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	write(w, 201, map[string]any{"id": id, "media_url": fmt.Sprintf("/api/v1/playback/sessions/%s/media?t=%s", id, mediaToken), "position": pos, "sequence": 0, "preferences": prefs, "owner": true})
+	payload := map[string]any{
+		"id":        id,
+		"media_url": fmt.Sprintf("/api/v1/playback/sessions/%s/media?t=%s", id, mediaToken),
+		"position":  pos, "sequence": 0, "preferences": prefs, "owner": true,
+	}
+	lookup, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	master, poster, _ := s.HLSPaths(lookup, body.LessonID)
+	if master != "" {
+		payload["hls_url"] = fmt.Sprintf("/api/v1/playback/sessions/%s/hls/master.m3u8?t=%s", id, mediaToken)
+	}
+	if poster != "" {
+		payload["poster_url"] = fmt.Sprintf("/api/v1/playback/sessions/%s/poster?t=%s", id, mediaToken)
+	}
+	write(w, 201, payload)
 }
 
 func loadSession(ctx context.Context, tx pgx.Tx, p identity.Principal, id string) (session, error) {

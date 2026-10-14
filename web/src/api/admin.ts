@@ -33,11 +33,7 @@ export function adminLearnerSummaries(
   return client.request(`/admin/learner-reports?${query}`, signal ? { signal } : {}).then(parseAdminUsers);
 }
 
-export function adminUserDetail(
-  client: HttpClient,
-  userId: string,
-  signal?: AbortSignal,
-): Promise<AdminUserDetail> {
+export function adminUserDetail(client: HttpClient, userId: string, signal?: AbortSignal): Promise<AdminUserDetail> {
   return client
     .request(`/admin/users/${encodeURIComponent(userId)}`, signal ? { signal } : {})
     .then(parseAdminUserDetail);
@@ -200,9 +196,7 @@ export async function exportReport(
     const msg =
       isRecord(errJson) && typeof errJson.detail === 'string'
         ? errJson.detail
-        : isRecord(errJson) &&
-            isRecord(errJson.error) &&
-            typeof errJson.error.message === 'string'
+        : isRecord(errJson) && isRecord(errJson.error) && typeof errJson.error.message === 'string'
           ? errJson.error.message
           : `Export failed (${res.status})`;
     throw new ApiError(msg, res.status);

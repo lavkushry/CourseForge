@@ -108,8 +108,10 @@ export function parseAdminOverview(value: unknown): AdminOverview {
       lectures: Number(s.lectures || 0),
       active_sessions: Number(s.active_sessions || 0),
     },
-    recent_activity_sessions: Array.isArray(d.recent_activity_sessions) ? d.recent_activity_sessions as Array<Record<string, unknown>> : [],
-    funnels: Array.isArray(d.funnels) ? d.funnels as Array<Record<string, unknown>> : [],
+    recent_activity_sessions: Array.isArray(d.recent_activity_sessions)
+      ? (d.recent_activity_sessions as Array<Record<string, unknown>>)
+      : [],
+    funnels: Array.isArray(d.funnels) ? (d.funnels as Array<Record<string, unknown>>) : [],
     activity_basis: String(d.activity_basis || ''),
     completion_basis: String(d.completion_basis || ''),
     server_now: String(d.server_now || ''),
@@ -129,11 +131,15 @@ export function parseAdminUserItem(u: Record<string, unknown>): AdminUser {
     ...(u.completed_lessons !== undefined ? { completed_lessons: Number(u.completed_lessons || 0) } : {}),
     ...(u.activity_seconds !== undefined ? { activity_seconds: Number(u.activity_seconds || 0) } : {}),
     ...(u.watched_seconds !== undefined ? { watched_seconds: Number(u.watched_seconds || 0) } : {}),
-    ...(u.measured_focus_seconds !== undefined ? { measured_focus_seconds: Number(u.measured_focus_seconds || 0) } : {}),
+    ...(u.measured_focus_seconds !== undefined
+      ? { measured_focus_seconds: Number(u.measured_focus_seconds || 0) }
+      : {}),
     ...(u.note_count !== undefined ? { note_count: Number(u.note_count || 0) } : {}),
     ...(u.bookmark_count !== undefined ? { bookmark_count: Number(u.bookmark_count || 0) } : {}),
     ...(u.quiz_attempts !== undefined ? { quiz_attempts: Number(u.quiz_attempts || 0) } : {}),
-    ...(u.topic_assessment_attempts !== undefined ? { topic_assessment_attempts: Number(u.topic_assessment_attempts || 0) } : {}),
+    ...(u.topic_assessment_attempts !== undefined
+      ? { topic_assessment_attempts: Number(u.topic_assessment_attempts || 0) }
+      : {}),
     ...(u.review_attempts !== undefined ? { review_attempts: Number(u.review_attempts || 0) } : {}),
     ...(u.last_seen !== undefined ? { last_seen: typeof u.last_seen === 'string' ? u.last_seen : null } : {}),
   };
@@ -154,7 +160,7 @@ export function parseAdminUsers(value: unknown): { users: AdminUser[]; next_curs
 export function parseAdminUserDetail(value: unknown): AdminUserDetail {
   if (!value || typeof value !== 'object') throw new ContractError('admin user detail');
   const d = value as Record<string, unknown>;
-  const u = (d.user && typeof d.user === 'object') ? d.user as Record<string, unknown> : {};
+  const u = d.user && typeof d.user === 'object' ? (d.user as Record<string, unknown>) : {};
   const enrollments = Array.isArray(d.enrollments) ? d.enrollments.map(String) : [];
   return {
     user: parseAdminUserItem(u),

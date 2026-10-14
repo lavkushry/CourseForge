@@ -72,6 +72,8 @@ export interface PlayerPreferences {
 export interface PlaybackSession {
   id: string;
   media_url: string;
+  hls_url?: string;
+  poster_url?: string;
   position: number;
   sequence: number;
   preferences: PlayerPreferences;
@@ -107,7 +109,12 @@ export interface ClaimResponse {
 }
 
 export interface PlaybackTransport {
-  create(lessonId: string, takeOver: boolean, startPosition: number | undefined, signal: AbortSignal): Promise<PlaybackSession>;
+  create(
+    lessonId: string,
+    takeOver: boolean,
+    startPosition: number | undefined,
+    signal: AbortSignal,
+  ): Promise<PlaybackSession>;
   pulse(sessionId: string, pulse: Pulse, signal: AbortSignal): Promise<PulseAck>;
   release(sessionId: string, options?: { keepalive?: boolean }): Promise<void>;
   claim(sessionId: string, takeOver: boolean, signal: AbortSignal): Promise<ClaimResponse>;

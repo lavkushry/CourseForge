@@ -8,7 +8,9 @@
   background: #121521;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .catalog-search > div:focus-within {
@@ -29,7 +31,9 @@
   height: 18px;
 }
 
-.catalog-search input, .catalog-search input:focus, .catalog-search input:focus-visible {
+.catalog-search input,
+.catalog-search input:focus,
+.catalog-search input:focus-visible {
   border: none;
   outline: none;
   box-shadow: none;
@@ -53,7 +57,9 @@
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: #8e8e93;
-  transition: border-color 0.18s ease, width 0.2s ease;
+  transition:
+    border-color 0.18s ease,
+    width 0.2s ease;
 }
 
 .lms-header-search:focus-within {
@@ -115,7 +121,7 @@
 .admin-search-box svg {
   width: 16px;
   height: 16px;
-  color: #8E8E93;
+  color: #8e8e93;
   flex-shrink: 0;
 }
 
@@ -141,7 +147,7 @@
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #A1A1AA;
+  color: #a1a1aa;
   font-size: 0.76rem;
   font-weight: 650;
   cursor: pointer;
@@ -150,7 +156,7 @@
 
 .admin-filter-pill:hover {
   color: #fff;
-  background: #2A2A2A;
+  background: #2a2a2a;
 }
 
 .admin-filter-pill.active {
@@ -177,8 +183,8 @@
 }
 
 .admin-table th {
-  background: #1E1E1E;
-  color: #9A9CA6;
+  background: #1e1e1e;
+  color: #9a9ca6;
   font-size: 0.72rem;
   font-weight: 750;
   text-transform: uppercase;
@@ -194,7 +200,7 @@
 }
 
 .admin-table tr:hover td {
-  background: #1C1C1C;
+  background: #1c1c1c;
 }
 
 .admin-user-cell {
@@ -247,7 +253,7 @@
 
 .admin-user-id {
   font-size: 0.68rem;
-  color: #71717A;
+  color: #71717a;
 }
 
 .admin-badge-stack {
@@ -270,7 +276,7 @@
 .badge-student {
   background: rgba(56, 189, 248, 0.14);
   border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #7DD3FC;
+  color: #7dd3fc;
   padding: 3px 9px;
   border-radius: 999px;
   font-size: 0.7rem;
@@ -369,7 +375,7 @@
 .admin-suspend-btn {
   background: rgba(239, 68, 68, 0.14);
   border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #FCA5A5;
+  color: #fca5a5;
   border-radius: 999px;
 }
 
@@ -381,7 +387,7 @@
 .admin-restore-btn {
   background: rgba(16, 185, 129, 0.16);
   border: 1px solid rgba(16, 185, 129, 0.45);
-  color: #6EE7B7;
+  color: #6ee7b7;
   border-radius: 999px;
 }
 
@@ -396,7 +402,9 @@
   background: rgba(18, 19, 26, 0.96);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.9),
+    0 0 1px rgba(255, 255, 255, 0.25);
   color: #f3f4f6;
   max-width: 680px;
   width: min(680px, 92vw);
@@ -556,7 +564,8 @@
   transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.omni-result-item:hover, .omni-result-item.selected {
+.omni-result-item:hover,
+.omni-result-item.selected {
   background: rgba(255, 255, 255, 0.08);
   transform: translateX(4px);
 }
@@ -605,7 +614,8 @@
   text-overflow: ellipsis;
 }
 
-.omni-item-title mark, .omni-item-subtitle mark {
+.omni-item-title mark,
+.omni-item-subtitle mark {
   background: var(--accent-glow);
   color: #ff8a5c;
   padding: 1px 3px;

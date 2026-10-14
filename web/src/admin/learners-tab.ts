@@ -10,13 +10,14 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
   const inviteCard = el('div', 'admin-invite-card');
   const inviteHead = el('div', 'admin-invite-head');
   const inviteTitleRow = el('div', 'admin-invite-title-row');
-  inviteTitleRow.append(
-    svgIcon('user-plus'),
-    el('div', '', '')
-  );
+  inviteTitleRow.append(svgIcon('user-plus'), el('div', '', ''));
   inviteTitleRow.lastElementChild!.append(
     el('h3', '', 'Invite & Provision Student Access'),
-    el('p', 'muted', 'Create a verified student invitation and immediately grant access to a specific course or the entire 29-course catalog.')
+    el(
+      'p',
+      'muted',
+      'Create a verified student invitation and immediately grant access to a specific course or the entire 29-course catalog.',
+    ),
   );
   inviteHead.append(inviteTitleRow);
   inviteCard.append(inviteHead);
@@ -52,7 +53,7 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
   submitInviteBtn.append(svgIcon('user-plus'), el('span', '', 'Provision Student'));
 
   inviteForm.append(nameInput, emailInput, courseSelect, submitInviteBtn);
-  inviteForm.addEventListener('submit', async (ev) => {
+  inviteForm.addEventListener('submit', async ev => {
     ev.preventDefault();
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
@@ -60,11 +61,11 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
     if (!name || !email) return;
     submitInviteBtn.disabled = true;
     try {
-      const initialCourse = selectedCourse === '__ALL__' ? (host.catalogCourses[0]?.id || '') : selectedCourse;
+      const initialCourse = selectedCourse === '__ALL__' ? host.catalogCourses[0]?.id || '' : selectedCourse;
       const res = await host.api.adminInviteStudent(name, email, initialCourse);
       if (selectedCourse === '__ALL__' && host.catalogCourses.length > 1) {
         await Promise.all(
-          host.catalogCourses.slice(1).map(c => host.api.adminSetEnrollment(res.user_id, c.id, true).catch(() => null))
+          host.catalogCourses.slice(1).map(c => host.api.adminSetEnrollment(res.user_id, c.id, true).catch(() => null)),
         );
       }
       host.lastInviteResult = {
@@ -89,12 +90,17 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
     const linkText = el('div', 'link-banner-info');
     linkText.append(
       el('strong', '', `One-Time Activation Link for ${host.lastInviteResult.email}:`),
-      el('code', 'link-code-box', host.lastInviteResult.activation_url)
+      el('code', 'link-code-box', host.lastInviteResult.activation_url),
     );
-    const copyBtn = button('Copy Link', () => {
-      void navigator.clipboard?.writeText(host.lastInviteResult!.activation_url);
-      host.notice('Activation link copied to clipboard!');
-    }, 'button secondary small-btn', 'copy');
+    const copyBtn = button(
+      'Copy Link',
+      () => {
+        void navigator.clipboard?.writeText(host.lastInviteResult!.activation_url);
+        host.notice('Activation link copied to clipboard!');
+      },
+      'button secondary small-btn',
+      'copy',
+    );
     linkBanner.append(linkText, copyBtn);
     inviteCard.append(linkBanner);
   }
@@ -122,10 +128,14 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
     { id: 'admin', label: 'Admins' },
   ];
   for (const r of roleOptions) {
-    const pill = button(r.label, () => {
-      host.learnerRoleFilter = r.id;
-      host.render();
-    }, `admin-filter-pill${host.learnerRoleFilter === r.id ? ' active' : ''}`);
+    const pill = button(
+      r.label,
+      () => {
+        host.learnerRoleFilter = r.id;
+        host.render();
+      },
+      `admin-filter-pill${host.learnerRoleFilter === r.id ? ' active' : ''}`,
+    );
     filterPills.append(pill);
   }
 
@@ -136,10 +146,14 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
     { id: 'suspended', label: 'Suspended' },
   ];
   for (const st of statusOptions) {
-    const pill = button(st.label, () => {
-      host.learnerStatusFilter = st.id;
-      host.render();
-    }, `admin-filter-pill${host.learnerStatusFilter === st.id ? ' active' : ''}`);
+    const pill = button(
+      st.label,
+      () => {
+        host.learnerStatusFilter = st.id;
+        host.render();
+      },
+      `admin-filter-pill${host.learnerStatusFilter === st.id ? ' active' : ''}`,
+    );
     filterPills.append(pill);
   }
 
@@ -151,7 +165,7 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
         host.showFixtures = !host.showFixtures;
         host.render();
       },
-      `admin-filter-pill${host.showFixtures ? ' active' : ''}`
+      `admin-filter-pill${host.showFixtures ? ' active' : ''}`,
     );
     filterPills.append(fixtureToggle);
   }
@@ -208,12 +222,16 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
       // Column 1: Student Identity
       const nameCol = el('td');
       const idWrap = el('div', 'admin-user-cell');
-      const avatar = el('div', `admin-user-avatar${u.role === 'admin' ? ' is-admin' : ''}`, initialsOf(u.name, u.email));
+      const avatar = el(
+        'div',
+        `admin-user-avatar${u.role === 'admin' ? ' is-admin' : ''}`,
+        initialsOf(u.name, u.email),
+      );
       const meta = el('div', 'admin-user-meta');
       meta.append(
         el('strong', 'admin-user-name', u.name || 'Unnamed User'),
         el('span', 'admin-user-email muted', u.email),
-        el('code', 'admin-user-id', u.id)
+        el('code', 'admin-user-id', u.id),
       );
       idWrap.append(avatar, meta);
       nameCol.append(idWrap);
@@ -238,7 +256,7 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
       topRow.append(
         svgIcon('book'),
         el('strong', '', `${enrolledCount} / ${totalCatalog} Courses`),
-        el('span', 'access-trigger-edit', u.role === 'admin' ? 'Admin Bypass' : 'Edit Access →')
+        el('span', 'access-trigger-edit', u.role === 'admin' ? 'Admin Bypass' : 'Edit Access →'),
       );
       const barTrack = el('div', 'admin-access-progress-track');
       const barFill = el('div', 'admin-access-progress-fill');
@@ -269,19 +287,19 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
         'Manage Access',
         () => void host.openStudentAccessModal(u, 'courses'),
         'button primary small-btn admin-manage-access-btn',
-        'key'
+        'key',
       );
       const securityBtn = button(
         'Security & Role',
         () => void host.openStudentAccessModal(u, 'security'),
         'button secondary small-btn',
-        'shield'
+        'shield',
       );
       const telemetryBtn = button(
         'Telemetry',
         () => void host.openStudentAccessModal(u, 'telemetry'),
         'button secondary small-btn',
-        'trending-up'
+        'trending-up',
       );
       actionGroup.append(manageCoursesBtn, securityBtn, telemetryBtn);
 
@@ -292,14 +310,16 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
             try {
               await host.api.adminUpdateAccount(u.id, { suspended: !u.suspended });
               u.suspended = !u.suspended;
-              host.notice(`${u.name} account ${u.suspended ? 'suspended & sessions revoked' : 'restored to active status'}.`);
+              host.notice(
+                `${u.name} account ${u.suspended ? 'suspended & sessions revoked' : 'restored to active status'}.`,
+              );
               renderTableRows();
             } catch (err) {
               host.notice('Account status update failed: ' + (err instanceof Error ? err.message : String(err)), true);
             }
           },
           `button small-btn ${u.suspended ? 'admin-restore-btn' : 'admin-suspend-btn'}`,
-          u.suspended ? 'check-circle' : 'ban'
+          u.suspended ? 'check-circle' : 'ban',
         );
         actionGroup.append(toggleSuspendBtn);
       }

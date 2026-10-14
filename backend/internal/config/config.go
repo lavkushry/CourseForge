@@ -12,55 +12,55 @@ import (
 // Config holds process-level deployment settings for a small API replica.
 // Defaults target a constrained box (~2 vCPU, 0.5–1 GiB) and remain overridable.
 type Config struct {
-	Address, DatabaseURL, PublicOrigin string
-	MaxConnections                     int32
-	MinConnections                     int32
-	MaxConnLifetime                       time.Duration
-	MaxConnIdleTime                    time.Duration
-	HealthCheckPeriod                  time.Duration
-	PasswordConcurrency                int
+	Address, DatabaseURL, PublicOrigin      string
+	MaxConnections                          int32
+	MinConnections                          int32
+	MaxConnLifetime                         time.Duration
+	MaxConnIdleTime                         time.Duration
+	HealthCheckPeriod                       time.Duration
+	PasswordConcurrency                     int
 	CookieSecure, RegistrationOpen, Migrate bool
-	RegistrationMode                   string
-	MediaMode                          string
-	RequestTimeout                     time.Duration
-	ReadHeaderTimeout                  time.Duration
-	ReadTimeout                        time.Duration
-	WriteTimeout                       time.Duration
-	IdleTimeout                        time.Duration
-	MaxHeaderBytes                     int
-	ShutdownTimeout                    time.Duration
-	RateLimitEnabled                   bool
-	RateLimitRPS                       float64
-	RateLimitBurst                     int
-	TrustProxy                         bool
-	CacheTTL                           time.Duration
-	RedisURL                           string
-	PprofAddr                          string
+	RegistrationMode                        string
+	MediaMode                               string
+	RequestTimeout                          time.Duration
+	ReadHeaderTimeout                       time.Duration
+	ReadTimeout                             time.Duration
+	WriteTimeout                            time.Duration
+	IdleTimeout                             time.Duration
+	MaxHeaderBytes                          int
+	ShutdownTimeout                         time.Duration
+	RateLimitEnabled                        bool
+	RateLimitRPS                            float64
+	RateLimitBurst                          int
+	TrustProxy                              bool
+	CacheTTL                                time.Duration
+	RedisURL                                string
+	PprofAddr                               string
 }
 
 // FromEnv loads environment values then validates the resulting Config.
 func FromEnv() (Config, error) {
 	c := Config{
-		Address:             value("CF_HTTP_ADDR", ":8080"),
-		DatabaseURL:         os.Getenv("CF_DATABASE_URL"),
-		PublicOrigin:        value("CF_PUBLIC_ORIGIN", "http://localhost:8080"),
-		RequestTimeout:      10 * time.Second,
-		RegistrationMode:    value("CF_REGISTRATION_MODE", "invite"),
-		MediaMode:           value("CF_MEDIA_MODE", "embedded"),
-		ReadHeaderTimeout:   5 * time.Second,
-		ReadTimeout:         10 * time.Second,
-		WriteTimeout:        30 * time.Second,
-		IdleTimeout:         60 * time.Second,
-		MaxHeaderBytes:      16 << 10,
-		ShutdownTimeout:     15 * time.Second,
-		MaxConnLifetime:        30 * time.Minute,
-		MaxConnIdleTime:     5 * time.Minute,
-		HealthCheckPeriod:   time.Minute,
-		CacheTTL:            30 * time.Second,
-		RedisURL:            os.Getenv("REDIS_URL"),
-		PprofAddr:           os.Getenv("PPROF_ADDR"),
-		RateLimitRPS:        120,
-		RateLimitBurst:      240,
+		Address:           value("CF_HTTP_ADDR", ":8080"),
+		DatabaseURL:       os.Getenv("CF_DATABASE_URL"),
+		PublicOrigin:      value("CF_PUBLIC_ORIGIN", "http://localhost:8080"),
+		RequestTimeout:    10 * time.Second,
+		RegistrationMode:  value("CF_REGISTRATION_MODE", "invite"),
+		MediaMode:         value("CF_MEDIA_MODE", "embedded"),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    16 << 10,
+		ShutdownTimeout:   15 * time.Second,
+		MaxConnLifetime:   30 * time.Minute,
+		MaxConnIdleTime:   5 * time.Minute,
+		HealthCheckPeriod: time.Minute,
+		CacheTTL:          30 * time.Second,
+		RedisURL:          os.Getenv("REDIS_URL"),
+		PprofAddr:         os.Getenv("PPROF_ADDR"),
+		RateLimitRPS:      120,
+		RateLimitBurst:    240,
 	}
 	var err error
 	// 16 max connections leaves room for a media/worker peer on a shared Postgres

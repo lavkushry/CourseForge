@@ -22,12 +22,7 @@ export function create(
     .then(parsePlaybackSession);
 }
 
-export function pulse(
-  client: HttpClient,
-  sessionId: string,
-  pulseBody: Pulse,
-  signal: AbortSignal,
-): Promise<PulseAck> {
+export function pulse(client: HttpClient, sessionId: string, pulseBody: Pulse, signal: AbortSignal): Promise<PulseAck> {
   return client
     .request(`/playback/sessions/${encodeURIComponent(sessionId)}/pulse`, {
       method: 'POST',
@@ -73,7 +68,20 @@ export function savePreferences(
   prefs: PlayerPreferences,
   signal: AbortSignal,
 ): Promise<PlayerPreferences> {
-  return client
-    .request('/player/preferences', { method: 'PUT', body: prefs, signal })
-    .then(parsePreferences);
+  return client.request('/player/preferences', { method: 'PUT', body: prefs, signal }).then(parsePreferences);
+}
+
+export async function postTelemetry(
+  client: HttpClient,
+  body: {
+    session_id: string;
+    startup_ms: number;
+    rebuffer_ms: number;
+    play_ms: number;
+    errors: number;
+    bitrate_switches: number;
+  },
+  signal?: AbortSignal,
+): Promise<void> {
+  await client.request('/player/telemetry', { method: 'POST', body, ...(signal ? { signal } : {}) });
 }

@@ -18,6 +18,8 @@
   color: var(--success);
 }
 
-.svg-icon-play, .svg-icon-sparkle, .svg-icon-star {
+.svg-icon-play,
+.svg-icon-sparkle,
+.svg-icon-star {
   fill: currentColor;
 }
