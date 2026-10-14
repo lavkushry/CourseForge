@@ -57,8 +57,6 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		{"GET /api/v1/admin/audit", s.audit},
 		{"GET /api/v1/admin/access-events", s.accessEvents},
 		{"GET /api/v1/admin/system", s.system},
-		{"GET /api/v1/admin/users", s.adminUsersList},
-		{"PATCH /api/v1/admin/users/{id}", s.adminUserStatusUpdate},
 	} {
 		mux.Handle(route.pattern, auth.Require(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			p, _ := identity.FromContext(r.Context())

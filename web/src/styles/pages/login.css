@@ -41,15 +41,15 @@
   width: 100%;
   border: 1px solid #ffffff24;
   background: #101116;
-  padding: var(--space-3) 14px;
-  min-height: 48px;
+  padding: 10px 14px;
+  min-height: 44px;
   margin-bottom: var(--space-3);
   color: #fff;
 }
 
-#login-form button {
+#login-form > button[type="submit"] {
   margin-top: var(--space-2);
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .login-footer {
@@ -139,13 +139,18 @@
 }
 
 .input-wrap input {
-  margin-bottom: 0;
-  padding-right: 48px;
+  margin-bottom: 0 !important;
+  padding-right: 48px !important;
+  min-height: 44px;
 }
 
 .password-toggle-btn {
   position: absolute;
   right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  min-height: 0;
   background: transparent;
   border: none;
   color: #9a9cb0;
@@ -155,6 +160,7 @@
   border-radius: 6px;
   user-select: none;
   transition: color .15s;
+  line-height: 1;
 }
 
 .password-toggle-btn:hover {
@@ -201,16 +207,16 @@
   width: 100%;
   border: 1px solid #ffffff24;
   background: #101116;
-  padding: var(--space-3) 14px;
-  min-height: 48px;
+  padding: 10px 14px;
+  min-height: 44px;
   margin-bottom: var(--space-3);
   color: #fff;
   border-radius: 8px;
 }
 
-#register-form button[type="submit"] {
+#register-form > button[type="submit"] {
   margin-top: var(--space-2);
-  min-height: 48px;
+  min-height: 44px;
 }
 
 /* Guest Curriculum Preview on Login Page */

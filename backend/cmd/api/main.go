@@ -18,7 +18,6 @@ import (
 	"courseforge/backend/internal/cache"
 	"courseforge/backend/internal/certificates"
 	"courseforge/backend/internal/config"
-	"courseforge/backend/internal/contract"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
 	"courseforge/backend/internal/labs"
@@ -87,30 +86,31 @@ func run() error {
 	app := api.New(pool, auth)
 	app.Cache = readCache
 	app.CacheTTL = c.CacheTTL
-	contract.Register(app.Mux)
-	auth.RegisterAdminRoutes(app.Mux)
 	reports := administration.New(pool)
 	reports.Capabilities.RegistrationMode = c.RegistrationMode
-	reports.Register(app.Mux, auth)
 	player := playback.New(pool, auth)
-	player.Register(app.Mux)
 	queue, err := jobs.New(pool, jobs.Config{MaxQueued: 5000, MaxQueuedPerUser: 20, Lease: 30 * time.Second})
 	if err != nil {
 		return err
 	}
-	queue.Register(app.Mux, auth)
-	learning.New(pool, queue).Register(app.Mux, auth)
 	pathService := paths.New(pool, queue)
 	queue.ResultProjector = paths.ProjectResult
-	pathService.Register(app.Mux, auth)
-	practice.New(pool, pathService).Register(app.Mux, auth)
 	planner := planning.New(pool)
 	planner.Paths = paths.PlanningAdapter{Service: pathService}
-	planner.Register(app.Mux, auth)
-	certificates.New(pool).Register(app.Mux, auth)
-	activity.New(pool).Register(app.Mux, auth)
-	labs.New(pool).Register(app.Mux, auth)
-	ai.New(pool).Register(app.Mux, auth)
+	deps := apiRouteDeps{
+		Auth:         auth,
+		Reports:      reports,
+		Player:       player,
+		Queue:        queue,
+		Learning:     learning.New(pool, queue),
+		Paths:        pathService,
+		Practice:     practice.New(pool, pathService),
+		Planner:      planner,
+		Certificates: certificates.New(pool),
+		Activity:     activity.New(pool),
+		Labs:         labs.New(pool),
+		AI:           ai.New(pool),
+	}
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)
 		if err != nil {
@@ -119,8 +119,9 @@ func run() error {
 		defer closeResolver()
 		gateway := media.New(player, resolver, mediaConfig)
 		defer gateway.Close()
-		gateway.Register(app.Mux, auth)
+		deps.Media = gateway
 	}
+	registerAPIRoutes(app.Mux, deps)
 	metrics := observe.New(pool)
 	if address := firstNonEmpty(c.PprofAddr, os.Getenv("CF_OBSERVABILITY_ADDR")); address != "" {
 		closeMetrics, e := metrics.Start(address)
