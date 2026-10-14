@@ -5,7 +5,7 @@
 @keyframes skeleton{0%,100%{background-position:0 0}50%{background-position:100% 0}}
 @media(min-width:1600px){.workspace{padding-top:40px}.featured-course{min-height:540px}.hero-content{padding:72px 60px}}
 @media(max-width:1100px){.site-header{gap:30px}.primary-navigation{gap:22px}.account>span:not(.account-avatar){max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.course-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.classroom-grid{grid-template-columns:minmax(0,1fr) 265px;gap:20px}.player-tools{gap:4px}.player-tools .button,.lesson-footer .button{padding:9px 10px;font-size:.75rem}.hero-content{max-width:70%;padding:46px 36px}.hero-title{font-size:3.1rem}.featured-course{min-height:450px}.hero-art .art-glyph{right:9%;font-size:23rem}}
-@media(max-width:800px){.site-header{min-height:72px;padding:12px 20px;gap:24px}.brand{font-size:1.15rem}.account>span:not(.account-avatar){display:none}.account .quiet{font-size:.7rem;padding:7px}.primary-navigation{gap:18px}.primary-navigation button{font-size:.77rem}.workspace{padding:26px 20px 0}.classroom-grid{grid-template-columns:minmax(0,1fr)}.lesson-sidebar{display:none}.player-tools{gap:10px}.player-wrap{border-radius:9px}.classroom-heading h1{font-size:1.55rem}.classroom-heading{align-items:flex-start}.classroom-heading #episodes{margin-top:4px}.lesson-footer{align-items:flex-start}.player-settings label{display:none}.shortcuts{display:none}.section-heading{align-items:flex-start;flex-direction:column;gap:22px;margin-top:36px}.catalog-search{min-width:0;width:100%}.catalog-search label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.hero-content{max-width:90%;padding:42px 30px}.hero-title{font-size:2.8rem}.hero-description{max-width:80%}.hero-art::after{background:linear-gradient(90deg,#16171eee,#16171e88),linear-gradient(0deg,#121318aa,transparent)}.hero-art .art-orb{width:80%;right:-20%}.hero-art .art-glyph{right:2%;font-size:23rem}.catalog-footer{margin-top:45px;flex-wrap:wrap;gap:15px}.catalog-footer>span:last-child{display:none}}
+@media(max-width:800px){.site-header{min-height:72px;padding:12px 20px;gap:24px}.brand{font-size:1.15rem}.account>span:not(.account-avatar){display:none}.account .quiet{font-size:.7rem;padding:7px}.primary-navigation{gap:18px}.primary-navigation button{font-size:.77rem}.workspace{padding:26px 20px 0}.classroom-grid{grid-template-columns:minmax(0,1fr)}.player-tools{gap:10px}.player-wrap{border-radius:9px}.classroom-heading h1{font-size:1.55rem}.classroom-heading{align-items:flex-start}.classroom-heading #episodes{margin-top:4px}.lesson-footer{align-items:flex-start}.player-settings label{display:none}.shortcuts{display:none}.section-heading{align-items:flex-start;flex-direction:column;gap:22px;margin-top:36px}.catalog-search{min-width:0;width:100%}.catalog-search label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.hero-content{max-width:90%;padding:42px 30px}.hero-title{font-size:2.8rem}.hero-description{max-width:80%}.hero-art::after{background:linear-gradient(90deg,#16171eee,#16171e88),linear-gradient(0deg,#121318aa,transparent)}.hero-art .art-orb{width:80%;right:-20%}.hero-art .art-glyph{right:2%;font-size:23rem}.catalog-footer{margin-top:45px;flex-wrap:wrap;gap:15px}.catalog-footer>span:last-child{display:none}}
 @media(max-width:520px){.site-header{padding:12px 16px;gap:8px;flex-wrap:wrap}.brand{font-size:1.15rem;order:0}.account{order:1;gap:6px}.account-avatar{width:26px;height:26px;font-size:.7rem}.primary-navigation{order:2;width:100%;gap:28px;padding:0 0 0 2px}.primary-navigation button{min-height:36px;padding:6px 0;font-size:.75rem}.workspace{padding:20px 16px 0}.featured-course{min-height:438px;border-radius:12px}.hero-content{max-width:100%;padding:34px 24px}.hero-kicker{font-size:.51rem;letter-spacing:.18em;margin-bottom:24px}.hero-title{font-size:2.7rem;max-width:300px}.hero-description{font-size:.8rem;max-width:95%;margin-bottom:18px}.hero-metadata{font-size:.61rem;gap:12px;margin-bottom:24px}.hero-metadata span+span::before{margin-right:12px}.hero-play,.hero-actions .list-button{min-height:44px;font-size:.73rem;padding:10px 14px}.hero-footnote{font-size:.58rem;max-width:90%}.hero-art .art-glyph{right:-10%;font-size:23rem;top:3%}.hero-art .art-orb{width:115%;right:-50%;top:-8%}.hero-art .art-label{display:none}.section-heading{margin-top:32px;gap:20px}.section-heading h1{font-size:1.95rem;max-width:310px}.section-heading .muted{font-size:.8rem}.course-grid{grid-template-columns:minmax(0,1fr);gap:20px}.course-art{aspect-ratio:16/9}.course-card-body{padding:20px}.course-card h2{font-size:1.2rem}.course-description{font-size:.8rem}.course-card-footer .list-button{font-size:.7rem}.art-glyph{font-size:9rem}.catalog-results{font-size:.65rem}.row-heading{align-items:flex-start;flex-direction:column;gap:6px}.row-heading h2{font-size:1.4rem}.continue-section{margin-top:28px}.continue-card{flex-basis:280px}.catalog-footer{font-size:.6rem;padding:24px 0;gap:12px}.login-panel{padding:32px 25px;margin-top:60px;margin-bottom:60px}.login-panel h1{font-size:2.35rem}.login-page{padding:28px 20px;justify-content:center}.login-atmosphere span{width:95vw;right:-48%;top:15%}.login-atmosphere span:nth-child(2){width:85vw;top:65%;left:-45%}.login-atmosphere span:nth-child(3){width:75vw;right:-37%;top:25%}.player-tools{flex-direction:column}.player-settings{justify-content:space-between}.player-actions{justify-content:space-between}.watermark{top:10px;right:10px;font-size:.6rem}.lesson-footer{flex-wrap:wrap}.autoplay{font-size:.71rem}.ownership-overlay{padding:14px}.ownership-overlay p{font-size:.8rem}.ownership-overlay .button{min-height:44px;padding:8px 12px}media-volume-range{display:none}media-time-display{font-size:.65rem}.classroom-heading .eyebrow{font-size:.6rem}.classroom-heading h1{font-size:1.3rem}.classroom-heading #episodes{font-size:.72rem;padding:9px}.course-enrollment{flex-direction:column;align-items:flex-start}.notes{padding:20px}.notes h2{font-size:1.05rem}.lesson-progress{font-size:.62rem;gap:10px}.lesson-footer .player-actions{width:100%;justify-content:space-between}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media(prefers-reduced-motion:reduce){.course-card:hover{transform:none}}
@@ -5800,7 +5800,7 @@ html[data-accent="rose"] {
    MOBILE VIEWPORT AUDIT & PEAK RESPONSIVENESS (@media max-width: 900px / 640px)
    ========================================================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 640px) {
   /* Hide desktop workspace mode buttons inside classroom on mobile */
   .classroom-heading .classroom-mode-switch {
     display: none !important;
@@ -5808,14 +5808,6 @@ html[data-accent="rose"] {
 
   .classroom-heading {
     margin-bottom: 14px !important;
-  }
-
-  .classroom-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .lesson-sidebar {
-    display: none !important;
   }
 }
 
@@ -6147,23 +6139,50 @@ media-controller {
 
 .classroom-grid {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px) !important;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 26vw, 360px) !important;
   gap: 20px !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+  align-items: start !important;
 }
 
-@media (max-width: 1024px) {
+#study-rail,
+.lesson-sidebar.study-rail,
+.study-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  background: #14151d !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  position: sticky !important;
+  top: 76px !important;
+  height: calc(100vh - 96px) !important;
+  max-height: calc(100vh - 96px) !important;
+  min-height: 520px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  z-index: 10 !important;
+}
+
+@media (max-width: 850px) {
   .classroom-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
-  .lesson-sidebar.study-rail {
+  #study-rail,
+  .lesson-sidebar.study-rail,
+  .study-rail {
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
-    max-height: 520px !important;
+    max-height: none !important;
+    min-height: auto !important;
+    margin-top: 16px !important;
   }
 }
 

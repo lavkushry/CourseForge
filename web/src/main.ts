@@ -591,7 +591,7 @@ function renderApp(account: User): void {
     learningApi,
     getCurrentPosition: () => controller?.position ?? 0,
     seekTo: (sec) => controller?.seek(sec),
-    onPlayLesson: (lesson) => { void loadLesson(lesson, true); },
+    onPlayLesson: (lesson) => { void loadLesson(lesson, true, true); },
     onMarkComplete: async (lessonId) => { await markComplete(lessonId); },
   });
   libraryView = new LibraryView({
@@ -1345,7 +1345,11 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
     }
     lessonCursor = null;
     hideAllWorkspaces();
-    required<HTMLElement>('#classroom').hidden = false;
+    const classroom = required<HTMLElement>('#classroom');
+    classroom.hidden = false;
+    classroom.classList.remove('theater');
+    const theaterBtn = document.querySelector<HTMLButtonElement>('#theater');
+    if (theaterBtn) theaterBtn.setAttribute('aria-pressed', 'false');
     setActiveNav('');
     required('#course-name').textContent = response.course.title;
     const cSec = document.querySelector<HTMLElement>('#crumb-section');
@@ -1375,7 +1379,7 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
       const contId = targetLessonId || discovery?.getContinuation(id)?.id || response.resume_lesson_id;
       const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
       if (targetLesson) {
-        await loadLesson(targetLesson, autoplay);
+        await loadLesson(targetLesson, autoplay, true);
         return;
       }
     }
@@ -1491,7 +1495,7 @@ function renderLessons(): void {
         const group = element('li', 'lesson-section'); group.append(element('h3', '', section)); drawerList.append(group);
       }
       const item = element('li');
-      const choice = button('', () => { closeEpisodes(); void loadLesson(lesson, true); }, 'lesson-choice');
+      const choice = button('', () => { closeEpisodes(); void loadLesson(lesson, true, true); }, 'lesson-choice');
       const number = element('span', 'lesson-number', String(index + 1).padStart(2, '0'));
       const details = element('span', 'lesson-choice-info');
       details.append(element('strong', '', lesson.title), element('span', 'muted', formatTime(lesson.duration_seconds)));
