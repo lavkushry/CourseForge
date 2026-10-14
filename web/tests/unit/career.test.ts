@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  emptyResumeDraft,
+  parseApplications,
   parseCompanies,
   parseFact,
   parseHiringProfile,
   parseMatchResult,
+  parseResumeVersion,
   parseRoleTracks,
+  parseTemplates,
 } from '../../src/career/contracts';
 
 describe('Career contracts', () => {
@@ -114,5 +118,72 @@ describe('Career contracts', () => {
     expect(() => parseRoleTracks(null)).toThrow();
     expect(() => parseCompanies({ companies: 'nope' })).toThrow();
     expect(() => parseMatchResult('bad')).toThrow();
+  });
+
+  it('parses resume templates, applications, and skim-scored versions', () => {
+    const templates = parseTemplates({
+      templates: [
+        { id: 'ats_classic', name: 'ATS Classic', description: 'Single column' },
+        { id: 'ats_compact', name: 'ATS Compact', description: 'Tighter' },
+      ],
+    });
+    expect(templates.templates).toHaveLength(2);
+    expect(templates.templates[0]!.id).toBe('ats_classic');
+
+    const apps = parseApplications({
+      applications: [
+        {
+          id: 'app_1',
+          title: 'Backend Engineer',
+          notes: '',
+          target_skills: ['go', 'postgresql'],
+          resume_draft: {
+            ...emptyResumeDraft('Backend Engineer'),
+            full_name: 'Casey Dev',
+            email: 'casey@example.test',
+            skills: ['go'],
+            experience: [
+              {
+                company: 'Acme',
+                role: 'Backend Engineer',
+                start: '2021',
+                end: 'Present',
+                bullets: ['Cut p99 latency 40%', 'Improved cache hit rate [METRIC]'],
+              },
+            ],
+          },
+          created_at: '2026-10-01T00:00:00Z',
+          updated_at: '2026-10-02T00:00:00Z',
+        },
+      ],
+    });
+    expect(apps.applications[0]!.resume_draft.experience[0]!.bullets[1]).toContain('[METRIC]');
+    expect(apps.applications[0]!.target_skills).toEqual(['go', 'postgresql']);
+
+    const version = parseResumeVersion({
+      id: 'rv_1',
+      application_id: 'app_1',
+      template_id: 'ats_classic',
+      snapshot: apps.applications[0]!.resume_draft,
+      status: 'ready',
+      compiler: 'tectonic',
+      skim_score: {
+        score: 85,
+        feedback: [
+          { code: 'title_in_top_third', ok: true, message: 'Title visible' },
+          { code: 'quantified_metrics', ok: true, message: 'Metrics visible' },
+          { code: 'jd_skills_visible', ok: false, message: 'Surface postgresql earlier' },
+        ],
+      },
+      verified_fields: ['full_name', 'title'],
+      has_pdf: true,
+      created_at: '2026-10-02T00:00:00Z',
+      updated_at: '2026-10-02T00:00:00Z',
+      latex_source: '\\documentclass{article}',
+    });
+    expect(version.has_pdf).toBe(true);
+    expect(version.skim_score?.score).toBe(85);
+    expect(version.skim_score?.feedback[2]!.ok).toBe(false);
+    expect(version.latex_source).toContain('documentclass');
   });
 });

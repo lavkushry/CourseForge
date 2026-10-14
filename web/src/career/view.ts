@@ -2,7 +2,18 @@ import { el } from '../components';
 import type { ApiClient } from '../api';
 import { errorMessage, isAbort } from '../api';
 import { CareerApi } from './api';
-import type { Company, ConfirmedFact, HiringProfile, MatchResult, RoleTrack } from './contracts';
+import {
+  emptyResumeDraft,
+  type Application,
+  type Company,
+  type ConfirmedFact,
+  type HiringProfile,
+  type MatchResult,
+  type ResumeDocument,
+  type ResumeVersion,
+  type RoleTrack,
+  type TemplateInfo,
+} from './contracts';
 
 export interface CareerViewOptions {
   root: HTMLElement;
@@ -15,10 +26,18 @@ export class CareerView {
   private tracks: RoleTrack[] = [];
   private companies: Company[] = [];
   private facts: ConfirmedFact[] = [];
+  private applications: Application[] = [];
+  private templates: TemplateInfo[] = [];
+  private versions: ResumeVersion[] = [];
   private selectedTrackId = '';
   private selectedCompanyId = '';
+  private selectedAppId = '';
+  private selectedTemplateId = 'ats_classic';
+  private draft: ResumeDocument = emptyResumeDraft();
+  private targetSkillsRaw = '';
   private profile: HiringProfile | null = null;
   private match: MatchResult | null = null;
+  private latestVersion: ResumeVersion | null = null;
   private signal: AbortSignal | null = null;
   private busy = false;
 
@@ -40,25 +59,49 @@ export class CareerView {
 
   private async reload(): Promise<void> {
     try {
-      const [tracks, companies, facts] = await Promise.all([
+      const [tracks, companies, facts, applications, templates] = await Promise.all([
         this.career.roleTracks(this.signal ?? undefined),
         this.career.companies(this.signal ?? undefined),
         this.career.facts(this.signal ?? undefined),
+        this.career.applications(this.signal ?? undefined),
+        this.career.templates(this.signal ?? undefined),
       ]);
       this.tracks = tracks.tracks;
       this.companies = companies.companies;
       this.facts = facts.facts;
+      this.applications = applications.applications;
+      this.templates = templates.templates;
       if (!this.selectedTrackId && this.tracks[0]) this.selectedTrackId = this.tracks[0].id;
       if (!this.selectedCompanyId && this.companies[0]) this.selectedCompanyId = this.companies[0].id;
+      if (!this.selectedAppId && this.applications[0]) this.selectedAppId = this.applications[0].id;
+      if (!this.selectedTemplateId && this.templates[0]) this.selectedTemplateId = this.templates[0].id;
       if (this.selectedCompanyId) {
         this.profile = await this.career.hiringProfile(this.selectedCompanyId, this.signal ?? undefined);
       } else {
         this.profile = null;
       }
+      await this.loadSelectedApplication();
       this.render();
     } catch (err) {
       if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
     }
+  }
+
+  private async loadSelectedApplication(): Promise<void> {
+    const app = this.applications.find((a) => a.id === this.selectedAppId);
+    if (!app) {
+      this.draft = emptyResumeDraft(this.tracks.find((t) => t.id === this.selectedTrackId)?.title ?? '');
+      this.targetSkillsRaw = '';
+      this.versions = [];
+      this.latestVersion = null;
+      return;
+    }
+    this.draft = { ...emptyResumeDraft(), ...app.resume_draft, skills: [...app.resume_draft.skills], experience: [...app.resume_draft.experience], education: [...app.resume_draft.education] };
+    this.targetSkillsRaw = app.target_skills.join(', ');
+    if (!this.draft.title) this.draft.title = app.title;
+    const versions = await this.career.versions(app.id, this.signal ?? undefined);
+    this.versions = versions.versions;
+    this.latestVersion = this.versions[0] ?? null;
   }
 
   private render(): void {
@@ -69,13 +112,14 @@ export class CareerView {
     head.append(
       el('span', 'eyebrow', 'CAREER STUDIO'),
       el('h1', '', 'Role Tracks & Hiring Fit'),
-      el('p', 'muted', 'Build company hiring profiles from pasted JDs, score matches against role tracks, and rewrite bullets only from facts you confirmed.'),
+      el('p', 'muted', 'Build company hiring profiles from pasted JDs, score matches against role tracks, rewrite bullets only from confirmed facts, and generate ATS-safe LaTeX resumes.'),
     );
     root.append(head);
 
     const layout = el('div', 'career-layout');
     layout.append(this.renderTracks(), this.renderCompanies(), this.renderFacts(), this.renderMatch());
     root.append(layout);
+    root.append(this.renderResumeStudio());
   }
 
   private renderTracks(): HTMLElement {
@@ -399,6 +443,310 @@ export class CareerView {
       if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
     } finally {
       this.busy = false;
+    }
+  }
+
+  private renderResumeStudio(): HTMLElement {
+    const panel = el('section', 'career-panel career-resume-studio');
+    panel.append(
+      el('h2', '', 'Resume versions'),
+      el('p', 'muted', 'Edit structured resume data, generate an immutable ATS-safe LaTeX snapshot, download the PDF, and review recruiter skim score. Metrics are never invented — use [METRIC] until you confirm a number.'),
+    );
+
+    const appRow = el('div', 'career-form career-app-row');
+    const title = el('input', '') as HTMLInputElement;
+    title.placeholder = 'Application / target title';
+    title.value = this.applications.find((a) => a.id === this.selectedAppId)?.title || this.draft.title || '';
+    const createBtn = el('button', 'button primary', 'New application') as HTMLButtonElement;
+    createBtn.type = 'button';
+    createBtn.addEventListener('click', () => void this.createApplication(title.value));
+    appRow.append(title, createBtn);
+    panel.append(appRow);
+
+    if (this.applications.length) {
+      const list = el('div', 'career-chip-row');
+      for (const app of this.applications) {
+        const btn = el('button', `career-chip${app.id === this.selectedAppId ? ' career-chip-ok' : ''}`, app.title) as HTMLButtonElement;
+        btn.type = 'button';
+        btn.addEventListener('click', () => void this.selectApplication(app.id));
+        list.append(btn);
+      }
+      panel.append(list);
+    }
+
+    const form = el('form', 'career-form career-resume-form') as HTMLFormElement;
+    const field = (label: string, input: HTMLElement) => {
+      const wrap = el('label', 'career-field');
+      wrap.append(el('span', 'career-cat', label), input);
+      return wrap;
+    };
+    const fullName = el('input', '') as HTMLInputElement;
+    fullName.value = this.draft.full_name;
+    fullName.required = true;
+    const email = el('input', '') as HTMLInputElement;
+    email.type = 'email';
+    email.value = this.draft.email;
+    email.required = true;
+    const phone = el('input', '') as HTMLInputElement;
+    phone.value = this.draft.phone || '';
+    const location = el('input', '') as HTMLInputElement;
+    location.value = this.draft.location || '';
+    const roleTitle = el('input', '') as HTMLInputElement;
+    roleTitle.value = this.draft.title;
+    roleTitle.required = true;
+    const summary = el('textarea', '') as HTMLTextAreaElement;
+    summary.rows = 3;
+    summary.value = this.draft.summary || '';
+    const skills = el('input', '') as HTMLInputElement;
+    skills.value = this.draft.skills.join(', ');
+    skills.placeholder = 'Skills, comma-separated';
+    const targetSkills = el('input', '') as HTMLInputElement;
+    targetSkills.value = this.targetSkillsRaw;
+    targetSkills.placeholder = 'JD target skills for skim scoring, comma-separated';
+    const bullets = el('textarea', '') as HTMLTextAreaElement;
+    bullets.rows = 6;
+    bullets.placeholder = 'Experience bullets (one per line). Include confirmed metrics only; use [METRIC] if unknown.';
+    bullets.value = this.draft.experience[0]?.bullets.join('\n') || '';
+    const company = el('input', '') as HTMLInputElement;
+    company.placeholder = 'Most recent company';
+    company.value = this.draft.experience[0]?.company || '';
+    const role = el('input', '') as HTMLInputElement;
+    role.placeholder = 'Most recent role';
+    role.value = this.draft.experience[0]?.role || '';
+
+    form.append(
+      field('Full name', fullName),
+      field('Email', email),
+      field('Phone', phone),
+      field('Location', location),
+      field('Title', roleTitle),
+      field('Summary', summary),
+      field('Skills', skills),
+      field('JD skills (skim)', targetSkills),
+      field('Company', company),
+      field('Role', role),
+      field('Bullets', bullets),
+    );
+
+    const tmplRow = el('div', 'career-chip-row');
+    tmplRow.append(el('span', 'career-cat', 'Template'));
+    for (const tmpl of this.templates) {
+      const btn = el('button', `career-chip${tmpl.id === this.selectedTemplateId ? ' career-chip-ok' : ''}`, tmpl.name) as HTMLButtonElement;
+      btn.type = 'button';
+      btn.title = tmpl.description;
+      btn.addEventListener('click', () => {
+        this.selectedTemplateId = tmpl.id;
+        this.render();
+      });
+      tmplRow.append(btn);
+    }
+    form.append(tmplRow);
+
+    const actions = el('div', 'career-chip-row');
+    const save = el('button', 'button', 'Save draft') as HTMLButtonElement;
+    save.type = 'submit';
+    const generate = el('button', 'button primary', 'Generate PDF') as HTMLButtonElement;
+    generate.type = 'button';
+    generate.disabled = !this.selectedAppId || this.busy;
+    generate.addEventListener('click', () => void this.generateResume(fullName, email, phone, location, roleTitle, summary, skills, targetSkills, company, role, bullets));
+    actions.append(save, generate);
+    form.append(actions);
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      void this.saveDraft(fullName, email, phone, location, roleTitle, summary, skills, targetSkills, company, role, bullets);
+    });
+    panel.append(form);
+
+    if (this.latestVersion) {
+      const box = el('div', 'career-match-result');
+      box.append(el('h3', '', `Version · ${this.latestVersion.template_id} · ${this.latestVersion.status}`));
+      if (this.latestVersion.error_message) {
+        box.append(el('p', 'career-warn', this.latestVersion.error_message));
+      }
+      if (this.latestVersion.skim_score) {
+        box.append(el('p', '', `Recruiter skim score: ${this.latestVersion.skim_score.score}%`));
+        for (const fb of this.latestVersion.skim_score.feedback) {
+          box.append(el('p', fb.ok ? 'muted' : 'career-warn', `${fb.ok ? '✓' : '!'} ${fb.message}`));
+        }
+      }
+      if (this.latestVersion.has_pdf) {
+        const dl = el('button', 'button primary', 'Download PDF') as HTMLButtonElement;
+        dl.type = 'button';
+        dl.addEventListener('click', () => void this.downloadVersion(this.latestVersion!.id));
+        box.append(dl);
+      }
+      if (this.versions.length > 1) {
+        box.append(el('p', 'muted', `${this.versions.length} immutable versions for this application`));
+      }
+      panel.append(box);
+    }
+    return panel;
+  }
+
+  private collectDraft(
+    fullName: HTMLInputElement,
+    email: HTMLInputElement,
+    phone: HTMLInputElement,
+    location: HTMLInputElement,
+    roleTitle: HTMLInputElement,
+    summary: HTMLTextAreaElement,
+    skills: HTMLInputElement,
+    targetSkills: HTMLInputElement,
+    company: HTMLInputElement,
+    role: HTMLInputElement,
+    bullets: HTMLTextAreaElement,
+  ): { draft: ResumeDocument; targetSkills: string[] } {
+    const skillList = skills.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const targets = targetSkills.value.split(',').map((s) => s.trim()).filter(Boolean);
+    const bulletList = bullets.value.split('\n').map((s) => s.trim()).filter(Boolean);
+    const draft: ResumeDocument = {
+      full_name: fullName.value.trim(),
+      email: email.value.trim(),
+      title: roleTitle.value.trim(),
+      skills: skillList,
+      experience: company.value.trim() || role.value.trim() || bulletList.length
+        ? [{
+            company: company.value.trim() || 'Company',
+            role: role.value.trim() || roleTitle.value.trim() || 'Role',
+            start: this.draft.experience[0]?.start || '',
+            end: this.draft.experience[0]?.end || 'Present',
+            bullets: bulletList,
+          }]
+        : [],
+      education: this.draft.education,
+    };
+    if (phone.value.trim()) draft.phone = phone.value.trim();
+    if (location.value.trim()) draft.location = location.value.trim();
+    if (summary.value.trim()) draft.summary = summary.value.trim();
+    if (this.draft.projects) draft.projects = this.draft.projects;
+    return { draft, targetSkills: targets };
+  }
+
+  private async createApplication(title: string): Promise<void> {
+    if (this.busy) return;
+    const trimmed = title.trim() || this.draft.title || 'Untitled application';
+    this.busy = true;
+    try {
+      const input: {
+        title: string;
+        company_id?: string;
+        track_id?: string;
+        resume_draft: ResumeDocument;
+        target_skills: string[];
+      } = {
+        title: trimmed,
+        resume_draft: { ...emptyResumeDraft(trimmed), ...this.draft, title: trimmed },
+        target_skills: this.targetSkillsRaw.split(',').map((s) => s.trim()).filter(Boolean),
+      };
+      if (this.selectedCompanyId) input.company_id = this.selectedCompanyId;
+      if (this.selectedTrackId) input.track_id = this.selectedTrackId;
+      const app = await this.career.createApplication(input, this.signal ?? undefined);
+      this.selectedAppId = app.id;
+      this.options.feedback(`Application “${app.title}” created`);
+      await this.reload();
+    } catch (err) {
+      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async selectApplication(id: string): Promise<void> {
+    this.selectedAppId = id;
+    try {
+      await this.loadSelectedApplication();
+      this.render();
+    } catch (err) {
+      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
+    }
+  }
+
+  private async saveDraft(
+    fullName: HTMLInputElement,
+    email: HTMLInputElement,
+    phone: HTMLInputElement,
+    location: HTMLInputElement,
+    roleTitle: HTMLInputElement,
+    summary: HTMLTextAreaElement,
+    skills: HTMLInputElement,
+    targetSkills: HTMLInputElement,
+    company: HTMLInputElement,
+    role: HTMLInputElement,
+    bullets: HTMLTextAreaElement,
+  ): Promise<void> {
+    if (!this.selectedAppId || this.busy) {
+      this.options.feedback('Create an application first', true);
+      return;
+    }
+    const collected = this.collectDraft(fullName, email, phone, location, roleTitle, summary, skills, targetSkills, company, role, bullets);
+    this.busy = true;
+    try {
+      await this.career.updateApplication(
+        this.selectedAppId,
+        { title: collected.draft.title, resume_draft: collected.draft, target_skills: collected.targetSkills },
+        this.signal ?? undefined,
+      );
+      this.draft = collected.draft;
+      this.targetSkillsRaw = collected.targetSkills.join(', ');
+      this.options.feedback('Resume draft saved');
+      await this.reload();
+    } catch (err) {
+      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async generateResume(
+    fullName: HTMLInputElement,
+    email: HTMLInputElement,
+    phone: HTMLInputElement,
+    location: HTMLInputElement,
+    roleTitle: HTMLInputElement,
+    summary: HTMLTextAreaElement,
+    skills: HTMLInputElement,
+    targetSkills: HTMLInputElement,
+    company: HTMLInputElement,
+    role: HTMLInputElement,
+    bullets: HTMLTextAreaElement,
+  ): Promise<void> {
+    if (!this.selectedAppId || this.busy) return;
+    const collected = this.collectDraft(fullName, email, phone, location, roleTitle, summary, skills, targetSkills, company, role, bullets);
+    this.busy = true;
+    try {
+      await this.career.updateApplication(
+        this.selectedAppId,
+        { title: collected.draft.title, resume_draft: collected.draft, target_skills: collected.targetSkills },
+        this.signal ?? undefined,
+      );
+      const version = await this.career.generateVersion(this.selectedAppId, this.selectedTemplateId, this.signal ?? undefined);
+      this.latestVersion = version;
+      if (version.status === 'ready') {
+        this.options.feedback(`Resume ready · skim ${version.skim_score?.score ?? 0}%`);
+      } else {
+        this.options.feedback(version.error_message || 'Resume generation failed', true);
+      }
+      await this.reload();
+    } catch (err) {
+      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async downloadVersion(id: string): Promise<void> {
+    try {
+      const blob = await this.career.downloadPdf(id, this.signal ?? undefined);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resume.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+      this.options.feedback('PDF downloaded');
+    } catch (err) {
+      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
     }
   }
 }

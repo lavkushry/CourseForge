@@ -131,8 +131,44 @@
   font-size: var(--text-sm);
 }
 
+.career-resume-studio {
+  margin-top: var(--space-6);
+}
+
+.career-resume-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.career-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.career-field textarea,
+.career-resume-form .career-chip-row,
+.career-app-row {
+  grid-column: 1 / -1;
+}
+
+.career-app-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.career-app-row input {
+  flex: 1 1 16rem;
+}
+
 @media (max-width: 1024px) {
   .career-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .career-resume-form {
     grid-template-columns: 1fr;
   }
 }

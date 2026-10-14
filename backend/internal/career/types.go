@@ -92,3 +92,95 @@ type MatchResult struct {
 	ExtractionSource string             `json:"extraction_source"`
 	JDKeywords       ExtractedSignals   `json:"jd_keywords"`
 }
+
+// ResumeExperience is one work entry in a structured resume.
+type ResumeExperience struct {
+	Company  string   `json:"company"`
+	Role     string   `json:"role"`
+	Location string   `json:"location,omitempty"`
+	Start    string   `json:"start"`
+	End      string   `json:"end"`
+	Bullets  []string `json:"bullets"`
+}
+
+// ResumeEducation is one education entry.
+type ResumeEducation struct {
+	Institution string `json:"institution"`
+	Degree      string `json:"degree"`
+	Year        string `json:"year"`
+	Details     string `json:"details,omitempty"`
+}
+
+// ResumeProject is one project entry.
+type ResumeProject struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Bullets     []string `json:"bullets,omitempty"`
+	URL         string   `json:"url,omitempty"`
+}
+
+// ResumeDocument is editable structured resume content. Facts and metrics must
+// come from the user — generators never invent numbers.
+type ResumeDocument struct {
+	FullName   string             `json:"full_name"`
+	Email      string             `json:"email"`
+	Phone      string             `json:"phone,omitempty"`
+	Location   string             `json:"location,omitempty"`
+	Title      string             `json:"title"`
+	Summary    string             `json:"summary,omitempty"`
+	Skills     []string           `json:"skills"`
+	Experience []ResumeExperience `json:"experience"`
+	Education  []ResumeEducation  `json:"education"`
+	Projects   []ResumeProject    `json:"projects,omitempty"`
+}
+
+// Application is a job application with an editable resume draft.
+type Application struct {
+	ID           string         `json:"id"`
+	CompanyID    *string        `json:"company_id,omitempty"`
+	CompanyName  string         `json:"company_name,omitempty"`
+	TrackID      *string        `json:"track_id,omitempty"`
+	Title        string         `json:"title"`
+	Notes        string         `json:"notes"`
+	TargetSkills []string       `json:"target_skills"`
+	ResumeDraft  ResumeDocument `json:"resume_draft"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+}
+
+// SkimFeedback is one actionable recruiter-skim finding.
+type SkimFeedback struct {
+	Code    string `json:"code"`
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// SkimScore evaluates the top third of resume text for recruiter skim quality.
+type SkimScore struct {
+	Score    float64        `json:"score"`
+	Feedback []SkimFeedback `json:"feedback"`
+}
+
+// ResumeVersion is an immutable snapshot of structured data + LaTeX (+ PDF when ready).
+type ResumeVersion struct {
+	ID              string          `json:"id"`
+	ApplicationID   string          `json:"application_id"`
+	TemplateID      string          `json:"template_id"`
+	Snapshot        ResumeDocument  `json:"snapshot"`
+	Status          string          `json:"status"`
+	ErrorMessage    string          `json:"error_message,omitempty"`
+	Compiler        string          `json:"compiler,omitempty"`
+	Skim            *SkimScore      `json:"skim_score,omitempty"`
+	VerifiedFields  []string        `json:"verified_fields"`
+	HasPDF          bool            `json:"has_pdf"`
+	CreatedAt       time.Time       `json:"created_at"`
+	UpdatedAt       time.Time       `json:"updated_at"`
+	LatexSource     string          `json:"latex_source,omitempty"`
+}
+
+// TemplateInfo describes an ATS-safe resume template.
+type TemplateInfo struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}

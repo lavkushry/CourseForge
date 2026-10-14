@@ -1,5 +1,7 @@
 import type { ApiClient } from '../api';
 import {
+  parseApplications,
+  parseApplication,
   parseCompanies,
   parseCompany,
   parseFact,
@@ -8,14 +10,21 @@ import {
   parseJobDescription,
   parseJobDescriptions,
   parseMatchResult,
+  parseResumeVersion,
+  parseResumeVersions,
   parseRoleTrack,
   parseRoleTracks,
+  parseTemplates,
+  type Application,
   type Company,
   type ConfirmedFact,
   type HiringProfile,
   type JobDescription,
   type MatchResult,
+  type ResumeDocument,
+  type ResumeVersion,
   type RoleTrack,
+  type TemplateInfo,
 } from './contracts';
 
 export class CareerApi {
@@ -81,5 +90,86 @@ export class CareerApi {
 
   match(input: { track_id: string; company_id?: string; jd_text?: string }, signal?: AbortSignal): Promise<MatchResult> {
     return this.api.request('/career/match', { method: 'POST', body: input, signal }).then(parseMatchResult);
+  }
+
+  templates(signal?: AbortSignal): Promise<{ templates: TemplateInfo[] }> {
+    return this.api.request('/career/templates', { signal }).then(parseTemplates);
+  }
+
+  applications(signal?: AbortSignal): Promise<{ applications: Application[] }> {
+    return this.api.request('/career/applications', { signal }).then(parseApplications);
+  }
+
+  createApplication(
+    input: {
+      company_id?: string;
+      track_id?: string;
+      title: string;
+      notes?: string;
+      target_skills?: string[];
+      resume_draft?: ResumeDocument;
+    },
+    signal?: AbortSignal,
+  ): Promise<Application> {
+    return this.api.request('/career/applications', { method: 'POST', body: input, signal }).then(parseApplication);
+  }
+
+  application(id: string, signal?: AbortSignal): Promise<Application> {
+    return this.api.request(`/career/applications/${encodeURIComponent(id)}`, { signal }).then(parseApplication);
+  }
+
+  updateApplication(
+    id: string,
+    input: {
+      title?: string;
+      notes?: string;
+      target_skills?: string[];
+      resume_draft?: ResumeDocument;
+      company_id?: string;
+      track_id?: string;
+    },
+    signal?: AbortSignal,
+  ): Promise<Application> {
+    return this.api
+      .request(`/career/applications/${encodeURIComponent(id)}`, { method: 'PUT', body: input, signal })
+      .then(parseApplication);
+  }
+
+  deleteApplication(id: string, signal?: AbortSignal): Promise<void> {
+    return this.api.request(`/career/applications/${encodeURIComponent(id)}`, { method: 'DELETE', signal }).then(() => undefined);
+  }
+
+  versions(applicationId: string, signal?: AbortSignal): Promise<{ versions: ResumeVersion[] }> {
+    return this.api
+      .request(`/career/applications/${encodeURIComponent(applicationId)}/versions`, { signal })
+      .then(parseResumeVersions);
+  }
+
+  generateVersion(applicationId: string, templateId: string, signal?: AbortSignal): Promise<ResumeVersion> {
+    return this.api
+      .request(`/career/applications/${encodeURIComponent(applicationId)}/versions`, {
+        method: 'POST',
+        body: { template_id: templateId },
+        signal,
+      })
+      .then(parseResumeVersion);
+  }
+
+  version(id: string, signal?: AbortSignal): Promise<ResumeVersion> {
+    return this.api.request(`/career/versions/${encodeURIComponent(id)}`, { signal }).then(parseResumeVersion);
+  }
+
+  async downloadPdf(versionId: string, signal?: AbortSignal): Promise<Blob> {
+    const init: RequestInit = {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/pdf' },
+    };
+    if (signal) init.signal = signal;
+    const response = await this.api.rawFetch(`/api/v1/career/versions/${encodeURIComponent(versionId)}/pdf`, init);
+    if (!response.ok) {
+      throw new Error(`PDF download failed (${response.status})`);
+    }
+    return response.blob();
   }
 }

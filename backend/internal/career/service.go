@@ -26,8 +26,9 @@ var (
 
 // Service serves the career/resume HTTP API.
 type Service struct {
-	Pool *pgxpool.Pool
-	AI   Completer
+	Pool    *pgxpool.Pool
+	AI      Completer
+	Compile CompileFunc // optional; defaults to CompileLaTeX (tectonic/latexmk)
 }
 
 func New(pool *pgxpool.Pool, ai Completer) *Service {
@@ -49,6 +50,16 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		"POST /api/v1/career/facts":                           s.createFact,
 		"DELETE /api/v1/career/facts/{id}":                    s.deleteFact,
 		"POST /api/v1/career/match":                           s.match,
+		"GET /api/v1/career/templates":                        s.listTemplates,
+		"GET /api/v1/career/applications":                     s.listApplications,
+		"POST /api/v1/career/applications":                    s.createApplication,
+		"GET /api/v1/career/applications/{id}":                s.getApplication,
+		"PUT /api/v1/career/applications/{id}":                s.updateApplication,
+		"DELETE /api/v1/career/applications/{id}":             s.deleteApplication,
+		"GET /api/v1/career/applications/{id}/versions":       s.listVersions,
+		"POST /api/v1/career/applications/{id}/versions":      s.generateVersion,
+		"GET /api/v1/career/versions/{vid}":                   s.getVersion,
+		"GET /api/v1/career/versions/{vid}/pdf":               s.downloadPDF,
 	} {
 		mux.Handle(route, auth.Require(h))
 	}

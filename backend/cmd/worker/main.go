@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"courseforge/backend/internal/career"
 	"courseforge/backend/internal/jobs"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/paths"
@@ -71,6 +72,12 @@ func run() error {
 	}
 	prefix := hex.EncodeToString(workerID)
 	var wg sync.WaitGroup
+	// Export workers also drain career resume LaTeX compile jobs (tectonic/latexmk).
+	if resource == "export" {
+		wg.Go(func() {
+			career.RunCompileLoop(ctx, pool, career.CompileLaTeX, time.Second)
+		})
+	}
 	for i := 0; i < parallel; i++ {
 		worker := prefix + "-" + strconv.Itoa(i)
 		wg.Go(func() {
