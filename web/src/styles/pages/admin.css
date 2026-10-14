@@ -1,0 +1,935 @@
+/* ==========================================================================
+   Admin Dashboard & Observability Styles
+   ========================================================================== */
+
+.admin-panel {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.admin-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-header {
+  border-bottom: 1px solid #232533;
+  padding-bottom: 1.2rem;
+}
+
+.admin-header h1 {
+  font-size: 1.8rem;
+  margin: 0.2rem 0;
+}
+
+.admin-nav {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #232533;
+  padding-bottom: 0.8rem;
+}
+
+.admin-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #8e92a8;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-tab-btn:hover {
+  background: #1c1d2b;
+  color: #fff;
+}
+
+.admin-tab-btn.active {
+  background: #29243f;
+  border-color: #7c3aed;
+  color: #c4b5fd;
+}
+
+.admin-content {
+  min-height: 400px;
+}
+
+.admin-tab-pane {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.2rem;
+}
+
+.admin-metric-card {
+  background: #13141f;
+  border: 1px solid #232638;
+  border-radius: 12px;
+  padding: 1.3rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.metric-top {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #9da1b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.metric-sub {
+  font-size: 0.78rem;
+  color: #6d7188;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #12131d;
+  border: 1px solid #232535;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.88rem;
+}
+
+.admin-table th, .admin-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #1f212e;
+}
+
+.admin-table th {
+  background: #181926;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8e92a8;
+  font-weight: 700;
+}
+
+.admin-table tr:hover td {
+  background: #161824;
+}
+
+.badge-admin {
+  background: #3b1d54;
+  color: #e9b3ff;
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-student {
+  background: #1a2836;
+  color: #7cc4fa;
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-instructor {
+  background: #332a18;
+  color: #fad17a;
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-verified {
+  color: #8dd7a5;
+  font-weight: 600;
+}
+
+.badge-suspended {
+  color: #f28b82;
+  font-weight: 600;
+}
+
+.badge-unverified {
+  color: #f2b97d;
+  font-weight: 600;
+}
+
+.badge-stat {
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.admin-export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.export-card {
+  background: #13141f;
+  border: 1px solid #232638;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.export-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.export-card .button {
+  justify-self: start;
+}
+
+.learner-dialog {
+  background: #161724;
+  border: 1px solid #363952;
+  border-radius: 14px;
+  padding: 2rem;
+  color: #fff;
+  max-width: 500px;
+  width: 90vw;
+}
+
+.learner-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.learner-modal-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.learner-modal-body h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.learner-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.stat-box {
+  background: #0e0f17;
+  border: 1px solid #232536;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* Dynamic AI Roadmap & Retention Styles */
+
+.roadmap-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, var(--space-4));
+}
+
+.roadmap-header h2 {
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.roadmap-goals-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.mode-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-pill:hover, .mode-pill.active {
+  background: var(--panel);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.roadmap-form {
+  display: flex;
+  gap: 10px;
+  max-width: 720px;
+}
+
+.roadmap-meta-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: var(--space-4) 0;
+}
+
+.badge-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.roadmap-timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.roadmap-step-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: border-color 0.15s;
+}
+
+.roadmap-step-card:hover {
+  border-color: var(--accent);
+}
+
+.step-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.step-hours {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.step-course-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.step-desc {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.step-concepts-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+.concept-pill {
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  background: var(--panel);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* Admin Retention & Replay Heatmap */
+
+.admin-retention-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: var(--space-5);
+}
+
+.retention-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.retention-chart-svg {
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  background: var(--bg);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.retention-peaks-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.peak-moment-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.badge-time {
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+/* ==========================================================================
+   UNIVERSITY LMS (DRIBBBLE 27155177) ADMIN CONSOLE & STUDENT ACCESS CONTROL
+   ========================================================================== */
+
+.admin-panel {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  background: var(--canvas);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: var(--space-6) var(--space-7);
+}
+
+.admin-header-copy h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #fff;
+  margin: var(--space-1) 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.admin-header-copy .eyebrow {
+  color: var(--lms-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-header-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #E5E5EA;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.admin-header-stat-pill svg {
+  width: 16px;
+  height: 16px;
+  color: var(--lms-accent);
+}
+
+.admin-layout .button.primary {
+  background: var(--lms-accent);
+  border-color: var(--lms-accent);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: 0 6px 18px rgba(229, 69, 3, 0.28);
+}
+
+.admin-layout .button.primary:hover {
+  background: #FF5510;
+  transform: translateY(-1px);
+}
+
+.admin-layout .button.secondary {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E5E5EA;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-layout .button.secondary:hover {
+  background: #2A2A2A;
+  color: #fff;
+}
+
+.admin-layout .small-btn {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 0.78rem;
+}
+
+.admin-layout .button svg, .student-access-dialog .button svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   STUDENT COURSE ACCESS & SECURITY CONTROL MODAL
+   ========================================================================== */
+
+.student-access-dialog {
+  max-width: 960px;
+  width: min(94vw, 960px);
+  max-height: 90vh;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 0;
+  color: #fff;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85);
+}
+
+.student-access-modal-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+}
+
+.student-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 22px 26px var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.student-modal-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.student-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.student-modal-title-row h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.student-modal-meta p {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8rem;
+}
+
+.student-modal-close-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.student-modal-close-btn:hover {
+  background: var(--lms-accent);
+  border-color: var(--lms-accent);
+}
+
+.student-modal-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 14px 26px;
+  background: var(--canvas);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.student-mini-kpi {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.mini-kpi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(229, 69, 3, 0.14);
+  color: var(--lms-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mini-kpi-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mini-kpi-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-kpi-label {
+  font-size: 0.7rem;
+  color: #8E8E93;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mini-kpi-val {
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.student-modal-subnav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 26px;
+  background: var(--canvas);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.student-subnav-btn {
+  height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #A1A1AA;
+  font-size: 0.82rem;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.student-subnav-btn.active {
+  background: var(--lms-accent);
+  border-color: var(--lms-accent);
+  color: #fff;
+}
+
+.student-modal-content {
+  padding: var(--space-5) 26px 26px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.student-matrix-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.student-matrix-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.student-course-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+  gap: var(--space-3);
+}
+
+.course-access-item {
+  background: #1C1C1C;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3);
+  transition: all 0.16s ease;
+}
+
+.course-access-item.is-enrolled {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.09) 0%, #1C1C1C 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.course-access-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.course-access-chips {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.access-chip {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+}
+
+.access-chip.granted {
+  background: rgba(16, 185, 129, 0.18);
+  color: var(--success);
+}
+
+.access-chip.restricted {
+  background: rgba(255, 255, 255, 0.07);
+  color: #8E8E93;
+}
+
+.access-chip-lectures {
+  font-size: 0.72rem;
+  color: #8E8E93;
+}
+
+.course-access-title {
+  font-size: 0.9rem;
+  color: #fff;
+  line-height: 1.35;
+}
+
+.course-access-id {
+  font-size: 0.7rem;
+  color: #71717A;
+}
+
+.course-toggle-enrolled {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34D399;
+  border-radius: 999px;
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.course-toggle-enrolled:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #FCA5A5;
+}
+
+.course-toggle-grant {
+  background: #262626;
+  border: 1px solid rgba(229, 69, 3, 0.45);
+  color: var(--coral);
+  border-radius: 999px;
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.course-toggle-grant:hover {
+  background: var(--lms-accent);
+  color: #fff;
+}
+
+/* Security Controls Grid inside Student Modal */
+
+.student-security-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 14px;
+}
+
+.security-control-card {
+  background: #1C1C1C;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.security-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.security-card-head svg {
+  width: 18px;
+  height: 18px;
+  color: var(--lms-accent);
+}
+
+.security-card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.security-role-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-telemetry-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.telemetry-sub-section h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .admin-invite-form {
+    grid-template-columns: 1fr;
+  }
+
+  .student-modal-kpi-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .student-security-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modal & Grid Polish for University LMS Admin Console */
+
+.admin-metrics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+}
+
+.student-access-dialog .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: 999px;
+  font-weight: 700;
+  height: 38px;
+  padding: 0 var(--space-4);
+}
+
+.student-access-dialog .button.small-btn {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 0.78rem;
+}
+
+.student-access-dialog .button.primary {
+  background: var(--lms-accent);
+  border: 1px solid var(--lms-accent);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(229, 69, 3, 0.28);
+}
+
+.student-access-dialog .button.primary:hover {
+  background: #FF5510;
+  border-color: #FF5510;
+}
+
+.student-access-dialog .button.secondary {
+  background: #222222;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #E5E5EA;
+}
+
+.student-access-dialog .button.secondary:hover {
+  background: #2C2C2C;
+  color: #fff;
+}
+
+@media (max-width: 1024px) {
+  #planning-panel form, .planning-daily-form, .planning-weekly-budgets, .planning-weekly-days {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+}

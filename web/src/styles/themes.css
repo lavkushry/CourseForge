@@ -1,0 +1,34 @@
+/* Component-level theme / accent overrides (tokens live in tokens.css) */
+
+html[data-accent="teal"] .button.primary, html[data-accent="teal"] .mode-switch-pill[aria-pressed="true"], html[data-accent="teal"] .pill-next {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  border-color: #2dd4bf;
+  color: #041f1e;
+}
+
+html[data-accent="rose"] .button.primary, html[data-accent="rose"] .mode-switch-pill[aria-pressed="true"], html[data-accent="rose"] .pill-next {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  border-color: #fb7185;
+  color: #fff;
+}
+
+html[data-theme="light"] body {
+  background: var(--bg);
+  color: #111420;
+}
+
+html[data-theme="light"] .site-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme="light"] .brand, html[data-theme="light"] .primary-navigation button, html[data-theme="light"] h1, html[data-theme="light"] h2, html[data-theme="light"] h3 {
+  color: var(--text);
+}
+
+html[data-theme="light"] .panel, html[data-theme="light"] .settings-panel-card, html[data-theme="light"] .planning-card, html[data-theme="light"] .course-card, html[data-theme="light"] .momentum-stat-card {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}

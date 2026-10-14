@@ -1,0 +1,431 @@
+/* Daily Preferences Card */
+
+.daily-preferences-card {
+  padding: var(--space-5) 22px;
+  background: #0f121d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.daily-preferences-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.daily-preferences-top label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.daily-preferences-top input[type="number"] {
+  width: 90px;
+  background: #181b2a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.save-pref-btn {
+  padding: var(--space-2) 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.budget-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.budget-choice-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cfd2dc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.budget-choice-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.budget-choice-pill.active {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #8b5cf6;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+
+.checklist-summary-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  font-size: 0.82rem;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+/* Recommended Focus Curriculum Cards */
+
+.recommended-focus-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.recommended-heading-row h3 {
+  margin: var(--space-1) 0 2px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.recommended-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+.recommended-task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-5);
+  background: #0f121d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.recommended-task-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.task-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.task-card-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #a78bfa;
+  text-transform: uppercase;
+}
+
+.task-card-dur {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px var(--space-2);
+  border-radius: 4px;
+}
+
+.task-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.task-card-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+  flex: 1 1 auto;
+}
+
+.task-action-btn {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Circular Header Icon Buttons (Bell & Settings Gear) */
+
+.lms-circle-icon-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #e4e4e7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.lms-circle-icon-btn:hover {
+  background: #2a2a2e;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.lms-circle-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.account-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #27272a, #18181b);
+  border: 2px solid var(--lms-accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px var(--lms-accent-glow);
+}
+
+/* Hide mobile-only controls on desktop */
+
+@media (min-width: 1025px) {
+  .mobile-only-btn, .mobile-more-trigger, .mobile-nav-backdrop {
+    display: none;
+  }
+
+  /* Desktop Left Vertical Icon Rail (Normal Mode — Dribbble 27155177) */
+
+  #primary-nav.lms-left-rail {
+    position: fixed;
+    top: 68px;
+    left: 0;
+    bottom: 0;
+    width: 82px;
+    background: var(--canvas);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px 0 var(--space-4);
+    gap: var(--space-2);
+    z-index: 110;
+    overflow: visible;
+    transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .lms-rail-studio-head {
+    display: none;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.16s ease;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item::after {
+    display: none;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item:hover {
+    background: #2c2c30;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: var(--lms-accent);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 18px var(--lms-accent-glow);
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  /* Floating Hover Tooltip Pill in Compact Rail Mode */
+
+  #primary-nav.lms-left-rail .lms-nav-label {
+    position: absolute;
+    left: 54px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-6px);
+    background: var(--surface);
+    color: #fff;
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 250;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item:hover .lms-nav-label, #primary-nav.lms-left-rail .lms-nav-item:focus-visible .lms-nav-label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  .lms-rail-bottom {
+    margin-top: auto;
+    padding-top: var(--space-2);
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .lms-rail-exit-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.16s ease;
+  }
+
+  .lms-rail-exit-btn:hover {
+    background: #2c2c30;
+    color: #fff;
+    border-color: var(--lms-accent);
+  }
+
+  .lms-rail-exit-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .app-layout-shell {
+    padding-left: 82px;
+    transition: padding-left 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* ========================================================================
+     ACADEMY STUDIO MODE (Expanded Left Sidebar with Full Labels)
+     ======================================================================== */
+
+  body.academy-studio-mode #primary-nav.lms-left-rail {
+    width: 244px;
+    align-items: stretch;
+    padding: 14px 14px 18px;
+    gap: 5px;
+    background: #111116;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  body.academy-studio-mode .lms-rail-studio-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 6px 10px;
+    margin-bottom: var(--space-1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item {
+    width: 100%;
+    height: 39px;
+    min-height: 39px;
+    border-radius: 12px;
+    justify-content: flex-start;
+    padding: 0 var(--space-3);
+    gap: var(--space-3);
+    background: transparent;
+    border-color: transparent;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item:hover {
+    background: var(--surface);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: rgba(229, 69, 3, 0.16);
+    border-color: rgba(229, 69, 3, 0.42);
+    color: #fff;
+    box-shadow: none;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] .lms-nav-icon {
+    color: var(--lms-accent);
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-label {
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: inherit;
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    padding-left: 244px;
+  }
+}

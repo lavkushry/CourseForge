@@ -1,0 +1,81 @@
+.course-cover {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.course-badge {
+  font-size: .55rem;
+  font-weight: 750;
+  letter-spacing: .13em;
+  color: #ffad92;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.course-description {
+  font-size: .78rem;
+  line-height: 1.65;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.course-meta {
+  font-size: .67rem;
+  color: #a9acb5;
+  margin-bottom: 18px;
+}
+
+#load-more {
+  display: block;
+  margin: 30px auto;
+}
+
+.row-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-bottom: 18px;
+}
+
+.row-heading h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -.045em;
+}
+
+#coverage {
+  color: #ffb197;
+}
+
+.material-link {
+  display: block;
+  padding: 10px 0;
+  font-size: .8rem;
+}
+
+.dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-5) 22px;
+}
+
+.dialog-heading h2 {
+  margin: 0;
+}
+
+.note-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
