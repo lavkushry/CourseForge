@@ -29,7 +29,104 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   row.classList.add('cinema-control-row');
   timeline.classList.add('cinema-timeline');
   timeline.setAttribute('aria-label', 'Seek lesson');
-  media.insertBefore(timeline, row);
+
+  // Custom sleek icons matching Dribbble University LMS reference
+  const playBtn = row.querySelector<HTMLElement>('media-play-button');
+  if (playBtn && !playBtn.querySelector('[slot="play"]')) {
+    playBtn.innerHTML = `
+      <span slot="play" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M7 4.5v15a1 1 0 0 0 1.55.83l12-7.5a1 1 0 0 0 0-1.66l-12-7.5A1 1 0 0 0 7 4.5z"/>
+        </svg>
+      </span>
+      <span slot="pause" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <rect x="6" y="4.5" width="3.5" height="15" rx="1.75"/>
+          <rect x="14.5" y="4.5" width="3.5" height="15" rx="1.75"/>
+        </svg>
+      </span>
+    `;
+  }
+
+  const muteBtn = row.querySelector<HTMLElement>('media-mute-button');
+  if (muteBtn && !muteBtn.querySelector('[slot="high"]')) {
+    muteBtn.innerHTML = `
+      <span slot="high" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </span>
+      <span slot="medium" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </span>
+      <span slot="low" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </span>
+      <span slot="off" class="dribbble-icon-slot" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+      </span>
+    `;
+  }
+
+  // Segmented Chapter Progress Bar matching Dribbble reference (5 pill segments or dynamic chapters)
+  const defaultSegments = [
+    { start: 0, end: 0.18 },
+    { start: 0.18, end: 0.38 },
+    { start: 0.38, end: 0.62 },
+    { start: 0.62, end: 0.80 },
+    { start: 0.80, end: 1.0 },
+  ];
+
+  const updateTimelineSegments = () => {
+    const duration = video.duration;
+    const chapters = actions.getChapters?.();
+    let segments = defaultSegments;
+    if (chapters && chapters.length > 0 && Number.isFinite(duration) && duration > 0) {
+      segments = chapters.map((c: any) => ({
+        start: Math.max(0, Math.min(1, c.start_seconds / duration)),
+        end: Math.max(0, Math.min(1, c.end_seconds / duration)),
+      })).filter((s: any) => s.end > s.start);
+      if (segments.length === 0) segments = defaultSegments;
+    }
+
+    if (typeof (timeline as any).updateSegments === 'function') {
+      (timeline as any).updateSegments(segments);
+    }
+
+    if (timeline.shadowRoot) {
+      if (!timeline.shadowRoot.querySelector('#cinema-timeline-round-style')) {
+        const style = document.createElement('style');
+        style.id = 'cinema-timeline-round-style';
+        style.textContent = `
+          #segments-clipping rect {
+            rx: 2.25px !important;
+            ry: 2.25px !important;
+          }
+        `;
+        timeline.shadowRoot.appendChild(style);
+      }
+      timeline.shadowRoot.querySelectorAll('#segments-clipping rect').forEach(r => {
+        r.setAttribute('rx', '2.25');
+        r.setAttribute('ry', '2.25');
+      });
+    }
+  };
+  for (const ev of ['durationchange', 'loadedmetadata', 'canplay', 'loadeddata', 'timeupdate']) {
+    video.addEventListener(ev, updateTimelineSegments, { signal });
+  }
+  updateTimelineSegments();
 
   const ui = (tag: string, className: string, text = '') => {
     const node = document.createElement(tag);
@@ -70,7 +167,7 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   top.append(capture, episodes, workbench, theater, lock);
   media.append(top);
 
-  const spacer = ui('span', 'cinema-spacer'); row.append(spacer);
+
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations
   let loopA: number | null = null;
@@ -79,7 +176,15 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   loopBtn.className = 'cinema-button';
   loopBtn.type = 'button';
   loopBtn.title = 'A-B Loop Repeat (Set marker A)';
-  loopBtn.append(svgIcon('loop'));
+  const loopSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  loopSvg.setAttribute('viewBox', '0 0 24 24');
+  loopSvg.setAttribute('fill', 'none');
+  loopSvg.setAttribute('stroke', 'currentColor');
+  loopSvg.setAttribute('stroke-width', '1.8');
+  loopSvg.setAttribute('stroke-linecap', 'round');
+  loopSvg.setAttribute('stroke-linejoin', 'round');
+  loopSvg.innerHTML = '<circle cx="12" cy="12" r="9.5"/><path d="M15 9l-2-2 2-2"/><path d="M9 7h4a3 3 0 0 1 3 3v1"/><path d="M9 15l2 2-2 2"/><path d="M15 17h-4a3 3 0 0 1-3-3v-1"/>';
+  loopBtn.append(loopSvg);
   loopBtn.addEventListener('click', () => {
     if (loopA === null) {
       loopA = video.currentTime;
@@ -95,7 +200,7 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
       loopBtn.title = 'A-B Loop Repeat (Set marker A)';
     }
   }, { signal });
-  row.append(loopBtn);
+
 
   video.addEventListener('timeupdate', () => {
     if (loopA !== null && loopB !== null && video.currentTime >= loopB) {
@@ -292,8 +397,10 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   }, { signal });
 
   const pip = delegate('Picture in picture', '#pip-toggle', 'pip');
-  const full = delegate('Toggle fullscreen', '#fullscreen', 'fullscreen');
-  row.append(speed, settingsBtn, pip, full);
+  pip.classList.add('sr-only-actionable');
+  const full = delegate('Toggle fullscreen', '#fullscreen', 'popout');
+  full.title = 'Fullscreen';
+  row.append(settingsBtn, loopBtn, full, speed, pip);
 
   const center = ui('div', 'cinema-center-actions'); center.slot = 'centered-chrome';
   const play = delegate('Play lesson', '#play-toggle', 'play'); play.classList.add('cinema-center-play');

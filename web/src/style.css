@@ -4093,38 +4093,109 @@ html[data-accent="rose"] {
 }
 
 /* ==========================================================================
-   DRIBBBLE 27155177 CLASSROOM COLORED TOPIC PILLS & DARK CHARCOAL CARDS
+   DRIBBBLE 27155177 UNIVERSITY LMS STATUS BADGES & CATEGORY PILLS
    ========================================================================== */
+.lesson-meta-badges {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.lesson-badge-pill {
+  border-radius: 9999px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.25 !important;
+  text-decoration: none !important;
+  transition: transform 0.15s ease, filter 0.15s ease !important;
+}
+
+.lesson-badge-pill:hover {
+  filter: brightness(1.1) !important;
+}
+
+/* Deep burgundy / terracotta */
 .lesson-badge-pill.pill-terracotta {
-  background: rgba(229, 69, 3, 0.18) !important;
-  color: #ff8a5c !important;
-  border: 1px solid rgba(229, 69, 3, 0.32) !important;
-  border-radius: 999px !important;
-  padding: 5px 14px !important;
+  background: #381c24 !important;
+  color: #ff987b !important;
+  border: 1px solid rgba(255, 152, 123, 0.15) !important;
 }
 
+/* Deep purple / indigo */
 .lesson-badge-pill.pill-purple {
-  background: rgba(139, 92, 246, 0.18) !important;
-  color: #c4b5fd !important;
-  border: 1px solid rgba(139, 92, 246, 0.32) !important;
-  border-radius: 999px !important;
-  padding: 5px 14px !important;
+  background: #281e3a !important;
+  color: #b39ddb !important;
+  border: 1px solid rgba(179, 157, 219, 0.15) !important;
 }
 
+/* Deep forest green / emerald */
 .lesson-badge-pill.pill-emerald {
-  background: rgba(16, 185, 129, 0.16) !important;
-  color: #6ee7b7 !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
-  border-radius: 999px !important;
-  padding: 5px 14px !important;
+  background: #1a3325 !important;
+  color: #81c784 !important;
+  border: 1px solid rgba(129, 199, 132, 0.15) !important;
 }
 
+/* Deep petrol / cyan */
 .lesson-badge-pill.pill-ocean {
-  background: rgba(14, 165, 233, 0.16) !important;
-  color: #7dd3fc !important;
-  border: 1px solid rgba(14, 165, 233, 0.3) !important;
-  border-radius: 999px !important;
-  padding: 5px 14px !important;
+  background: #172f3a !important;
+  color: #80deea !important;
+  border: 1px solid rgba(128, 222, 234, 0.15) !important;
+}
+
+/* Lesson save & progress status */
+.lesson-progress-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+}
+
+.lesson-save-status,
+#save-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #81c784 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.lesson-save-status::before,
+#save-status::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: #81c784 !important;
+  box-shadow: 0 0 6px rgba(129, 199, 132, 0.75) !important;
+}
+
+.lesson-meta-bar {
+  margin-top: 14px !important;
+  padding: 18px 22px !important;
+  background: #15161b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.lesson-meta-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
 }
 
 
@@ -5860,8 +5931,10 @@ html[data-accent="rose"] {
   }
 
   .lesson-badge-pill {
-    padding: 3px 10px !important;
-    font-size: 0.68rem !important;
+    border-radius: 9999px !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
     margin: 0 !important;
   }
 
@@ -6076,10 +6149,12 @@ textarea:focus {
 #watermark,
 .watermark {
   position: absolute !important;
-  top: 16px !important;
+  top: auto !important;
+  bottom: 65px !important;
   right: 20px !important;
-  bottom: auto !important;
   left: auto !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
   z-index: 25 !important;
   pointer-events: none !important;
   color: rgba(255, 255, 255, 0.45) !important;

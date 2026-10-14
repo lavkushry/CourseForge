@@ -502,7 +502,7 @@ function renderApp(account: User): void {
                   <div class="lesson-progress-track">
                     <div id="lesson-progress-fill" class="lesson-progress-fill" style="width: 0%"></div>
                   </div>
-                  <span id="save-status" class="lesson-save-status">No unsaved progress</span>
+                  <span id="save-status" class="lesson-save-status">Progress saved</span>
                 </div>
               </div>
 
