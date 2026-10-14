@@ -10,6 +10,7 @@ import (
 	"courseforge/backend/internal/administration"
 	"courseforge/backend/internal/ai"
 	"courseforge/backend/internal/api"
+	"courseforge/backend/internal/career"
 	"courseforge/backend/internal/certificates"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
@@ -231,6 +232,7 @@ func TestRegisterAPIRoutesNoPanicAndBaselineSuperset(t *testing.T) {
 		Activity:     activity.New(nil),
 		Labs:         labs.New(nil),
 		AI:           ai.New(nil),
+		Career:       career.New(nil, nil),
 		Media:        &media.Gateway{},
 	}
 	defer func() {

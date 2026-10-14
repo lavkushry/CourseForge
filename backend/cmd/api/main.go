@@ -16,6 +16,7 @@ import (
 	"courseforge/backend/internal/ai"
 	"courseforge/backend/internal/api"
 	"courseforge/backend/internal/cache"
+	"courseforge/backend/internal/career"
 	"courseforge/backend/internal/certificates"
 	"courseforge/backend/internal/config"
 	"courseforge/backend/internal/identity"
@@ -57,7 +58,7 @@ func run() error {
 	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
 		MaxConns:          c.MaxConnections,
 		MinConns:          c.MinConnections,
-		MaxConnLifetime:      c.MaxConnLifetime,
+		MaxConnLifetime:   c.MaxConnLifetime,
 		MaxConnIdleTime:   c.MaxConnIdleTime,
 		HealthCheckPeriod: c.HealthCheckPeriod,
 	})
@@ -97,6 +98,7 @@ func run() error {
 	queue.ResultProjector = paths.ProjectResult
 	planner := planning.New(pool)
 	planner.Paths = paths.PlanningAdapter{Service: pathService}
+	aiService := ai.New(pool)
 	deps := apiRouteDeps{
 		Auth:         auth,
 		Reports:      reports,
@@ -109,7 +111,8 @@ func run() error {
 		Certificates: certificates.New(pool),
 		Activity:     activity.New(pool),
 		Labs:         labs.New(pool),
-		AI:           ai.New(pool),
+		AI:           aiService,
+		Career:       career.New(pool, aiService),
 	}
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)

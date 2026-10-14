@@ -14,6 +14,7 @@ ctx.newNavigation = function newNavigation(): { signal: AbortSignal; generation:
   ctx.reviewsView?.deactivate();
   ctx.tutorView?.deactivate();
   ctx.labsView?.deactivate();
+  ctx.careerView?.deactivate();
   ctx.syllabusDialog?.close();
   ctx.navigationScope.abort();
   ctx.navigationScope = new AbortController();
@@ -31,6 +32,7 @@ ctx.hideAllWorkspaces = function hideAllWorkspaces(): void {
   required<HTMLElement>('#reviews-panel').hidden = true;
   required<HTMLElement>('#tutor-panel').hidden = true;
   required<HTMLElement>('#labs-panel').hidden = true;
+  required<HTMLElement>('#career-panel').hidden = true;
   required<HTMLElement>('#settings-panel').hidden = true;
 }
 
@@ -72,6 +74,7 @@ ctx.setActiveNav = function setActiveNav(name: string): void {
     tutor: ['Studio', 'AI Study Partner'],
     labs: ['Studio', 'Cloud IDE Labs'],
     paths: ['Studio', 'Learning Roadmaps'],
+    career: ['Studio', 'Career & Resume'],
     settings: ['Studio', 'Studio Settings'],
     admin: ['Studio', 'Command Center'],
   };
@@ -213,6 +216,19 @@ ctx.showPaths = async function showPaths(): Promise<void> {
   ctx.setActiveNav('paths');
   ctx.feedback('');
   await ctx.pathsView?.activate(navigation.signal);
+}
+
+ctx.showCareer = async function showCareer(): Promise<void> {
+  if (!ctx.user) return;
+  const navigation = ctx.newNavigation();
+  await ctx.controller?.close();
+  if (!navigation.current()) return;
+  ctx.selectedCourse = null; ctx.selectedLesson = null; ctx.lessons = [];
+  ctx.hideAllWorkspaces();
+  required<HTMLElement>('#career-panel').hidden = false;
+  ctx.setActiveNav('career');
+  ctx.feedback('');
+  ctx.careerView?.activate(navigation.signal);
 }
 
 ctx.showAdmin = async function showAdmin(): Promise<void> {

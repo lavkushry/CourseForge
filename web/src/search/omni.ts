@@ -333,6 +333,16 @@ export class OmniSearch {
         onSelect: () => this.options.onNavigateView('paths'),
       },
       {
+        id: 'tool-career',
+        type: 'tool',
+        title: 'Career & Resume Studio',
+        subtitle: 'Role tracks, company hiring profiles, and grounded JD match scoring',
+        badge: 'Career',
+        badgeClass: 'pill-ocean',
+        iconName: 'target',
+        onSelect: () => this.options.onNavigateView('career'),
+      },
+      {
         id: 'tool-settings',
         type: 'tool',
         title: 'Studio & Account Settings',

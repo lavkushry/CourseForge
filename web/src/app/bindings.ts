@@ -52,6 +52,7 @@ ctx.bindInterface = function bindInterface(video: HTMLVideoElement, signal: Abor
   on('#nav-tutor', () => { void ctx.showTutor(); });
   on('#nav-labs', () => { void ctx.showLabs(); });
   on('#nav-paths', () => { void ctx.showPaths(); });
+  on('#nav-career', () => { void ctx.showCareer(); });
   on('#nav-settings', () => { void ctx.showSettings(); });
   on('#workspace-mode-toggle', () => {
     const cur = document.body.classList.contains('academy-studio-mode') || document.body.classList.contains('in-zen-studio');
