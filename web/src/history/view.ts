@@ -1,15 +1,9 @@
 import { svgIcon } from '../icons';
 import type { HistoryItem } from '../contracts';
-import { ApiClient } from '../api';
+import type { ApiClient } from '../api';
+import { el, emptyState } from '../components';
 import { formatTime } from '../player/controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
 
 export interface HistoryViewOptions {
   root: HTMLElement;
@@ -89,15 +83,15 @@ export class HistoryView {
     }
 
     if (this.items.length === 0) {
-      const empty = el('div', 'catalog-empty history-empty-state');
-      const iconWrap = el('span', 'empty-symbol');
-      iconWrap.append(svgIcon('history'));
-      empty.append(
-        iconWrap,
-        el('h2', '', 'No watch history yet'),
-        el('p', 'muted', 'Start streaming any lesson from your library or discovery catalog to build your study timeline.'),
+      root.append(
+        emptyState({
+          className: 'catalog-empty history-empty-state',
+          icon: 'history',
+          title: 'No watch history yet',
+          description:
+            'Start streaming any lesson from your library or discovery catalog to build your study timeline.',
+        }),
       );
-      root.append(empty);
       return;
     }
 

@@ -1,20 +1,7 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
+import { button, el, emptyState, sidebar } from '../components';
 import type { LearningPath, PathStep } from './contracts';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] {
-  const n = document.createElement(tag);
-  n.className = cls;
-  n.textContent = text;
-  return n;
-}
-
-function button(text: string, action: () => void, cls = 'button'): HTMLButtonElement {
-  const n = el('button', cls, text);
-  n.type = 'button';
-  n.addEventListener('click', action);
-  return n;
-}
 
 export class PathsView {
   private paths: LearningPath[] = [];
@@ -56,7 +43,7 @@ export class PathsView {
     const container = el('div', 'paths-layout');
 
     // Sidebar list of paths
-    const sidebar = el('aside', 'paths-sidebar');
+    const side = sidebar({ className: 'paths-sidebar', label: 'Learning roadmaps' });
     const sideHead = el('div', 'paths-sidebar-head');
     const aiBtn = button('AI Generate', () => void this.showAiGenerateModal(), 'button quiet ai-gen-path-btn');
     aiBtn.prepend(svgIcon('sparkle'));
@@ -65,13 +52,20 @@ export class PathsView {
       aiBtn,
       button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn')
     );
-    sidebar.append(sideHead);
+    side.append(sideHead);
 
     const list = el('div', 'paths-list');
     if (this.loading && !this.paths.length) {
       list.append(el('p', 'muted', 'Loading roadmaps…'));
     } else if (!this.paths.length) {
-      list.append(el('p', 'muted', 'No saved learning roadmaps yet. Create one to chart your learning journey!'));
+      list.append(
+        emptyState({
+          className: 'catalog-empty paths-empty-state',
+          icon: 'sparkle',
+          title: 'No saved learning roadmaps yet',
+          description: 'Create one to chart your learning journey!',
+        }),
+      );
     } else {
       for (const p of this.paths) {
         const item = el('div', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`);
@@ -90,7 +84,7 @@ export class PathsView {
         list.append(item);
       }
     }
-    sidebar.append(list);
+    side.append(list);
 
     // Main detail pane
     const main = el('div', 'paths-main');
@@ -123,7 +117,7 @@ export class PathsView {
       main.append(stepsList);
     }
 
-    container.append(sidebar, main);
+    container.append(side, main);
     this.root.append(container);
   }
 

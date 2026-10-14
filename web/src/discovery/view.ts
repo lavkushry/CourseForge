@@ -1,5 +1,6 @@
 import { svgIcon, type IconName } from '../icons';
-import { ApiClient, errorMessage, isAbort } from '../api';
+import type { ApiClient} from '../api';
+import { errorMessage, isAbort } from '../api';
 import type { Course } from '../contracts';
 import { courseCover } from './contracts';
 import type { ContinueItem, SavedItem } from './contracts';
@@ -53,12 +54,12 @@ export function toTitleCase(str: string): string {
 export function cleanLessonTitle(raw: string): string {
   if (!raw) return '';
   let t = raw.trim();
-  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s\-]+)\]\s*)+/i, '');
+  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s-]+)\]\s*)+/i, '');
   const modMatch = t.match(/^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s*[-—:]\s*(.+)$/i);
   if (modMatch && modMatch[1] && modMatch[1].trim().length >= 2) {
     t = modMatch[1].trim();
   }
-  const numMatch = t.match(/^[0-9]{1,3}\s*[\.\-—]\s*(.+)$/);
+  const numMatch = t.match(/^[0-9]{1,3}\s*[.\-—]\s*(.+)$/);
   if (numMatch && numMatch[1] && numMatch[1].trim().length >= 2) {
     t = numMatch[1].trim();
   }
@@ -120,7 +121,7 @@ export function createSvgThumbnailDataUri(title: string, category?: string): str
     { bg1: '#261d12', bg2: '#422e17', accent: '#ffb74d', glow: 'rgba(255,183,77,0.3)', cat: 'Architecture' },
   ];
   const theme = themes[hash % themes.length] || { bg1: '#1a1024', bg2: '#2a163e', accent: '#b39ddb', glow: 'rgba(179,157,219,0.3)', cat: 'Masterclass' };
-  const catLabel = escapeXml(toTitleCase(category || theme.cat));
+  const _catLabel = escapeXml(toTitleCase(category || theme.cat));
   const cleanTitle = escapeXml(cleanLessonTitle(title || 'CourseForge Masterclass'));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
     <defs>

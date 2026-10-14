@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
-import type { CertificateResponse, Certificate } from './contracts';
+import type {  Certificate } from './contracts';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] {
   const n = document.createElement(tag);
@@ -60,9 +60,9 @@ export class CertificatesView {
                 await this.renderStatus(container, courseId);
                 this.showCertificateModal(cert);
               }
-            } catch (err) {
+            } catch (error: unknown) {
               claimBtn.disabled = false;
-              this.notice(err instanceof Error ? err.message : 'Could not issue certificate', true);
+              this.notice(error instanceof Error ? error.message : 'Could not issue certificate', true);
             }
           }, 'button primary cert-claim-btn');
           wrap.append(claimBtn);
@@ -71,7 +71,7 @@ export class CertificatesView {
         }
         container.append(wrap);
       }
-    } catch (err) {
+    } catch {
       container.replaceChildren(el('p', 'muted', 'Certificate status unavailable for this course.'));
     }
   }

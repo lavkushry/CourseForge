@@ -1,5 +1,6 @@
 import { svgIcon } from '../icons';
-import { ApiClient, ApiError, errorMessage } from '../api';
+import type { ApiClient} from '../api';
+import {  errorMessage } from '../api';
 import { LearningApi } from '../learning/api';
 import type { Card } from '../learning/contracts';
 

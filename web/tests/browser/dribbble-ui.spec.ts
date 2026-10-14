@@ -121,7 +121,7 @@ test('Desktop: Catalog thumbnails & Dribbble course cards at 1440x900', async ({
   const images = firstCard.locator('img');
   const imgCount = await images.count();
   if (imgCount > 0) {
-    const naturalWidth = await images.first().evaluate((img: HTMLImageElement) => img.naturalWidth);
+    const _naturalWidth = await images.first().evaluate((img: HTMLImageElement) => img.naturalWidth);
     const src = await images.first().getAttribute('src');
     expect(src).toBeTruthy();
   }

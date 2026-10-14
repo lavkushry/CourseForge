@@ -2,7 +2,8 @@ import { svgIcon, type IconName } from '../icons';
 import { ApiError, errorMessage, isAbort } from "../api";
 import type { Lesson } from "../contracts";
 import { formatTime } from "../player/controller";
-import { Commands, LearningApi } from "./api";
+import type { LearningApi } from "./api";
+import { Commands } from "./api";
 import type { Card, QuizResult, ReviewAttempt, TutorSource } from "./contracts";
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,

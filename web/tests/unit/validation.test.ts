@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseAuth, parseClaim, parsePlaybackSession, parsePreferences, parsePulseAck } from '../../src/validation';
-import { acknowledgement, session } from './fixtures';
+import {  session } from './fixtures';
 
 describe('server contract validation', () => {
   it('requires account identity and CSRF before opening the authenticated interface', () => {

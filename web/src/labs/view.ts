@@ -1,5 +1,5 @@
 import { svgIcon } from '../icons';
-import { ApiClient, ApiError, errorMessage } from '../api';
+import type { ApiClient} from '../api';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);

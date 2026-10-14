@@ -1,4 +1,4 @@
-import { ApiClient } from '../api';
+import type { ApiClient } from '../api';
 import * as c from './contracts';
 const id=encodeURIComponent;
 export class PlanningApi {

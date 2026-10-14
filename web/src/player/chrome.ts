@@ -13,7 +13,7 @@ export interface ChromeActions {
   onWatchNext?: () => void;
   onCancelNext?: () => void;
   toggleZen?: () => void;
-  getChapters?: () => any[];
+  getChapters?: () => Array<{ start_seconds: number; end_seconds: number }>;
   onOpenChapters?: () => void;
 }
 
@@ -94,15 +94,16 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     const chapters = actions.getChapters?.();
     let segments = defaultSegments;
     if (chapters && chapters.length > 0 && Number.isFinite(duration) && duration > 0) {
-      segments = chapters.map((c: any) => ({
+      segments = chapters.map(c => ({
         start: Math.max(0, Math.min(1, c.start_seconds / duration)),
         end: Math.max(0, Math.min(1, c.end_seconds / duration)),
-      })).filter((s: any) => s.end > s.start);
+      })).filter(s => s.end > s.start);
       if (segments.length === 0) segments = defaultSegments;
     }
 
-    if (typeof (timeline as any).updateSegments === 'function') {
-      (timeline as any).updateSegments(segments);
+    const timelineWithSegments = timeline as HTMLElement & { updateSegments?: (segments: Array<{ start: number; end: number }>) => void };
+    if (typeof timelineWithSegments.updateSegments === 'function') {
+      timelineWithSegments.updateSegments(segments);
     }
 
     if (timeline.shadowRoot) {
@@ -492,7 +493,7 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
 }
 
 async function openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
-  let existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
+  const existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
   if (existingModal) {
     existingModal.remove();
   }
@@ -604,8 +605,8 @@ ${resp.stdout}`;
           socraticBox.textContent = `Cognitive Mentor: ${resp.socratic_prompt}`;
         }
       }
-    } catch (err: any) {
-      consoleBody.textContent = `Execution error: ${err.message}`;
+    } catch (err: unknown) {
+      consoleBody.textContent = `Execution error: ${err instanceof Error ? err.message : String(err)}`;
     } finally {
       runBtn.disabled = false;
       runBtn.textContent = 'Run Property Crucible';
@@ -630,8 +631,8 @@ ${resp.stdout}`;
         }),
       }).then(r => r.json());
       socraticBox.textContent = `Cognitive Mentor (Zero-Leakage Fading): ${resp.response}`;
-    } catch (err: any) {
-      socraticBox.textContent = `Mentor error: ${err.message}`;
+    } catch (err: unknown) {
+      socraticBox.textContent = `Mentor error: ${err instanceof Error ? err.message : String(err)}`;
     } finally {
       mentorBtn.disabled = false;
       mentorBtn.textContent = 'Ask Cognitive Mentor';

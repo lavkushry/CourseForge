@@ -1,4 +1,4 @@
-import { ApiClient } from "../api";
+import type { ApiClient } from "../api";
 import {
   bookmark,
   card,
