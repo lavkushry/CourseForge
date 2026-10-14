@@ -4,6 +4,42 @@
 
 For hosting, administrator setup, email configuration and database recovery, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md). Administration includes student invitations, course publishing, player session filters and CSV export, service reports, and an audit log. Invitations let students choose their password without an email service. The CourseForge player streams authorized Odysee uploads through an account-bound media gateway, saves resume positions automatically, and records browser-reported playback and content coverage. The embedded fallback keeps manual resume points. Lesson-page activity and self-reported completion remain separate from playback or assessment performance. The AI and Docker tools require their configured local services.
 
+## Repository structure
+
+| Path | Role |
+| --- | --- |
+| `app/` | Live Python/FastAPI Academy API and static UI (do not relocate while cron/uvicorn run) |
+| `backend/` | Go rewrite API, media gateway, workers |
+| `web/` | TypeScript player / LMS UI (Vite) |
+| `scripts/` | Operator and CI helpers for the Python stack |
+| `compose.yaml` | Unified Compose entrypoint (Qdrant by default; rewrite via profiles) |
+| `compose.rewrite.yaml` | Rewrite project name wrapper — see [docs/compose.md](docs/compose.md) |
+| `docs/tools-migration.md` | Proposed future `tools/` layout for ops scripts (not applied on the live host) |
+
+## Rewrite development commands (Go + TypeScript)
+
+```bash
+# Web
+cd web
+npm ci
+npm run lint
+npm run typecheck
+npx vitest run
+npm run build
+COURSEFORGE_API_URL=http://127.0.0.1:18090 npm run dev -- --host 127.0.0.1
+
+# Backend
+cd backend
+go build ./...
+go vet ./...
+go test ./...
+
+# Loopback rewrite stack (postgres + api + media + web)
+docker compose -f compose.rewrite.yaml --profile app up -d --build
+```
+
+GitHub Actions: `.github/workflows/ci.yml` runs backend `go vet` / `go test` / `golangci-lint` and web `npm ci` / `lint` / `typecheck` / `vitest` / `build`. The older `.github/workflows/tests.yml` suite still covers the Python app.
+
 ## Step 10 — Real-device acceptance gate
 
 To validate a real local lecture, source timestamps, note cleanup, focus timer lifecycle, and opt-in live Chromium / Whisper–Ollama–Qdrant / Docker grading, run `python scripts/acceptance_live.py --video-id YOUR_VIDEO_ID --focus --docker-lab --real-ai --browser`. The full gate **must run on your own machine**; CI cannot see your downloaded courses or local services. See [the real-device acceptance runbook](docs/P0_REAL_DEVICE_ACCEPTANCE.md).

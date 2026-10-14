@@ -9,7 +9,10 @@ FROM nginx:1.29.5-alpine@sha256:1eff5a5f3fcf8431a0abb7eddf5471fec24e5e1905a2581a
 ENV COURSEFORGE_API_UPSTREAM=api:8080
 ENV COURSEFORGE_MEDIA_UPSTREAM=api:8080
 ENV COURSEFORGE_WEB_PORT=8080
+# Container probes use cleartext HTTP on the listen port. TLS terminates at the
+# edge; /health must never 301/302 to HTTPS or the probe fails.
+ENV COURSEFORGE_WEB_SCHEME=http
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /src/dist /usr/share/nginx/html
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD wget -q -O /dev/null http://127.0.0.1:${COURSEFORGE_WEB_PORT}/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD /bin/sh -c 'wget -q -O /dev/null "${COURSEFORGE_WEB_SCHEME}://127.0.0.1:${COURSEFORGE_WEB_PORT}/health"'

@@ -21,9 +21,11 @@ The current system remains Python/SQLite behind the existing Cloudflare tunnel.
 | M4 scale/resilience | Pending | Named topology, target-load runs, faults, media/provider verdicts |
 | M5 release | Pending | Cutover and post-write recovery evidence plus real devices/provider scale |
 
-Use `compose.rewrite.yaml` for the separate development/test PostgreSQL instance.
-It uses loopback ports and synthetic credentials. No production service/database
-replacement is performed by the development stack.
+Use `docker compose -f compose.rewrite.yaml --profile rewrite up -d` for the
+separate development/test PostgreSQL instance, or `--profile app` for the full
+loopback stack (see `docs/compose.md`). It uses loopback ports and synthetic
+credentials. No production service/database replacement is performed by the
+development stack.
 
 ## Evidence and its limits
 

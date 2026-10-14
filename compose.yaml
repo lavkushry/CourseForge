@@ -1,3 +1,17 @@
+# Unified Compose entrypoint. Profiles select stacks without renaming
+# services, volumes, or published ports. See docs/compose.md.
+#
+# Legacy Python AI (Qdrant only):
+#   docker compose up -d
+#
+# Rewrite PostgreSQL only:
+#   docker compose -f compose.rewrite.yaml --profile rewrite up -d
+#
+# Full rewrite app stack:
+#   docker compose -f compose.rewrite.yaml --profile app up -d
+include:
+  - path: compose.rewrite.services.yaml
+
 services:
   qdrant:
     image: qdrant/qdrant:v1.15.5
@@ -6,5 +20,6 @@ services:
       - '127.0.0.1:6333:6333'
     volumes:
       - qdrant_storage:/qdrant/storage
+
 volumes:
   qdrant_storage:
