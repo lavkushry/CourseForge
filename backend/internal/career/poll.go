@@ -198,10 +198,6 @@ RETURNING id`,
 	created = true
 	if matched {
 		notifID := newID("nt_")
-		label := src.Label
-		if label == "" {
-			label = src.Provider + ":" + src.BoardToken
-		}
 		body := title
 		if opening.Location != "" {
 			body += " · " + opening.Location

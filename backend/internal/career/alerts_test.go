@@ -124,11 +124,11 @@ func TestAlertPollCreatesInAppNotificationAndDedupes(t *testing.T) {
 
 	// Register source via HTTP.
 	w := f.call("alice", "POST", "/api/v1/career/alert-sources", map[string]any{
-		"provider":     "greenhouse",
-		"board_token":  "acme",
-		"label":        "Acme Greenhouse",
-		"track_id":     "backend",
-		"keywords":     []string{"go"},
+		"provider":              "greenhouse",
+		"board_token":           "acme",
+		"label":                 "Acme Greenhouse",
+		"track_id":              "backend",
+		"keywords":              []string{"go"},
 		"poll_interval_seconds": 60,
 	})
 	expect(t, w, 201)

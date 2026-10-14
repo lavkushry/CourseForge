@@ -118,22 +118,22 @@ const (
 
 // AlertSource is a user-registered company careers board to poll.
 type AlertSource struct {
-	ID                   string     `json:"id"`
-	CompanyID            *string    `json:"company_id,omitempty"`
-	Provider             string     `json:"provider"`
-	BoardToken           string     `json:"board_token"`
-	Label                string     `json:"label"`
-	TrackID              *string    `json:"track_id,omitempty"`
-	Keywords             []string   `json:"keywords"`
-	Enabled              bool       `json:"enabled"`
-	LastPolledAt         *time.Time `json:"last_polled_at,omitempty"`
-	NextPollAt           time.Time  `json:"next_poll_at"`
-	PollIntervalSeconds  int        `json:"poll_interval_seconds"`
-	BackoffSeconds       int        `json:"backoff_seconds"`
-	ConsecutiveFailures  int        `json:"consecutive_failures"`
-	LastError            string     `json:"last_error"`
-	CreatedAt            time.Time  `json:"created_at"`
-	UpdatedAt            time.Time  `json:"updated_at"`
+	ID                  string     `json:"id"`
+	CompanyID           *string    `json:"company_id,omitempty"`
+	Provider            string     `json:"provider"`
+	BoardToken          string     `json:"board_token"`
+	Label               string     `json:"label"`
+	TrackID             *string    `json:"track_id,omitempty"`
+	Keywords            []string   `json:"keywords"`
+	Enabled             bool       `json:"enabled"`
+	LastPolledAt        *time.Time `json:"last_polled_at,omitempty"`
+	NextPollAt          time.Time  `json:"next_poll_at"`
+	PollIntervalSeconds int        `json:"poll_interval_seconds"`
+	BackoffSeconds      int        `json:"backoff_seconds"`
+	ConsecutiveFailures int        `json:"consecutive_failures"`
+	LastError           string     `json:"last_error"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
 // AlertOpening is one posting seen on a careers board.

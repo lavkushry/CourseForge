@@ -69,11 +69,7 @@ export function renderAlerts(host: CareerStudioHost): HTMLElement {
     const card = el('div', 'career-fact-card');
     card.append(el('strong', '', src.label || `${src.provider}:${src.board_token}`));
     card.append(
-      el(
-        'p',
-        'muted',
-        `${src.provider} · ${src.board_token}${src.track_id ? ` · track ${src.track_id}` : ''}`,
-      ),
+      el('p', 'muted', `${src.provider} · ${src.board_token}${src.track_id ? ` · track ${src.track_id}` : ''}`),
     );
     if (src.keywords.length) {
       card.append(el('p', 'muted', `Keywords: ${src.keywords.join(', ')}`));

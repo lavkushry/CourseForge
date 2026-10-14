@@ -45,13 +45,6 @@ func defaultHTTPClient() HTTPDoer {
 	return &http.Client{Timeout: 20 * time.Second}
 }
 
-func (s *Service) httpDoer() HTTPDoer {
-	if s != nil && s.HTTPClient != nil {
-		return s.HTTPClient
-	}
-	return defaultHTTPClient()
-}
-
 func boardURL(provider, token string) (string, error) {
 	token = strings.TrimSpace(token)
 	if token == "" || strings.ContainsAny(token, "/?#") {
