@@ -76,3 +76,5 @@ ACTIVE_TUNNEL_URL.txt
 __pycache__/
 .venv/
 temp_videos/
+
+node_modules
