@@ -30,7 +30,13 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(673583404)"); err != nil {
+	// Lock per current_schema so parallel synthetic test schemas do not serialize
+	// on one cluster-wide key (and trip connection lock_timeout).
+	var schema string
+	if err = tx.QueryRow(ctx, "SELECT current_schema()").Scan(&schema); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(hashtextextended($1::text, 673583404))", schema); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, "CREATE TABLE IF NOT EXISTS schema_migrations(version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())"); err != nil {

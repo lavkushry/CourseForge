@@ -1,0 +1,4 @@
+# Core worker deps (tests + runtime). ML engines are optional imports.
+httpx==0.28.1
+Pillow==11.3.0
+pytesseract==0.3.13

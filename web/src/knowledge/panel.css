@@ -1,0 +1,99 @@
+/* Living Video Knowledge side panel — uses LMS design tokens only. */
+.knowledge-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--text);
+  background: var(--panel);
+  font-family: var(--font-sans);
+  min-width: 0;
+}
+
+.knowledge-panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.knowledge-panel__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--lms-accent);
+}
+
+.knowledge-panel__meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.knowledge-panel__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.knowledge-panel__status[data-state='ready'] {
+  color: var(--success);
+}
+
+.knowledge-panel__status[data-state='failed'] {
+  color: var(--danger);
+}
+
+.knowledge-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 40vh;
+  overflow: auto;
+}
+
+.knowledge-panel__item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  min-width: 0;
+}
+
+.knowledge-panel__time {
+  color: var(--lms-accent);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+}
+
+.knowledge-panel__text {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.knowledge-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.knowledge-panel__tag {
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  background: var(--surface);
+}
+
+html[data-theme='light'] .knowledge-panel {
+  color: var(--text);
+}

@@ -20,6 +20,7 @@ import (
 	"courseforge/backend/internal/config"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
+	"courseforge/backend/internal/knowledge"
 	"courseforge/backend/internal/labs"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/media"
@@ -57,7 +58,7 @@ func run() error {
 	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
 		MaxConns:          c.MaxConnections,
 		MinConns:          c.MinConnections,
-		MaxConnLifetime:      c.MaxConnLifetime,
+		MaxConnLifetime:   c.MaxConnLifetime,
 		MaxConnIdleTime:   c.MaxConnIdleTime,
 		HealthCheckPeriod: c.HealthCheckPeriod,
 	})
@@ -110,6 +111,7 @@ func run() error {
 		Activity:     activity.New(pool),
 		Labs:         labs.New(pool),
 		AI:           ai.New(pool),
+		Knowledge:    knowledge.New(pool),
 	}
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)

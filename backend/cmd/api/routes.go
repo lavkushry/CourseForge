@@ -10,6 +10,7 @@ import (
 	"courseforge/backend/internal/contract"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
+	"courseforge/backend/internal/knowledge"
 	"courseforge/backend/internal/labs"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/media"
@@ -34,6 +35,7 @@ type apiRouteDeps struct {
 	Activity     *activity.Service
 	Labs         *labs.Service
 	AI           *ai.Service
+	Knowledge    *knowledge.Service
 	Media        *media.Gateway // optional; only registered when non-nil
 }
 
@@ -53,6 +55,7 @@ func registerAPIRoutes(mux *http.ServeMux, d apiRouteDeps) {
 	d.Activity.Register(mux, d.Auth)
 	d.Labs.Register(mux, d.Auth)
 	d.AI.Register(mux, d.Auth)
+	d.Knowledge.Register(mux, d.Auth)
 	if d.Media != nil {
 		d.Media.Register(mux, d.Auth)
 	}
