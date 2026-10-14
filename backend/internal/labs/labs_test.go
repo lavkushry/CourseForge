@@ -16,6 +16,7 @@ import (
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
 	"courseforge/backend/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -105,12 +106,7 @@ func TestEightCuratedCatalogDefinitionsAndUnavailableGrading(t *testing.T) {
 	f := setup(t)
 	w := f.call("alice", "GET", "/api/v1/labs", "", nil)
 	expect(t, w, 200)
-	var result struct {
-		Labs      []Definition `json:"labs"`
-		Available bool         `json:"grading_available"`
-		Kind      bool         `json:"kind_available"`
-	}
-	result = read[struct {
+	result := read[struct {
 		Labs      []Definition `json:"labs"`
 		Available bool         `json:"grading_available"`
 		Kind      bool         `json:"kind_available"`

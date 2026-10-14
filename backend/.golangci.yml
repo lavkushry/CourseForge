@@ -1,0 +1,86 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    errcheck:
+      # Deferred cleanup Close/Rollback errors are intentionally ignored at call sites.
+      exclude-functions:
+        - io.Closer.Close
+        - (*os.File).Close
+        - (io.ReadCloser).Close
+        - (*compress/gzip.Reader).Close
+        - (net.Conn).Close
+        - (*net/http.Response).Body.Close
+        - (*net/smtp.Client).Close
+        - (*github.com/jackc/pgx/v5pool.Tx).Rollback
+        - github.com/jackc/pgx/v5.Tx.Rollback
+        - (github.com/jackc/pgx/v5.Tx).Rollback
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+          disabled: true
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: package-comments
+          disabled: true
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+          disabled: true
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+          disabled: true
+        - name: unreachable-code
+        - name: redefines-builtin-id
+  exclusions:
+    rules:
+      - linters: [errcheck]
+        text: "\\.Close`"
+      - linters: [errcheck]
+        text: "\\.Rollback`"
+      - linters: [errcheck]
+        text: "SetWriteDeadline"
+      - linters: [errcheck]
+        path: "internal/observe/observe\\.go"
+        text: "fmt\\.Fprintf"
+      - linters: [revive]
+        text: "redefinition of the built-in function (min|max|close)"
+      - linters: [revive]
+        text: "blank import should be only in a main or test package"
+      - linters: [revive]
+        text: "context.Context should be the first parameter"
+      - linters: [revive]
+        text: "will be inferred from the right-hand side"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - courseforge/backend

@@ -2,21 +2,22 @@ package identity
 
 import (
 	"context"
-	"net"
-	"net/url"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
 
 	"courseforge/backend/internal/httpx"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/text/cases"

@@ -17,6 +17,7 @@ import (
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/store"
 	"courseforge/backend/internal/testutil"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

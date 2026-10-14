@@ -230,4 +230,3 @@ func TestClassifySplitEndpoint(t *testing.T) {
 		t.Fatalf("unexpected chapters: %+v", res.Chapters)
 	}
 }
-

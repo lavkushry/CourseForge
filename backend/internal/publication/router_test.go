@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"courseforge/backend/internal/jobs"
+
 	"github.com/jackc/pgx/v5"
 )
 

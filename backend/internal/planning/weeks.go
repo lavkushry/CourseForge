@@ -2,13 +2,15 @@ package planning
 
 import (
 	"context"
-	"courseforge/backend/internal/httpx"
-	"courseforge/backend/internal/identity"
 	"encoding/json"
 	"errors"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"time"
+
+	"courseforge/backend/internal/httpx"
+	"courseforge/backend/internal/identity"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Forecast struct {

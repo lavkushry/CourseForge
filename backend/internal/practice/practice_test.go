@@ -15,6 +15,7 @@ import (
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/paths"
 	"courseforge/backend/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -183,12 +184,7 @@ func TestNilAdapterHasTruthfulRecommendationsAndNoFakeSession(t *testing.T) {
 	f.create(t, "path")
 	w := f.call("alice", "GET", "/api/v1/learning-paths/path/practice-recommendations", "", nil)
 	expect(t, w, 200)
-	var value struct {
-		Recommendations []Recommendation   `json:"recommendations"`
-		Lessons         []LessonSuggestion `json:"source_suggestions"`
-		Without         []string           `json:"topics_without_recommendations"`
-	}
-	value = read[struct {
+	value := read[struct {
 		Recommendations []Recommendation   `json:"recommendations"`
 		Lessons         []LessonSuggestion `json:"source_suggestions"`
 		Without         []string           `json:"topics_without_recommendations"`
@@ -214,11 +210,7 @@ func TestActualAssessmentReviewAndWatchSignalsRemainSeparate(t *testing.T) {
 	}
 	w := f.call("alice", "GET", "/api/v1/learning-paths/path/practice-recommendations", "", nil)
 	expect(t, w, 200)
-	var value struct {
-		Recommendations []Recommendation   `json:"recommendations"`
-		Lessons         []LessonSuggestion `json:"source_suggestions"`
-	}
-	value = read[struct {
+	value := read[struct {
 		Recommendations []Recommendation   `json:"recommendations"`
 		Lessons         []LessonSuggestion `json:"source_suggestions"`
 	}](t, w)
@@ -386,10 +378,7 @@ func TestLatestAcceptedFailureReopensStrongAssessmentGap(t *testing.T) {
 	f.accept(t, session.SessionID, "fail", "accept_fail")
 	w = f.call("alice", "GET", "/api/v1/learning-paths/path/practice-recommendations", "", nil)
 	expect(t, w, 200)
-	var value struct {
-		Items []Recommendation `json:"recommendations"`
-	}
-	value = read[struct {
+	value := read[struct {
 		Items []Recommendation `json:"recommendations"`
 	}](t, w)
 	if len(value.Items) != 1 || value.Items[0].Action != "Retry graded lab" || value.Items[0].LastPassed || value.Items[0].Attempts != 2 || value.Items[0].Priority != 61 {
@@ -415,11 +404,7 @@ func TestHistoryPagingAndDurableAckAfterLaterGrades(t *testing.T) {
 	}
 	w := f.call("alice", "GET", "/api/v1/learning-paths/path/practice-history?limit=1", "", nil)
 	expect(t, w, 200)
-	var page struct {
-		Items  []Attempt `json:"attempts"`
-		Cursor string    `json:"next_cursor"`
-	}
-	page = read[struct {
+	page := read[struct {
 		Items  []Attempt `json:"attempts"`
 		Cursor string    `json:"next_cursor"`
 	}](t, w)

@@ -31,13 +31,13 @@ func main() {
 	mux.HandleFunc("GET /media.mp4", func(w http.ResponseWriter, r *http.Request) {
 		f, err := os.Open(*file)
 		if err != nil {
-			http.Error(w, "fixture unavailable", 503)
+			http.Error(w, "fixture unavailable", http.StatusServiceUnavailable)
 			return
 		}
 		defer f.Close()
 		info, err := f.Stat()
 		if err != nil {
-			http.Error(w, "fixture unavailable", 503)
+			http.Error(w, "fixture unavailable", http.StatusServiceUnavailable)
 			return
 		}
 		w.Header().Set("Content-Type", "video/mp4")
@@ -45,7 +45,7 @@ func main() {
 	})
 	mux.HandleFunc("GET /fault/rate-limit", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "5")
-		http.Error(w, "synthetic provider throttle", 429)
+		http.Error(w, "synthetic provider throttle", http.StatusTooManyRequests)
 	})
 	mux.HandleFunc("GET /fault/stall", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "video/mp4")
