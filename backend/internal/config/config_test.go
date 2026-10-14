@@ -1,12 +1,15 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func validEnv(t *testing.T) {
 	t.Helper()
 	t.Setenv("CF_DATABASE_URL", "postgresql://fixture@localhost/synthetic")
 	t.Setenv("CF_PUBLIC_ORIGIN", "https://academy.example")
-	t.Setenv("CF_DB_MAX_CONNS", "24")
+	t.Setenv("CF_DB_MAX_CONNS", "16")
 	t.Setenv("CF_PASSWORD_CONCURRENCY", "2")
 	t.Setenv("CF_COOKIE_SECURE", "true")
 	t.Setenv("CF_MIGRATE", "false")
@@ -22,8 +25,11 @@ func TestSafeDefaultsAndExplicitRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !c.CookieSecure || c.Migrate || c.RegistrationMode != "invite" || c.MaxConnections != 24 {
+	if !c.CookieSecure || c.Migrate || c.RegistrationMode != "invite" || c.MaxConnections != 16 || c.MinConnections != 2 {
 		t.Fatal("unexpected deployment defaults", c)
+	}
+	if !c.RateLimitEnabled || c.WriteTimeout != 30*time.Second || c.HealthCheckPeriod != time.Minute {
+		t.Fatal("unexpected perf defaults", c.RateLimitEnabled, c.WriteTimeout, c.HealthCheckPeriod)
 	}
 	t.Setenv("CF_REGISTRATION_OPEN", "true")
 	c, err = FromEnv()
@@ -63,7 +69,21 @@ func TestValidateRejectsUnsafeConfig(t *testing.T) {
 		Address:             ":8080",
 		DatabaseURL:         "postgresql://fixture@localhost/synthetic",
 		PublicOrigin:        "https://academy.example",
-		MaxConnections:      24,
+		MaxConnections:      16,
+		MinConnections:      2,
+		MaxConnLifetime:        time.Minute,
+		MaxConnIdleTime:     time.Minute,
+		HealthCheckPeriod:   time.Minute,
+		ReadHeaderTimeout:   time.Second,
+		ReadTimeout:         time.Second,
+		WriteTimeout:        time.Second,
+		IdleTimeout:         time.Second,
+		MaxHeaderBytes:      4096,
+		ShutdownTimeout:     time.Second,
+		RateLimitEnabled:    true,
+		RateLimitRPS:        10,
+		RateLimitBurst:      20,
+		CacheTTL:            time.Second,
 		PasswordConcurrency: 2,
 		CookieSecure:        true,
 		RegistrationMode:    "invite",

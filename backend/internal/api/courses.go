@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"courseforge/backend/internal/httpx"
@@ -32,6 +33,15 @@ func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, 400, "invalid_search", "Search is too long")
 		return
 	}
+	cacheKey := "catalog/courses/list/" + p.UserID + "/" + p.Role + "/" + strconv.Itoa(limit) + "/" + cursor + "/" + search
+	if cached, hit := s.cacheGet(r, cacheKey); hit {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Cache", "HIT")
+		w.WriteHeader(200)
+		_, _ = w.Write(cached)
+		return
+	}
 	rows, err := s.Pool.Query(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE ($2='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id))) AND c.id>$3 AND ($4='' OR c.title ILIKE '%' || $4 || '%' ESCAPE '') ORDER BY c.id LIMIT $5`, p.UserID, p.Role, cursor, search, limit+1)
 	if err != nil {
 		s.databaseError(w, err)
@@ -56,12 +66,28 @@ func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 		items = items[:limit]
 		next = nextCursor(items[len(items)-1].ID)
 	}
-	httpx.JSON(w, 200, paginated("courses", items, next))
+	payload := paginated("courses", items, next)
+	s.cacheSet(r, cacheKey, payload)
+	httpx.JSON(w, 200, payload)
 }
 func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
+	limit, cursor, ok := pageArgs(w, r)
+	if !ok {
+		return
+	}
+	id := r.PathValue("id")
+	cacheKey := "catalog/courses/detail/" + p.UserID + "/" + p.Role + "/" + id + "/" + strconv.Itoa(limit) + "/" + cursor
+	if cached, hit := s.cacheGet(r, cacheKey); hit {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Cache", "HIT")
+		w.WriteHeader(200)
+		_, _ = w.Write(cached)
+		return
+	}
 	var c Course
-	err := s.Pool.QueryRow(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))`, p.UserID, r.PathValue("id"), p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
+	err := s.Pool.QueryRow(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))`, p.UserID, id, p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
 	if err != nil {
 		s.databaseError(w, err)
 		return
@@ -70,10 +96,6 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	var resumeLessonID string
 	if c.Enrolled || p.Role == "admin" {
 		_ = s.Pool.QueryRow(r.Context(), `SELECT lesson_id FROM (SELECT lesson_id, watched_at AS last_time FROM watch_history WHERE user_id=$1 AND course_id=$2 UNION ALL SELECT p.lesson_id, p.updated_at AS last_time FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id=$1 AND l.course_id=$2 AND NOT p.completed) recent ORDER BY last_time DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
-		limit, cursor, ok := pageArgs(w, r)
-		if !ok {
-			return
-		}
 		mark := lessonCursor{Flow: -1, Order: math.MinInt32}
 		if cursor != "" {
 			if err := json.Unmarshal([]byte(cursor), &mark); err != nil || len(mark.ID) > 512 {
@@ -106,10 +128,14 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 			mark, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
 			next = nextCursor(string(mark))
 		}
-		httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": next, "resume_lesson_id": resumeLessonID})
+		payload := map[string]any{"course": c, "lessons": lessons, "next_cursor": next, "resume_lesson_id": resumeLessonID}
+		s.cacheSet(r, cacheKey, payload)
+		httpx.JSON(w, 200, payload)
 		return
 	}
-	httpx.JSON(w, 200, map[string]any{"course": c, "lessons": lessons, "next_cursor": "", "resume_lesson_id": ""})
+	payload := map[string]any{"course": c, "lessons": lessons, "next_cursor": "", "resume_lesson_id": ""}
+	s.cacheSet(r, cacheKey, payload)
+	httpx.JSON(w, 200, payload)
 }
 
 type lessonCursor struct {
@@ -144,5 +170,6 @@ func (s *Server) enroll(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+	s.invalidateCatalog(r)
 	httpx.JSON(w, 201, map[string]bool{"enrolled": true})
 }

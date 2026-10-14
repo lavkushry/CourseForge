@@ -3,6 +3,20 @@
 # probes call http://127.0.0.1:${COURSEFORGE_WEB_PORT}/health and must get 200
 # without following a TLS redirect. Terminate TLS at the edge (or a separate
 # TLS server block) and exclude /health from any force-HTTPS redirect there.
+upstream courseforge_api {
+    server ${COURSEFORGE_API_UPSTREAM};
+    keepalive 32;
+    keepalive_requests 1000;
+    keepalive_timeout 60s;
+}
+
+upstream courseforge_media {
+    server ${COURSEFORGE_MEDIA_UPSTREAM};
+    keepalive 32;
+    keepalive_requests 1000;
+    keepalive_timeout 60s;
+}
+
 server {
     listen ${COURSEFORGE_WEB_PORT};
     server_name _;
@@ -11,10 +25,24 @@ server {
     index index.html;
     client_max_body_size 64k;
 
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 256;
+    gzip_proxied any;
+    gzip_vary on;
+    gzip_types
+        text/plain
+        text/css
+        text/javascript
+        application/javascript
+        application/json
+        application/xml
+        image/svg+xml
+        font/woff2;
+
     add_header X-Content-Type-Options nosniff always;
     add_header Referrer-Policy same-origin always;
     add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
-    add_header Cache-Control "no-cache" always;
 
     location = /health {
         access_log off;
@@ -29,12 +57,12 @@ server {
     location ~ ^/api/v1/playback/sessions/[^/]+/media$ {
         access_log off;
         error_log /dev/null;
-        proxy_pass http://${COURSEFORGE_MEDIA_UPSTREAM};
+        proxy_pass http://courseforge_media;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Connection "";
-        proxy_http_version 1.1;
         proxy_buffering off;
         proxy_request_buffering off;
         proxy_read_timeout 3600s;
@@ -44,11 +72,12 @@ server {
 
     location /api/ {
         access_log off;
-        proxy_pass http://${COURSEFORGE_API_UPSTREAM};
+        proxy_pass http://courseforge_api;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_buffering off;
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
@@ -57,11 +86,12 @@ server {
 
     location /verify/ {
         access_log off;
-        proxy_pass http://${COURSEFORGE_API_UPSTREAM};
+        proxy_pass http://courseforge_api;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_buffering off;
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
@@ -71,23 +101,38 @@ server {
     location /media/ {
         access_log off;
         error_log /dev/null;
-        proxy_pass http://${COURSEFORGE_MEDIA_UPSTREAM};
+        proxy_pass http://courseforge_media;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_buffering off;
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
         proxy_cache off;
     }
 
+    # Vite content-hashed assets under /assets/
     location /assets/ {
         try_files $uri =404;
-        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy same-origin always;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy same-origin always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
     }
 
     location / {
         try_files $uri /index.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Referrer-Policy same-origin always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
     }
 }

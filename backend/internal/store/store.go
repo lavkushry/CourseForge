@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -13,32 +12,14 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
+// Open connects with MaxConns only; prefer OpenWithConfig for full pool tuning.
 func Open(ctx context.Context, databaseURL string, maxConnections int32) (*pgxpool.Pool, error) {
-	if maxConnections < 1 || maxConnections > 120 {
-		return nil, fmt.Errorf("database connection budget must be 1..120")
+	cfg := DefaultPoolConfig()
+	cfg.MaxConns = maxConnections
+	if maxConnections < 4 {
+		cfg.MinConns = 0
 	}
-	c, err := pgxpool.ParseConfig(databaseURL)
-	if err != nil {
-		return nil, err
-	}
-	c.MaxConns = maxConnections
-	c.MinConns = 0
-	c.MaxConnLifetime = 30 * time.Minute
-	c.MaxConnLifetimeJitter = 5 * time.Minute
-	c.MaxConnIdleTime = 5 * time.Minute
-	c.ConnConfig.RuntimeParams["statement_timeout"] = "5000"
-	c.ConnConfig.RuntimeParams["lock_timeout"] = "2000"
-	c.ConnConfig.RuntimeParams["idle_in_transaction_session_timeout"] = "10000"
-	c.ConnConfig.RuntimeParams["application_name"] = "courseforge-go"
-	p, err := pgxpool.NewWithConfig(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-	if err = p.Ping(ctx); err != nil {
-		p.Close()
-		return nil, err
-	}
-	return p, nil
+	return OpenWithConfig(ctx, databaseURL, cfg)
 }
 
 // Migrate serializes replicas with a transaction-scoped PostgreSQL advisory lock.
