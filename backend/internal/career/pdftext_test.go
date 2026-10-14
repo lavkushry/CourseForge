@@ -17,7 +17,7 @@ func minimalPDF(lines ...string) []byte {
 		escaped := strings.ReplaceAll(line, `\`, `\\`)
 		escaped = strings.ReplaceAll(escaped, `(`, `\(`)
 		escaped = strings.ReplaceAll(escaped, `)`, `\)`)
-		content.WriteString(fmt.Sprintf("(%s) Tj\n", escaped))
+		fmt.Fprintf(&content, "(%s) Tj\n", escaped)
 	}
 	content.WriteString("ET")
 	stream := content.String()
@@ -36,12 +36,12 @@ func minimalPDF(lines ...string) []byte {
 		body.WriteString(obj)
 	}
 	xrefAt := body.Len()
-	body.WriteString(fmt.Sprintf("xref\n0 %d\n", len(objs)+1))
+	fmt.Fprintf(&body, "xref\n0 %d\n", len(objs)+1)
 	body.WriteString("0000000000 65535 f \n")
 	for i := 1; i <= len(objs); i++ {
-		body.WriteString(fmt.Sprintf("%010d 00000 n \n", offsets[i]))
+		fmt.Fprintf(&body, "%010d 00000 n \n", offsets[i])
 	}
-	body.WriteString(fmt.Sprintf("trailer<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n", len(objs)+1, xrefAt))
+	fmt.Fprintf(&body, "trailer<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n", len(objs)+1, xrefAt)
 	return []byte(body.String())
 }
 

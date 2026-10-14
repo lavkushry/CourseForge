@@ -26,9 +26,10 @@ var (
 
 // Service serves the career/resume HTTP API.
 type Service struct {
-	Pool    *pgxpool.Pool
-	AI      Completer
-	Compile CompileFunc // optional; defaults to CompileLaTeX (tectonic/latexmk)
+	Pool       *pgxpool.Pool
+	AI         Completer
+	Compile    CompileFunc // optional; defaults to CompileLaTeX (tectonic/latexmk)
+	HTTPClient HTTPDoer    // optional; defaults to a timeout http.Client for board polls
 }
 
 func New(pool *pgxpool.Pool, ai Completer) *Service {
@@ -53,6 +54,7 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		"GET /api/v1/career/templates":                        s.listTemplates,
 		"GET /api/v1/career/applications":                     s.listApplications,
 		"POST /api/v1/career/applications":                    s.createApplication,
+		"POST /api/v1/career/applications/import":             s.importApplications,
 		"GET /api/v1/career/applications/{id}":                s.getApplication,
 		"PUT /api/v1/career/applications/{id}":                s.updateApplication,
 		"DELETE /api/v1/career/applications/{id}":             s.deleteApplication,
@@ -60,6 +62,19 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		"POST /api/v1/career/applications/{id}/versions":      s.generateVersion,
 		"GET /api/v1/career/versions/{vid}":                   s.getVersion,
 		"GET /api/v1/career/versions/{vid}/pdf":               s.downloadPDF,
+		"GET /api/v1/career/analytics":                        s.analytics,
+		"GET /api/v1/career/contacts":                         s.listContacts,
+		"POST /api/v1/career/contacts":                        s.createContact,
+		"POST /api/v1/career/contacts/import":                 s.importContacts,
+		"DELETE /api/v1/career/contacts/{id}":                 s.deleteContact,
+		"GET /api/v1/career/referrals/matches":                s.matchReferrals,
+		"POST /api/v1/career/referrals/draft":                 s.draftReferral,
+		"GET /api/v1/career/alert-sources":                    s.listAlertSources,
+		"POST /api/v1/career/alert-sources":                   s.createAlertSource,
+		"DELETE /api/v1/career/alert-sources/{id}":            s.deleteAlertSource,
+		"GET /api/v1/career/notifications":                    s.listNotifications,
+		"POST /api/v1/career/notifications/{id}/read":         s.markNotificationRead,
+		"POST /api/v1/career/notifications/read-all":          s.markAllNotificationsRead,
 	} {
 		mux.Handle(route, auth.Require(h))
 	}
@@ -591,7 +606,7 @@ func (s *Service) match(w http.ResponseWriter, r *http.Request) {
 
 	p := principal(r)
 	var signals ExtractedSignals
-	source := "keyword_fallback"
+	var source string
 	if jdText != "" {
 		signals, source = s.ExtractSignals(r.Context(), jdText)
 	} else {
@@ -623,6 +638,12 @@ WHERE c.id=$1 AND c.user_id=$2`, companyID, p.UserID).
 	result := ScoreMatch(&track, signals, facts)
 	result.CompanyID = companyID
 	result.ExtractionSource = source
+	bridges, err := s.bridgeSkillGaps(r.Context(), result.MissingKeywords)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	result.SkillBridges = bridges
 	httpx.JSON(w, 200, result)
 }
 

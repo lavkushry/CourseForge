@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,7 +41,11 @@ func CompileLaTeX(ctx context.Context, latex string) (pdf []byte, compiler strin
 	if err != nil {
 		return nil, compiler, err
 	}
-	defer os.RemoveAll(dir)
+	defer func() {
+		if removeErr := os.RemoveAll(dir); removeErr != nil {
+			slog.Warn("career latex temp cleanup failed", "dir", dir, "error", removeErr)
+		}
+	}()
 
 	texPath := filepath.Join(dir, "resume.tex")
 	if err = os.WriteFile(texPath, []byte(latex), 0o600); err != nil {

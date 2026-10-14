@@ -31,7 +31,8 @@
 }
 
 .career-form input,
-.career-form textarea {
+.career-form textarea,
+.career-form select {
   width: 100%;
   background: var(--bg);
   color: var(--text);
@@ -39,6 +40,23 @@
   border-radius: var(--radius-sm);
   padding: var(--space-3);
   font: inherit;
+}
+
+.career-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.career-notif-unread {
+  border-color: var(--accent, #e54503);
+}
+
+.career-bridge-link {
+  color: var(--accent, #e54503);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.92rem;
 }
 
 .career-track-list,
@@ -131,8 +149,29 @@
   font-size: var(--text-sm);
 }
 
-.career-resume-studio {
+.career-resume-studio,
+.career-tracker-layout,
+.career-panel + .career-panel {
   margin-top: var(--space-6);
+}
+
+/* Alerts panel sits full-width under tracker layout */
+.career-tracker-layout + .career-panel {
+  margin-top: var(--space-6);
+}
+
+.career-tracker-layout {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.career-tracker-layout .career-form select {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font: inherit;
 }
 
 .career-resume-form {
@@ -164,7 +203,8 @@
 }
 
 @media (max-width: 1024px) {
-  .career-layout {
+  .career-layout,
+  .career-tracker-layout {
     grid-template-columns: 1fr;
   }
 

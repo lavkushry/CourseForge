@@ -58,6 +58,7 @@ func ScoreMatch(track *RoleTrack, jd ExtractedSignals, facts []ConfirmedFact) Ma
 		MatchedKeywords:  matched,
 		MissingKeywords:  missing,
 		SuggestedBullets: SuggestBullets(facts, present),
+		SkillBridges:     []SkillBridge{},
 		JDKeywords:       jd,
 	}
 }

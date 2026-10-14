@@ -89,8 +89,79 @@ type MatchResult struct {
 	MatchedKeywords  []KeywordWeight    `json:"matched_keywords"`
 	MissingKeywords  []KeywordWeight    `json:"missing_keywords"`
 	SuggestedBullets []BulletSuggestion `json:"suggested_bullets"`
+	SkillBridges     []SkillBridge      `json:"skill_bridges"`
 	ExtractionSource string             `json:"extraction_source"`
 	JDKeywords       ExtractedSignals   `json:"jd_keywords"`
+}
+
+// SkillBridge maps a missing JD skill to CourseForge courses/lessons.
+type SkillBridge struct {
+	Skill   string            `json:"skill"`
+	Courses []SkillBridgeLink `json:"courses"`
+	Lessons []SkillBridgeLink `json:"lessons"`
+}
+
+// SkillBridgeLink is a catalog course or lesson the learner can open.
+type SkillBridgeLink struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	CourseID string `json:"course_id,omitempty"`
+	Href     string `json:"href"`
+}
+
+const (
+	ProviderGreenhouse = "greenhouse"
+	ProviderLever      = "lever"
+	ProviderAshby      = "ashby"
+	NotifyNewOpening   = "new_opening"
+)
+
+// AlertSource is a user-registered company careers board to poll.
+type AlertSource struct {
+	ID                   string     `json:"id"`
+	CompanyID            *string    `json:"company_id,omitempty"`
+	Provider             string     `json:"provider"`
+	BoardToken           string     `json:"board_token"`
+	Label                string     `json:"label"`
+	TrackID              *string    `json:"track_id,omitempty"`
+	Keywords             []string   `json:"keywords"`
+	Enabled              bool       `json:"enabled"`
+	LastPolledAt         *time.Time `json:"last_polled_at,omitempty"`
+	NextPollAt           time.Time  `json:"next_poll_at"`
+	PollIntervalSeconds  int        `json:"poll_interval_seconds"`
+	BackoffSeconds       int        `json:"backoff_seconds"`
+	ConsecutiveFailures  int        `json:"consecutive_failures"`
+	LastError            string     `json:"last_error"`
+	CreatedAt            time.Time  `json:"created_at"`
+	UpdatedAt            time.Time  `json:"updated_at"`
+}
+
+// AlertOpening is one posting seen on a careers board.
+type AlertOpening struct {
+	ID                 string    `json:"id"`
+	SourceID           string    `json:"source_id"`
+	ExternalID         string    `json:"external_id"`
+	Title              string    `json:"title"`
+	Location           string    `json:"location"`
+	URL                string    `json:"url"`
+	DescriptionSnippet string    `json:"description_snippet"`
+	Matched            bool      `json:"matched"`
+	MatchScore         float64   `json:"match_score"`
+	MatchedKeywords    []string  `json:"matched_keywords"`
+	FirstSeenAt        time.Time `json:"first_seen_at"`
+}
+
+// CareerNotification is an in-app alert (never emailed or messaged externally).
+type CareerNotification struct {
+	ID        string     `json:"id"`
+	Kind      string     `json:"kind"`
+	Title     string     `json:"title"`
+	Body      string     `json:"body"`
+	OpeningID *string    `json:"opening_id,omitempty"`
+	SourceID  *string    `json:"source_id,omitempty"`
+	Href      string     `json:"href"`
+	ReadAt    *time.Time `json:"read_at,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 // ResumeExperience is one work entry in a structured resume.
@@ -134,18 +205,145 @@ type ResumeDocument struct {
 	Projects   []ResumeProject    `json:"projects,omitempty"`
 }
 
-// Application is a job application with an editable resume draft.
+// ApplicationStatus is the pipeline stage for a tracked application.
+const (
+	StatusApplied   = "applied"
+	StatusCallback  = "callback"
+	StatusInterview = "interview"
+	StatusOffer     = "offer"
+	StatusRejected  = "rejected"
+)
+
+// ResumeVersionType distinguishes baseline vs tailored resumes for matched-pair analytics.
+const (
+	VersionOriginal = "original"
+	VersionTailored = "tailored"
+)
+
+// RejectionReason classifies why an application was rejected.
+const (
+	RejectUnderqualified = "underqualified"
+	RejectLate           = "late"
+	RejectNoReferral     = "no_referral"
+	RejectUnknown        = "unknown"
+)
+
+// ContactRelation describes how the user knows a referral contact.
+const (
+	RelationAlumni    = "alumni"
+	RelationCohort    = "cohort"
+	RelationColleague = "colleague"
+)
+
+// Application is a job application with an editable resume draft and tracker fields.
 type Application struct {
-	ID           string         `json:"id"`
-	CompanyID    *string        `json:"company_id,omitempty"`
-	CompanyName  string         `json:"company_name,omitempty"`
-	TrackID      *string        `json:"track_id,omitempty"`
-	Title        string         `json:"title"`
-	Notes        string         `json:"notes"`
-	TargetSkills []string       `json:"target_skills"`
-	ResumeDraft  ResumeDocument `json:"resume_draft"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	ID                      string         `json:"id"`
+	CompanyID               *string        `json:"company_id,omitempty"`
+	CompanyName             string         `json:"company_name,omitempty"`
+	TrackID                 *string        `json:"track_id,omitempty"`
+	Title                   string         `json:"title"`
+	Notes                   string         `json:"notes"`
+	TargetSkills            []string       `json:"target_skills"`
+	ResumeDraft             ResumeDocument `json:"resume_draft"`
+	Status                  string         `json:"status"`
+	AppliedAt               time.Time      `json:"applied_at"`
+	CallbackAt              *time.Time     `json:"callback_at,omitempty"`
+	InterviewAt             *time.Time     `json:"interview_at,omitempty"`
+	OfferAt                 *time.Time     `json:"offer_at,omitempty"`
+	RejectedAt              *time.Time     `json:"rejected_at,omitempty"`
+	ResumeVersionID         *string        `json:"resume_version_id,omitempty"`
+	ResumeVersionType       string         `json:"resume_version_type"`
+	RejectionReason         *string        `json:"rejection_reason,omitempty"`
+	PostingDate             *string        `json:"posting_date,omitempty"` // YYYY-MM-DD
+	AppliedDaysAfterPosting *int           `json:"applied_days_after_posting,omitempty"`
+	CreatedAt               time.Time      `json:"created_at"`
+	UpdatedAt               time.Time      `json:"updated_at"`
+}
+
+// ReferralContact is a person who may provide a referral (never auto-emailed).
+type ReferralContact struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Company   string    `json:"company"`
+	Relation  string    `json:"relation"`
+	Link      string    `json:"link"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// RateStats is a proportion with a 95% Wilson score confidence interval.
+type RateStats struct {
+	Label          string  `json:"label"`
+	N              int     `json:"n"`
+	Successes      int     `json:"successes"`
+	Rate           float64 `json:"rate"`
+	WilsonLow      float64 `json:"wilson_low"`
+	WilsonHigh     float64 `json:"wilson_high"`
+	WilsonOK       bool    `json:"wilson_ok"`
+	Unreliable     bool    `json:"unreliable"` // true when n < 100
+	UnreliableNote string  `json:"unreliable_note,omitempty"`
+}
+
+// MatchedPairCompare contrasts original vs tailored outcomes for the same company+track.
+type MatchedPairCompare struct {
+	CompanyID   string    `json:"company_id"`
+	CompanyName string    `json:"company_name"`
+	TrackID     string    `json:"track_id"`
+	Original    RateStats `json:"original_callback"`
+	Tailored    RateStats `json:"tailored_callback"`
+	OriginalInt RateStats `json:"original_interview"`
+	TailoredInt RateStats `json:"tailored_interview"`
+}
+
+// AnalyticsReport aggregates callback/interview rates by grouping dimensions.
+type AnalyticsReport struct {
+	TotalApplications int                  `json:"total_applications"`
+	ByResumeVersion   []RateGroup          `json:"by_resume_version"`
+	ByVersionType     []RateGroup          `json:"by_version_type"`
+	ByRoleTrack       []RateGroup          `json:"by_role_track"`
+	ByCompany         []RateGroup          `json:"by_company"`
+	ByRejectionReason []RateGroup          `json:"by_rejection_reason"`
+	ByAppliedDays     []RateGroup          `json:"by_applied_days"`
+	MatchedPairs      []MatchedPairCompare `json:"matched_pairs"`
+	MinReliableN      int                  `json:"min_reliable_n"`
+	Warning           string               `json:"warning,omitempty"`
+}
+
+// RateGroup holds callback and interview rates for one analytics bucket.
+type RateGroup struct {
+	Key       string    `json:"key"`
+	Label     string    `json:"label"`
+	Callback  RateStats `json:"callback"`
+	Interview RateStats `json:"interview"`
+}
+
+// CSVImportReport documents validation results for a dry-run or committed import.
+type CSVImportReport struct {
+	Columns     []string         `json:"columns"`
+	DryRun      bool             `json:"dry_run"`
+	TotalRows   int              `json:"total_rows"`
+	ValidRows   int              `json:"valid_rows"`
+	InvalidRows int              `json:"invalid_rows"`
+	Created     int              `json:"created"`
+	Errors      []CSVRowError    `json:"errors"`
+	Preview     []map[string]any `json:"preview"`
+	FormatDocs  string           `json:"format_docs"`
+}
+
+// CSVRowError is one validation failure in an imported CSV.
+type CSVRowError struct {
+	Row     int    `json:"row"`
+	Field   string `json:"field,omitempty"`
+	Message string `json:"message"`
+}
+
+// ReferralDraft is a copy-to-clipboard message only — never sent automatically.
+type ReferralDraft struct {
+	ContactID   string `json:"contact_id"`
+	ContactName string `json:"contact_name"`
+	Company     string `json:"company"`
+	Role        string `json:"role"`
+	Message     string `json:"message"`
+	Delivery    string `json:"delivery"` // always "clipboard_only"
 }
 
 // SkimFeedback is one actionable recruiter-skim finding.
@@ -163,19 +361,19 @@ type SkimScore struct {
 
 // ResumeVersion is an immutable snapshot of structured data + LaTeX (+ PDF when ready).
 type ResumeVersion struct {
-	ID              string          `json:"id"`
-	ApplicationID   string          `json:"application_id"`
-	TemplateID      string          `json:"template_id"`
-	Snapshot        ResumeDocument  `json:"snapshot"`
-	Status          string          `json:"status"`
-	ErrorMessage    string          `json:"error_message,omitempty"`
-	Compiler        string          `json:"compiler,omitempty"`
-	Skim            *SkimScore      `json:"skim_score,omitempty"`
-	VerifiedFields  []string        `json:"verified_fields"`
-	HasPDF          bool            `json:"has_pdf"`
-	CreatedAt       time.Time       `json:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at"`
-	LatexSource     string          `json:"latex_source,omitempty"`
+	ID             string         `json:"id"`
+	ApplicationID  string         `json:"application_id"`
+	TemplateID     string         `json:"template_id"`
+	Snapshot       ResumeDocument `json:"snapshot"`
+	Status         string         `json:"status"`
+	ErrorMessage   string         `json:"error_message,omitempty"`
+	Compiler       string         `json:"compiler,omitempty"`
+	Skim           *SkimScore     `json:"skim_score,omitempty"`
+	VerifiedFields []string       `json:"verified_fields"`
+	HasPDF         bool           `json:"has_pdf"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	LatexSource    string         `json:"latex_source,omitempty"`
 }
 
 // TemplateInfo describes an ATS-safe resume template.

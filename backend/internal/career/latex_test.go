@@ -8,12 +8,6 @@ import (
 func TestEscapeLaTeXSpecialChars(t *testing.T) {
 	in := `A & B $100 #1 50% x_y ~ ^ { } \ < >`
 	out := EscapeLaTeX(in)
-	for _, bad := range []string{"&", "$", "#", "%", "_", "~", "^", "{", "}", "\\", "<", ">"} {
-		// raw specials must not remain unescaped (except inside commands we emit)
-		if strings.Contains(out, bad) && !strings.Contains(out, `\`+bad) && bad != "\\" && bad != "~" && bad != "^" && bad != "<" && bad != ">" {
-			// check via known replacements instead
-		}
-	}
 	for _, want := range []string{`\&`, `\$`, `\#`, `\%`, `\_`, `\textasciitilde{}`, `\textasciicircum{}`, `\{`, `\}`, `\textbackslash{}`, `\textless{}`, `\textgreater{}`} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("escape missing %q in %q", want, out)

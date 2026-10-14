@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"courseforge/backend/internal/httpx"
 
@@ -16,27 +17,8 @@ func (s *Service) listTemplates(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Service) listApplications(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.Pool.Query(r.Context(), `
-SELECT a.id,a.company_id,COALESCE(c.name,''),a.track_id,a.title,a.notes,a.target_skills,a.resume_draft,a.created_at,a.updated_at
-FROM career_applications a
-LEFT JOIN career_companies c ON c.id=a.company_id AND c.user_id=a.user_id
-WHERE a.user_id=$1
-ORDER BY a.updated_at DESC, a.id DESC`, principal(r).UserID)
+	items, err := s.listApplicationRows(r.Context(), principal(r).UserID)
 	if err != nil {
-		failure(w, err)
-		return
-	}
-	defer rows.Close()
-	items := []Application{}
-	for rows.Next() {
-		app, err := scanApplication(rows)
-		if err != nil {
-			failure(w, err)
-			return
-		}
-		items = append(items, app)
-	}
-	if err = rows.Err(); err != nil {
 		failure(w, err)
 		return
 	}
@@ -45,12 +27,19 @@ ORDER BY a.updated_at DESC, a.id DESC`, principal(r).UserID)
 
 func (s *Service) createApplication(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		CompanyID    string         `json:"company_id"`
-		TrackID      string         `json:"track_id"`
-		Title        string         `json:"title"`
-		Notes        string         `json:"notes"`
-		TargetSkills []string       `json:"target_skills"`
-		ResumeDraft  ResumeDocument `json:"resume_draft"`
+		CompanyID               string         `json:"company_id"`
+		TrackID                 string         `json:"track_id"`
+		Title                   string         `json:"title"`
+		Notes                   string         `json:"notes"`
+		TargetSkills            []string       `json:"target_skills"`
+		ResumeDraft             ResumeDocument `json:"resume_draft"`
+		Status                  string         `json:"status"`
+		ResumeVersionID         string         `json:"resume_version_id"`
+		ResumeVersionType       string         `json:"resume_version_type"`
+		RejectionReason         string         `json:"rejection_reason"`
+		PostingDate             string         `json:"posting_date"`
+		AppliedDaysAfterPosting *int           `json:"applied_days_after_posting"`
+		AppliedAt               *time.Time     `json:"applied_at"`
 	}
 	if !decodeJSON(w, r, &body, 96<<10) {
 		return
@@ -68,6 +57,42 @@ func (s *Service) createApplication(w http.ResponseWriter, r *http.Request) {
 	if len(skills) > 40 {
 		httpx.Error(w, 422, "invalid_career", "At most 40 target skills")
 		return
+	}
+	status := strings.TrimSpace(body.Status)
+	if status == "" {
+		status = StatusApplied
+	}
+	if !validStatus(status) {
+		httpx.Error(w, 422, "invalid_career", "status must be applied|callback|interview|offer|rejected")
+		return
+	}
+	versionType := strings.TrimSpace(body.ResumeVersionType)
+	if versionType == "" {
+		versionType = VersionOriginal
+	}
+	if !validVersionType(versionType) {
+		httpx.Error(w, 422, "invalid_career", "resume_version_type must be original|tailored")
+		return
+	}
+	var rejectionReason *string
+	if rr := strings.TrimSpace(body.RejectionReason); rr != "" {
+		if !validRejectionReason(rr) {
+			httpx.Error(w, 422, "invalid_career", "rejection_reason must be underqualified|late|no_referral|unknown")
+			return
+		}
+		if status != StatusRejected {
+			httpx.Error(w, 422, "invalid_career", "rejection_reason requires status=rejected")
+			return
+		}
+		rejectionReason = &rr
+	}
+	var postingDate *string
+	if pd := strings.TrimSpace(body.PostingDate); pd != "" {
+		if _, err := time.Parse("2006-01-02", pd); err != nil {
+			httpx.Error(w, 422, "invalid_career", "posting_date must be YYYY-MM-DD")
+			return
+		}
+		postingDate = &pd
 	}
 	draft := normalizeDraft(body.ResumeDraft, title)
 	tx, err := s.transaction(r)
@@ -96,24 +121,60 @@ func (s *Service) createApplication(w http.ResponseWriter, r *http.Request) {
 		}
 		trackID = &id
 	}
+	var resumeVersionID *string
+	if id := strings.TrimSpace(body.ResumeVersionID); id != "" {
+		var exists string
+		if err = tx.QueryRow(r.Context(), `SELECT id FROM career_resume_versions WHERE id=$1 AND user_id=$2`, id, p.UserID).Scan(&exists); err != nil {
+			failure(w, err)
+			return
+		}
+		resumeVersionID = &id
+	}
 	draftRaw, err := json.Marshal(draft)
 	if err != nil {
 		failure(w, err)
 		return
 	}
+	now := time.Now().UTC()
 	app := Application{
-		ID:           newID("app_"),
-		CompanyID:    companyID,
-		TrackID:      trackID,
-		Title:        title,
-		Notes:        strings.TrimSpace(body.Notes),
-		TargetSkills: skills,
-		ResumeDraft:  draft,
+		ID:                newID("app_"),
+		CompanyID:         companyID,
+		TrackID:           trackID,
+		Title:             title,
+		Notes:             strings.TrimSpace(body.Notes),
+		TargetSkills:      skills,
+		ResumeDraft:       draft,
+		Status:            status,
+		AppliedAt:         now,
+		ResumeVersionID:   resumeVersionID,
+		ResumeVersionType: versionType,
+		RejectionReason:   rejectionReason,
+		PostingDate:       postingDate,
+	}
+	if body.AppliedAt != nil {
+		app.AppliedAt = body.AppliedAt.UTC()
+	}
+	stampForStatus(status, now, &app)
+	if body.AppliedDaysAfterPosting != nil {
+		d := *body.AppliedDaysAfterPosting
+		if d < 0 {
+			httpx.Error(w, 422, "invalid_career", "applied_days_after_posting must be >= 0")
+			return
+		}
+		app.AppliedDaysAfterPosting = &d
+	} else {
+		app.AppliedDaysAfterPosting = deriveAppliedDays(postingDate, app.AppliedAt)
 	}
 	err = tx.QueryRow(r.Context(), `
-INSERT INTO career_applications(id,user_id,company_id,track_id,title,notes,target_skills,resume_draft)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
-RETURNING created_at,updated_at`, app.ID, p.UserID, companyID, trackID, app.Title, app.Notes, skills, draftRaw).
+INSERT INTO career_applications(
+ id,user_id,company_id,track_id,title,notes,target_skills,resume_draft,
+ status,applied_at,callback_at,interview_at,offer_at,rejected_at,
+ resume_version_id,resume_version_type,rejection_reason,posting_date,applied_days_after_posting)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18::date,$19)
+RETURNING created_at,updated_at`,
+		app.ID, p.UserID, companyID, trackID, app.Title, app.Notes, skills, draftRaw,
+		app.Status, app.AppliedAt, app.CallbackAt, app.InterviewAt, app.OfferAt, app.RejectedAt,
+		resumeVersionID, versionType, rejectionReason, postingDate, app.AppliedDaysAfterPosting).
 		Scan(&app.CreatedAt, &app.UpdatedAt)
 	if err != nil {
 		failure(w, err)
@@ -140,12 +201,23 @@ func (s *Service) getApplication(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) updateApplication(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Title        *string         `json:"title"`
-		Notes        *string         `json:"notes"`
-		TargetSkills *[]string       `json:"target_skills"`
-		ResumeDraft  *ResumeDocument `json:"resume_draft"`
-		CompanyID    *string         `json:"company_id"`
-		TrackID      *string         `json:"track_id"`
+		Title                   *string         `json:"title"`
+		Notes                   *string         `json:"notes"`
+		TargetSkills            *[]string       `json:"target_skills"`
+		ResumeDraft             *ResumeDocument `json:"resume_draft"`
+		CompanyID               *string         `json:"company_id"`
+		TrackID                 *string         `json:"track_id"`
+		Status                  *string         `json:"status"`
+		ResumeVersionID         *string         `json:"resume_version_id"`
+		ResumeVersionType       *string         `json:"resume_version_type"`
+		RejectionReason         *string         `json:"rejection_reason"`
+		PostingDate             *string         `json:"posting_date"`
+		AppliedDaysAfterPosting *int            `json:"applied_days_after_posting"`
+		AppliedAt               *time.Time      `json:"applied_at"`
+		CallbackAt              *time.Time      `json:"callback_at"`
+		InterviewAt             *time.Time      `json:"interview_at"`
+		OfferAt                 *time.Time      `json:"offer_at"`
+		RejectedAt              *time.Time      `json:"rejected_at"`
 	}
 	if !decodeJSON(w, r, &body, 96<<10) {
 		return
@@ -159,20 +231,12 @@ func (s *Service) updateApplication(w http.ResponseWriter, r *http.Request) {
 	p := principal(r)
 	appID := r.PathValue("id")
 
-	var cur Application
-	var companyID, trackID *string
-	var draftRaw []byte
-	err = tx.QueryRow(r.Context(), `
-SELECT id,company_id,track_id,title,notes,target_skills,resume_draft,created_at,updated_at
-FROM career_applications WHERE id=$1 AND user_id=$2 FOR UPDATE`, appID, p.UserID).
-		Scan(&cur.ID, &companyID, &trackID, &cur.Title, &cur.Notes, &cur.TargetSkills, &draftRaw, &cur.CreatedAt, &cur.UpdatedAt)
+	cur, err := scanApplication(tx.QueryRow(r.Context(), applicationSelectSQL+`
+WHERE a.id=$1 AND a.user_id=$2 FOR UPDATE OF a`, appID, p.UserID))
 	if err != nil {
 		failure(w, err)
 		return
 	}
-	_ = json.Unmarshal(draftRaw, &cur.ResumeDraft)
-	cur.CompanyID = companyID
-	cur.TrackID = trackID
 
 	if body.Title != nil {
 		title := strings.TrimSpace(*body.Title)
@@ -226,16 +290,109 @@ FROM career_applications WHERE id=$1 AND user_id=$2 FOR UPDATE`, appID, p.UserID
 			cur.TrackID = &id
 		}
 	}
+	if body.ResumeVersionType != nil {
+		vt := strings.TrimSpace(*body.ResumeVersionType)
+		if !validVersionType(vt) {
+			httpx.Error(w, 422, "invalid_career", "resume_version_type must be original|tailored")
+			return
+		}
+		cur.ResumeVersionType = vt
+	}
+	if body.ResumeVersionID != nil {
+		id := strings.TrimSpace(*body.ResumeVersionID)
+		if id == "" {
+			cur.ResumeVersionID = nil
+		} else {
+			var exists string
+			if err = tx.QueryRow(r.Context(), `SELECT id FROM career_resume_versions WHERE id=$1 AND user_id=$2`, id, p.UserID).Scan(&exists); err != nil {
+				failure(w, err)
+				return
+			}
+			cur.ResumeVersionID = &id
+		}
+	}
+	if body.AppliedAt != nil {
+		cur.AppliedAt = body.AppliedAt.UTC()
+	}
+	if body.CallbackAt != nil {
+		t := body.CallbackAt.UTC()
+		cur.CallbackAt = &t
+	}
+	if body.InterviewAt != nil {
+		t := body.InterviewAt.UTC()
+		cur.InterviewAt = &t
+	}
+	if body.OfferAt != nil {
+		t := body.OfferAt.UTC()
+		cur.OfferAt = &t
+	}
+	if body.RejectedAt != nil {
+		t := body.RejectedAt.UTC()
+		cur.RejectedAt = &t
+	}
+	if body.Status != nil {
+		status := strings.TrimSpace(*body.Status)
+		if !validStatus(status) {
+			httpx.Error(w, 422, "invalid_career", "status must be applied|callback|interview|offer|rejected")
+			return
+		}
+		cur.Status = status
+		stampForStatus(status, time.Now().UTC(), &cur)
+	}
+	if body.RejectionReason != nil {
+		rr := strings.TrimSpace(*body.RejectionReason)
+		if rr == "" {
+			cur.RejectionReason = nil
+		} else {
+			if !validRejectionReason(rr) {
+				httpx.Error(w, 422, "invalid_career", "rejection_reason must be underqualified|late|no_referral|unknown")
+				return
+			}
+			cur.RejectionReason = &rr
+		}
+	}
+	if cur.RejectionReason != nil && cur.Status != StatusRejected {
+		httpx.Error(w, 422, "invalid_career", "rejection_reason requires status=rejected")
+		return
+	}
+	if body.PostingDate != nil {
+		pd := strings.TrimSpace(*body.PostingDate)
+		if pd == "" {
+			cur.PostingDate = nil
+		} else {
+			if _, err = time.Parse("2006-01-02", pd); err != nil {
+				httpx.Error(w, 422, "invalid_career", "posting_date must be YYYY-MM-DD")
+				return
+			}
+			cur.PostingDate = &pd
+		}
+	}
+	if body.AppliedDaysAfterPosting != nil {
+		d := *body.AppliedDaysAfterPosting
+		if d < 0 {
+			httpx.Error(w, 422, "invalid_career", "applied_days_after_posting must be >= 0")
+			return
+		}
+		cur.AppliedDaysAfterPosting = &d
+	} else if body.PostingDate != nil || body.AppliedAt != nil {
+		cur.AppliedDaysAfterPosting = deriveAppliedDays(cur.PostingDate, cur.AppliedAt)
+	}
 	draftOut, err := json.Marshal(cur.ResumeDraft)
 	if err != nil {
 		failure(w, err)
 		return
 	}
 	err = tx.QueryRow(r.Context(), `
-UPDATE career_applications
-SET title=$3, notes=$4, target_skills=$5, resume_draft=$6::jsonb, company_id=$7, track_id=$8, updated_at=now()
+UPDATE career_applications SET
+ title=$3, notes=$4, target_skills=$5, resume_draft=$6::jsonb, company_id=$7, track_id=$8,
+ status=$9, applied_at=$10, callback_at=$11, interview_at=$12, offer_at=$13, rejected_at=$14,
+ resume_version_id=$15, resume_version_type=$16, rejection_reason=$17, posting_date=$18::date,
+ applied_days_after_posting=$19, updated_at=now()
 WHERE id=$1 AND user_id=$2
-RETURNING updated_at`, appID, p.UserID, cur.Title, cur.Notes, cur.TargetSkills, draftOut, cur.CompanyID, cur.TrackID).
+RETURNING updated_at`,
+		appID, p.UserID, cur.Title, cur.Notes, cur.TargetSkills, draftOut, cur.CompanyID, cur.TrackID,
+		cur.Status, cur.AppliedAt, cur.CallbackAt, cur.InterviewAt, cur.OfferAt, cur.RejectedAt,
+		cur.ResumeVersionID, cur.ResumeVersionType, cur.RejectionReason, cur.PostingDate, cur.AppliedDaysAfterPosting).
 		Scan(&cur.UpdatedAt)
 	if err != nil {
 		failure(w, err)
@@ -334,10 +491,7 @@ func (s *Service) generateVersion(w http.ResponseWriter, r *http.Request) {
 	p := principal(r)
 	appID := r.PathValue("id")
 
-	app, err := scanApplication(tx.QueryRow(r.Context(), `
-SELECT a.id,a.company_id,COALESCE(c.name,''),a.track_id,a.title,a.notes,a.target_skills,a.resume_draft,a.created_at,a.updated_at
-FROM career_applications a
-LEFT JOIN career_companies c ON c.id=a.company_id AND c.user_id=a.user_id
+	app, err := scanApplication(tx.QueryRow(r.Context(), applicationSelectSQL+`
 WHERE a.id=$1 AND a.user_id=$2 FOR UPDATE OF a`, appID, p.UserID))
 	if err != nil {
 		failure(w, err)
@@ -426,10 +580,7 @@ SELECT status,pdf_data FROM career_resume_versions WHERE id=$1 AND user_id=$2`, 
 }
 
 func (s *Service) loadApplication(ctx context.Context, userID, id string) (Application, error) {
-	return scanApplication(s.Pool.QueryRow(ctx, `
-SELECT a.id,a.company_id,COALESCE(c.name,''),a.track_id,a.title,a.notes,a.target_skills,a.resume_draft,a.created_at,a.updated_at
-FROM career_applications a
-LEFT JOIN career_companies c ON c.id=a.company_id AND c.user_id=a.user_id
+	return scanApplication(s.Pool.QueryRow(ctx, applicationSelectSQL+`
 WHERE a.id=$1 AND a.user_id=$2`, id, userID))
 }
 
@@ -447,16 +598,30 @@ type scannable interface {
 
 func scanApplication(row scannable) (Application, error) {
 	var app Application
-	var companyID, trackID *string
+	var companyID, trackID, resumeVersionID, rejectionReason, postingDate *string
 	var draftRaw []byte
-	err := row.Scan(&app.ID, &companyID, &app.CompanyName, &trackID, &app.Title, &app.Notes, &app.TargetSkills, &draftRaw, &app.CreatedAt, &app.UpdatedAt)
+	err := row.Scan(
+		&app.ID, &companyID, &app.CompanyName, &trackID, &app.Title, &app.Notes, &app.TargetSkills, &draftRaw,
+		&app.Status, &app.AppliedAt, &app.CallbackAt, &app.InterviewAt, &app.OfferAt, &app.RejectedAt,
+		&resumeVersionID, &app.ResumeVersionType, &rejectionReason, &postingDate, &app.AppliedDaysAfterPosting,
+		&app.CreatedAt, &app.UpdatedAt,
+	)
 	if err != nil {
 		return app, err
 	}
 	app.CompanyID = companyID
 	app.TrackID = trackID
+	app.ResumeVersionID = resumeVersionID
+	app.RejectionReason = rejectionReason
+	app.PostingDate = postingDate
 	if app.TargetSkills == nil {
 		app.TargetSkills = []string{}
+	}
+	if app.Status == "" {
+		app.Status = StatusApplied
+	}
+	if app.ResumeVersionType == "" {
+		app.ResumeVersionType = VersionOriginal
 	}
 	_ = json.Unmarshal(draftRaw, &app.ResumeDraft)
 	app.ResumeDraft = normalizeDraft(app.ResumeDraft, app.Title)
