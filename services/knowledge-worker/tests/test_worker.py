@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from knowledge_worker.config import Settings
+from knowledge_worker.embedder import HashEmbedder
 from knowledge_worker.worker import IngestWorker
 
 from conftest import MockASR, MockOCR, MockScenes
@@ -13,6 +14,7 @@ class FakeAPI:
     def __init__(self) -> None:
         self.jobs: list[dict[str, Any]] = []
         self.stored: list[dict[str, Any]] = []
+        self.indexed: list[dict[str, Any]] = []
         self.completed: list[str] = []
         self.failed: list[str] = []
         self.heartbeats = 0
@@ -28,6 +30,19 @@ class FakeAPI:
     def store_ingest(self, job_id: str, worker_id: str, fence: int, ingest: dict[str, Any]) -> dict[str, Any]:
         self.stored.append(ingest)
         return {"status": "ready"}
+
+    def store_index(
+        self,
+        job_id: str,
+        worker_id: str,
+        fence: int,
+        *,
+        chapters: list[dict[str, Any]],
+        chunks: list[dict[str, Any]],
+        embedder: str = "",
+    ) -> dict[str, Any]:
+        self.indexed.append({"chapters": chapters, "chunks": chunks, "embedder": embedder})
+        return {"chapter_count": len(chapters), "chunk_count": len(chunks)}
 
     def complete(self, job_id: str, worker_id: str, fence: int, result: dict[str, Any] | None = None) -> None:
         self.completed.append(job_id)
@@ -50,8 +65,11 @@ def _settings(media_root: Path) -> Settings:
         whisper_cpp_bin="whisper-cli",
         ocr_engine="tesseract",
         qdrant_url="http://127.0.0.1:6333",
-        qdrant_collection="courseforge_living_video",
+        qdrant_collection="courseforge_knowledge",
         enable_qdrant=False,
+        embedder="hash",
+        reranker="lexical",
+        embed_dim=32,
     )
 
 
@@ -71,11 +89,14 @@ def test_worker_poll_processes_job(tmp_path: Path, tiny_media: Path, tiny_frame:
         asr=MockASR(fixtures_dir),
         scenes=MockScenes(tiny_frame),
         ocr=MockOCR(),
+        embedder=HashEmbedder(dim=32),
         sleep=lambda _s: None,
     )
     assert worker.poll_once() is True
     assert api.heartbeats == 1
     assert len(api.stored) == 1
+    assert len(api.indexed) == 1
+    assert api.indexed[0]["chunks"]
     assert api.completed == ["kjob_1"]
     assert api.failed == []
     assert worker.poll_once() is False

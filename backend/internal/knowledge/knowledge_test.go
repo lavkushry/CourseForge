@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -95,12 +96,20 @@ func read[T any](t *testing.T, w *httptest.ResponseRecorder) T {
 }
 
 func TestQdrantCollectionIsolation(t *testing.T) {
-	if QdrantCollection != "courseforge_living_video" {
+	if QdrantCollection != "courseforge_knowledge" {
 		t.Fatalf("unexpected collection %q", QdrantCollection)
 	}
 	if QdrantCollection == "courseforge_chunks" {
 		t.Fatal("must not use legacy chunk collection")
 	}
+}
+
+type stubGenerator struct {
+	answer string
+}
+
+func (g stubGenerator) Complete(ctx context.Context, system, user string) (string, error) {
+	return g.answer, nil
 }
 
 func TestIngestJobRoundTrip(t *testing.T) {
@@ -244,5 +253,110 @@ func TestClaimLeaseHeartbeat(t *testing.T) {
 	expect(t, reclaim, 200)
 	if read[Job](t, reclaim).Attempt < 2 {
 		t.Fatal("retry should increment attempt")
+	}
+}
+
+func TestIndexChaptersAndAskWithCitations(t *testing.T) {
+	f := setup(t)
+	f.s.Generator = stubGenerator{answer: "Containers package apps [0:00]."}
+	f.s.Qdrant = nil // BM25-only path for deterministic unit tests
+
+	created := f.call("admin", "POST", "/api/v1/knowledge/jobs", "ask1", EnqueueRequest{
+		LessonID: "lesson",
+		Payload:  json.RawMessage(`{}`),
+	})
+	expect(t, created, 202)
+	claim := f.worker("POST", "/api/v1/knowledge/worker/claim", ClaimRequest{WorkerID: "w1", LeaseSec: 60})
+	expect(t, claim, 200)
+	leased := read[Job](t, claim)
+
+	ingest := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/ingest", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"ingest": IngestPayload{
+			ASREngine: "mock", SceneEngine: "mock", OCREngine: "mock",
+			Segments: []Segment{
+				{Ordinal: 0, StartMs: 0, EndMs: 4000, Text: "docker containers package applications"},
+				{Ordinal: 1, StartMs: 4000, EndMs: 8000, Text: "postgres stores relational tables"},
+			},
+		},
+	})
+	expect(t, ingest, 200)
+
+	index := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/index", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"embedder":  "hash",
+		"chapters": []Chapter{
+			{Ordinal: 0, StartMs: 0, EndMs: 4000, Title: "Containers", Summary: "docker containers"},
+			{Ordinal: 1, StartMs: 4000, EndMs: 8000, Title: "Postgres", Summary: "relational tables"},
+		},
+		"chunks": []Chunk{
+			{ID: "kc_1", Ordinal: 0, StartMs: 0, EndMs: 4000, Text: "docker containers package applications", Source: "transcript"},
+			{ID: "kc_2", Ordinal: 1, StartMs: 4000, EndMs: 8000, Text: "postgres stores relational tables", Source: "transcript"},
+		},
+	})
+	expect(t, index, 200)
+	doc := read[Document](t, index)
+	if doc.ChapterCount != 2 || doc.ChunkCount != 2 {
+		t.Fatalf("unexpected index counts %+v", doc)
+	}
+
+	chapters := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/chapters", "", nil)
+	expect(t, chapters, 200)
+	var chapterBody struct {
+		Chapters []Chapter `json:"chapters"`
+	}
+	if err := json.Unmarshal(chapters.Body.Bytes(), &chapterBody); err != nil {
+		t.Fatal(err)
+	}
+	if len(chapterBody.Chapters) != 2 || chapterBody.Chapters[0].Title != "Containers" {
+		t.Fatalf("unexpected chapters %+v", chapterBody.Chapters)
+	}
+
+	ask := f.call("alice", "POST", "/api/v1/knowledge/lessons/lesson/ask", "", AskRequest{
+		Question: "How do docker containers package applications?",
+	})
+	expect(t, ask, 200)
+	ans := read[AskResponse](t, ask)
+	if ans.Abstained || ans.Support != "supported" || len(ans.Citations) == 0 {
+		t.Fatalf("expected supported answer with citations %+v", ans)
+	}
+	if !strings.Contains(ans.Answer, "[0:00]") && !strings.Contains(ans.Answer, "[00:00]") {
+		t.Fatalf("answer missing citation: %q", ans.Answer)
+	}
+
+	miss := f.call("alice", "POST", "/api/v1/knowledge/lessons/lesson/ask", "", AskRequest{
+		Question: "What is quantum entanglement theory?",
+	})
+	expect(t, miss, 200)
+	abstain := read[AskResponse](t, miss)
+	if !abstain.Abstained || abstain.Support != "not_covered" {
+		t.Fatalf("expected abstain %+v", abstain)
+	}
+	if !strings.Contains(strings.ToLower(abstain.Answer), "not covered in this video") {
+		t.Fatalf("abstain message %q", abstain.Answer)
+	}
+}
+
+func TestHashEmbedStable(t *testing.T) {
+	a := HashEmbed("hello world", 32)
+	b := HashEmbed("hello world", 32)
+	if len(a) != 32 {
+		t.Fatalf("dim %d", len(a))
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			t.Fatal("hash embed not stable")
+		}
+	}
+}
+
+func TestReciprocalRankFusionPrefersOverlap(t *testing.T) {
+	bm25 := []Chunk{{ID: "a", Text: "a"}, {ID: "b", Text: "b"}}
+	dense := []Chunk{{ID: "b", Text: "b"}, {ID: "c", Text: "c"}}
+	fused := reciprocalRankFusion(bm25, dense)
+	if len(fused) == 0 || fused[0].Chunk.ID != "b" {
+		t.Fatalf("expected b first, got %+v", fused)
 	}
 }

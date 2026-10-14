@@ -375,10 +375,122 @@ func (s *Service) StoreIngest(ctx context.Context, id, workerID string, fence in
 			asr_engine=EXCLUDED.asr_engine, scene_engine=EXCLUDED.scene_engine, ocr_engine=EXCLUDED.ocr_engine,
 			word_count=EXCLUDED.word_count, segment_count=EXCLUDED.segment_count, keyframe_count=EXCLUDED.keyframe_count,
 			updated_at=now()
-		RETURNING lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,created_at,updated_at`,
+		RETURNING lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
+			chapter_count,chunk_count,embedder,created_at,updated_at`,
 		lessonID, id, asr, scene, ocr, len(payload.Words), len(payload.Segments), len(payload.Keyframes),
 	).Scan(&doc.LessonID, &doc.JobID, &doc.Status, &doc.ASREngine, &doc.SceneEngine, &doc.OCREngine,
-		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.CreatedAt, &doc.UpdatedAt)
+		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder,
+		&doc.CreatedAt, &doc.UpdatedAt)
+	if err != nil {
+		return Document{}, err
+	}
+	return doc, tx.Commit(ctx)
+}
+
+func (s *Service) StoreIndex(ctx context.Context, id, workerID string, fence int64, payload IndexPayload) (Document, error) {
+	if len(payload.Chapters) > 500 || len(payload.Chunks) > 20000 {
+		return Document{}, ErrInvalid
+	}
+	embedder := strings.TrimSpace(payload.Embedder)
+	if len(embedder) > 64 {
+		return Document{}, ErrInvalid
+	}
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return Document{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var lessonID string
+	err = tx.QueryRow(ctx, `
+		SELECT lesson_id FROM knowledge_jobs
+		WHERE id=$1 AND state='running' AND worker_id=$2 AND fence=$3
+		FOR UPDATE`, id, workerID, fence).Scan(&lessonID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Document{}, ErrStale
+	}
+	if err != nil {
+		return Document{}, err
+	}
+
+	if _, err = tx.Exec(ctx, `DELETE FROM knowledge_chapters WHERE lesson_id=$1`, lessonID); err != nil {
+		return Document{}, err
+	}
+	if _, err = tx.Exec(ctx, `DELETE FROM knowledge_chunks WHERE lesson_id=$1`, lessonID); err != nil {
+		return Document{}, err
+	}
+
+	for i, ch := range payload.Chapters {
+		if ch.Ordinal != i || ch.StartMs < 0 || ch.EndMs < ch.StartMs {
+			return Document{}, ErrInvalid
+		}
+		title := strings.TrimSpace(ch.Title)
+		summary := strings.TrimSpace(ch.Summary)
+		if title == "" {
+			title = "Concept"
+		}
+		if utf8.RuneCountInString(title) > 200 || utf8.RuneCountInString(summary) > 2000 {
+			return Document{}, ErrInvalid
+		}
+		cid := ch.ID
+		if cid == "" {
+			cid, err = newID("kch_")
+			if err != nil {
+				return Document{}, err
+			}
+		}
+		if _, err = tx.Exec(ctx, `
+			INSERT INTO knowledge_chapters(id,lesson_id,job_id,ordinal,start_ms,end_ms,title,summary)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, cid, lessonID, id, ch.Ordinal, ch.StartMs, ch.EndMs, title, summary); err != nil {
+			return Document{}, err
+		}
+	}
+
+	for i, chunk := range payload.Chunks {
+		if chunk.Ordinal != i || chunk.StartMs < 0 || chunk.EndMs < chunk.StartMs {
+			return Document{}, ErrInvalid
+		}
+		text := strings.TrimSpace(chunk.Text)
+		if text == "" || utf8.RuneCountInString(text) > 8000 {
+			return Document{}, ErrInvalid
+		}
+		source := strings.TrimSpace(chunk.Source)
+		if source == "" {
+			source = "multimodal"
+		}
+		switch source {
+		case "transcript", "ocr", "multimodal":
+		default:
+			return Document{}, ErrInvalid
+		}
+		cid := chunk.ID
+		if cid == "" {
+			cid, err = newID("kc_")
+			if err != nil {
+				return Document{}, err
+			}
+		}
+		if _, err = tx.Exec(ctx, `
+			INSERT INTO knowledge_chunks(id,lesson_id,job_id,ordinal,start_ms,end_ms,text,source)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, cid, lessonID, id, chunk.Ordinal, chunk.StartMs, chunk.EndMs, text, source); err != nil {
+			return Document{}, err
+		}
+	}
+
+	var doc Document
+	err = tx.QueryRow(ctx, `
+		UPDATE knowledge_documents SET
+			chapter_count=$2, chunk_count=$3, embedder=$4, updated_at=now()
+		WHERE lesson_id=$1
+		RETURNING lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
+			chapter_count,chunk_count,embedder,created_at,updated_at`,
+		lessonID, len(payload.Chapters), len(payload.Chunks), embedder,
+	).Scan(&doc.LessonID, &doc.JobID, &doc.Status, &doc.ASREngine, &doc.SceneEngine, &doc.OCREngine,
+		&doc.WordCount, &doc.SegmentCount, &doc.KeyframeCount, &doc.ChapterCount, &doc.ChunkCount, &doc.Embedder,
+		&doc.CreatedAt, &doc.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Document{}, ErrDenied
+	}
 	if err != nil {
 		return Document{}, err
 	}
@@ -396,16 +508,19 @@ func (s *Service) GetLesson(ctx context.Context, p identity.Principal, lessonID 
 	}
 	var out LessonKnowledge
 	err = tx.QueryRow(ctx, `
-		SELECT lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,created_at,updated_at
+		SELECT lesson_id,job_id,status,asr_engine,scene_engine,ocr_engine,word_count,segment_count,keyframe_count,
+			chapter_count,chunk_count,embedder,created_at,updated_at
 		FROM knowledge_documents WHERE lesson_id=$1`, lessonID).Scan(
 		&out.Document.LessonID, &out.Document.JobID, &out.Document.Status, &out.Document.ASREngine,
 		&out.Document.SceneEngine, &out.Document.OCREngine, &out.Document.WordCount, &out.Document.SegmentCount,
-		&out.Document.KeyframeCount, &out.Document.CreatedAt, &out.Document.UpdatedAt)
+		&out.Document.KeyframeCount, &out.Document.ChapterCount, &out.Document.ChunkCount, &out.Document.Embedder,
+		&out.Document.CreatedAt, &out.Document.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		out.Document = Document{LessonID: lessonID, Status: "pending"}
 		out.Words = []Word{}
 		out.Segments = []Segment{}
 		out.Keyframes = []Keyframe{}
+		out.Chapters = []Chapter{}
 		return out, tx.Commit(ctx)
 	}
 	if err != nil {
@@ -485,5 +600,116 @@ func (s *Service) GetLesson(ctx context.Context, p identity.Principal, lessonID 
 	if err = kfRows.Err(); err != nil {
 		return LessonKnowledge{}, err
 	}
+
+	chRows, err := tx.Query(ctx, `
+		SELECT id,ordinal,start_ms,end_ms,title,summary
+		FROM knowledge_chapters WHERE lesson_id=$1 ORDER BY ordinal`, lessonID)
+	if err != nil {
+		return LessonKnowledge{}, err
+	}
+	out.Chapters = []Chapter{}
+	for chRows.Next() {
+		var ch Chapter
+		if err = chRows.Scan(&ch.ID, &ch.Ordinal, &ch.StartMs, &ch.EndMs, &ch.Title, &ch.Summary); err != nil {
+			chRows.Close()
+			return LessonKnowledge{}, err
+		}
+		out.Chapters = append(out.Chapters, ch)
+	}
+	chRows.Close()
+	if err = chRows.Err(); err != nil {
+		return LessonKnowledge{}, err
+	}
 	return out, tx.Commit(ctx)
+}
+
+func (s *Service) ListChapters(ctx context.Context, p identity.Principal, lessonID string) ([]Chapter, error) {
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	if err = lessonAccess(ctx, tx, p.UserID, lessonID, p.Role); err != nil {
+		return nil, err
+	}
+	rows, err := tx.Query(ctx, `
+		SELECT id,ordinal,start_ms,end_ms,title,summary
+		FROM knowledge_chapters WHERE lesson_id=$1 ORDER BY ordinal`, lessonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []Chapter{}
+	for rows.Next() {
+		var ch Chapter
+		if err = rows.Scan(&ch.ID, &ch.Ordinal, &ch.StartMs, &ch.EndMs, &ch.Title, &ch.Summary); err != nil {
+			return nil, err
+		}
+		out = append(out, ch)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (s *Service) searchBM25(ctx context.Context, lessonID, query string, limit int) ([]Chunk, error) {
+	if limit < 1 {
+		limit = 6
+	}
+	keywords := extractSearchKeywords(query)
+	rows, err := s.Pool.Query(ctx, `
+		SELECT id,ordinal,start_ms,end_ms,text,source,
+		       ts_rank_cd(search_document, websearch_to_tsquery('simple', $2)) AS rank
+		FROM knowledge_chunks
+		WHERE lesson_id=$1
+		  AND (
+		       search_document @@ websearch_to_tsquery('simple', $2)
+		    OR (length($3) > 1 AND search_document @@ plainto_tsquery('simple', $3))
+		    OR text ILIKE '%' || $3 || '%'
+		  )
+		ORDER BY rank DESC, start_ms ASC, ordinal ASC
+		LIMIT $4`, lessonID, query, keywords, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []Chunk{}
+	for rows.Next() {
+		var c Chunk
+		if err = rows.Scan(&c.ID, &c.Ordinal, &c.StartMs, &c.EndMs, &c.Text, &c.Source, &c.Score); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+func extractSearchKeywords(q string) string {
+	stopWords := map[string]bool{
+		"what": true, "is": true, "an": true, "a": true, "the": true, "in": true, "of": true,
+		"for": true, "how": true, "why": true, "does": true, "do": true, "can": true,
+		"to": true, "and": true, "or": true, "with": true, "by": true, "on": true,
+		"at": true, "from": true, "explain": true, "describe": true, "tell": true,
+		"me": true, "about": true,
+	}
+	words := strings.Fields(strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			return r
+		}
+		return ' '
+	}, strings.ToLower(q)))
+	var result []string
+	for _, w := range words {
+		if !stopWords[w] && len(w) > 1 {
+			result = append(result, w)
+		}
+	}
+	if len(result) == 0 {
+		return q
+	}
+	return strings.Join(result, " ")
 }

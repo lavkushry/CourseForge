@@ -8,7 +8,10 @@ import (
 
 // Dedicated Qdrant collection for Living Video Knowledge. Never write to
 // courseforge_chunks or other existing collections.
-const QdrantCollection = "courseforge_living_video"
+const QdrantCollection = "courseforge_knowledge"
+
+// AbstainMessage is returned when retrieval lacks cited support.
+const AbstainMessage = "not covered in this video"
 
 type Job struct {
 	ID             string          `json:"id"`
@@ -40,6 +43,9 @@ type Document struct {
 	WordCount     int       `json:"word_count"`
 	SegmentCount  int       `json:"segment_count"`
 	KeyframeCount int       `json:"keyframe_count"`
+	ChapterCount  int       `json:"chapter_count"`
+	ChunkCount    int       `json:"chunk_count"`
+	Embedder      string    `json:"embedder,omitempty"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -78,11 +84,31 @@ type OCRHit struct {
 	Confidence *float64 `json:"confidence,omitempty"`
 }
 
+type Chapter struct {
+	ID      string `json:"id"`
+	Ordinal int    `json:"ordinal"`
+	StartMs int    `json:"start_ms"`
+	EndMs   int    `json:"end_ms"`
+	Title   string `json:"title"`
+	Summary string `json:"summary"`
+}
+
+type Chunk struct {
+	ID      string  `json:"id"`
+	Ordinal int     `json:"ordinal"`
+	StartMs int     `json:"start_ms"`
+	EndMs   int     `json:"end_ms"`
+	Text    string  `json:"text"`
+	Source  string  `json:"source"`
+	Score   float64 `json:"score,omitempty"`
+}
+
 type LessonKnowledge struct {
 	Document  Document   `json:"document"`
 	Words     []Word     `json:"words"`
 	Segments  []Segment  `json:"segments"`
 	Keyframes []Keyframe `json:"keyframes"`
+	Chapters  []Chapter  `json:"chapters"`
 }
 
 type EnqueueRequest struct {
@@ -99,6 +125,12 @@ type IngestPayload struct {
 	Keyframes   []Keyframe `json:"keyframes"`
 }
 
+type IndexPayload struct {
+	Chapters []Chapter `json:"chapters"`
+	Chunks   []Chunk   `json:"chunks"`
+	Embedder string    `json:"embedder"`
+}
+
 type ClaimRequest struct {
 	WorkerID string `json:"worker_id"`
 	LeaseSec int    `json:"lease_seconds"`
@@ -111,4 +143,25 @@ type CompleteRequest struct {
 type FailRequest struct {
 	ErrorCode string `json:"error_code"`
 	Retry     bool   `json:"retry"`
+}
+
+type AskRequest struct {
+	Question string `json:"question"`
+}
+
+type AskCitation struct {
+	ChunkID string  `json:"chunk_id"`
+	StartMs int     `json:"start_ms"`
+	EndMs   int     `json:"end_ms"`
+	Label   string  `json:"label"`
+	Text    string  `json:"text"`
+	Score   float64 `json:"score,omitempty"`
+}
+
+type AskResponse struct {
+	Answer    string        `json:"answer"`
+	Abstained bool          `json:"abstained"`
+	Support   string        `json:"support"` // supported | not_covered
+	Citations []AskCitation `json:"citations"`
+	Broadened bool          `json:"broadened,omitempty"`
 }

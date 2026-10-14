@@ -20,7 +20,9 @@ COPY knowledge_worker ./knowledge_worker
 ENV PYTHONUNBUFFERED=1 \
     CF_KNOWLEDGE_API_URL=http://api:8090 \
     CF_QDRANT_URL=http://qdrant:6333 \
-    CF_QDRANT_COLLECTION=courseforge_living_video \
+    CF_QDRANT_COLLECTION=courseforge_knowledge \
+    CF_KNOWLEDGE_EMBEDDER=sentence-transformers \
+    CF_KNOWLEDGE_RERANKER=cross-encoder \
     CF_WHISPER_MODEL=tiny \
     CF_WHISPER_DEVICE=cpu \
     CF_WHISPER_COMPUTE_TYPE=int8

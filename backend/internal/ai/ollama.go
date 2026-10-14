@@ -54,6 +54,16 @@ func formatVector(v []float32) string {
 	return sb.String()
 }
 
+// Complete exposes Ollama generation for other packages (e.g. knowledge ask).
+func (s *Service) Complete(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	return s.generateCompletion(ctx, systemPrompt, userPrompt)
+}
+
+// Embed exposes Ollama embeddings for other packages.
+func (s *Service) Embed(ctx context.Context, text string) ([]float32, error) {
+	return s.generateEmbedding(ctx, text)
+}
+
 func (s *Service) generateCompletion(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	reqBody, _ := json.Marshal(map[string]any{
 		"model":  s.ChatModel,

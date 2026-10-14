@@ -113,6 +113,7 @@ func run() error {
 		AI:           ai.New(pool),
 		Knowledge:    knowledge.New(pool),
 	}
+	deps.Knowledge.Generator = deps.AI
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)
 		if err != nil {

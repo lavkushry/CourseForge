@@ -1,4 +1,4 @@
-"""Poll knowledge_jobs via the Go API and run ingest."""
+"""Poll knowledge_jobs via the Go API and run ingest + retrieval indexing."""
 
 from __future__ import annotations
 
@@ -11,9 +11,11 @@ from typing import Any, Callable
 from knowledge_worker.api_client import KnowledgeAPI
 from knowledge_worker.asr import ASREngine, build_asr
 from knowledge_worker.config import Settings, load_settings
+from knowledge_worker.embedder import Embedder, build_embedder
+from knowledge_worker.index_pipeline import build_index_artifacts
 from knowledge_worker.ocr import OCREngine, build_ocr
 from knowledge_worker.pipeline import resolve_media_path, run_ingest
-from knowledge_worker.qdrant_store import ensure_living_video_collection
+from knowledge_worker.qdrant_store import ensure_knowledge_collection, upsert_chunks
 from knowledge_worker.scenes import SceneDetector, build_scene_detector
 
 log = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ class IngestWorker:
         asr: ASREngine | None = None,
         scenes: SceneDetector | None = None,
         ocr: OCREngine | None = None,
+        embedder: Embedder | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.settings = settings
@@ -40,10 +43,12 @@ class IngestWorker:
         )
         self.scenes = scenes or build_scene_detector()
         self.ocr = ocr or build_ocr(settings.ocr_engine)
+        self.embedder = embedder or build_embedder(settings.embedder, dim=settings.embed_dim)
         self._sleep = sleep
 
     def process_job(self, job: dict[str, Any]) -> None:
         job_id = str(job["id"])
+        lesson_id = str(job.get("lesson_id") or "")
         worker_id = self.settings.worker_id
         fence = int(job["fence"])
         payload = job.get("payload") or {}
@@ -59,32 +64,63 @@ class IngestWorker:
                 ocr=self.ocr,
             )
             self.api.store_ingest(job_id, worker_id, fence, bundle.as_payload())
-        if self.settings.enable_qdrant:
-            self._ensure_qdrant()
+            chapters, chunks, vectors = build_index_artifacts(
+                bundle.segments,
+                bundle.keyframes,
+                embedder=self.embedder,
+            )
+            # Assign stable chunk ids before Qdrant upsert / Postgres index.
+            for chunk in chunks:
+                chunk["id"] = f"kc_{lesson_id}_{chunk['ordinal']}"
+            if self.settings.enable_qdrant and vectors:
+                self._upsert_qdrant(lesson_id, chunks, vectors)
+            self.api.store_index(
+                job_id,
+                worker_id,
+                fence,
+                chapters=chapters,
+                chunks=chunks,
+                embedder=getattr(self.embedder, "name", ""),
+            )
         self.api.complete(
             job_id,
             worker_id,
             fence,
             {
-                "lesson_id": job.get("lesson_id"),
+                "lesson_id": lesson_id,
                 "word_count": len(bundle.words),
                 "segment_count": len(bundle.segments),
                 "keyframe_count": len(bundle.keyframes),
+                "chapter_count": len(chapters),
+                "chunk_count": len(chunks),
                 "asr_engine": bundle.asr_engine,
                 "scene_engine": bundle.scene_engine,
                 "ocr_engine": bundle.ocr_engine,
+                "embedder": getattr(self.embedder, "name", ""),
             },
         )
 
-    def _ensure_qdrant(self) -> None:
+    def _upsert_qdrant(
+        self,
+        lesson_id: str,
+        chunks: list[dict[str, Any]],
+        vectors: list[list[float]],
+    ) -> None:
         try:
             from qdrant_client import QdrantClient  # type: ignore
         except Exception as exc:
             log.warning("qdrant client unavailable: %s", exc)
             return
         client = QdrantClient(url=self.settings.qdrant_url, timeout=30, check_compatibility=False)
-        # Dimension placeholder for later embedding steps; collection is dedicated.
-        ensure_living_video_collection(client, dimension=1024, collection=self.settings.qdrant_collection)
+        dim = len(vectors[0]) if vectors else self.embedder.dimension()
+        ensure_knowledge_collection(client, dimension=dim, collection=self.settings.qdrant_collection)
+        upsert_chunks(
+            client,
+            lesson_id=lesson_id,
+            chunks=chunks,
+            vectors=vectors,
+            collection=self.settings.qdrant_collection,
+        )
 
     def poll_once(self) -> bool:
         job = self.api.claim(self.settings.worker_id, self.settings.lease_seconds)
@@ -103,10 +139,11 @@ class IngestWorker:
 
     def run_forever(self) -> None:
         log.info(
-            "knowledge worker starting worker_id=%s api=%s collection=%s",
+            "knowledge worker starting worker_id=%s api=%s collection=%s embedder=%s",
             self.settings.worker_id,
             self.settings.api_url,
             self.settings.qdrant_collection,
+            getattr(self.embedder, "name", ""),
         )
         while True:
             worked = False

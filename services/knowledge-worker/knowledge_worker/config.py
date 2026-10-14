@@ -26,13 +26,16 @@ class Settings:
     qdrant_url: str
     qdrant_collection: str
     enable_qdrant: bool
+    embedder: str
+    reranker: str
+    embed_dim: int
 
 
 def load_settings() -> Settings:
     collection = _env("CF_QDRANT_COLLECTION", QDRANT_COLLECTION)
     if collection != QDRANT_COLLECTION:
         # Hard-guard: reject accidental reuse of legacy collections.
-        if collection in {"courseforge_chunks", ""}:
+        if collection in {"courseforge_chunks", "courseforge_living_video", ""}:
             collection = QDRANT_COLLECTION
     return Settings(
         api_url=_env("CF_KNOWLEDGE_API_URL", "http://127.0.0.1:8090").rstrip("/"),
@@ -49,4 +52,7 @@ def load_settings() -> Settings:
         qdrant_url=_env("CF_QDRANT_URL", "http://127.0.0.1:6333").rstrip("/"),
         qdrant_collection=collection,
         enable_qdrant=_env("CF_KNOWLEDGE_ENABLE_QDRANT", "false").lower() in {"1", "true", "yes"},
+        embedder=_env("CF_KNOWLEDGE_EMBEDDER", "sentence-transformers") or "sentence-transformers",
+        reranker=_env("CF_KNOWLEDGE_RERANKER", "cross-encoder") or "cross-encoder",
+        embed_dim=int(_env("CF_KNOWLEDGE_EMBED_DIM", "384") or "384"),
     )

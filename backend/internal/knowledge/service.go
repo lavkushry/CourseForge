@@ -31,23 +31,33 @@ type Service struct {
 	Pool        *pgxpool.Pool
 	WorkerToken string
 	Lease       time.Duration
+	Generator   Generator
+	Qdrant      *qdrantClient
 }
 
 func New(pool *pgxpool.Pool) *Service {
 	token := strings.TrimSpace(os.Getenv("CF_KNOWLEDGE_WORKER_TOKEN"))
-	return &Service{Pool: pool, WorkerToken: token, Lease: 2 * time.Minute}
+	return &Service{
+		Pool:        pool,
+		WorkerToken: token,
+		Lease:       2 * time.Minute,
+		Qdrant:      newQdrantFromEnv(),
+	}
 }
 
 func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("POST /api/v1/knowledge/jobs", auth.Require(http.HandlerFunc(s.enqueueHTTP)))
 	mux.Handle("GET /api/v1/knowledge/jobs/{id}", auth.Require(http.HandlerFunc(s.getJobHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}", auth.Require(http.HandlerFunc(s.getLessonHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/chapters", auth.Require(http.HandlerFunc(s.getChaptersHTTP)))
+	mux.Handle("POST /api/v1/knowledge/lessons/{id}/ask", auth.Require(http.HandlerFunc(s.askHTTP)))
 
 	mux.Handle("POST /api/v1/knowledge/worker/claim", s.requireWorker(s.claimHTTP))
 	mux.Handle("POST /api/v1/knowledge/worker/jobs/{id}/heartbeat", s.requireWorker(s.heartbeatHTTP))
 	mux.Handle("POST /api/v1/knowledge/worker/jobs/{id}/complete", s.requireWorker(s.completeHTTP))
 	mux.Handle("POST /api/v1/knowledge/worker/jobs/{id}/fail", s.requireWorker(s.failHTTP))
 	mux.Handle("PUT /api/v1/knowledge/worker/jobs/{id}/ingest", s.requireWorker(s.ingestHTTP))
+	mux.Handle("PUT /api/v1/knowledge/worker/jobs/{id}/index", s.requireWorker(s.indexHTTP))
 }
 
 func (s *Service) requireWorker(next http.HandlerFunc) http.Handler {

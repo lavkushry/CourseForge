@@ -48,6 +48,29 @@ class KnowledgeAPI:
         response.raise_for_status()
         return response.json()
 
+    def store_index(
+        self,
+        job_id: str,
+        worker_id: str,
+        fence: int,
+        *,
+        chapters: list[dict[str, Any]],
+        chunks: list[dict[str, Any]],
+        embedder: str = "",
+    ) -> dict[str, Any]:
+        response = self._client.put(
+            f"/api/v1/knowledge/worker/jobs/{job_id}/index",
+            json={
+                "worker_id": worker_id,
+                "fence": fence,
+                "chapters": chapters,
+                "chunks": chunks,
+                "embedder": embedder,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
     def complete(self, job_id: str, worker_id: str, fence: int, result: dict[str, Any] | None = None) -> None:
         response = self._client.post(
             f"/api/v1/knowledge/worker/jobs/{job_id}/complete",

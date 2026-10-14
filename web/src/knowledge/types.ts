@@ -1,4 +1,4 @@
-/** Living Video Knowledge types (ingest artifacts for the player side panel). */
+/** Living Video Knowledge types (ingest + retrieval for the player side panel). */
 
 export type KnowledgeStatus = 'pending' | 'ready' | 'failed';
 
@@ -12,6 +12,9 @@ export interface KnowledgeDocument {
   word_count: number;
   segment_count: number;
   keyframe_count: number;
+  chapter_count?: number;
+  chunk_count?: number;
+  embedder?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -50,11 +53,38 @@ export interface KnowledgeKeyframe {
   ocr?: KnowledgeOCR | null;
 }
 
+export interface KnowledgeChapter {
+  id: string;
+  ordinal: number;
+  start_ms: number;
+  end_ms: number;
+  title: string;
+  summary: string;
+}
+
 export interface LessonKnowledge {
   document: KnowledgeDocument;
   words: KnowledgeWord[];
   segments: KnowledgeSegment[];
   keyframes: KnowledgeKeyframe[];
+  chapters?: KnowledgeChapter[];
 }
 
-export const QDRANT_COLLECTION = 'courseforge_living_video';
+export interface AskCitation {
+  chunk_id: string;
+  start_ms: number;
+  end_ms: number;
+  label: string;
+  text: string;
+  score?: number;
+}
+
+export interface AskResponse {
+  answer: string;
+  abstained: boolean;
+  support: 'supported' | 'not_covered' | string;
+  citations: AskCitation[];
+  broadened?: boolean;
+}
+
+export const QDRANT_COLLECTION = 'courseforge_knowledge';

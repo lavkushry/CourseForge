@@ -2,7 +2,7 @@ from pathlib import Path
 
 from knowledge_worker import QDRANT_COLLECTION
 from knowledge_worker.pipeline import resolve_media_path, run_ingest
-from knowledge_worker.qdrant_store import ensure_living_video_collection
+from knowledge_worker.qdrant_store import ensure_knowledge_collection
 
 from conftest import MockASR, MockOCR, MockScenes
 
@@ -41,10 +41,10 @@ def test_qdrant_collection_guard():
             self.created = collection_name
 
     client = FakeClient()
-    ensure_living_video_collection(client, dimension=8)
+    ensure_knowledge_collection(client, dimension=8)
     assert client.created == QDRANT_COLLECTION
     try:
-        ensure_living_video_collection(client, dimension=8, collection="courseforge_chunks")
+        ensure_knowledge_collection(client, dimension=8, collection="courseforge_chunks")
         raise AssertionError("should refuse legacy collection")
     except ValueError:
         pass

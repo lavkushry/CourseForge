@@ -68,6 +68,33 @@ func (s *Service) getLessonHTTP(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, 200, out)
 }
 
+func (s *Service) getChaptersHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	chapters, err := s.ListChapters(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{
+		"lesson_id": r.PathValue("id"),
+		"chapters":  chapters,
+	})
+}
+
+func (s *Service) askHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	var req AskRequest
+	if !decodeJSON(w, r, 8<<10, &req) {
+		return
+	}
+	out, err := s.Ask(r.Context(), p, r.PathValue("id"), req.Question)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, out)
+}
+
 func (s *Service) claimHTTP(w http.ResponseWriter, r *http.Request) {
 	var req ClaimRequest
 	if !decodeJSON(w, r, 4<<10, &req) {
@@ -151,6 +178,29 @@ func (s *Service) ingestHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	doc, err := s.StoreIngest(r.Context(), r.PathValue("id"), req.WorkerID, req.Fence, req.Ingest)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, doc)
+}
+
+func (s *Service) indexHTTP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		WorkerID string    `json:"worker_id"`
+		Fence    int64     `json:"fence"`
+		Chapters []Chapter `json:"chapters"`
+		Chunks   []Chunk   `json:"chunks"`
+		Embedder string    `json:"embedder"`
+	}
+	if !decodeJSON(w, r, 8<<20, &req) {
+		return
+	}
+	doc, err := s.StoreIndex(r.Context(), r.PathValue("id"), req.WorkerID, req.Fence, IndexPayload{
+		Chapters: req.Chapters,
+		Chunks:   req.Chunks,
+		Embedder: req.Embedder,
+	})
 	if err != nil {
 		failure(w, err)
 		return
