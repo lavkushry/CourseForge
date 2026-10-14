@@ -27,7 +27,12 @@ export default defineConfig({
     {
       name: 'iphone-14',
       use: { ...devices['iPhone 14'] },
-      testMatch: /responsive-layout\.spec\.ts/,
+      testMatch: /(responsive-layout|mobile-menu-sheet)\.spec\.ts/,
+    },
+    {
+      name: 'iphone-se',
+      use: { ...devices['iPhone SE'], viewport: { width: 375, height: 667 } },
+      testMatch: /mobile-menu-sheet\.spec\.ts/,
     },
     {
       name: 'ipad-pro-11-portrait',
@@ -35,7 +40,7 @@ export default defineConfig({
         ...devices['iPad Pro 11'],
         viewport: { width: 834, height: 1194 },
       },
-      testMatch: /responsive-layout\.spec\.ts/,
+      testMatch: /(responsive-layout|mobile-menu-sheet)\.spec\.ts/,
     },
     {
       name: 'ipad-pro-11-landscape',
