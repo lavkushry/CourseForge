@@ -1,0 +1,1334 @@
+/* 9. Academy Studio Mode & Normal Mode Switcher + Sidebar Layout */
+
+.mode-switch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e2e6f8;
+  background: rgba(139, 92, 246, 0.14);
+  border: 1px solid rgba(139, 92, 246, 0.38);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-switch-pill:hover {
+  background: rgba(139, 92, 246, 0.28);
+  border-color: #8b5cf6;
+  color: #fff;
+}
+
+.mode-switch-pill[aria-pressed="true"] {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border-color: #a78bfa;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}
+
+.classroom-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.classroom-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: #0d101a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  gap: 3px;
+}
+
+.mode-seg-btn {
+  padding: 6px var(--space-3);
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #98a0bc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.mode-seg-btn:hover {
+  color: #fff;
+}
+
+.mode-seg-btn.active {
+  background: rgba(139, 92, 246, 0.25);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5);
+}
+
+.app-layout-shell {
+  display: block;
+  width: 100%;
+}
+
+body.academy-studio-mode .app-layout-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  align-items: start;
+  min-height: calc(100vh - 72px);
+}
+
+.academy-sidebar {
+  position: sticky;
+  top: 72px;
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+  background: #0b0d15;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 30;
+}
+
+.academy-sidebar[hidden] {
+  display: none;
+}
+
+.academy-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) 6px var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 6px;
+}
+
+.academy-badge-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.18);
+  padding: var(--space-1) var(--space-2);
+  border-radius: 6px;
+}
+
+.sidebar-mode-exit {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #b5bdd6;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.sidebar-mode-exit:hover {
+  color: #fff;
+  border-color: #8b5cf6;
+}
+
+.academy-side-group {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #6c738f;
+  padding: 10px 10px var(--space-1);
+}
+
+.academy-side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.academy-side-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 9px var(--space-3);
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a8b0ca;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.academy-side-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.academy-side-btn.active {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #fff;
+}
+
+body.academy-studio-mode .workspace {
+  max-width: 100%;
+  padding: var(--space-6) var(--space-7) 60px;
+}
+
+/* 10. Theme (Light / Dark) & Accent (Indigo / Teal / Rose) Reactivity
+   Token overrides live in styles/tokens.css; component accents stay here. */
+
+@media (max-width: 1024px) {
+  .weekday-budgets-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .academy-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Single-row navigation fit & Academy Studio header refinement */
+
+@media (min-width: 1025px) {
+  .site-header {
+    gap: 18px;
+  }
+
+  .primary-navigation {
+    gap: 18px;
+    flex-wrap: nowrap;
+  }
+
+  .primary-navigation button {
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  body.academy-studio-mode .site-header .primary-navigation {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   UNIVERSITY LMS DESIGN SYSTEM (Dribbble 27155177 — Ronas IT)
+   Left Circular Icon Rail + Expandable Studio Sidebar + Mobile Bottom Dock & Drawer
+   ========================================================================== */
+
+/* LMS color vars (--lms-*) are aliases in styles/tokens.css */
+
+/* Top Header Bar */
+
+.site-header.lms-top-header {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  height: 68px;
+  min-height: 68px;
+  padding: 0 var(--space-7) 0 18px;
+  background: rgba(13, 13, 13, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.lms-header-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.brand .lms-floral-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(229, 69, 3, 0.14);
+  color: var(--lms-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(229, 69, 3, 0.3);
+  box-shadow: 0 4px 14px rgba(229, 69, 3, 0.2);
+}
+
+.brand .lms-floral-mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+.lms-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: #8e8e93;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: var(--space-2);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lms-breadcrumb .crumb-link {
+  color: #8e8e93;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.lms-breadcrumb .crumb-link:hover {
+  color: #fff;
+}
+
+.lms-breadcrumb .crumb-sep {
+  color: rgba(255, 255, 255, 0.24);
+}
+
+.lms-breadcrumb .crumb-current {
+  color: #fff;
+  font-weight: 600;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lms-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   MOBILE & TABLET MENU MANAGEMENT (@media max-width: 1024px)
+   Bottom Fixed Navigation Dock + 1-Tap Full 3-Column Menu Sheet
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .site-header.lms-top-header {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 var(--space-3);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .lms-breadcrumb, .lms-header-search, #header-bell-btn, #account-name, .lms-rail-studio-head, .lms-rail-bottom {
+    display: none;
+  }
+
+  .brand-wordmark {
+    font-size: 16px;
+  }
+
+  #workspace-mode-toggle span {
+    display: none;
+  }
+
+  #workspace-mode-toggle {
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .lms-circle-icon-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .app-layout-shell {
+    padding-left: 0;
+    padding-bottom: 76px;
+  }
+
+  /* Default Mobile Bottom Navigation Bar */
+
+  #primary-nav.lms-left-rail {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 64px;
+    background: rgba(13, 13, 13, 0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 6px;
+    gap: 2px;
+    z-index: 950;
+    overflow: hidden;
+  }
+
+  body:not(.mobile-menu-open) #primary-nav.lms-left-rail .lms-secondary-mobile {
+    display: none;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item {
+    flex: 1 1 0;
+    height: 52px;
+    min-width: 0;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: var(--space-1) 2px;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item::after {
+    display: none;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    color: var(--lms-accent);
+    background: rgba(229, 69, 3, 0.12);
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-label {
+    position: static;
+    opacity: 1;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Expanded Full Mobile Menu Sheet (when Hamburger or More is tapped) */
+
+  .mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    z-index: 940;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail {
+    height: auto;
+    max-height: 82vh;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: var(--space-5) 14px 26px;
+    background: #141418;
+    border-radius: 24px 24px 0 0;
+    border-top: 1px solid rgba(229, 69, 3, 0.45);
+    box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.92);
+    overflow-y: auto;
+    z-index: 960;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item {
+    height: 72px;
+    background: var(--surface);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    gap: 6px;
+    color: #e4e4e7;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+    background: rgba(229, 69, 3, 0.18);
+    border-color: var(--lms-accent);
+    color: #fff;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-label {
+    font-size: 11.5px;
+  }
+}
+
+/* ==========================================================================
+   DRIBBBLE 27155177 UNIVERSITY LMS STATUS BADGES & CATEGORY PILLS
+   ========================================================================== */
+
+.lesson-meta-badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.lesson-badge-pill {
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-decoration: none;
+  text-transform: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.lesson-badge-pill:hover {
+  filter: brightness(1.1);
+}
+
+/* Deep burgundy / terracotta */
+
+.lesson-badge-pill.pill-terracotta {
+  background: #381c24;
+  color: var(--coral-hover);
+  border: 1px solid rgba(255, 152, 123, 0.15);
+}
+
+/* Deep purple / indigo */
+
+.lesson-badge-pill.pill-purple {
+  background: #281e3a;
+  color: #b39ddb;
+  border: 1px solid rgba(179, 157, 219, 0.15);
+}
+
+/* Deep forest green / emerald */
+
+.lesson-badge-pill.pill-emerald {
+  background: #1a3325;
+  color: #81c784;
+  border: 1px solid rgba(129, 199, 132, 0.15);
+}
+
+/* Deep petrol / cyan */
+
+.lesson-badge-pill.pill-ocean {
+  background: #172f3a;
+  color: #80deea;
+  border: 1px solid rgba(128, 222, 234, 0.15);
+}
+
+/* Lesson save & progress status */
+
+.lesson-progress-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.lesson-progress-container .lesson-progress-track {
+  width: 90px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lesson-save-status, #save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #81c784;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.lesson-save-status::before, #save-status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #81c784;
+  box-shadow: 0 0 6px rgba(129, 199, 132, 0.8);
+  flex-shrink: 0;
+}
+
+.lesson-meta-bar {
+  margin-top: 14px;
+  padding: 18px 22px;
+  background: #15161b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lesson-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Fix Academy Studio full-width workspace & hide mobile-more-btn on desktop */
+
+@media (min-width: 1025px) {
+  #primary-nav.lms-left-rail #mobile-more-btn, #primary-nav.lms-left-rail .mobile-more-trigger {
+    display: none;
+  }
+
+  .app-layout-shell, body.academy-studio-mode .app-layout-shell {
+    display: block;
+    grid-template-columns: none;
+    width: 100%;
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    padding-left: 244px;
+  }
+
+  body.academy-studio-mode .workspace {
+    width: 100%;
+    max-width: 100%;
+    padding: var(--space-6) var(--space-8);
+  }
+}
+
+/* Fix single-row mobile top header (no wrapping onto 2 lines) */
+
+@media (max-width: 1024px) {
+  .site-header.lms-top-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    min-height: 60px;
+    padding: 0 var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .site-header.lms-top-header .lms-header-left {
+    width: auto;
+    flex: 0 1 auto;
+    gap: 10px;
+  }
+
+  .site-header.lms-top-header .account.lms-header-right {
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+
+  .site-header.lms-top-header #logout {
+    padding: var(--space-1) var(--space-2);
+    font-size: 11.5px;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  #workspace-mode-toggle, #header-gear-btn {
+    display: none;
+  }
+}
+
+/* University LMS Pill Tab Bar */
+
+.admin-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  background: var(--canvas);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: var(--space-2);
+}
+
+.admin-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9A9CA6;
+  font-size: 0.83rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.admin-tab-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-tab-btn:hover {
+  background: var(--surface);
+  color: #fff;
+}
+
+.admin-tab-btn.active {
+  background: var(--lms-accent);
+  border-color: var(--lms-accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(229, 69, 3, 0.35);
+}
+
+.admin-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* Metric Cards */
+
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.admin-metric-card {
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 18px var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9A9CA6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(229, 69, 3, 0.14);
+  color: var(--lms-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-icon-badge svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Student Access Spotlight on Overview */
+
+.admin-section {
+  background: var(--canvas);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 22px var(--space-6);
+}
+
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.admin-section-header h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.25rem;
+}
+
+.admin-student-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.admin-student-quick-card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quick-student-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.quick-student-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.quick-student-info strong {
+  color: #fff;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-student-info span {
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-student-access {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--canvas);
+  padding: 10px var(--space-3);
+  border-radius: 12px;
+}
+
+.quick-student-access-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #A1A1AA;
+}
+
+.quick-student-access-labels strong {
+  color: #fff;
+}
+
+.quick-student-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Provision / Invite Student Card */
+
+.admin-invite-card {
+  background: linear-gradient(135deg, #1C1918 0%, var(--canvas) 100%);
+  border: 1px solid rgba(229, 69, 3, 0.28);
+  border-radius: 20px;
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-invite-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-invite-title-row > svg {
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  border-radius: 50%;
+  background: rgba(229, 69, 3, 0.16);
+  color: var(--lms-accent);
+  flex-shrink: 0;
+}
+
+.admin-invite-title-row h3 {
+  margin: 0 0 3px;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.admin-invite-title-row p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.admin-invite-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-input {
+  background: var(--canvas);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  height: 42px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.admin-input:focus {
+  border-color: var(--lms-accent);
+  outline: none;
+}
+
+.admin-generated-link-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  background: var(--canvas);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.link-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.link-code-box {
+  background: #1A1A1A;
+  padding: var(--space-1) 10px;
+  border-radius: 8px;
+  color: var(--success);
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   MOBILE VIEWPORT AUDIT & PEAK RESPONSIVENESS (@media max-width: 1024px / 640px)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  /* Hide desktop workspace mode buttons inside classroom on mobile */
+
+  .classroom-heading .classroom-mode-switch {
+    display: none;
+  }
+
+  .classroom-heading {
+    margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Classroom Heading on Phone */
+
+  .classroom-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .classroom-heading-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .classroom-heading-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Video player geometry: 100% full width, aspect ratio 16/9 */
+
+  .player-wrap {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    margin: 0 0 10px;
+  }
+
+  /* Lesson Meta Bar Below Video */
+
+  .lesson-meta-bar {
+    padding: 14px var(--space-4);
+    margin-top: 10px;
+    gap: var(--space-3);
+    border-radius: 14px;
+  }
+
+  .lesson-meta-top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .lesson-meta-badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .lesson-badge-pill {
+    border-radius: 9999px;
+    padding: 5px var(--space-3);
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .lesson-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 2px;
+    position: static;
+  }
+
+  .lesson-progress-container .lesson-progress-track {
+    flex: 1 1 auto;
+    height: 5px;
+  }
+
+  .lesson-save-status {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+  }
+
+  .lesson-heading-group .lesson-main-title {
+    font-size: 1.15rem;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .lesson-instructor-meta {
+    font-size: 0.78rem;
+  }
+
+  /* 2x2 Clean Action Pills on Mobile */
+
+  .lesson-action-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .lesson-action-pills .action-pill {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 10px;
+    font-size: 0.74rem;
+    min-height: 42px;
+  }
+
+  /* Magnetic Slide-Up Drawer on Phone */
+
+  .magnetic-macos-drawer, #episode-dialog.magnetic-macos-drawer {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -16px 64px rgba(0, 0, 0, 0.95);
+    animation: slideSheetUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 82vh;
+    border-bottom: none;
+  }
+
+  /* Omni Search on Mobile */
+
+  .omni-search-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    top: 0;
+    left: 0;
+    margin: 0;
+    background: #090a0f;
+  }
+
+  .omni-search-shell {
+    height: 100vh;
+    max-height: 100vh;
+    background: #090a0f;
+  }
+
+  .omni-search-body {
+    max-height: calc(100vh - 140px);
+  }
+
+  .omni-item-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .omni-item-title {
+    font-size: 0.85rem;
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .omni-item-subtitle {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .omni-jump-tag {
+    display: none;
+  }
+}
+
+/* 4. Top Controls Alignment: Normal Mode, Academy Studio, Lessons pill */
+
+.classroom-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.classroom-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: #0d101a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  gap: 3px;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.classroom-mode-switch .mode-seg-btn {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-3);
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #98a0bc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.18s ease;
+}
+
+.classroom-mode-switch .mode-seg-btn:hover {
+  color: #fff;
+}
+
+.classroom-mode-switch .mode-seg-btn.active {
+  background: rgba(139, 92, 246, 0.25);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5);
+}
+
+.lms-playlist-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  height: 38px;
+  box-sizing: border-box;
+  border-radius: 99px;
+  background: rgba(229, 69, 3, 0.15);
+  border: 1px solid rgba(229, 69, 3, 0.35);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.lms-playlist-pill:hover {
+  background: rgba(229, 69, 3, 0.28);
+  border-color: var(--lms-accent);
+  box-shadow: 0 0 16px rgba(229, 69, 3, 0.3);
+}
+
+/* 5. Mobile & Tablet Touch Compliance (@media max-width: 640px) */
+
+@media (max-width: 640px) {
+  /* Touch target standard 44px min-height on mobile */
+
+  .button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn), button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn), a.button:not([hidden]), .hero-play:not([hidden]), .run-checks-btn:not([hidden]), .tutor-submit-btn:not([hidden]), .review-reveal-btn:not([hidden]), .dialog-actions .button:not([hidden]), #login-form button[type="submit"]:not([hidden]), #register-form button[type="submit"]:not([hidden]), .planning-form > .button:not([hidden]), .weekly-setup-card > button.button:not([hidden]), .habits-card > button.button:not([hidden]), .new-path-btn:not([hidden]), .ai-gen-path-btn:not([hidden]), .paths-sidebar-head .button:not([hidden]), #load-more:not([hidden]), .auth-tab:not([hidden]), .close-drawer-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), .cert-view-btn:not([hidden]), .cert-claim-btn:not([hidden]) {
+    min-height: 44px;
+    padding: 10px var(--space-4);
+    font-size: 0.88rem;
+  }
+
+  .text-button:not([hidden]) {
+    min-height: 44px;
+    font-size: 0.86rem;
+  }
+
+  /* Action pills comfortable mobile touch target */
+
+  .action-pill:not([hidden]), .filter-pill:not([hidden]), .mode-pill:not([hidden]), .tutor-mode-btn:not([hidden]), .theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), .budget-choice-pill:not([hidden]), .lms-playlist-pill:not([hidden]), .study-rail-tab:not([hidden]), .planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), .mode-switch-pill:not([hidden]), .citation-link:not([hidden]), .citation-link-card:not([hidden]), .source-chip:not([hidden]), .omni-chip:not([hidden]), .popover-chip:not([hidden]), .note-seek-pill:not([hidden]), .chapter-time-btn:not([hidden]), .transcript-seek-btn:not([hidden]) {
+    min-height: 36px;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+  }
+
+  /* Review flashcard rating buttons: 2 columns on mobile to prevent text clipping */
+
+  .review-grades-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  .review-grades-row .button {
+    min-height: 44px;
+    font-size: 0.82rem;
+    padding: var(--space-2) 10px;
+  }
+
+  /* Icon buttons mobile touch sizing */
+
+  .lms-circle-icon-btn:not([hidden]), .cinema-button:not([hidden]), .carousel-nav-btn:not([hidden]), .tab-scroll-btn:not([hidden]), .lms-rail-exit-btn:not([hidden]), #rail-mode-expand:not([hidden]), #header-bell-btn:not([hidden]), #header-gear-btn:not([hidden]), #header-settings-btn:not([hidden]), #mobile-search-btn:not([hidden]), .syllabus-close-btn:not([hidden]), .note-del-btn:not([hidden]), #omni-search-clear:not([hidden]) {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    max-width: 40px;
+    max-height: 40px;
+  }
+
+  /* On mobile header, bell and gear buttons are accessed via 1-tap drawer */
+
+  #header-bell-btn, #header-bell-btn:not([hidden]), #header-gear-btn, #header-gear-btn:not([hidden]), #header-settings-btn, #header-settings-btn:not([hidden]) {
+    display: none;
+  }
+
+  /* Card footers wrapping on mobile */
+
+  .course-card-footer, .history-card-footer {
+    gap: 10px;
+  }
+
+  .course-card-footer .list-button, .course-card-footer .button {
+    min-height: 40px;
+    height: 40px;
+    font-size: 0.80rem;
+  }
+
+  .history-card-footer .history-resume-btn {
+    min-height: 40px;
+    height: 40px;
+    font-size: 0.80rem;
+  }
+
+  /* Library controls stacked cleanly on mobile */
+
+  .library-controls-bar {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .library-search-wrap, .library-status-filters, .library-selects-row {
+    width: 100%;
+  }
+
+  .library-selects-row .select-label {
+    flex: 1 1 100%;
+  }
+
+  .library-selects-row select {
+    width: 100%;
+  }
+
+  .paths-sidebar-head .button {
+    flex: 1 1 100%;
+  }
+
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .dialog-actions .button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 120px;
+  }
+
+  .tutor-ask-footer .tutor-submit-btn, .editor-footer-bar .run-checks-btn {
+    width: 100%;
+  }
+}

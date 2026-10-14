@@ -1,0 +1,469 @@
+/* ==========================================================================
+   UNIFIED ALIGNED INPUTS, SELECTS, TEXTAREAS ACROSS ALL PAGES
+   ========================================================================== */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+  min-height: 42px;
+  border-radius: 10px;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 14px;
+  padding: var(--space-2) 14px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color-scheme: dark;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, select:focus, textarea:focus {
+  border-color: var(--lms-accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+    min-height: 44px;
+    font-size: 15px;
+  }
+}
+
+/* ==========================================================================
+   STANDARDIZED INTERACTIVE CONTROLS & RESPONSIVE LAYOUT ENGINE
+   Standardizing button hierarchy, action pills, icon buttons, and form inputs
+   across mobile (320px–428px), tablet (640px–1024px), and desktop (1024px–1440px+)
+   ========================================================================== */
+
+/* 1. Primary & Secondary Standard Buttons: Desktop 38px–42px (min-height 40px), Mobile 44px touch min-height */
+
+.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn), button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn), a.button:not([hidden]), .hero-play:not([hidden]), .run-checks-btn:not([hidden]), .tutor-submit-btn:not([hidden]), .review-reveal-btn:not([hidden]), .dialog-actions .button:not([hidden]), #login-form button[type="submit"]:not([hidden]), #register-form button[type="submit"]:not([hidden]), .planning-form > .button:not([hidden]), .weekly-setup-card > button.button:not([hidden]), .habits-card > button.button:not([hidden]), .new-path-btn:not([hidden]), .ai-gen-path-btn:not([hidden]), .paths-sidebar-head .button:not([hidden]), #load-more:not([hidden]), .cert-view-btn:not([hidden]), .cert-claim-btn:not([hidden]), .admin-cta-btn:not([hidden]), .admin-refresh-btn:not([hidden]), .danger-btn:not([hidden]), #logout:not([hidden]), #enroll:not([hidden]), #back:not([hidden]), .save-pref-btn:not([hidden]), .clear-history-btn:not([hidden]), .auth-tab:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  height: auto;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.25;
+  box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  max-width: 100%;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Secondary & Quiet Standard Buttons */
+
+.button.quiet:not([hidden]) {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #d1d5db;
+}
+
+.button.quiet:not([hidden]):hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+/* Text Buttons (Links with button semantics) */
+
+.text-button:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  height: auto;
+  padding: 6px 10px;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1.2;
+  box-sizing: border-box;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #d1d5db;
+  transition: color 0.15s ease;
+}
+
+.text-button:not([hidden]):hover:not(:disabled) {
+  color: var(--accent);
+}
+
+/* 2. Action Pills & Filter Tags: 32px–36px height, 6px–14px padding, font size ~0.78rem–0.82rem */
+
+.action-pill:not([hidden]), button.action-pill:not([hidden]), .filter-pill:not([hidden]), button.filter-pill:not([hidden]), .mode-pill:not([hidden]), button.mode-pill:not([hidden]), .tutor-mode-btn:not([hidden]), button.tutor-mode-btn:not([hidden]), .theme-choice-btn:not([hidden]), button.theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), button.accent-choice-btn:not([hidden]), .budget-choice-pill:not([hidden]), button.budget-choice-pill:not([hidden]), .lms-playlist-pill:not([hidden]), button.lms-playlist-pill:not([hidden]), .study-rail-tab:not([hidden]), button.study-rail-tab:not([hidden]), .planning-tab:not([hidden]), button.planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), button.admin-tab-btn:not([hidden]), .mode-switch-pill:not([hidden]), button.mode-switch-pill:not([hidden]), .mode-seg-btn:not([hidden]), button.mode-seg-btn:not([hidden]), .suggestion-pill:not([hidden]), button.suggestion-pill:not([hidden]), .citation-link:not([hidden]), .citation-link-card:not([hidden]), button.citation-link-card:not([hidden]), .source-chip:not([hidden]), button.source-chip:not([hidden]), .omni-chip:not([hidden]), button.omni-chip:not([hidden]), .popover-chip:not([hidden]), button.popover-chip:not([hidden]), .note-seek-pill:not([hidden]), button.note-seek-pill:not([hidden]), .chapter-time-btn:not([hidden]), button.chapter-time-btn:not([hidden]), .transcript-seek-btn:not([hidden]), button.transcript-seek-btn:not([hidden]), .list-button:not([hidden]), button.list-button:not([hidden]), .history-resume-btn:not([hidden]), button.history-resume-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), button.sidebar-mode-exit:not([hidden]), .close-drawer-btn:not([hidden]), button.close-drawer-btn:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  height: auto;
+  max-height: 38px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  line-height: 1.2;
+  box-sizing: border-box;
+  white-space: nowrap;
+  cursor: pointer;
+  max-width: 100%;
+  transition: all 0.15s ease;
+}
+
+/* Theme choices, mode segment buttons, and tabs with rounded-rect aesthetics */
+
+.theme-choice-btn:not([hidden]), button.theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), button.accent-choice-btn:not([hidden]), .mode-seg-btn:not([hidden]), button.mode-seg-btn:not([hidden]), .study-rail-tab:not([hidden]), button.study-rail-tab:not([hidden]), .planning-tab:not([hidden]), button.planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), button.admin-tab-btn:not([hidden]), .close-drawer-btn:not([hidden]), button.close-drawer-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), button.sidebar-mode-exit:not([hidden]), .source-chip:not([hidden]), button.source-chip:not([hidden]), .list-button:not([hidden]), button.list-button:not([hidden]), .history-resume-btn:not([hidden]), button.history-resume-btn:not([hidden]) {
+  border-radius: 8px;
+}
+
+/* Multi-line Recommendation Prompt Pills */
+
+.prompt-pill:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  text-align: left;
+  min-height: 34px;
+  height: auto;
+  padding: 6px var(--space-3);
+  border-radius: 8px;
+  font-size: 0.80rem;
+  line-height: 1.35;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  cursor: pointer;
+}
+
+/* 3. Icon Buttons: 36px–40px diameter / square, centering outline SVGs with 18px–20px viewBox */
+
+.lms-circle-icon-btn:not([hidden]), button.lms-circle-icon-btn:not([hidden]), .cinema-button:not([hidden]), button.cinema-button:not([hidden]), .carousel-nav-btn:not([hidden]), button.carousel-nav-btn:not([hidden]), .tab-scroll-btn:not([hidden]), button.tab-scroll-btn:not([hidden]), .lms-rail-exit-btn:not([hidden]), button.lms-rail-exit-btn:not([hidden]), #rail-mode-expand:not([hidden]), #header-bell-btn:not([hidden]), #header-gear-btn:not([hidden]), #header-settings-btn:not([hidden]), #mobile-search-btn:not([hidden]), .syllabus-close-btn:not([hidden]), button.syllabus-close-btn:not([hidden]), .note-del-btn:not([hidden]), button.note-del-btn:not([hidden]), #omni-search-clear:not([hidden]) {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  max-width: 38px;
+  max-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Outline SVGs inside controls: strict 18px–20px */
+
+.lms-circle-icon-btn svg, .cinema-button svg, .carousel-nav-btn svg, .tab-scroll-btn svg, .lms-rail-exit-btn svg, .syllabus-close-btn svg, .note-del-btn svg, #omni-search-clear svg, #header-bell-btn svg, #header-gear-btn svg, #mobile-search-btn svg, .action-pill svg, .action-pill .svg-icon, .lms-playlist-pill svg, .lms-playlist-pill .svg-icon, .text-button svg, .text-button .svg-icon, .close-drawer-btn svg, .close-drawer-btn .svg-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* 4. Structural Flex/Grid Layouts, Prevention of Card Button Overflow, Alignment Across Views */
+
+.course-card-footer, .history-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: auto;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  padding-top: var(--space-3);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.course-card-footer .button, .course-card-footer .list-button {
+  font-size: 0.78rem;
+  padding: 6px var(--space-3);
+  min-height: 34px;
+  height: 34px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.review-grades-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.review-grades-row .button {
+  min-height: 40px;
+  font-size: 0.82rem;
+  padding: var(--space-2) 10px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.tutor-ask-footer, .editor-footer-bar, .paths-sidebar-head, .library-controls-bar, .library-selects-row, .classroom-heading-actions, .lesson-action-pills, .planning-actions, .planning-form, .planning-tabs, .dialog-actions, .hero-actions {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.tutor-ask-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.editor-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.paths-sidebar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.paths-sidebar-head h2 {
+  width: 100%;
+  margin: 0 0 6px 0;
+  font-size: 1.2rem;
+}
+
+.paths-sidebar-head .button {
+  flex: 1 1 calc(50% - 6px);
+  min-width: 120px;
+}
+
+/* ==========================================================================
+   DRIBBBLE 27155177 LMS THUMBNAILS, CARDS & UP-NEXT RESPONSIVE SUITE
+   ========================================================================== */
+
+/* 1. Floating category pill over thumbnails */
+
+.thumb-category-pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: var(--coral-hover);
+  background: rgba(22, 23, 31, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 152, 123, 0.25);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* 2. Sleek Dribbble Course Card Container */
+
+.course-card {
+  background: #15161b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+.thumb-duration-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 4;
+  padding: 3px var(--space-2);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f3f4f6;
+  background: rgba(15, 16, 22, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.cover-button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  border: none;
+  padding: 0;
+  display: block;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.course-card .course-art, .continue-card .course-art, .library-card .course-art, .cover-button .course-art {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  width: 100%;
+}
+
+#featured-course, .featured-course {
+  position: relative;
+  min-height: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  background: #15161b;
+}
+
+.hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 62%;
+  padding: 56px 48px;
+}
+
+.hero-kicker, .hero-metadata span, .hero-badge-match, .hero-chip, .hero-chip-badge, .hero-tech-badge {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.course-art img.course-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.course-card-body {
+  padding: 18px var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.course-card h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #f3f4f6;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.course-description {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #9ca3af;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-meta {
+  font-size: 0.78rem;
+  color: #81c784;
+  font-weight: 500;
+  margin: var(--space-1) 0 0;
+}
+
+.course-badge {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+  color: #b39ddb;
+  background: #281e3a;
+  border: 1px solid rgba(179, 157, 219, 0.15);
+}
+
+/* 3. Continue Learning Card */
+
+.continue-card {
+  background: #15161b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.continue-open {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+
+.continue-open .course-art {
+  aspect-ratio: 16/9;
+  border-radius: 16px 16px 0 0;
+}
+
+/* 4. Responsive Grid Across All Sizes */
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+@media (max-width: 1024px) {
+  .course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .course-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}

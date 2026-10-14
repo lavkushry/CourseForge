@@ -1,0 +1,172 @@
+/* Lesson learning tools reuse the classroom palette and wrap on touch screens. */
+
+.learning-tools {
+  margin-top: 2rem;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.learning-heading h2 {
+  margin: .4rem 0 1rem;
+}
+
+.learning-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1rem 0;
+}
+
+.learning-nav button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #30233e;
+  color: #fff;
+}
+
+.learning-status {
+  min-height: 1.5rem;
+  margin: .5rem 0;
+}
+
+.learning-form {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.learning-form > button {
+  justify-self: start;
+}
+
+.learning-field {
+  display: grid;
+  gap: .6rem;
+  font-size: .93rem;
+}
+
+.learning-field input, .learning-field textarea {
+  width: 100%;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  background: #0e0e15;
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.learning-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.learning-row p {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+.learning-panel h3 {
+  margin-top: 1.5rem;
+}
+
+.quiz-question {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.quiz-question legend {
+  padding: 0 .4rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.quiz-choice {
+  display: flex;
+  gap: .8rem;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: .6rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.quiz-choice:has(input:checked) {
+  background: #30233e;
+}
+
+.quiz-choice input {
+  flex: 0 0 auto;
+  margin: .2rem 0;
+}
+
+.quiz-choice span, .learning-result, .review-answer {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.learning-result {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 12px;
+  background: #101019;
+}
+
+.quiz-feedback {
+  border-top: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.feedback-correct {
+  color: #8dd7a5;
+}
+
+.feedback-incorrect {
+  color: #f2b97d;
+}
+
+.learning-attempt {
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.learning-attempt summary {
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+.review-study:not(:empty) {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.review-grades {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.review-grades button {
+  min-height: 44px;
+}
+
+.learning-tools [hidden] {
+  display: none !important;
+}
+
+.learned-badge {
+  color: #8dd7a5;
+  font-size: .76rem;
+  font-weight: 650;
+}

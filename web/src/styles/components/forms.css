@@ -1,0 +1,25 @@
+/* Unified form control alignment */
+.stack > label,
+.learning-field,
+.catalog-search label,
+.settings-field,
+.planning-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}

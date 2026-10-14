@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Spaced Review Flashcards Workspace
+   ========================================================================== */
+
+.reviews-container {
+  max-width: 680px;
+  margin: var(--space-5) auto;
+}
+
+.review-flashcard {
+  background: #151620;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: var(--space-8);
+  box-shadow: 0 16px 50px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-course-badge {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.review-question-text {
+  font-size: 1.25rem;
+  line-height: 1.45;
+  margin: 6px 0 0;
+}
+
+.review-reveal-btn {
+  align-self: center;
+  min-width: 200px;
+  margin-top: 10px;
+}
+
+.review-answer-box {
+  background: #0f1016;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: var(--space-4) 18px;
+}
+
+.review-answer-text {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #e5e7eb;
+}
+
+.grade-prompt {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 10px 0 var(--space-1);
+}
+
+.review-grades-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.grade-again {
+  border-color: #f87171;
+  color: #fca5a5;
+}
+
+.grade-hard {
+  border-color: #fbbf24;
+  color: #fde68a;
+}
+
+.grade-good {
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+.grade-easy {
+  border-color: #34d399;
+  color: #6ee7b7;
+}

@@ -1,0 +1,274 @@
+/* ==========================================================================
+   Labs Workspace
+   ========================================================================== */
+
+.labs-layout-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.labs-picker-col h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+}
+
+.labs-challenge-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.lab-picker-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) 14px;
+  border: 1px solid var(--line);
+  background: #14151d;
+  border-radius: 8px;
+  text-align: left;
+  color: #cfd2dc;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lab-picker-card:hover {
+  background: #1e1f29;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.lab-picker-card.active {
+  border-color: var(--accent);
+  background: rgba(255, 121, 82, 0.08);
+}
+
+.lab-picker-card strong {
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.code-editor-shell {
+  background: #0a0b10;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+
+.editor-tab-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px var(--space-4);
+  background: #12131b;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.78rem;
+}
+
+.code-editor-textarea {
+  width: 100%;
+  padding: var(--space-4);
+  border: 0;
+  background: #0a0b10;
+  color: #f1f2f6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.code-editor-textarea:focus {
+  outline: none;
+}
+
+.editor-footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px var(--space-4);
+  background: #12131b;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.75rem;
+}
+
+.labs-output-box {
+  margin-top: var(--space-4);
+  background: #0c0d12;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 14px var(--space-4);
+}
+
+.labs-output-box h4 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  color: #8dd7a5;
+}
+
+.output-log-text {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #d1d5db;
+  white-space: pre-wrap;
+}
+
+/* Responsive adjustments */
+
+@media(max-width: 1024px) {
+  .classroom-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .study-rail {
+    position: static;
+    height: auto;
+    max-height: 600px;
+  }
+
+  .planning-layout-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .labs-layout-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   LABS — DARK CLOUD IDE WORKSPACE
+   ========================================================================== */
+
+.code-editor-shell {
+  background: #07090e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.editor-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background: #0f121d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.editor-file-tab {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editor-file-tab .svg-icon {
+  width: 14px;
+  height: 14px;
+  color: #a78bfa;
+}
+
+.editor-lang-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+}
+
+.code-editor-textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: var(--space-4);
+  color: #e5e7eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.code-editor-textarea:focus {
+  outline: none;
+}
+
+.editor-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--space-4);
+  background: #0f121d;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.run-checks-btn {
+  padding: var(--space-2) 18px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.labs-output-box {
+  margin-top: 14px;
+  padding: var(--space-4);
+  background: #07090e;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+}
+
+.labs-output-box h4 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.output-log-text {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #d1fae5;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .labs-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .calendar-strip-row {
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-1);
+  }
+
+  .tutor-latency-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .planning-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}

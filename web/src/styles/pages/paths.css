@@ -1,0 +1,345 @@
+/* ==========================================================================
+   Learning Roadmaps (Paths) Styles
+   ========================================================================== */
+
+.paths-panel {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.paths-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media(max-width: 1024px) {
+  .paths-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.paths-sidebar {
+  background: #13141e;
+  border: 1px solid #232533;
+  border-radius: 14px;
+  padding: 1.2rem;
+}
+
+.paths-sidebar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.paths-sidebar-head h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.paths-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.path-nav-item {
+  background: #181926;
+  border: 1px solid #232533;
+  border-radius: 10px;
+  padding: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.path-nav-item:hover, .path-nav-item.active {
+  border-color: #a78bfa;
+  background: #201e30;
+}
+
+.path-nav-item strong {
+  font-size: 0.95rem;
+}
+
+.path-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  appearance: none;
+  overflow: hidden;
+}
+
+.path-progress::-webkit-progress-bar {
+  background: #0c0d12;
+}
+
+.path-progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+}
+
+.paths-main {
+  background: #13141e;
+  border: 1px solid #232533;
+  border-radius: 14px;
+  padding: 1.8rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.path-header {
+  display: grid;
+  gap: 0.5rem;
+  border-bottom: 1px solid #232533;
+  padding-bottom: 1.2rem;
+}
+
+.path-header h1 {
+  font-size: 1.7rem;
+  margin: 0;
+}
+
+.path-stats-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.stat-chip {
+  background: #1e202f;
+  border: 1px solid #2f3248;
+  border-radius: 6px;
+  padding: var(--space-1) 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.path-steps {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.path-step-card {
+  background: #181a28;
+  border: 1px solid #26283b;
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.8rem;
+  transition: border-color 0.2s;
+}
+
+.path-step-card.step-done {
+  border-color: #2e593d;
+  background: #121915;
+}
+
+.step-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.step-index-badge {
+  background: #2e2640;
+  color: #c4b5fd;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px var(--space-2);
+  border-radius: 4px;
+}
+
+.step-card-head h3 {
+  font-size: 1.05rem;
+  margin: 0;
+  flex: 1;
+}
+
+.step-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.step-objectives {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  color: #a5a8bc;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.step-sources {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #232535;
+}
+
+.source-chip {
+  font-size: 0.78rem;
+  padding: var(--space-1) var(--space-2);
+  background: #222438;
+  border: 1px solid #333650;
+}
+
+.path-skill-tree {
+  background: #181926;
+  border: 1px solid #282a3d;
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.8rem;
+  overflow: hidden;
+}
+
+.skill-tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.skill-tree-header h3 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.skill-tree-scroll {
+  overflow-x: auto;
+  padding: 0.6rem 0.2rem;
+}
+
+.skill-tree-svg {
+  width: 100%;
+  min-width: 580px;
+  height: 110px;
+  display: block;
+}
+
+.skill-node-group:hover circle {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+}
+
+.ai-gen-path-btn {
+  color: #c4b5fd;
+  border-color: #7c3aed40;
+  background: #7c3aed15;
+  font-size: 0.8rem;
+}
+
+.ai-gen-path-btn:hover {
+  background: #7c3aed30;
+  border-color: #7c3aed80;
+}
+
+.new-path-dialog {
+  background: #161724;
+  border: 1px solid #363952;
+  border-radius: 14px;
+  padding: 1.8rem;
+  color: #fff;
+  width: 440px;
+  max-width: 90vw;
+}
+
+.new-path-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.new-path-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.new-path-form h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.text-input {
+  width: 100%;
+  padding: 0.8rem;
+  background: #0c0d12;
+  border: 1px solid #2e3146;
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+/* 8. Fix Library Controls Bar & Roadmaps Sidebar Header (audit_library.png & audit_paths.png) */
+
+.library-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: var(--space-4) var(--space-5);
+  background: #0f121d;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  margin-bottom: var(--space-5);
+}
+
+.library-search-wrap {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.library-search-input {
+  width: 100%;
+}
+
+.library-selects-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.library-selects-row .select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #a3aac2;
+}
+
+.paths-sidebar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.paths-sidebar-head h2 {
+  width: 100%;
+  margin: 0 0 6px 0;
+  font-size: 1.2rem;
+}
+
+.paths-sidebar-head .button {
+  flex: 1 1 calc(50% - 6px);
+  justify-content: center;
+  font-size: 0.78rem;
+  padding: var(--space-2) 10px;
+  white-space: nowrap;
+}
