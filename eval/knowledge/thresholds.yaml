@@ -1,0 +1,16 @@
+# Minimum metrics for Living Video Knowledge offline evaluation.
+# CI fails when any reported metric falls below these floors.
+# Tuned for the synthetic fixture corpus under eval/knowledge/fixtures.
+
+citation_tolerance_ms: 5000
+
+metrics:
+  recall_at_1: 0.70
+  recall_at_3: 0.85
+  recall_at_5: 0.90
+  recall_at_10: 0.90
+  mrr: 0.75
+  citation_accuracy: 0.80
+  faithfulness: 0.75
+  abstention_precision: 0.90
+  abstention_recall: 0.90

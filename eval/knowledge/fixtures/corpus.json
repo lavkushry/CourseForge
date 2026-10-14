@@ -1,0 +1,70 @@
+{
+  "description": "Synthetic Living Video Knowledge corpus for offline evaluation. No real media or models.",
+  "embedder": "hash",
+  "embed_dim": 64,
+  "chunks": [
+    {
+      "chunk_id": "containers-c0",
+      "video_id": "video-containers",
+      "start_ms": 0,
+      "end_ms": 8000,
+      "text": "Docker containers package applications with their dependencies into portable images built from Dockerfiles."
+    },
+    {
+      "chunk_id": "containers-c1",
+      "video_id": "video-containers",
+      "start_ms": 8000,
+      "end_ms": 16000,
+      "text": "Docker Compose orchestrates multi-container local stacks with services, networks, and named volumes."
+    },
+    {
+      "chunk_id": "containers-c2",
+      "video_id": "video-containers",
+      "start_ms": 16000,
+      "end_ms": 24000,
+      "text": "Container registries store tagged images so teams can pull the same build into every environment."
+    },
+    {
+      "chunk_id": "postgres-c0",
+      "video_id": "video-postgres",
+      "start_ms": 0,
+      "end_ms": 7000,
+      "text": "PostgreSQL stores relational tables and answers SQL queries with ACID transactions."
+    },
+    {
+      "chunk_id": "postgres-c1",
+      "video_id": "video-postgres",
+      "start_ms": 7000,
+      "end_ms": 14000,
+      "text": "B-tree indexes speed up selective lookups on primary keys and foreign key joins."
+    },
+    {
+      "chunk_id": "postgres-c2",
+      "video_id": "video-postgres",
+      "start_ms": 14000,
+      "end_ms": 21000,
+      "text": "VACUUM and ANALYZE keep table statistics fresh so the planner chooses efficient plans."
+    },
+    {
+      "chunk_id": "k8s-c0",
+      "video_id": "video-k8s",
+      "start_ms": 0,
+      "end_ms": 9000,
+      "text": "Kubernetes schedules pods onto cluster nodes and restarts them when health checks fail."
+    },
+    {
+      "chunk_id": "k8s-c1",
+      "video_id": "video-k8s",
+      "start_ms": 9000,
+      "end_ms": 18000,
+      "text": "Deployments manage replica sets so rolling updates replace pods without downtime."
+    },
+    {
+      "chunk_id": "k8s-c2",
+      "video_id": "video-k8s",
+      "start_ms": 18000,
+      "end_ms": 27000,
+      "text": "Services expose a stable ClusterIP so clients reach pods even as replicas change."
+    }
+  ]
+}
