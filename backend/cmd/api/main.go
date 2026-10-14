@@ -15,6 +15,7 @@ import (
 	"courseforge/backend/internal/administration"
 	"courseforge/backend/internal/ai"
 	"courseforge/backend/internal/api"
+	"courseforge/backend/internal/cache"
 	"courseforge/backend/internal/certificates"
 	"courseforge/backend/internal/config"
 	"courseforge/backend/internal/contract"
@@ -28,7 +29,11 @@ import (
 	"courseforge/backend/internal/planning"
 	"courseforge/backend/internal/playback"
 	"courseforge/backend/internal/practice"
+	"courseforge/backend/internal/ratelimit"
 	"courseforge/backend/internal/store"
+
+	"github.com/KimMachineGun/automemlimit/memlimit"
+	_ "go.uber.org/automaxprocs"
 )
 
 func main() {
@@ -38,6 +43,9 @@ func main() {
 	}
 }
 func run() error {
+	// Align GOMAXPROCS with cgroup CPU quota and GOMEMLIMIT with container memory.
+	_, _ = memlimit.Set(memlimit.WithRatio(0.9))
+
 	loadEnvFile("/home/ubuntu/CourseForge/.env", ".env", "../.env")
 	c, err := config.FromEnv()
 	if err != nil {
@@ -47,7 +55,13 @@ func run() error {
 	defer stop()
 	startup, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	pool, err := store.Open(startup, c.DatabaseURL, c.MaxConnections)
+	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
+		MaxConns:          c.MaxConnections,
+		MinConns:          c.MinConnections,
+		MaxConnLifetime:      c.MaxConnLifetime,
+		MaxConnIdleTime:   c.MaxConnIdleTime,
+		HealthCheckPeriod: c.HealthCheckPeriod,
+	})
 	if err != nil {
 		return errors.New("cannot connect to configured PostgreSQL")
 	}
@@ -57,6 +71,11 @@ func run() error {
 			return err
 		}
 	}
+	readCache, err := cache.Open(c.RedisURL)
+	if err != nil {
+		return err
+	}
+	defer readCache.Close()
 	mailer, err := identity.NewSMTPFromEnv()
 	if err != nil {
 		return err
@@ -66,6 +85,8 @@ func run() error {
 		return err
 	}
 	app := api.New(pool, auth)
+	app.Cache = readCache
+	app.CacheTTL = c.CacheTTL
 	contract.Register(app.Mux)
 	auth.RegisterAdminRoutes(app.Mux)
 	reports := administration.New(pool)
@@ -101,17 +122,39 @@ func run() error {
 		gateway.Register(app.Mux, auth)
 	}
 	metrics := observe.New(pool)
-	if address := os.Getenv("CF_OBSERVABILITY_ADDR"); address != "" {
+	if address := firstNonEmpty(c.PprofAddr, os.Getenv("CF_OBSERVABILITY_ADDR")); address != "" {
 		closeMetrics, e := metrics.Start(address)
 		if e != nil {
 			return e
 		}
 		defer closeMetrics()
 	}
-	server := &http.Server{Addr: c.Address, Handler: api.Middleware(metrics.Wrap(app.Handler()), c.RequestTimeout), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	limiter := ratelimit.New(ratelimit.Config{
+		Enabled:    c.RateLimitEnabled,
+		RPS:        c.RateLimitRPS,
+		Burst:      c.RateLimitBurst,
+		TrustProxy: c.TrustProxy,
+	})
+	handler := limiter.Middleware(api.Middleware(metrics.Wrap(app.Handler()), c.RequestTimeout))
+	readHeader, readTimeout, writeTimeout, idleTimeout, maxHeader := c.HTTPServerTimeouts()
+	server := &http.Server{
+		Addr:              c.Address,
+		Handler:           handler,
+		ReadHeaderTimeout: readHeader,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+		MaxHeaderBytes:    maxHeader,
+	}
 	stopped := make(chan error, 1)
 	go func() { stopped <- server.ListenAndServe() }()
-	slog.Info("CourseForge API listening", "address", c.Address, "database_connections", c.MaxConnections)
+	slog.Info("CourseForge API listening",
+		"address", c.Address,
+		"database_connections", c.MaxConnections,
+		"database_min_connections", c.MinConnections,
+		"rate_limit", c.RateLimitEnabled,
+		"cache_ttl", c.CacheTTL.String(),
+	)
 	select {
 	case err = <-stopped:
 		if errors.Is(err, http.ErrServerClosed) {
@@ -120,7 +163,8 @@ func run() error {
 		return err
 	case <-ctx.Done():
 	}
-	drain, cancelDrain := context.WithTimeout(context.Background(), 15*time.Second)
+	// Drain in-flight requests, then release pool/workers via deferred Close calls.
+	drain, cancelDrain := context.WithTimeout(context.Background(), c.ShutdownTimeout)
 	defer cancelDrain()
 	if err = server.Shutdown(drain); err != nil {
 		_ = server.Close()
@@ -130,6 +174,15 @@ func run() error {
 		return listenErr
 	}
 	return err
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func loadEnvFile(paths ...string) {

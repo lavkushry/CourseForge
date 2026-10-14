@@ -1,14 +1,14 @@
 package api
 
 import (
-	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
+	"courseforge/backend/internal/cache"
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
 
@@ -22,6 +22,8 @@ type Server struct {
 	Mux            *http.ServeMux
 	ArtifactRoot   string
 	MaterialLoader MaterialLoader
+	Cache          cache.Cache
+	CacheTTL       time.Duration
 }
 
 func New(pool *pgxpool.Pool, auth *identity.Service) *Server {
@@ -80,27 +82,40 @@ func paginated[T any](key string, items []T, next string) map[string]any {
 	return map[string]any{key: items, "items": items, "next_cursor": next}
 }
 func pageArgs(w http.ResponseWriter, r *http.Request) (int, string, bool) {
-	limit := 50
-	if v := r.URL.Query().Get("limit"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < 1 || n > 100 {
-			httpx.Error(w, 400, "invalid_page", "limit must be 1..100")
-			return 0, "", false
-		}
-		limit = n
-	}
-	cursor := ""
-	if c := r.URL.Query().Get("cursor"); c != "" {
-		b, err := base64.RawURLEncoding.DecodeString(c)
-		if err != nil || len(b) > 512 {
-			httpx.Error(w, 400, "invalid_cursor", "Invalid page cursor")
-			return 0, "", false
-		}
-		cursor = string(b)
-	}
-	return limit, cursor, true
+	page, ok := httpx.ParsePage(w, r)
+	return page.Limit, page.Cursor, ok
 }
-func nextCursor(id string) string { return base64.RawURLEncoding.EncodeToString([]byte(id)) }
+func nextCursor(id string) string { return httpx.EncodeCursor(id) }
+
+func (s *Server) cacheGet(r *http.Request, key string) ([]byte, bool) {
+	if s.Cache == nil || s.CacheTTL <= 0 || key == "" {
+		return nil, false
+	}
+	b, ok, err := s.Cache.Get(r.Context(), key)
+	if err != nil || !ok {
+		return nil, false
+	}
+	return b, true
+}
+
+func (s *Server) cacheSet(r *http.Request, key string, payload any) {
+	if s.Cache == nil || s.CacheTTL <= 0 || key == "" {
+		return
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	_ = s.Cache.Set(r.Context(), key, b, s.CacheTTL)
+}
+
+func (s *Server) invalidateCatalog(r *http.Request) {
+	if s.Cache == nil {
+		return
+	}
+	_ = s.Cache.DeletePrefix(r.Context(), "catalog")
+}
+
 func (s *Server) databaseError(w http.ResponseWriter, err error) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		httpx.Error(w, 404, "not_found", "Resource not found")
