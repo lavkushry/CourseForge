@@ -1,3 +1,8 @@
+# Cleartext listen port used by Compose and in-container healthchecks.
+# Do not add an HTTP→HTTPS redirect on this server for /health: container
+# probes call http://127.0.0.1:${COURSEFORGE_WEB_PORT}/health and must get 200
+# without following a TLS redirect. Terminate TLS at the edge (or a separate
+# TLS server block) and exclude /health from any force-HTTPS redirect there.
 server {
     listen ${COURSEFORGE_WEB_PORT};
     server_name _;
@@ -13,8 +18,10 @@ server {
 
     location = /health {
         access_log off;
+        default_type text/plain;
+        add_header Content-Type text/plain always;
+        # Absolute 200 body — never return 301/302 here.
         return 200 'ok';
-        add_header Content-Type text/plain;
     }
 
     # The media URL includes a short-lived gateway authorization token. Keep

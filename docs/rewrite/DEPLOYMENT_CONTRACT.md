@@ -29,7 +29,8 @@ routes to media; other `/api/` routes go to the application. Media credentials a
 provider URLs never reach clients. Private API/media tokens stay out of proxy logs
 and shared caches. Configure the HTTPS public origin and secure cookies together.
 
-`compose.rewrite.yaml --profile app` describes the loopback development topology.
+`compose.rewrite.yaml --profile app` describes the loopback development topology
+(shared definitions in `compose.rewrite.services.yaml`; see `docs/compose.md`).
 Web is port18096, API18090, PostgreSQL15439; media is internal to Compose. For the
 current terminal-managed tests, Vite5173 proxies API18090; standalone media18094
 and realistic simulator18092 are separate. Container media simulator configuration
