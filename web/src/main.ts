@@ -937,8 +937,8 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
     on('#nav-admin', () => { void showAdmin(); });
   }
   required<HTMLFormElement>('#search-form').addEventListener('submit', event => event.preventDefault(), { signal });
-  on('#play-toggle', () => { if (!video.paused && controller?.owns) controller.pause(); else void controller?.requestPlay(); });
-  on('#resume-here', () => { void controller?.requestPlay(); });
+  on('#play-toggle', () => { if (!video.paused && controller?.owns) controller.pause(); else void controller?.requestPlay(controller?.state === 'lost'); });
+  on('#resume-here', () => { void controller?.requestPlay(true); });
   on('#retry-lesson', () => { if (selectedLesson && controller?.lesson?.id !== selectedLesson.id) void loadLesson(selectedLesson, true, true); else void controller?.retry(); });
   on('#sign-in-again', () => { const previous = controller; void previous?.close().then(() => { if (controller === previous) { controller = null; renderLogin('Sign in again to continue your course.'); } }); });
   on('#return-to-course', () => { if (selectedCourse) void loadCourse(selectedCourse.id, !selectedCourse.enrolled); });
@@ -1023,8 +1023,8 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
     if (target instanceof HTMLElement && (target.matches('input,textarea,select,button') || target.isContentEditable)) return;
     if (key.ctrlKey || key.altKey || key.metaKey) return;
     const action: Record<string, () => void> = {
-      ' ': () => { if (video.paused) void controller?.requestPlay(); else controller?.pause(); },
-      k: () => { if (video.paused) void controller?.requestPlay(); else controller?.pause(); },
+      ' ': () => { if (video.paused) void controller?.requestPlay(controller?.state === 'lost'); else controller?.pause(); },
+      k: () => { if (video.paused) void controller?.requestPlay(controller?.state === 'lost'); else controller?.pause(); },
       j: () => controller?.seek(video.currentTime - 10),
       ArrowLeft: () => controller?.seek(video.currentTime - 10),
       ArrowRight: () => controller?.seek(video.currentTime + 10),
