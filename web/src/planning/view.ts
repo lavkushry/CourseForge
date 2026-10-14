@@ -3,6 +3,7 @@ import { PlanningApi } from './api';
 import { Commands } from '../learning/api';
 import * as c from './contracts';
 import { svgIcon } from '../icons';
+import './style.css';
 
 export interface PlanningHooks {
   unauthorized?: () => void;

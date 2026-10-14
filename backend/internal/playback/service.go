@@ -354,16 +354,6 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := s.Now()
-	if !owner {
-		var otherSession string
-		_ = tx.QueryRow(ctx, "SELECT session_id FROM playback_leases WHERE user_id=$1 AND session_id!=$2 AND expires_at>now()", p.UserID, v.ID).Scan(&otherSession)
-		if otherSession == "" && b.Visible && b.Kind != "hidden" && b.Kind != "close" {
-			_, err = tx.Exec(ctx, "INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,$3)ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at", p.UserID, v.ID, now.Add(40*time.Second))
-			if err == nil {
-				owner = true
-			}
-		}
-	}
 	completed, err := isComplete(ctx, tx, p, v.LessonID)
 	if err != nil {
 		fail(w, err)
@@ -499,14 +489,10 @@ func (s *Service) release(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
-	v, err := loadSession(ctx, tx, p, r.PathValue("id"))
-	if err != nil {
-		fail(w, err)
-		return
-	}
-	_, err = tx.Exec(ctx, `DELETE FROM playback_leases WHERE user_id=$1 AND session_id=$2`, p.UserID, v.ID)
+	sessionID := r.PathValue("id")
+	_, err = tx.Exec(ctx, `DELETE FROM playback_leases WHERE user_id=$1 AND session_id=$2`, p.UserID, sessionID)
 	if err == nil {
-		_, err = tx.Exec(ctx, `UPDATE playback_sessions SET baseline_at=now(),baseline_playing=false,baseline_visible=false WHERE id=$1`, v.ID)
+		_, err = tx.Exec(ctx, `UPDATE playback_sessions SET baseline_at=now(),baseline_playing=false,baseline_visible=false WHERE id=$1 AND user_id=$2`, sessionID, p.UserID)
 	}
 	if err == nil {
 		err = tx.Commit(ctx)

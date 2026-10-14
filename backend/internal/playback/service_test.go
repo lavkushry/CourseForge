@@ -189,3 +189,20 @@ func TestSeekingAndCrossSessionCoverage(t *testing.T) {
 		t.Fatalf("cross-session coverage lost or invented%#v", ack)
 	}
 }
+
+func TestReleaseClosedSessionSucceeds(t *testing.T) {
+	f := setup(t)
+	id, _ := f.open(t, "alice", false)
+	f.baseline(t, id, f.now.Add(-10*time.Second), 0, true)
+	f.svc.Now = func() time.Time { return f.now }
+	_ = f.pulse(t, "alice", id, Pulse{Sequence: 1, Kind: "close", Visible: false, PlaybackRate: 1})
+	code, body := f.call(t, "alice", "POST", "/api/v1/playback/sessions/"+id+"/release", nil)
+	if code != 200 {
+		t.Fatalf("release closed session failed: %d %s", code, body)
+	}
+	var owner bool
+	_ = f.pool.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM playback_leases WHERE user_id='alice' AND session_id=$1)`, id).Scan(&owner)
+	if owner {
+		t.Fatal("lease still exists after release")
+	}
+}

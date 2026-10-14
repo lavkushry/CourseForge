@@ -377,7 +377,10 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   signal.addEventListener('abort', () => {
     observer.disconnect(); clearTimeout(feedbackTimer); clearTimeout(clickTimer);
     settingsPopover.remove();
-    if (dialog && previousParent?.isConnected) previousParent.append(dialog);
+    if (dialog) {
+      if (dialog.open) dialog.close();
+      if (previousParent?.isConnected) previousParent.append(dialog);
+    }
   }, { once: true });
 }
 

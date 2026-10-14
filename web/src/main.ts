@@ -367,7 +367,7 @@ function renderApp(account: User): void {
           <span class="academy-badge-pill">ACADEMY STUDIO</span>
           <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal ↗</button>
         </div>
-        <button id="nav-search-btn" type="button" class="lms-nav-item drawer-search-btn" aria-label="Search all pages" title="Search all pages">
+        <button id="nav-search-btn" type="button" class="lms-nav-item drawer-search-btn lms-secondary-mobile" aria-label="Search all pages" title="Search all pages">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg></span>
           <span class="lms-nav-label">Search</span>
         </button>
@@ -717,7 +717,7 @@ function renderApp(account: User): void {
     speedChanged: speed => { if (preferences?.current.speed !== speed) preferences?.update({ speed }); },
     visible: () => !document.hidden, online: () => navigator.onLine,
     hasNext: () => nextLesson() !== null,
-    next: () => { const next = nextLesson(); if (next) void loadLesson(next, true); },
+    next: () => { const next = nextLesson(); if (next) void loadLesson(next, true, true); },
     state: updatePlayerState,
     saved: updateProgress,
     delivery: status => {
@@ -738,7 +738,7 @@ function renderApp(account: User): void {
           const title = upNextCard.querySelector('#upNextTitleText');
           if (title && next) title.textContent = next.title;
           const img = upNextCard.querySelector<HTMLImageElement>('#upNextThumbImg');
-          if (img && next) img.src = `/api/artwork/lectures/${next.id}/thumbnail?size=sm`;
+          if (img) img.style.display = 'none';
         } else {
           upNextCard.hidden = true;
         }
@@ -756,14 +756,14 @@ function renderApp(account: User): void {
       },
       nextLesson: () => {
         const next = nextLesson();
-        if (next) void loadLesson(next, true);
+        if (next) void loadLesson(next, true, true);
       },
       prevLesson: () => {
         if (!selectedLesson) return;
         const index = lessons.findIndex(l => l.id === selectedLesson?.id);
         if (index > 0) {
           const prev = lessons[index - 1];
-          if (prev) void loadLesson(prev);
+          if (prev) void loadLesson(prev, true, true);
         }
       },
       toggleTheater,
@@ -772,7 +772,7 @@ function renderApp(account: User): void {
       getNextLesson: () => nextLesson(),
       onWatchNext: () => {
         const next = nextLesson();
-        if (next) void loadLesson(next, true);
+        if (next) void loadLesson(next, true, true);
       },
       onCancelNext: () => {
         controller?.cancelNext();
@@ -939,13 +939,13 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   required<HTMLFormElement>('#search-form').addEventListener('submit', event => event.preventDefault(), { signal });
   on('#play-toggle', () => { if (!video.paused && controller?.owns) controller.pause(); else void controller?.requestPlay(); });
   on('#resume-here', () => { void controller?.requestPlay(); });
-  on('#retry-lesson', () => { if (selectedLesson && controller?.lesson?.id !== selectedLesson.id) void loadLesson(selectedLesson, true); else void controller?.retry(); });
+  on('#retry-lesson', () => { if (selectedLesson && controller?.lesson?.id !== selectedLesson.id) void loadLesson(selectedLesson, true, true); else void controller?.retry(); });
   on('#sign-in-again', () => { const previous = controller; void previous?.close().then(() => { if (controller === previous) { controller = null; renderLogin('Sign in again to continue your course.'); } }); });
   on('#return-to-course', () => { if (selectedCourse) void loadCourse(selectedCourse.id, !selectedCourse.enrolled); });
   on('#move-here', () => { void controller?.requestPlay(true); });
   on('#restart', () => { video.currentTime = 0; controller?.restart(); });
   on('#cancel-next', () => controller?.cancelNext());
-  on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next, true); });
+  on('#next-lesson', () => { const next = nextLesson(); if (next) void loadLesson(next, true, true); });
   on('#mark-complete', () => { void markComplete(); });
   on('#save-note-pill', () => {
     const notesEl = document.querySelector<HTMLElement>('#notes');
@@ -984,7 +984,14 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
   }, { signal });
   on('#episodes', () => { required<HTMLDialogElement>('#episode-dialog').showModal(); });
   on('#close-episodes', closeEpisodes);
-  required<HTMLDialogElement>('#episode-dialog').addEventListener('close', () => required<HTMLButtonElement>('#episodes').focus(), { signal });
+  required<HTMLDialogElement>('#episode-dialog').addEventListener('close', () => {
+    const epBtn = document.querySelector<HTMLButtonElement>('#episodes');
+    if (epBtn && !window.matchMedia('(max-width: 640px)').matches) epBtn.focus({ preventScroll: true });
+  }, { signal });
+  const episodeDialog = document.querySelector<HTMLDialogElement>('#episode-dialog');
+  episodeDialog?.addEventListener('click', (e) => {
+    if (e.target === episodeDialog) closeEpisodes();
+  }, { signal });
   on('#enroll', () => {
     if (!selectedCourse) return;
     const courseId = selectedCourse.id;
@@ -1037,7 +1044,7 @@ function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
         const index = lessons.findIndex(l => l.id === selectedLesson?.id);
         if (index > 0) {
           const prevLesson = lessons[index - 1];
-          if (prevLesson) void loadLesson(prevLesson, true);
+          if (prevLesson) void loadLesson(prevLesson, true, true);
         }
       },
       l: () => setLocked(true),
@@ -1314,7 +1321,7 @@ async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
     if (generation !== navigationGeneration || selectedCourse?.id !== courseId) return;
     if (!lessons.some(value => value.id === lessonId)) lessons.push(lesson);
     if (selectedLesson?.id !== lesson.id) {
-      await loadLesson(lesson, true);
+      await loadLesson(lesson, true, true);
     }
   } catch (error) { if (!isAbort(error) && generation === navigationGeneration) feedback(errorMessage(error), true); }
 }
@@ -1364,10 +1371,11 @@ async function loadCourse(id: string, preview = false, targetLessonId?: string, 
       certSec.hidden = true;
       certSec.replaceChildren();
     }
-    if (targetLessonId && response.lessons && response.lessons.length > 0) {
-      const targetLesson = response.lessons.find(l => l.id === targetLessonId);
+    if (response.lessons && response.lessons.length > 0) {
+      const contId = targetLessonId || discovery?.getContinuation(id)?.id || response.resume_lesson_id;
+      const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
       if (targetLesson) {
-        await loadLesson(targetLesson, autoplay, true);
+        await loadLesson(targetLesson, autoplay);
         return;
       }
     }
@@ -1536,11 +1544,7 @@ async function loadMoreLessons(): Promise<void> {
 
 async function prefetchLesson(lessonId: string): Promise<void> {
   try {
-    const res = await api.lesson(lessonId, navigationScope.signal);
-    if (res?.lesson?.id) {
-      const img = new Image();
-      img.src = `/api/artwork/lectures/${res.lesson.id}/thumbnail?size=sm`;
-    }
+    await api.lesson(lessonId, navigationScope.signal);
   } catch (_) {}
 }
 
@@ -1727,8 +1731,8 @@ function renderMaterials(lesson: Lesson): void {
 }
 
 function closeEpisodes(): void {
-  const dialog = required<HTMLDialogElement>('#episode-dialog');
-  if (dialog.open) dialog.close();
+  const dialog = document.querySelector<HTMLDialogElement>('#episode-dialog');
+  if (dialog?.open) dialog.close();
 }
 
 function toggleTheater(): void {

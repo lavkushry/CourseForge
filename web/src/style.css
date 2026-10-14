@@ -6396,9 +6396,9 @@ textarea {
    across mobile (320px–428px), tablet (768px–900px), and desktop (1024px–1440px+)
    ========================================================================== */
 
-/* 1. Primary & Secondary Standard Buttons: Desktop 38px–42px, Mobile 44px touch min-height */
-.button:not([hidden]),
-button.button:not([hidden]),
+/* 1. Primary & Secondary Standard Buttons: Desktop 38px–42px (min-height 40px), Mobile 44px touch min-height */
+.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn),
+button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.close-drawer-btn):not(.sidebar-mode-exit):not(.note-seek-pill):not(.note-del-btn):not(.chapter-time-btn):not(.transcript-seek-btn):not(.tab-scroll-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn),
 a.button:not([hidden]),
 .hero-play:not([hidden]),
 .run-checks-btn:not([hidden]),
@@ -6413,7 +6413,18 @@ a.button:not([hidden]),
 .new-path-btn:not([hidden]),
 .ai-gen-path-btn:not([hidden]),
 .paths-sidebar-head .button:not([hidden]),
-#load-more:not([hidden]) {
+#load-more:not([hidden]),
+.cert-view-btn:not([hidden]),
+.cert-claim-btn:not([hidden]),
+.admin-cta-btn:not([hidden]),
+.admin-refresh-btn:not([hidden]),
+.danger-btn:not([hidden]),
+#logout:not([hidden]),
+#enroll:not([hidden]),
+#back:not([hidden]),
+.save-pref-btn:not([hidden]),
+.clear-history-btn:not([hidden]),
+.auth-tab:not([hidden]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -6428,7 +6439,7 @@ a.button:not([hidden]),
   box-sizing: border-box !important;
   text-decoration: none !important;
   cursor: pointer !important;
-  white-space: nowrap !important;
+  max-width: 100% !important;
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 
@@ -6469,41 +6480,100 @@ a.button:not([hidden]),
   color: var(--accent, #ff7952) !important;
 }
 
-/* 2. Action Pills & Filter Tags: 32px–36px height, 6px–12px padding, font size ~0.78rem–0.82rem */
+/* 2. Action Pills & Filter Tags: 32px–36px height, 6px–14px padding, font size ~0.78rem–0.82rem */
 .action-pill:not([hidden]),
+button.action-pill:not([hidden]),
 .filter-pill:not([hidden]),
+button.filter-pill:not([hidden]),
 .mode-pill:not([hidden]),
+button.mode-pill:not([hidden]),
 .tutor-mode-btn:not([hidden]),
+button.tutor-mode-btn:not([hidden]),
 .theme-choice-btn:not([hidden]),
+button.theme-choice-btn:not([hidden]),
 .accent-choice-btn:not([hidden]),
+button.accent-choice-btn:not([hidden]),
 .budget-choice-pill:not([hidden]),
+button.budget-choice-pill:not([hidden]),
 .lms-playlist-pill:not([hidden]),
+button.lms-playlist-pill:not([hidden]),
 .study-rail-tab:not([hidden]),
+button.study-rail-tab:not([hidden]),
+.planning-tab:not([hidden]),
+button.planning-tab:not([hidden]),
+.admin-tab-btn:not([hidden]),
+button.admin-tab-btn:not([hidden]),
 .mode-switch-pill:not([hidden]),
+button.mode-switch-pill:not([hidden]),
+.mode-seg-btn:not([hidden]),
+button.mode-seg-btn:not([hidden]),
 .suggestion-pill:not([hidden]),
-.citation-link:not([hidden]) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
+button.suggestion-pill:not([hidden]),
+.citation-link:not([hidden]),
+.citation-link-card:not([hidden]),
+button.citation-link-card:not([hidden]),
+.source-chip:not([hidden]),
+button.source-chip:not([hidden]),
+.omni-chip:not([hidden]),
+button.omni-chip:not([hidden]),
+.popover-chip:not([hidden]),
+button.popover-chip:not([hidden]),
+.note-seek-pill:not([hidden]),
+button.note-seek-pill:not([hidden]),
+.chapter-time-btn:not([hidden]),
+button.chapter-time-btn:not([hidden]),
+.transcript-seek-btn:not([hidden]),
+button.transcript-seek-btn:not([hidden]),
+.list-button:not([hidden]),
+button.list-button:not([hidden]),
+.history-resume-btn:not([hidden]),
+button.history-resume-btn:not([hidden]),
+.sidebar-mode-exit:not([hidden]),
+button.sidebar-mode-exit:not([hidden]),
+.close-drawer-btn:not([hidden]),
+button.close-drawer-btn:not([hidden]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
   min-height: 34px !important;
-  height: 34px !important;
-  padding: 6px 12px !important;
+  height: auto !important;
+  max-height: 38px !important;
+  padding: 6px 14px !important;
   border-radius: 99px !important;
   font-size: 0.80rem !important;
   font-weight: 600 !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   box-sizing: border-box !important;
   white-space: nowrap !important;
   cursor: pointer !important;
+  max-width: 100% !important;
   transition: all 0.15s ease !important;
 }
 
-/* Theme choices, mode segment buttons, and study rail tabs with rounded-rect aesthetics */
+/* Theme choices, mode segment buttons, and tabs with rounded-rect aesthetics */
 .theme-choice-btn:not([hidden]),
+button.theme-choice-btn:not([hidden]),
 .accent-choice-btn:not([hidden]),
+button.accent-choice-btn:not([hidden]),
 .mode-seg-btn:not([hidden]),
-.study-rail-tab:not([hidden]) {
+button.mode-seg-btn:not([hidden]),
+.study-rail-tab:not([hidden]),
+button.study-rail-tab:not([hidden]),
+.planning-tab:not([hidden]),
+button.planning-tab:not([hidden]),
+.admin-tab-btn:not([hidden]),
+button.admin-tab-btn:not([hidden]),
+.close-drawer-btn:not([hidden]),
+button.close-drawer-btn:not([hidden]),
+.sidebar-mode-exit:not([hidden]),
+button.sidebar-mode-exit:not([hidden]),
+.source-chip:not([hidden]),
+button.source-chip:not([hidden]),
+.list-button:not([hidden]),
+button.list-button:not([hidden]),
+.history-resume-btn:not([hidden]),
+button.history-resume-btn:not([hidden]) {
   border-radius: 8px !important;
 }
 
@@ -6526,21 +6596,34 @@ a.button:not([hidden]),
 
 /* 3. Icon Buttons: 36px–40px diameter / square, centering outline SVGs with 18px–20px viewBox */
 .lms-circle-icon-btn:not([hidden]),
-.sidebar-mode-exit:not([hidden]),
-.close-drawer-btn:not([hidden]),
+button.lms-circle-icon-btn:not([hidden]),
 .cinema-button:not([hidden]),
+button.cinema-button:not([hidden]),
 .carousel-nav-btn:not([hidden]),
+button.carousel-nav-btn:not([hidden]),
+.tab-scroll-btn:not([hidden]),
+button.tab-scroll-btn:not([hidden]),
 .lms-rail-exit-btn:not([hidden]),
+button.lms-rail-exit-btn:not([hidden]),
 #rail-mode-expand:not([hidden]),
 #header-bell-btn:not([hidden]),
-#header-settings-btn:not([hidden]) {
+#header-gear-btn:not([hidden]),
+#header-settings-btn:not([hidden]),
+#mobile-search-btn:not([hidden]),
+.syllabus-close-btn:not([hidden]),
+button.syllabus-close-btn:not([hidden]),
+.note-del-btn:not([hidden]),
+button.note-del-btn:not([hidden]),
+#omni-search-clear:not([hidden]) {
   width: 38px !important;
   height: 38px !important;
   min-width: 38px !important;
   min-height: 38px !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   padding: 0 !important;
   box-sizing: border-box !important;
   cursor: pointer !important;
@@ -6549,17 +6632,24 @@ a.button:not([hidden]),
 
 /* Outline SVGs inside controls: strict 18px–20px */
 .lms-circle-icon-btn svg,
-.sidebar-mode-exit svg,
-.close-drawer-btn svg,
-.close-drawer-btn .svg-icon,
 .cinema-button svg,
+.carousel-nav-btn svg,
+.tab-scroll-btn svg,
 .lms-rail-exit-btn svg,
+.syllabus-close-btn svg,
+.note-del-btn svg,
+#omni-search-clear svg,
+#header-bell-btn svg,
+#header-gear-btn svg,
+#mobile-search-btn svg,
 .action-pill svg,
 .action-pill .svg-icon,
 .lms-playlist-pill svg,
 .lms-playlist-pill .svg-icon,
 .text-button svg,
-.text-button .svg-icon {
+.text-button .svg-icon,
+.close-drawer-btn svg,
+.close-drawer-btn .svg-icon {
   width: 18px !important;
   height: 18px !important;
   display: block !important;
@@ -6567,7 +6657,8 @@ a.button:not([hidden]),
 }
 
 /* 4. Structural Flex/Grid Layouts, Prevention of Card Button Overflow, Alignment Across Views */
-.course-card-footer {
+.course-card-footer,
+.history-card-footer {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -6577,14 +6668,18 @@ a.button:not([hidden]),
   border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08)) !important;
   padding-top: 12px !important;
   min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
+.course-card-footer .button,
 .course-card-footer .list-button {
   font-size: 0.78rem !important;
   padding: 6px 12px !important;
   min-height: 34px !important;
   height: 34px !important;
   border-radius: 8px !important;
+  flex-shrink: 0 !important;
 }
 
 .review-grades-row {
@@ -6593,6 +6688,14 @@ a.button:not([hidden]),
   gap: 10px !important;
   width: 100% !important;
   box-sizing: border-box !important;
+}
+
+.review-grades-row .button {
+  min-height: 40px !important;
+  font-size: 0.82rem !important;
+  padding: 8px 10px !important;
+  text-align: center !important;
+  word-break: break-word !important;
 }
 
 .tutor-ask-footer,
@@ -6604,7 +6707,9 @@ a.button:not([hidden]),
 .lesson-action-pills,
 .planning-actions,
 .planning-form,
-.planning-tabs {
+.planning-tabs,
+.dialog-actions,
+.hero-actions {
   min-width: 0 !important;
   box-sizing: border-box !important;
 }
@@ -6632,6 +6737,12 @@ a.button:not([hidden]),
   gap: 8px !important;
 }
 
+.paths-sidebar-head h2 {
+  width: 100% !important;
+  margin: 0 0 6px 0 !important;
+  font-size: 1.2rem !important;
+}
+
 .paths-sidebar-head .button {
   flex: 1 1 calc(50% - 6px) !important;
   min-width: 120px !important;
@@ -6640,8 +6751,8 @@ a.button:not([hidden]),
 /* 5. Mobile & Tablet Touch Compliance (@media max-width: 640px) */
 @media (max-width: 640px) {
   /* Touch target standard 44px min-height on mobile */
-  .button:not([hidden]),
-  button.button:not([hidden]),
+  .button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn),
+  button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn),
   a.button:not([hidden]),
   .hero-play:not([hidden]),
   .run-checks-btn:not([hidden]),
@@ -6657,7 +6768,11 @@ a.button:not([hidden]),
   .ai-gen-path-btn:not([hidden]),
   .paths-sidebar-head .button:not([hidden]),
   #load-more:not([hidden]),
-  .lesson-action-pills .action-pill:not([hidden]) {
+  .auth-tab:not([hidden]),
+  .close-drawer-btn:not([hidden]),
+  .sidebar-mode-exit:not([hidden]),
+  .cert-view-btn:not([hidden]),
+  .cert-claim-btn:not([hidden]) {
     min-height: 44px !important;
     padding: 10px 16px !important;
     font-size: 0.88rem !important;
@@ -6678,10 +6793,19 @@ a.button:not([hidden]),
   .budget-choice-pill:not([hidden]),
   .lms-playlist-pill:not([hidden]),
   .study-rail-tab:not([hidden]),
+  .planning-tab:not([hidden]),
+  .admin-tab-btn:not([hidden]),
   .mode-switch-pill:not([hidden]),
-  .citation-link:not([hidden]) {
+  .citation-link:not([hidden]),
+  .citation-link-card:not([hidden]),
+  .source-chip:not([hidden]),
+  .omni-chip:not([hidden]),
+  .popover-chip:not([hidden]),
+  .note-seek-pill:not([hidden]),
+  .chapter-time-btn:not([hidden]),
+  .transcript-seek-btn:not([hidden]) {
     min-height: 36px !important;
-    padding: 6px 12px !important;
+    padding: 7px 14px !important;
     font-size: 0.78rem !important;
   }
 
@@ -6690,29 +6814,58 @@ a.button:not([hidden]),
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
+  .review-grades-row .button {
+    min-height: 44px !important;
+    font-size: 0.82rem !important;
+    padding: 8px 10px !important;
+  }
 
   /* Icon buttons mobile touch sizing */
   .lms-circle-icon-btn:not([hidden]),
-  .sidebar-mode-exit:not([hidden]),
-  .close-drawer-btn:not([hidden]),
   .cinema-button:not([hidden]),
   .carousel-nav-btn:not([hidden]),
+  .tab-scroll-btn:not([hidden]),
   .lms-rail-exit-btn:not([hidden]),
   #rail-mode-expand:not([hidden]),
   #header-bell-btn:not([hidden]),
-  #header-settings-btn:not([hidden]) {
+  #header-gear-btn:not([hidden]),
+  #header-settings-btn:not([hidden]),
+  #mobile-search-btn:not([hidden]),
+  .syllabus-close-btn:not([hidden]),
+  .note-del-btn:not([hidden]),
+  #omni-search-clear:not([hidden]) {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
     min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
   }
 
-  /* Card footer wrapping */
-  .course-card-footer {
+  /* On mobile header, bell and gear buttons are accessed via 1-tap drawer */
+  #header-bell-btn,
+  #header-bell-btn:not([hidden]),
+  #header-gear-btn,
+  #header-gear-btn:not([hidden]),
+  #header-settings-btn,
+  #header-settings-btn:not([hidden]) {
+    display: none !important;
+  }
+
+  /* Card footers wrapping on mobile */
+  .course-card-footer,
+  .history-card-footer {
     gap: 10px !important;
   }
 
-  .course-card-footer .list-button {
+  .course-card-footer .list-button,
+  .course-card-footer .button {
+    min-height: 40px !important;
+    height: 40px !important;
+    font-size: 0.80rem !important;
+  }
+
+  .history-card-footer .history-resume-btn {
     min-height: 40px !important;
     height: 40px !important;
     font-size: 0.80rem !important;
@@ -6740,6 +6893,23 @@ a.button:not([hidden]),
 
   .paths-sidebar-head .button {
     flex: 1 1 100% !important;
+  }
+
+  .dialog-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .dialog-actions .button {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 120px !important;
+  }
+
+  .tutor-ask-footer .tutor-submit-btn,
+  .editor-footer-bar .run-checks-btn {
+    width: 100% !important;
   }
 }
 
