@@ -184,9 +184,10 @@ def record_claim_in_db(video_id: str, claim_name: str, claim_id: str):
         except Exception as e:
             print(f"  ⚠️ DB insert note: {e}", flush=True)
     try:
-        esc_name = claim_name.replace(", )
-        esc_id = claim_id.replace(", "")
-        sql = f"INSERT INTO lesson_providers(lesson_id, claim_name, claim_id, updated_at) VALUES ({video_id}, {esc_name}, {esc_id}, now()) ON CONFLICT(lesson_id) DO UPDATE SET claim_name=EXCLUDED.claim_name, claim_id=EXCLUDED.claim_id, updated_at=now();"
+        esc_vid = str(video_id).replace("'", "''")
+        esc_name = str(claim_name).replace("'", "''")
+        esc_id = str(claim_id).replace("'", "''")
+        sql = f"INSERT INTO lesson_providers(lesson_id, claim_name, claim_id, updated_at) VALUES ('{esc_vid}', '{esc_name}', '{esc_id}', now()) ON CONFLICT(lesson_id) DO UPDATE SET claim_name=EXCLUDED.claim_name, claim_id=EXCLUDED.claim_id, updated_at=now();"
         subprocess.run(["docker", "exec", "-i", "courseforge-rewrite-postgres-1", "psql", "-U", "courseforge", "-d", "courseforge_rewrite", "-c", sql], timeout=5, capture_output=True)
     except Exception:
         pass
