@@ -4,7 +4,7 @@
 window.CourseForgePlayerRecovery = function({reload,canRecover,onState,onFailure,
   delays=[800,2500],setTimer=setTimeout,clearTimer=clearTimeout}) {
   let attempts=0,timer=null,request=null,pending=false,stopped=false,fatal=false,healthySeconds=0,lastError=null;
-  function terminal(error){return [401,404,409].includes(error?.status)||error?.code==='decode';}
+  function terminal(error){return [401,403,404,409].includes(error?.status)||error?.code==='decode';}
   function failed(error){pending=false;fatal=true;onState('failed');onFailure(error);}
   function schedule(){
     if(stopped||!pending||timer!==null||request)return;
