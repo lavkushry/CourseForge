@@ -47,7 +47,7 @@ async def inspect():
                 placeholderText: input ? input.placeholder : ''
             };
         }''')
-        print(TOPBAR INFO at 1366px:, topbar_info)
+        print('TOPBAR INFO at 1366px:', topbar_info)
 
         # Billboard buttons
         billboard_info = await page.evaluate('''() => {
@@ -60,7 +60,7 @@ async def inspect():
             }));
             return btns;
         }''')
-        print(BILLBOARD ACTIONS at 1366px:, billboard_info)
+        print('BILLBOARD ACTIONS at 1366px:', billboard_info)
 
         await page.screenshot(path='/home/ubuntu/CourseForge/screen_1366.png')
         await browser.close()
