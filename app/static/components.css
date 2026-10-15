@@ -72,3 +72,4 @@ html body :is(button,a)[data-ui-component="card"]:hover { transform: none; borde
 }
 
 @layer base { :where([data-ui-component="button"]) { display: inline-flex; } }
+.player-speed-options button{min-width:var(--size-44);min-height:var(--control-h-lg);}

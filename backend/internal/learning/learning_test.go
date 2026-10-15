@@ -16,6 +16,7 @@ import (
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
 	"courseforge/backend/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 )
 

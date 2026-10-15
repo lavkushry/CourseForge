@@ -2,12 +2,14 @@ package learning
 
 import (
 	"context"
-	"courseforge/backend/internal/httpx"
-	"courseforge/backend/internal/identity"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"time"
 	_ "time/tzdata"
+
+	"courseforge/backend/internal/httpx"
+	"courseforge/backend/internal/identity"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Credit anchors the learner's chosen/imported timezone on first accepted action.

@@ -1,4 +1,4 @@
-import { ApiClient } from "../api";
+import type { ApiClient } from '../api';
 import {
   bookmark,
   card,
@@ -11,38 +11,33 @@ import {
   reviewAttempt,
   tutorResponse,
   type TutorResponse,
-} from "./contracts";
+} from './contracts';
 const id = encodeURIComponent;
-function query(course: string, cursor = "") {
-  const q = new URLSearchParams({ course, limit: "30" });
-  if (cursor) q.set("cursor", cursor);
+function query(course: string, cursor = '') {
+  const q = new URLSearchParams({ course, limit: '30' });
+  if (cursor) q.set('cursor', cursor);
   return q;
 }
 export class LearningApi {
   constructor(private readonly api: ApiClient) {}
-  courseStatus(course: string, signal: AbortSignal, cursor = "") {
+  courseStatus(course: string, signal: AbortSignal, cursor = '') {
     return this.api
-      .request(`/courses/${id(course)}/quizzes/status?${query("", cursor)}`, {
+      .request(`/courses/${id(course)}/quizzes/status?${query('', cursor)}`, {
         signal,
       })
       .then(courseStatus);
   }
-  bookmarks(lesson: string, signal: AbortSignal, cursor = "") {
+  bookmarks(lesson: string, signal: AbortSignal, cursor = '') {
     return this.api
-      .request(`/lessons/${id(lesson)}/bookmarks?${query("", cursor)}`, {
+      .request(`/lessons/${id(lesson)}/bookmarks?${query('', cursor)}`, {
         signal,
       })
-      .then((v) => page(v, "bookmarks", bookmark));
+      .then(v => page(v, 'bookmarks', bookmark));
   }
-  createBookmark(
-    lesson: string,
-    body: { label: string; position: number },
-    key: string,
-    signal: AbortSignal,
-  ) {
+  createBookmark(lesson: string, body: { label: string; position: number }, key: string, signal: AbortSignal) {
     return this.api
       .request(`/lessons/${id(lesson)}/bookmarks`, {
-        method: "POST",
+        method: 'POST',
         body,
         idempotencyKey: key,
         signal,
@@ -51,14 +46,12 @@ export class LearningApi {
   }
   deleteBookmark(bookmarkId: string, signal: AbortSignal) {
     return this.api.request(`/bookmarks/${id(bookmarkId)}`, {
-      method: "DELETE",
+      method: 'DELETE',
       signal,
     });
   }
   quiz(lesson: string, signal: AbortSignal) {
-    return this.api
-      .request(`/lessons/${id(lesson)}/quiz`, { signal })
-      .then(quiz);
+    return this.api.request(`/lessons/${id(lesson)}/quiz`, { signal }).then(quiz);
   }
   attempt(
     lesson: string,
@@ -72,26 +65,26 @@ export class LearningApi {
   ) {
     return this.api
       .request(`/lessons/${id(lesson)}/quiz/attempts`, {
-        method: "POST",
+        method: 'POST',
         body,
         idempotencyKey: key,
         signal,
       })
       .then(result);
   }
-  quizHistory(lesson: string, signal: AbortSignal, cursor = "") {
+  quizHistory(lesson: string, signal: AbortSignal, cursor = '') {
     return this.api
-      .request(`/lessons/${id(lesson)}/quiz/attempts?${query("", cursor)}`, {
+      .request(`/lessons/${id(lesson)}/quiz/attempts?${query('', cursor)}`, {
         signal,
       })
-      .then((v) => page(v, "attempts", result));
+      .then(v => page(v, 'attempts', result));
   }
-  cards(course: string, due: boolean, signal: AbortSignal, cursor = "") {
+  cards(course: string, due: boolean, signal: AbortSignal, cursor = '') {
     return this.api
-      .request(`/reviews/${due ? "due" : "cards"}?${query(course, cursor)}`, {
+      .request(`/reviews/${due ? 'due' : 'cards'}?${query(course, cursor)}`, {
         signal,
       })
-      .then((v) => page(v, "cards", card));
+      .then(v => page(v, 'cards', card));
   }
   createCard(
     body: {
@@ -105,43 +98,33 @@ export class LearningApi {
     signal: AbortSignal,
   ) {
     return this.api
-      .request("/reviews/cards", {
-        method: "POST",
+      .request('/reviews/cards', {
+        method: 'POST',
         body,
         idempotencyKey: key,
         signal,
       })
       .then(card);
   }
-  grade(
-    cardId: string,
-    body: { quality: number; expected_revision: number },
-    key: string,
-    signal: AbortSignal,
-  ) {
+  grade(cardId: string, body: { quality: number; expected_revision: number }, key: string, signal: AbortSignal) {
     return this.api
       .request(`/reviews/${id(cardId)}/grade`, {
-        method: "POST",
+        method: 'POST',
         body,
         idempotencyKey: key,
         signal,
       })
       .then(grade);
   }
-  history(course: string, signal: AbortSignal, cursor = "") {
+  history(course: string, signal: AbortSignal, cursor = '') {
     return this.api
       .request(`/reviews/history?${query(course, cursor)}`, { signal })
-      .then((v) => page(v, "attempts", reviewAttempt));
+      .then(v => page(v, 'attempts', reviewAttempt));
   }
-  complete(
-    course: string,
-    attempts: string[],
-    key: string,
-    signal: AbortSignal,
-  ) {
+  complete(course: string, attempts: string[], key: string, signal: AbortSignal) {
     return this.api
-      .request("/reviews/complete", {
-        method: "POST",
+      .request('/reviews/complete', {
+        method: 'POST',
         body: { course, attempt_ids: attempts },
         idempotencyKey: key,
         signal,
@@ -158,8 +141,8 @@ export class LearningApi {
     signal: AbortSignal,
   ): Promise<TutorResponse> {
     return this.api
-      .request("/learning/tutor", {
-        method: "POST",
+      .request('/learning/tutor', {
+        method: 'POST',
         body,
         signal,
       })
@@ -171,10 +154,7 @@ export class LearningApi {
 // snapshot per action exists; editing its payload replaces it, acknowledgement
 // clears it, and navigation discards the complete in-memory ledger.
 export class Commands {
-  private readonly pending = new Map<
-    string,
-    { fingerprint: string; key: string; body: unknown }
-  >();
+  private readonly pending = new Map<string, { fingerprint: string; key: string; body: unknown }>();
   get<T>(action: string, body: T): { key: string; body: T } {
     const fingerprint = JSON.stringify(body);
     let command = this.pending.get(action);

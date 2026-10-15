@@ -4,7 +4,15 @@ import type { Pulse } from '../../src/contracts';
 import { ProgressDelivery } from '../../src/player/delivery';
 import { acknowledgement, clock, deferred } from './fixtures';
 
-const pulse = (sequence: number): Pulse => ({ sequence, kind: 'heartbeat', position: sequence * 10, playing: true, visible: true, elapsed_seconds: 10, playback_rate: 1 });
+const pulse = (sequence: number): Pulse => ({
+  sequence,
+  kind: 'heartbeat',
+  position: sequence * 10,
+  playing: true,
+  visible: true,
+  elapsed_seconds: 10,
+  playback_rate: 1,
+});
 
 describe('ordered durable progress delivery', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -18,7 +26,10 @@ describe('ordered durable progress delivery', () => {
         requests.push(packet);
         if (requests.length === 1) throw new ApiError('temporarily unavailable', 503);
         return acknowledgement(packet);
-      }, onSaved: saved, onError: vi.fn(), clock,
+      },
+      onSaved: saved,
+      onError: vi.fn(),
+      clock,
     });
     const first = queue.send(pulse(1));
     const second = queue.send(pulse(2));
@@ -35,7 +46,16 @@ describe('ordered durable progress delivery', () => {
     const request = deferred<ReturnType<typeof acknowledgement>>();
     const failure = vi.fn();
     let signal: AbortSignal | undefined;
-    const queue = new ProgressDelivery({ request: (_packet, incoming) => { signal = incoming; return request.promise; }, onSaved: vi.fn(), onError: failure, maxQueue: 2, clock });
+    const queue = new ProgressDelivery({
+      request: (_packet, incoming) => {
+        signal = incoming;
+        return request.promise;
+      },
+      onSaved: vi.fn(),
+      onError: failure,
+      maxQueue: 2,
+      clock,
+    });
     const outcomes = Promise.allSettled([queue.send(pulse(1)), queue.send(pulse(2)), queue.send(pulse(3))]);
     expect(signal?.aborted).toBe(true);
     expect(failure).toHaveBeenCalledOnce();
@@ -45,7 +65,9 @@ describe('ordered durable progress delivery', () => {
   });
 
   it('does not retry terminal access failures or acknowledge them as saved', async () => {
-    const request = vi.fn(async () => { throw new ApiError('access revoked', 403); });
+    const request = vi.fn(async () => {
+      throw new ApiError('access revoked', 403);
+    });
     const saved = vi.fn();
     const failed = vi.fn();
     const queue = new ProgressDelivery({ request, onSaved: saved, onError: failed, clock });
@@ -57,7 +79,9 @@ describe('ordered durable progress delivery', () => {
   });
 
   it('bounds retries and honors provider Retry-After without retaining an infinite queue', async () => {
-    const request = vi.fn(async () => { throw new ApiError('busy', 429, '', 2000); });
+    const request = vi.fn(async () => {
+      throw new ApiError('busy', 429, '', 2000);
+    });
     const failed = vi.fn();
     const queue = new ProgressDelivery({ request, onSaved: vi.fn(), onError: failed, clock, maxAttempts: 3 });
     const outcome = queue.send(pulse(1)).catch(error => error);
@@ -71,7 +95,9 @@ describe('ordered durable progress delivery', () => {
   });
 
   it('cancels retries when a lesson is disposed', async () => {
-    const request = vi.fn(async () => { throw new Error('network disconnected'); });
+    const request = vi.fn(async () => {
+      throw new Error('network disconnected');
+    });
     const queue = new ProgressDelivery({ request, onSaved: vi.fn(), onError: vi.fn(), clock });
     const result = queue.send(pulse(1)).catch(error => error);
     await vi.advanceTimersByTimeAsync(1);

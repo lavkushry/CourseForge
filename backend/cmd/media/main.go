@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"strings"
+	"syscall"
 	"time"
 
 	"courseforge/backend/internal/api"
@@ -21,6 +21,9 @@ import (
 	"courseforge/backend/internal/observe"
 	"courseforge/backend/internal/playback"
 	"courseforge/backend/internal/store"
+
+	"github.com/KimMachineGun/automemlimit/memlimit"
+	_ "go.uber.org/automaxprocs"
 )
 
 func main() {
@@ -31,6 +34,7 @@ func main() {
 }
 
 func run() error {
+	_, _ = memlimit.Set(memlimit.WithRatio(0.9))
 	loadEnvFile("/home/ubuntu/CourseForge/.env", ".env", "../.env")
 	c, err := config.FromEnv()
 	if err != nil {
@@ -43,7 +47,13 @@ func run() error {
 	defer stop()
 	startup, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	pool, err := store.Open(startup, c.DatabaseURL, c.MaxConnections)
+	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
+		MaxConns:          c.MaxConnections,
+		MinConns:          c.MinConnections,
+		MaxConnLifetime:   c.MaxConnLifetime,
+		MaxConnIdleTime:   c.MaxConnIdleTime,
+		HealthCheckPeriod: c.HealthCheckPeriod,
+	})
 	if err != nil {
 		return errors.New("cannot connect to configured PostgreSQL")
 	}
@@ -81,7 +91,17 @@ func run() error {
 		}
 		defer closeMetrics()
 	}
-	server := &http.Server{Addr: c.Address, Handler: api.Middleware(metrics.Wrap(mux), c.RequestTimeout), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	// Standalone media never sets WriteTimeout: range streams outlive ordinary API deadlines.
+	readHeader, readTimeout, _, idleTimeout, maxHeader := c.HTTPServerTimeouts()
+	server := &http.Server{
+		Addr:              c.Address,
+		Handler:           api.Middleware(metrics.Wrap(mux), c.RequestTimeout),
+		ReadHeaderTimeout: readHeader,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      0,
+		IdleTimeout:       idleTimeout,
+		MaxHeaderBytes:    maxHeader,
+	}
 	stopped := make(chan error, 1)
 	go func() { stopped <- server.ListenAndServe() }()
 	slog.Info("CourseForge media gateway listening", "address", c.Address, "database_connections", c.MaxConnections, "transfer_limit", mediaConfig.MaxTransfers)
@@ -93,7 +113,7 @@ func run() error {
 		return err
 	case <-ctx.Done():
 	}
-	drain, cancelDrain := context.WithTimeout(context.Background(), 15*time.Second)
+	drain, cancelDrain := context.WithTimeout(context.Background(), c.ShutdownTimeout)
 	defer cancelDrain()
 	if err = server.Shutdown(drain); err != nil {
 		_ = server.Close()

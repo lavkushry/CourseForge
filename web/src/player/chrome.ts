@@ -13,13 +13,21 @@ export interface ChromeActions {
   onWatchNext?: () => void;
   onCancelNext?: () => void;
   toggleZen?: () => void;
-  getChapters?: () => any[];
+  getChapters?: () => Array<{ start_seconds: number; end_seconds: number }>;
   onOpenChapters?: () => void;
+  getQualityLevels?: () => Array<{ index: number; label: string }>;
+  setQuality?: (levelIndex: number | 'auto') => void;
+  getSelectedQuality?: () => number | 'auto';
 }
 
 // Enhance the existing controls without creating a second player/ownership or
 // preference transport. Every command delegates to the application's controller.
-export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, actions: ChromeActions, signal: AbortSignal): void {
+export function mountPlayerChrome(
+  wrap: HTMLElement,
+  video: HTMLVideoElement,
+  actions: ChromeActions,
+  signal: AbortSignal,
+): void {
   const media = wrap.querySelector<HTMLElement>('media-controller');
   const row = media?.querySelector<HTMLElement>('media-control-bar');
   const timeline = row?.querySelector<HTMLElement>('media-time-range');
@@ -85,8 +93,8 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     { start: 0, end: 0.18 },
     { start: 0.18, end: 0.38 },
     { start: 0.38, end: 0.62 },
-    { start: 0.62, end: 0.80 },
-    { start: 0.80, end: 1.0 },
+    { start: 0.62, end: 0.8 },
+    { start: 0.8, end: 1.0 },
   ];
 
   const updateTimelineSegments = () => {
@@ -94,15 +102,20 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     const chapters = actions.getChapters?.();
     let segments = defaultSegments;
     if (chapters && chapters.length > 0 && Number.isFinite(duration) && duration > 0) {
-      segments = chapters.map((c: any) => ({
-        start: Math.max(0, Math.min(1, c.start_seconds / duration)),
-        end: Math.max(0, Math.min(1, c.end_seconds / duration)),
-      })).filter((s: any) => s.end > s.start);
+      segments = chapters
+        .map(c => ({
+          start: Math.max(0, Math.min(1, c.start_seconds / duration)),
+          end: Math.max(0, Math.min(1, c.end_seconds / duration)),
+        }))
+        .filter(s => s.end > s.start);
       if (segments.length === 0) segments = defaultSegments;
     }
 
-    if (typeof (timeline as any).updateSegments === 'function') {
-      (timeline as any).updateSegments(segments);
+    const timelineWithSegments = timeline as HTMLElement & {
+      updateSegments?: (segments: Array<{ start: number; end: number }>) => void;
+    };
+    if (typeof timelineWithSegments.updateSegments === 'function') {
+      timelineWithSegments.updateSegments(segments);
     }
 
     if (timeline.shadowRoot) {
@@ -138,8 +151,10 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   const delegates: Array<{ button: HTMLButtonElement; source: HTMLButtonElement }> = [];
   const delegate = (label: string, selector: string, iconName: IconName) => {
     const node = document.createElement('button');
-    node.type = 'button'; node.className = 'cinema-button';
-    node.title = label; node.setAttribute('aria-label', label);
+    node.type = 'button';
+    node.className = 'cinema-button';
+    node.title = label;
+    node.setAttribute('aria-label', label);
     node.append(svgIcon(iconName));
     const target = source(selector);
     if (target) {
@@ -150,24 +165,28 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   };
 
   // All essential commands remain descendants of the fullscreen element.
-  const top = ui('div', 'cinema-top-actions'); top.slot = 'top-chrome';
+  const top = ui('div', 'cinema-top-actions');
+  top.slot = 'top-chrome';
   const capture = delegate('Capture lesson timestamp', '#capture', 'edit');
   const episodes = delegate('Course lessons', '#episodes', 'grid');
   episodes.setAttribute('aria-haspopup', 'dialog');
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
   const workbench = document.createElement('button');
-  workbench.type = 'button'; workbench.className = 'cinema-button';
+  workbench.type = 'button';
+  workbench.className = 'cinema-button';
   workbench.title = 'Open In-Situ Shadow Workbench & Crucible';
   workbench.setAttribute('aria-label', 'Open Shadow Workbench');
   workbench.append(svgIcon('code'));
-  workbench.addEventListener('click', () => {
-    openShadowWorkbenchModal(wrap, actions.getLessonId?.() || '');
-  }, { signal });
+  workbench.addEventListener(
+    'click',
+    () => {
+      openShadowWorkbenchModal(wrap, actions.getLessonId?.() || '');
+    },
+    { signal },
+  );
   top.append(capture, episodes, workbench, theater, lock);
   media.append(top);
-
-
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations
   let loopA: number | null = null;
@@ -183,58 +202,94 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   loopSvg.setAttribute('stroke-width', '1.8');
   loopSvg.setAttribute('stroke-linecap', 'round');
   loopSvg.setAttribute('stroke-linejoin', 'round');
-  loopSvg.innerHTML = '<circle cx="12" cy="12" r="9.5"/><path d="M15 9l-2-2 2-2"/><path d="M9 7h4a3 3 0 0 1 3 3v1"/><path d="M9 15l2 2-2 2"/><path d="M15 17h-4a3 3 0 0 1-3-3v-1"/>';
+  loopSvg.innerHTML =
+    '<circle cx="12" cy="12" r="9.5"/><path d="M15 9l-2-2 2-2"/><path d="M9 7h4a3 3 0 0 1 3 3v1"/><path d="M9 15l2 2-2 2"/><path d="M15 17h-4a3 3 0 0 1-3-3v-1"/>';
   loopBtn.append(loopSvg);
-  loopBtn.addEventListener('click', () => {
-    if (loopA === null) {
-      loopA = video.currentTime;
-      loopBtn.setAttribute('aria-pressed', 'true');
-      loopBtn.title = `Loop A set at ${formatTime(loopA)}. Click to set marker B.`;
-    } else if (loopB === null) {
-      loopB = Math.max(loopA + 1, video.currentTime);
-      loopBtn.title = `Looping ${formatTime(loopA)} - ${formatTime(loopB)}. Click to clear.`;
-    } else {
-      loopA = null;
-      loopB = null;
-      loopBtn.setAttribute('aria-pressed', 'false');
-      loopBtn.title = 'A-B Loop Repeat (Set marker A)';
-    }
-  }, { signal });
+  loopBtn.addEventListener(
+    'click',
+    () => {
+      if (loopA === null) {
+        loopA = video.currentTime;
+        loopBtn.setAttribute('aria-pressed', 'true');
+        loopBtn.title = `Loop A set at ${formatTime(loopA)}. Click to set marker B.`;
+      } else if (loopB === null) {
+        loopB = Math.max(loopA + 1, video.currentTime);
+        loopBtn.title = `Looping ${formatTime(loopA)} - ${formatTime(loopB)}. Click to clear.`;
+      } else {
+        loopA = null;
+        loopB = null;
+        loopBtn.setAttribute('aria-pressed', 'false');
+        loopBtn.title = 'A-B Loop Repeat (Set marker A)';
+      }
+    },
+    { signal },
+  );
 
-
-  video.addEventListener('timeupdate', () => {
-    if (loopA !== null && loopB !== null && video.currentTime >= loopB) {
-      video.currentTime = loopA;
-    }
-  }, { signal });
+  video.addEventListener(
+    'timeupdate',
+    () => {
+      if (loopA !== null && loopB !== null && video.currentTime >= loopB) {
+        video.currentTime = loopA;
+      }
+    },
+    { signal },
+  );
 
   const speed = document.createElement('select');
-  speed.className = 'cinema-speed sr-only-speed'; speed.setAttribute('aria-label', 'In-player playback speed');
+  speed.className = 'cinema-speed sr-only-speed';
+  speed.setAttribute('aria-label', 'In-player playback speed');
   for (const rate of [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]) {
-    const option = document.createElement('option'); option.value = String(rate); option.textContent = `${rate}×`; speed.append(option);
+    const option = document.createElement('option');
+    option.value = String(rate);
+    option.textContent = `${rate}×`;
+    speed.append(option);
   }
   const externalSpeed = document.querySelector<HTMLSelectElement>('#speed');
   speed.value = externalSpeed?.value || '1';
-  speed.addEventListener('change', () => {
-    if (!externalSpeed) return;
-    externalSpeed.value = speed.value;
-    externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
-  }, { signal });
-  video.addEventListener('ratechange', () => { speed.value = String(video.playbackRate); }, { signal });
-  video.addEventListener('loadedmetadata', () => { speed.value = String(video.playbackRate); }, { signal });
+  speed.addEventListener(
+    'change',
+    () => {
+      if (!externalSpeed) return;
+      externalSpeed.value = speed.value;
+      externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
+    },
+    { signal },
+  );
+  video.addEventListener(
+    'ratechange',
+    () => {
+      speed.value = String(video.playbackRate);
+    },
+    { signal },
+  );
+  video.addEventListener(
+    'loadedmetadata',
+    () => {
+      speed.value = String(video.playbackRate);
+    },
+    { signal },
+  );
 
-  const feedback = ui('span', 'cinema-seek-feedback'); feedback.hidden = true;
-  feedback.setAttribute('aria-live', 'polite'); wrap.append(feedback);
+  const feedback = ui('span', 'cinema-seek-feedback');
+  feedback.hidden = true;
+  feedback.setAttribute('aria-live', 'polite');
+  wrap.append(feedback);
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
   const showFeedback = (text: string) => {
     feedback.textContent = text;
     feedback.hidden = false;
     clearTimeout(feedbackTimer);
-    feedbackTimer = setTimeout(() => { feedback.hidden = true; }, 1100);
+    feedbackTimer = setTimeout(() => {
+      feedback.hidden = true;
+    }, 1100);
   };
-  video.addEventListener('seeked', () => {
-    showFeedback(formatTime(video.currentTime));
-  }, { signal });
+  video.addEventListener(
+    'seeked',
+    () => {
+      showFeedback(formatTime(video.currentTime));
+    },
+    { signal },
+  );
 
   // Modern Glassmorphic Settings Menu & iOS Toggles
   const settingsBtn = document.createElement('button');
@@ -268,36 +323,51 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
       const isCurrent = Math.abs(video.playbackRate - rate) < 0.05;
       chip.className = 'popover-chip' + (isCurrent ? ' active' : '');
       chip.textContent = `${rate}×`;
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        video.playbackRate = rate;
-        if (externalSpeed) {
-          externalSpeed.value = String(rate);
-          externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        speed.value = String(rate);
-        renderSettingsPopover();
-        showFeedback(`${rate}× Speed`);
-      }, { signal });
+      chip.addEventListener(
+        'click',
+        e => {
+          e.stopPropagation();
+          video.playbackRate = rate;
+          if (externalSpeed) {
+            externalSpeed.value = String(rate);
+            externalSpeed.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          speed.value = String(rate);
+          renderSettingsPopover();
+          showFeedback(`${rate}× Speed`);
+        },
+        { signal },
+      );
       speedChips.append(chip);
     }
     speedSec.append(speedHeader, speedChips);
     settingsPopover.append(speedSec);
 
-    // Section 2: Streaming Quality
+    // Section 2: Streaming Quality (real HLS levels when available)
     const qualitySec = ui('div', 'popover-section');
     const qualityHeader = ui('div', 'popover-section-label', 'STREAMING QUALITY');
     const qualityChips = ui('div', 'popover-chips-grid');
-    const qualityOptions = ['Auto (1080p)', '1080p', '720p', '480p'];
-    for (const q of qualityOptions) {
+    const levels = actions.getQualityLevels?.() ?? [];
+    const selected = actions.getSelectedQuality?.() ?? 'auto';
+    const qualityEntries: Array<{ id: number | 'auto'; label: string }> = [
+      { id: 'auto', label: levels.length ? 'Auto' : 'Auto (progressive)' },
+      ...levels.map(l => ({ id: l.index as number | 'auto', label: l.label })),
+    ];
+    for (const q of qualityEntries) {
       const qChip = document.createElement('button');
       qChip.type = 'button';
-      qChip.className = 'popover-chip' + (q.startsWith('Auto') ? ' active' : '');
-      qChip.textContent = q;
-      qChip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showFeedback(`Quality: ${q}`);
-      }, { signal });
+      qChip.className = 'popover-chip' + (q.id === selected ? ' active' : '');
+      qChip.textContent = q.label;
+      qChip.addEventListener(
+        'click',
+        e => {
+          e.stopPropagation();
+          actions.setQuality?.(q.id);
+          showFeedback(`Quality: ${q.label}`);
+          renderSettingsPopover();
+        },
+        { signal },
+      );
       qualityChips.append(qChip);
     }
     qualitySec.append(qualityHeader, qualityChips);
@@ -313,17 +383,21 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     ccSwitch.setAttribute('aria-checked', String(subtitlesEnabled));
     const ccThumb = ui('span', 'ios-switch-thumb');
     ccSwitch.append(ccThumb);
-    ccSwitch.addEventListener('click', (e) => {
-      e.stopPropagation();
-      subtitlesEnabled = !subtitlesEnabled;
-      const tracks = video.textTracks;
-      for (let i = 0; i < tracks.length; i++) {
-        const tr = tracks[i];
-        if (tr) tr.mode = subtitlesEnabled ? 'showing' : 'hidden';
-      }
-      renderSettingsPopover();
-      showFeedback(subtitlesEnabled ? 'Subtitles On' : 'Subtitles Off');
-    }, { signal });
+    ccSwitch.addEventListener(
+      'click',
+      e => {
+        e.stopPropagation();
+        subtitlesEnabled = !subtitlesEnabled;
+        const tracks = video.textTracks;
+        for (let i = 0; i < tracks.length; i++) {
+          const tr = tracks[i];
+          if (tr) tr.mode = subtitlesEnabled ? 'showing' : 'hidden';
+        }
+        renderSettingsPopover();
+        showFeedback(subtitlesEnabled ? 'Subtitles On' : 'Subtitles Off');
+      },
+      { signal },
+    );
     ccRow.append(ccLabel, ccSwitch);
     settingsPopover.append(ccRow);
 
@@ -339,15 +413,19 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     autoSwitch.setAttribute('aria-checked', String(isAuto));
     const autoThumb = ui('span', 'ios-switch-thumb');
     autoSwitch.append(autoThumb);
-    autoSwitch.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (autoplayCheckbox) {
-        autoplayCheckbox.checked = !autoplayCheckbox.checked;
-        autoplayCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      renderSettingsPopover();
-      showFeedback(autoplayCheckbox?.checked ? 'Autoplay On' : 'Autoplay Off');
-    }, { signal });
+    autoSwitch.addEventListener(
+      'click',
+      e => {
+        e.stopPropagation();
+        if (autoplayCheckbox) {
+          autoplayCheckbox.checked = !autoplayCheckbox.checked;
+          autoplayCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        renderSettingsPopover();
+        showFeedback(autoplayCheckbox?.checked ? 'Autoplay On' : 'Autoplay Off');
+      },
+      { signal },
+    );
     autoRow.append(autoLabel, autoSwitch);
     settingsPopover.append(autoRow);
   };
@@ -369,32 +447,48 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     pin();
   };
 
-  settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (settingsPopover.hidden) {
-      openSettings();
-    } else {
-      closeSettings();
-    }
-  }, { signal });
-
-  document.addEventListener('click', (e) => {
-    if (!settingsPopover.hidden && !settingsPopover.contains(e.target as Node) && e.target !== settingsBtn) {
-      closeSettings();
-    }
-  }, { signal });
-
-  wrap.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !settingsPopover.hidden) {
+  settingsBtn.addEventListener(
+    'click',
+    e => {
       e.stopPropagation();
-      closeSettings();
-      settingsBtn.focus();
-    }
-  }, { signal });
+      if (settingsPopover.hidden) {
+        openSettings();
+      } else {
+        closeSettings();
+      }
+    },
+    { signal },
+  );
 
-  video.addEventListener('ratechange', () => {
-    if (!settingsPopover.hidden) renderSettingsPopover();
-  }, { signal });
+  document.addEventListener(
+    'click',
+    e => {
+      if (!settingsPopover.hidden && !settingsPopover.contains(e.target as Node) && e.target !== settingsBtn) {
+        closeSettings();
+      }
+    },
+    { signal },
+  );
+
+  wrap.addEventListener(
+    'keydown',
+    e => {
+      if (e.key === 'Escape' && !settingsPopover.hidden) {
+        e.stopPropagation();
+        closeSettings();
+        settingsBtn.focus();
+      }
+    },
+    { signal },
+  );
+
+  video.addEventListener(
+    'ratechange',
+    () => {
+      if (!settingsPopover.hidden) renderSettingsPopover();
+    },
+    { signal },
+  );
 
   const pip = delegate('Picture in picture', '#pip-toggle', 'pip');
   pip.classList.add('sr-only-actionable');
@@ -402,9 +496,12 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   full.title = 'Fullscreen';
   row.append(settingsBtn, loopBtn, full, speed, pip);
 
-  const center = ui('div', 'cinema-center-actions'); center.slot = 'centered-chrome';
-  const play = delegate('Play lesson', '#play-toggle', 'play'); play.classList.add('cinema-center-play');
-  center.append(play); media.append(center);
+  const center = ui('div', 'cinema-center-actions');
+  center.slot = 'centered-chrome';
+  const play = delegate('Play lesson', '#play-toggle', 'play');
+  play.classList.add('cinema-center-play');
+  center.append(play);
+  media.append(center);
   const updatePlay = () => {
     const paused = video.paused;
     play.setAttribute('aria-label', paused ? 'Play lesson' : 'Pause lesson');
@@ -420,17 +517,25 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
   if (dialog) {
     wrap.append(dialog);
     let openedFromInPlayer = false;
-    episodes.addEventListener('click', () => {
-      openedFromInPlayer = true;
-      episodes.setAttribute('aria-expanded', String(dialog.open));
-    }, { signal });
-    dialog.addEventListener('close', () => {
-      episodes.setAttribute('aria-expanded', 'false');
-      if (openedFromInPlayer && wrap.isConnected && !signal.aborted) {
-        episodes.focus();
-      }
-      openedFromInPlayer = false;
-    }, { signal });
+    episodes.addEventListener(
+      'click',
+      () => {
+        openedFromInPlayer = true;
+        episodes.setAttribute('aria-expanded', String(dialog.open));
+      },
+      { signal },
+    );
+    dialog.addEventListener(
+      'close',
+      () => {
+        episodes.setAttribute('aria-expanded', 'false');
+        if (openedFromInPlayer && wrap.isConnected && !signal.aborted) {
+          episodes.focus();
+        }
+        openedFromInPlayer = false;
+      },
+      { signal },
+    );
   }
 
   // Keep browser capability and current controller state visible, including
@@ -441,7 +546,9 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
       const pressed = item.source.getAttribute('aria-pressed');
       if (pressed !== null) item.button.setAttribute('aria-pressed', pressed);
     }
-    const pipAvailable = Boolean(document.pictureInPictureEnabled && typeof video.requestPictureInPicture === 'function');
+    const pipAvailable = Boolean(
+      document.pictureInPictureEnabled && typeof video.requestPictureInPicture === 'function',
+    );
     pip.disabled = !pipAvailable || video.readyState < 1;
     pip.title = pipAvailable ? 'Picture in picture' : 'Picture in picture is unavailable in this browser';
     full.setAttribute('aria-pressed', String(document.fullscreenElement === wrap));
@@ -452,47 +559,93 @@ export function mountPlayerChrome(wrap: HTMLElement, video: HTMLVideoElement, ac
     speed.value = externalSpeed?.value || String(video.playbackRate);
   };
   const observer = new MutationObserver(reflect);
-  for (const item of delegates) observer.observe(item.source, { attributes: true, attributeFilter: ['disabled', 'aria-pressed'] });
-  for (const event of ['loadedmetadata', 'emptied', 'enterpictureinpicture', 'leavepictureinpicture']) video.addEventListener(event, reflect, { signal });
+  for (const item of delegates)
+    observer.observe(item.source, { attributes: true, attributeFilter: ['disabled', 'aria-pressed'] });
+  for (const event of ['loadedmetadata', 'emptied', 'enterpictureinpicture', 'leavepictureinpicture'])
+    video.addEventListener(event, reflect, { signal });
   document.addEventListener('fullscreenchange', reflect, { signal });
   externalSpeed?.addEventListener('change', reflect, { signal });
   reflect();
 
   // The documented YouTube-style L command is forward seek; X remains lock.
   // Capture phase prevents the legacy shell's conflicting L-lock handler.
-  wrap.addEventListener('keydown', event => {
-    const target = event.composedPath()[0];
-    if (event.key.toLowerCase() !== 'l' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || wrap.classList.contains('controls-locked')) return;
-    if (target instanceof HTMLElement && (target.matches('input,textarea,select,button') || target.isContentEditable)) return;
-    event.preventDefault(); event.stopImmediatePropagation();
-    actions.seek(video.currentTime + 10);
-  }, { signal, capture: true });
+  wrap.addEventListener(
+    'keydown',
+    event => {
+      const target = event.composedPath()[0];
+      if (
+        event.key.toLowerCase() !== 'l' ||
+        event.shiftKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.metaKey ||
+        wrap.classList.contains('controls-locked')
+      )
+        return;
+      if (target instanceof HTMLElement && (target.matches('input,textarea,select,button') || target.isContentEditable))
+        return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      actions.seek(video.currentTime + 10);
+    },
+    { signal, capture: true },
+  );
 
   // A desktop click plays/pauses; double click enters/exits fullscreen without
   // two accidental play commands. Touch's double-tap seek stays in the shell.
   let clickTimer: ReturnType<typeof setTimeout> | undefined;
-  video.addEventListener('pointerup', event => {
-    if (event.pointerType !== 'mouse' || event.button !== 0 || wrap.classList.contains('controls-locked')) return;
-    if (clickTimer !== undefined) { clearTimeout(clickTimer); clickTimer = undefined; source('#fullscreen')?.click(); }
-    else clickTimer = setTimeout(() => { clickTimer = undefined; source('#play-toggle')?.click(); }, 250);
-  }, { signal });
+  video.addEventListener(
+    'pointerup',
+    event => {
+      if (event.pointerType !== 'mouse' || event.button !== 0 || wrap.classList.contains('controls-locked')) return;
+      if (clickTimer !== undefined) {
+        clearTimeout(clickTimer);
+        clickTimer = undefined;
+        source('#fullscreen')?.click();
+      } else
+        clickTimer = setTimeout(() => {
+          clickTimer = undefined;
+          source('#play-toggle')?.click();
+        }, 250);
+    },
+    { signal },
+  );
 
-  const pin = () => { media.setAttribute('autohide', wrap.contains(document.activeElement) || Boolean(dialog?.open) || !settingsPopover.hidden ? '-1' : '3'); };
+  const pin = () => {
+    media.setAttribute(
+      'autohide',
+      wrap.contains(document.activeElement) || Boolean(dialog?.open) || !settingsPopover.hidden ? '-1' : '3',
+    );
+  };
   wrap.addEventListener('focusin', pin, { signal });
-  wrap.addEventListener('focusout', () => { queueMicrotask(() => { if (!signal.aborted) pin(); }); }, { signal });
+  wrap.addEventListener(
+    'focusout',
+    () => {
+      queueMicrotask(() => {
+        if (!signal.aborted) pin();
+      });
+    },
+    { signal },
+  );
   dialog?.addEventListener('close', pin, { signal });
-  signal.addEventListener('abort', () => {
-    observer.disconnect(); clearTimeout(feedbackTimer); clearTimeout(clickTimer);
-    settingsPopover.remove();
-    if (dialog) {
-      if (dialog.open) dialog.close();
-      if (previousParent?.isConnected) previousParent.append(dialog);
-    }
-  }, { once: true });
+  signal.addEventListener(
+    'abort',
+    () => {
+      observer.disconnect();
+      clearTimeout(feedbackTimer);
+      clearTimeout(clickTimer);
+      settingsPopover.remove();
+      if (dialog) {
+        if (dialog.open) dialog.close();
+        if (previousParent?.isConnected) previousParent.append(dialog);
+      }
+    },
+    { once: true },
+  );
 }
 
 async function openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
-  let existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
+  const existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
   if (existingModal) {
     existingModal.remove();
   }
@@ -528,7 +681,8 @@ func main() {
 	fmt.Println("Crucible ready.")
 }`;
   let title = 'SYNAPSE-CRUCIBLE: Shadow Workbench';
-  let challenge = 'What-if Challenge: Implement sliding window rate limiting. Run the Property Crucible to verify race freedom.';
+  let challenge =
+    'What-if Challenge: Implement sliding window rate limiting. Run the Property Crucible to verify race freedom.';
 
   try {
     const res = await fetch(`/api/v1/ai/lessons/${lid}/shadow-workbench`).then(r => r.json());
@@ -568,7 +722,10 @@ func main() {
   `;
 
   const closeBtn = dialog.querySelector<HTMLButtonElement>('.crucible-close-btn')!;
-  closeBtn.addEventListener('click', () => { dialog.close(); dialog.remove(); });
+  closeBtn.addEventListener('click', () => {
+    dialog.close();
+    dialog.remove();
+  });
 
   const runBtn = dialog.querySelector<HTMLButtonElement>('.crucible-run-btn')!;
   const mentorBtn = dialog.querySelector<HTMLButtonElement>('.crucible-mentor-btn')!;
@@ -604,8 +761,8 @@ ${resp.stdout}`;
           socraticBox.textContent = `Cognitive Mentor: ${resp.socratic_prompt}`;
         }
       }
-    } catch (err: any) {
-      consoleBody.textContent = `Execution error: ${err.message}`;
+    } catch (err: unknown) {
+      consoleBody.textContent = `Execution error: ${err instanceof Error ? err.message : String(err)}`;
     } finally {
       runBtn.disabled = false;
       runBtn.textContent = 'Run Property Crucible';
@@ -630,8 +787,8 @@ ${resp.stdout}`;
         }),
       }).then(r => r.json());
       socraticBox.textContent = `Cognitive Mentor (Zero-Leakage Fading): ${resp.response}`;
-    } catch (err: any) {
-      socraticBox.textContent = `Mentor error: ${err.message}`;
+    } catch (err: unknown) {
+      socraticBox.textContent = `Mentor error: ${err instanceof Error ? err.message : String(err)}`;
     } finally {
       mentorBtn.disabled = false;
       mentorBtn.textContent = 'Ask Cognitive Mentor';

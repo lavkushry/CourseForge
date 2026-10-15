@@ -2,10 +2,8 @@ package administration
 
 import (
 	"context"
-	"encoding/json"
 	"math"
 	"net/http"
-	"strconv"
 	"time"
 
 	"courseforge/backend/internal/httpx"
@@ -154,98 +152,5 @@ func (s *Service) analyticsOverview(w http.ResponseWriter, r *http.Request) {
 		"completed_lessons":       totalLessonsCompleted,
 		"active_courses":          totalCourses,
 		"average_completion_rate": 78.4,
-	})
-}
-
-func (s *Service) adminUsersList(w http.ResponseWriter, r *http.Request) {
-	limitStr := r.URL.Query().Get("limit")
-	limit := 50
-	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
-		limit = l
-	}
-	search := r.URL.Query().Get("search")
-
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	query := `
-		SELECT u.id, u.email, COALESCE(u.display_name, ''), u.role, u.verified, u.suspended, u.created_at,
-		       COALESCE(p.watched_seconds, 0) AS watched_seconds
-		FROM users u
-		LEFT JOIN (
-			SELECT user_id, sum(watched_seconds) as watched_seconds FROM playback_totals GROUP BY user_id
-		) p ON p.user_id = u.id
-		WHERE ($1 = '' OR u.email ILIKE '%' || $1 || '%' OR u.display_name ILIKE '%' || $1 || '%')
-		ORDER BY u.created_at DESC
-		LIMIT $2
-	`
-	rows, err := s.Pool.Query(ctx, query, search, limit)
-	if err != nil {
-		httpx.Error(w, 500, "db_error", "Failed to query learners")
-		return
-	}
-	defer rows.Close()
-
-	type UserItem struct {
-		ID             string    `json:"id"`
-		Email          string    `json:"email"`
-		Name           string    `json:"name"`
-		Role           string    `json:"role"`
-		Verified       bool      `json:"verified"`
-		Suspended      bool      `json:"suspended"`
-		CreatedAt      time.Time `json:"created_at"`
-		WatchedSeconds int64     `json:"watched_seconds"`
-	}
-
-	var users []UserItem
-	for rows.Next() {
-		var u UserItem
-		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.Verified, &u.Suspended, &u.CreatedAt, &u.WatchedSeconds); err == nil {
-			users = append(users, u)
-		}
-	}
-
-	httpx.JSON(w, 200, map[string]any{
-		"users": users,
-		"count": len(users),
-	})
-}
-
-func (s *Service) adminUserStatusUpdate(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("id")
-	if userID == "" {
-		httpx.Error(w, 400, "invalid_id", "User ID is required")
-		return
-	}
-	var body struct {
-		Suspended *bool `json:"suspended"`
-		Verified  *bool `json:"verified"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		httpx.Error(w, 400, "invalid_body", "Invalid request body")
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	if body.Suspended != nil {
-		_, err := s.Pool.Exec(ctx, "UPDATE users SET suspended=$1 WHERE id=$2", *body.Suspended, userID)
-		if err != nil {
-			httpx.Error(w, 500, "db_error", "Could not update user suspension")
-			return
-		}
-	}
-	if body.Verified != nil {
-		_, err := s.Pool.Exec(ctx, "UPDATE users SET verified=$1 WHERE id=$2", *body.Verified, userID)
-		if err != nil {
-			httpx.Error(w, 500, "db_error", "Could not update user verification")
-			return
-		}
-	}
-
-	httpx.JSON(w, 200, map[string]any{
-		"user_id": userID,
-		"updated": true,
 	})
 }

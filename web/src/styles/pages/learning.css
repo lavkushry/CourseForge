@@ -9,17 +9,17 @@
 }
 
 .learning-heading h2 {
-  margin: .4rem 0 1rem;
+  margin: 0.4rem 0 1rem;
 }
 
 .learning-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: .6rem;
+  gap: 0.6rem;
   margin: 1rem 0;
 }
 
-.learning-nav button[aria-pressed="true"] {
+.learning-nav button[aria-pressed='true'] {
   border-color: var(--accent);
   background: #30233e;
   color: #fff;
@@ -27,7 +27,7 @@
 
 .learning-status {
   min-height: 1.5rem;
-  margin: .5rem 0;
+  margin: 0.5rem 0;
 }
 
 .learning-form {
@@ -42,13 +42,14 @@
 
 .learning-field {
   display: grid;
-  gap: .6rem;
-  font-size: .93rem;
+  gap: 0.6rem;
+  font-size: 0.93rem;
 }
 
-.learning-field input, .learning-field textarea {
+.learning-field input,
+.learning-field textarea {
   width: 100%;
-  padding: .8rem;
+  padding: 0.8rem;
   border: 1px solid var(--line);
   background: #0e0e15;
   border-radius: 10px;
@@ -60,7 +61,7 @@
 .learning-row {
   display: flex;
   flex-wrap: wrap;
-  gap: .7rem;
+  gap: 0.7rem;
   align-items: center;
   padding: 1rem 0;
   border-bottom: 1px solid var(--line);
@@ -84,17 +85,17 @@
 }
 
 .quiz-question legend {
-  padding: 0 .4rem;
+  padding: 0 0.4rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
 .quiz-choice {
   display: flex;
-  gap: .8rem;
+  gap: 0.8rem;
   align-items: flex-start;
   min-height: 44px;
-  padding: .6rem;
+  padding: 0.6rem;
   border-radius: 8px;
   cursor: pointer;
 }
@@ -105,10 +106,12 @@
 
 .quiz-choice input {
   flex: 0 0 auto;
-  margin: .2rem 0;
+  margin: 0.2rem 0;
 }
 
-.quiz-choice span, .learning-result, .review-answer {
+.quiz-choice span,
+.learning-result,
+.review-answer {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -152,7 +155,7 @@
 
 .review-grades {
   display: flex;
-  gap: .5rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
   margin: 1rem 0;
 }
@@ -167,6 +170,6 @@
 
 .learned-badge {
   color: #8dd7a5;
-  font-size: .76rem;
+  font-size: 0.76rem;
   font-weight: 650;
 }

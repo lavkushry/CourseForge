@@ -16,8 +16,14 @@ export const browserClock: Clock = {
 
 export function wait(clock: Clock, delayMs: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    const abort = () => { clock.clearTimeout(timer); reject(new DOMException('Cancelled', 'AbortError')); };
-    const timer = clock.setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, delayMs);
+    const abort = () => {
+      clock.clearTimeout(timer);
+      reject(new DOMException('Cancelled', 'AbortError'));
+    };
+    const timer = clock.setTimeout(() => {
+      signal.removeEventListener('abort', abort);
+      resolve();
+    }, delayMs);
     signal.addEventListener('abort', abort, { once: true });
     if (signal.aborted) abort();
   });

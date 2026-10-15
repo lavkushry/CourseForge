@@ -6,7 +6,9 @@ export default defineConfig({
     strictPort: true,
     watch: { ignored: ['**/test-results*/**', '**/playwright-report/**', '**/.playwright-cli/**', '**/evidence/**'] },
     proxy: {
-      '^/api/v1/playback/sessions/[^/]+/media(?:\\?|$)': { target: process.env.COURSEFORGE_MEDIA_URL || 'http://127.0.0.1:18194' },
+      '^/api/v1/playback/sessions/[^/]+/media(?:\\?|$)': {
+        target: process.env.COURSEFORGE_MEDIA_URL || 'http://127.0.0.1:18194',
+      },
       '/api': { target: process.env.COURSEFORGE_API_URL || 'http://127.0.0.1:18190' },
       '/verify/': { target: process.env.COURSEFORGE_API_URL || 'http://127.0.0.1:18190' },
       '/media': { target: process.env.COURSEFORGE_MEDIA_URL || 'http://127.0.0.1:18194' },
@@ -20,6 +22,9 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('media-chrome')) {
             return 'media-chrome';
+          }
+          if (id.includes('node_modules/hls.js')) {
+            return 'hls';
           }
         },
       },

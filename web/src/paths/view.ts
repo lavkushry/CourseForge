@@ -1,20 +1,7 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
+import { button, el, emptyState, sidebar } from '../components';
 import type { LearningPath, PathStep } from './contracts';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''): HTMLElementTagNameMap[K] {
-  const n = document.createElement(tag);
-  n.className = cls;
-  n.textContent = text;
-  return n;
-}
-
-function button(text: string, action: () => void, cls = 'button'): HTMLButtonElement {
-  const n = el('button', cls, text);
-  n.type = 'button';
-  n.addEventListener('click', action);
-  return n;
-}
 
 export class PathsView {
   private paths: LearningPath[] = [];
@@ -56,29 +43,40 @@ export class PathsView {
     const container = el('div', 'paths-layout');
 
     // Sidebar list of paths
-    const sidebar = el('aside', 'paths-sidebar');
+    const side = sidebar({ className: 'paths-sidebar', label: 'Learning roadmaps' });
     const sideHead = el('div', 'paths-sidebar-head');
     const aiBtn = button('AI Generate', () => void this.showAiGenerateModal(), 'button quiet ai-gen-path-btn');
     aiBtn.prepend(svgIcon('sparkle'));
     sideHead.append(
       el('h2', '', 'Learning Roadmaps'),
       aiBtn,
-      button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn')
+      button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn'),
     );
-    sidebar.append(sideHead);
+    side.append(sideHead);
 
     const list = el('div', 'paths-list');
     if (this.loading && !this.paths.length) {
       list.append(el('p', 'muted', 'Loading roadmaps…'));
     } else if (!this.paths.length) {
-      list.append(el('p', 'muted', 'No saved learning roadmaps yet. Create one to chart your learning journey!'));
+      list.append(
+        emptyState({
+          className: 'catalog-empty paths-empty-state',
+          icon: 'sparkle',
+          title: 'No saved learning roadmaps yet',
+          description: 'Create one to chart your learning journey!',
+        }),
+      );
     } else {
       for (const p of this.paths) {
         const item = el('div', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`);
         item.append(
           el('strong', '', p.goal),
-          el('span', 'muted', `${p.course_ids.length} courses · ${p.steps.length} steps · ${p.completion_percent}% complete`),
-          el('progress', 'path-progress', '')
+          el(
+            'span',
+            'muted',
+            `${p.course_ids.length} courses · ${p.steps.length} steps · ${p.completion_percent}% complete`,
+          ),
+          el('progress', 'path-progress', ''),
         );
         const bar = item.querySelector<HTMLProgressElement>('.path-progress')!;
         bar.max = 100;
@@ -90,7 +88,7 @@ export class PathsView {
         list.append(item);
       }
     }
-    sidebar.append(list);
+    side.append(list);
 
     // Main detail pane
     const main = el('div', 'paths-main');
@@ -103,13 +101,13 @@ export class PathsView {
         el('span', 'eyebrow', `LEARNING ROADMAP · ${p.provenance.toUpperCase()}`),
         el('h1', '', p.goal),
         el('p', 'muted', `Covering: ${p.course_ids.join(', ')}`),
-        el('div', 'path-stats-row')
+        el('div', 'path-stats-row'),
       );
       const stats = head.querySelector('.path-stats-row')!;
       stats.append(
         el('div', 'stat-chip', `Progress: ${p.completion_percent}%`),
         el('div', 'stat-chip', `Steps: ${p.completed_steps} / ${p.steps.length}`),
-        el('div', 'stat-chip', `Revision: ${p.revision}`)
+        el('div', 'stat-chip', `Revision: ${p.revision}`),
       );
       main.append(head, this.renderSkillTree(p));
 
@@ -123,7 +121,7 @@ export class PathsView {
       main.append(stepsList);
     }
 
-    container.append(sidebar, main);
+    container.append(side, main);
     this.root.append(container);
   }
 
@@ -177,7 +175,7 @@ export class PathsView {
         const chip = button(
           ` ${src.title || src.lesson_id} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
           () => this.openLesson(src.course_id, src.lesson_id, src.start),
-          'button quiet source-chip'
+          'button quiet source-chip',
         );
         chip.prepend(svgIcon('play'));
         sourcesWrap.append(chip);
@@ -195,7 +193,7 @@ export class PathsView {
     form.append(
       el('h2', '', 'Create Learning Roadmap'),
       el('label', 'field-label', 'Your Learning Goal'),
-      el('input', 'text-input')
+      el('input', 'text-input'),
     );
     const input = form.querySelector<HTMLInputElement>('input')!;
     input.placeholder = 'e.g. Master Cloud Native Data Engineering';
@@ -227,25 +225,29 @@ export class PathsView {
     }
 
     const actions = el('div', 'dialog-actions');
-    const createBtn = button('Create Roadmap', async () => {
-      const goal = input.value.trim();
-      if (goal.length < 3) {
-        this.notice('Goal must be at least 3 characters', true);
-        return;
-      }
-      const courseId = select.value || 'fixture-course';
-      createBtn.disabled = true;
-      try {
-        const newPath = await this.api.createLearningPath(goal, [courseId], 4);
-        dialog.close();
-        this.activePath = newPath;
-        await this.activate();
-        this.notice('Roadmap created!');
-      } catch (err) {
-        createBtn.disabled = false;
-        this.notice('Could not create roadmap: ' + (err instanceof Error ? err.message : String(err)), true);
-      }
-    }, 'button primary');
+    const createBtn = button(
+      'Create Roadmap',
+      async () => {
+        const goal = input.value.trim();
+        if (goal.length < 3) {
+          this.notice('Goal must be at least 3 characters', true);
+          return;
+        }
+        const courseId = select.value || 'fixture-course';
+        createBtn.disabled = true;
+        try {
+          const newPath = await this.api.createLearningPath(goal, [courseId], 4);
+          dialog.close();
+          this.activePath = newPath;
+          await this.activate();
+          this.notice('Roadmap created!');
+        } catch (err) {
+          createBtn.disabled = false;
+          this.notice('Could not create roadmap: ' + (err instanceof Error ? err.message : String(err)), true);
+        }
+      },
+      'button primary',
+    );
 
     const cancelBtn = button('Cancel', () => dialog.close(), 'button quiet');
     actions.append(cancelBtn, createBtn);
@@ -265,7 +267,7 @@ export class PathsView {
       el('h2', '', 'AI Career Roadmap Generator'),
       el('p', 'muted', 'Synthesize a multi-stage engineering roadmap powered by hosted Ollama and PostgreSQL courses.'),
       el('label', 'field-label', 'Target Career Goal'),
-      el('input', 'text-input')
+      el('input', 'text-input'),
     );
     const input = form.querySelector<HTMLInputElement>('input')!;
     input.placeholder = 'e.g. Full-Stack Cloud & Distributed Systems Architect';
@@ -279,29 +281,33 @@ export class PathsView {
     form.append(roleInput);
 
     const actions = el('div', 'dialog-actions');
-    const generateBtn = button('Synthesize with Ollama AI', async () => {
-      const goal = input.value.trim();
-      const role = roleInput.value.trim();
-      if (goal.length < 3) {
-        this.notice('Goal must be at least 3 characters', true);
-        return;
-      }
-      try {
-        const aiResult = await this.api.generateAiRoadmap(goal, role);
-        const steps = (aiResult.steps || []) as Array<{ course_id: string }>;
-        const courseIds = steps.map((s: { course_id: string }) => s.course_id).filter(Boolean);
-        if (!courseIds.length) courseIds.push('fixture-course');
-        const newPath = await this.api.createLearningPath(goal, courseIds.slice(0, 4), steps.length || 4);
-        dialog.close();
-        this.activePath = newPath;
-        await this.activate();
-        this.notice(`AI Career Roadmap generated: ${aiResult.steps.length} stages mapped!`);
-      } catch (err) {
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Synthesize with Ollama AI';
-        this.notice('Could not generate AI roadmap: ' + (err instanceof Error ? err.message : String(err)), true);
-      }
-    }, 'button primary');
+    const generateBtn = button(
+      'Synthesize with Ollama AI',
+      async () => {
+        const goal = input.value.trim();
+        const role = roleInput.value.trim();
+        if (goal.length < 3) {
+          this.notice('Goal must be at least 3 characters', true);
+          return;
+        }
+        try {
+          const aiResult = await this.api.generateAiRoadmap(goal, role);
+          const steps = (aiResult.steps || []) as Array<{ course_id: string }>;
+          const courseIds = steps.map((s: { course_id: string }) => s.course_id).filter(Boolean);
+          if (!courseIds.length) courseIds.push('fixture-course');
+          const newPath = await this.api.createLearningPath(goal, courseIds.slice(0, 4), steps.length || 4);
+          dialog.close();
+          this.activePath = newPath;
+          await this.activate();
+          this.notice(`AI Career Roadmap generated: ${aiResult.steps.length} stages mapped!`);
+        } catch (err) {
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Synthesize with Ollama AI';
+          this.notice('Could not generate AI roadmap: ' + (err instanceof Error ? err.message : String(err)), true);
+        }
+      },
+      'button primary',
+    );
 
     const cancelBtn = button('Cancel', () => dialog.close(), 'button quiet');
     actions.append(cancelBtn, generateBtn);
@@ -318,7 +324,7 @@ export class PathsView {
     const header = el('div', 'skill-tree-header');
     header.append(
       el('h3', '', 'Curriculum Progression & Skill Tree'),
-      el('span', 'muted', `${path.steps.length} Milestones · Interactive Progression`)
+      el('span', 'muted', `${path.steps.length} Milestones · Interactive Progression`),
     );
     wrap.append(header);
 

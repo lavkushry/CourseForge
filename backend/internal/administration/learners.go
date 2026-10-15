@@ -1,9 +1,10 @@
 package administration
 
 import (
-	"courseforge/backend/internal/httpx"
 	"encoding/json"
 	"net/http"
+
+	"courseforge/backend/internal/httpx"
 )
 
 const focusMeasured = `least(f.duration_seconds,f.elapsed_seconds+CASE WHEN f.status='running' THEN greatest(0,extract(epoch FROM $2::timestamptz-f.run_started_at)) ELSE 0 END)`

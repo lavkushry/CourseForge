@@ -5,14 +5,14 @@
 
 .catalog-search label {
   display: block;
-  font-size: .67rem;
+  font-size: 0.67rem;
   font-weight: 700;
   color: var(--muted);
   margin-bottom: var(--space-2);
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
 }
 
-.catalog-search>div {
+.catalog-search > div {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -34,7 +34,7 @@
   padding: var(--space-2) 0;
   border: 0;
   background: transparent;
-  font-size: .79rem;
+  font-size: 0.79rem;
   color: #fff;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .catalog-results {
-  font-size: .7rem;
+  font-size: 0.7rem;
   color: var(--muted);
   margin: 22px 0 15px;
 }
@@ -70,17 +70,17 @@
 }
 
 .hero-kicker {
-  font-size: .6rem;
+  font-size: 0.6rem;
   font-weight: 750;
-  letter-spacing: .23em;
+  letter-spacing: 0.23em;
   color: #ffb395;
   margin-bottom: 25px;
 }
 
 .hero-title {
-  font-size: clamp(2.4rem,4.5vw,4.4rem);
+  font-size: clamp(2.4rem, 4.5vw, 4.4rem);
   line-height: 1.03;
-  letter-spacing: -.07em;
+  letter-spacing: -0.07em;
   max-width: 700px;
   margin: 0 0 22px;
   text-wrap: balance;
@@ -88,7 +88,7 @@
 
 .hero-description {
   color: #cecad0;
-  font-size: .94rem;
+  font-size: 0.94rem;
   line-height: 1.65;
   max-width: 470px;
   display: -webkit-box;
@@ -101,15 +101,15 @@
 .hero-metadata {
   display: flex;
   gap: 18px;
-  font-size: .72rem;
+  font-size: 0.72rem;
   color: #c4c6cb;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 30px;
 }
 
-.hero-metadata span+span::before {
-  content: "·";
+.hero-metadata span + span::before {
+  content: '·';
   color: #797a83;
   margin-right: 18px;
 }
@@ -124,11 +124,11 @@
 .hero-play {
   min-height: 48px;
   padding: var(--space-3) 22px;
-  font-size: .88rem;
+  font-size: 0.88rem;
 }
 
 .hero-footnote {
-  font-size: .64rem;
+  font-size: 0.64rem;
   color: #a8a4ac;
   margin: var(--space-5) 0 0;
 }
@@ -138,7 +138,9 @@
   isolation: isolate;
   aspect-ratio: 16/10;
   overflow: hidden;
-  background: radial-gradient(ellipse at 78% 15%,hsl(var(--art-hue) 36% 29%),transparent 65%),linear-gradient(145deg,#292934,#13141a);
+  background:
+    radial-gradient(ellipse at 78% 15%, hsl(var(--art-hue) 36% 29%), transparent 65%),
+    linear-gradient(145deg, #292934, #13141a);
   width: 100%;
 }
 
@@ -150,13 +152,16 @@
   top: -13%;
   border: 1px solid #ffffff42;
   border-radius: 38% 62% 52% 48% / 42% 38% 62% 58%;
-  background: linear-gradient(145deg,#ffffff30,#ffffff02 42%,hsl(var(--art-hue) 56% 53% / .23));
-  box-shadow: inset 12px 12px 40px #ffffff0d,25px 35px 50px #0003;
+  background: linear-gradient(145deg, #ffffff30, #ffffff02 42%, hsl(var(--art-hue) 56% 53% / 0.23));
+  box-shadow:
+    inset 12px 12px 40px #ffffff0d,
+    25px 35px 50px #0003;
   transform: rotate(-25deg);
 }
 
-.art-orb::before,.art-orb::after {
-  content: "";
+.art-orb::before,
+.art-orb::after {
+  content: '';
   position: absolute;
   inset: 14%;
   border: 1px solid #ffffff38;
@@ -173,11 +178,11 @@
   position: absolute;
   left: 10%;
   top: 5%;
-  font-size: clamp(6rem,12vw,12rem);
+  font-size: clamp(6rem, 12vw, 12rem);
   font-weight: 850;
   line-height: 1;
   color: #ffffffdf;
-  letter-spacing: -.12em;
+  letter-spacing: -0.12em;
   mix-blend-mode: soft-light;
 }
 
@@ -185,9 +190,9 @@
   position: absolute;
   bottom: 15%;
   left: 10%;
-  font-size: .56rem;
+  font-size: 0.56rem;
   font-weight: 700;
-  letter-spacing: .2em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #ffffffc9;
   max-width: 80%;
@@ -201,15 +206,18 @@
   inset: 0;
   aspect-ratio: auto;
   height: 100%;
-  background: radial-gradient(ellipse at 85% 65%,#914948 0,transparent 65%),linear-gradient(125deg,#1a1a21,#32202e);
+  background:
+    radial-gradient(ellipse at 85% 65%, #914948 0, transparent 65%), linear-gradient(125deg, #1a1a21, #32202e);
   --art-hue: 22;
 }
 
 .hero-art::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg,#16171eef 0,#16171ede 30%,#16171e60 68%,#16171e00),linear-gradient(0deg,#12131899,transparent 65%);
+  background:
+    linear-gradient(90deg, #16171eef 0, #16171ede 30%, #16171e60 68%, #16171e00),
+    linear-gradient(0deg, #12131899, transparent 65%);
   z-index: 2;
 }
 
@@ -218,8 +226,10 @@
   top: -15%;
   right: -2%;
   border-color: #ffc5b455;
-  background: linear-gradient(145deg,#e7b8b645,#d5644635 55%,#481f7c);
-  box-shadow: inset 20px 20px 80px #ffcb8826,0 70px 150px #0005;
+  background: linear-gradient(145deg, #e7b8b645, #d5644635 55%, #481f7c);
+  box-shadow:
+    inset 20px 20px 80px #ffcb8826,
+    0 70px 150px #0005;
 }
 
 .hero-art .art-glyph {
@@ -238,13 +248,13 @@
   bottom: 15%;
   z-index: 1;
   writing-mode: vertical-rl;
-  letter-spacing: .3em;
+  letter-spacing: 0.3em;
   color: #ffffff70;
 }
 
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 25px;
 }
 
@@ -256,7 +266,9 @@
   border-radius: 12px;
   overflow: hidden;
   background: var(--panel);
-  transition: transform .2s,border-color .2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
 }
 
 .course-card:hover {
@@ -288,11 +300,12 @@
   background: #08091044;
   color: white;
   opacity: 0;
-  transition: opacity .2s;
+  transition: opacity 0.2s;
   z-index: 2;
 }
 
-.cover-button:hover .art-play,.cover-button:focus-visible .art-play {
+.cover-button:hover .art-play,
+.cover-button:focus-visible .art-play {
   opacity: 1;
 }
 
@@ -324,7 +337,7 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   height: 360px;
-  background: linear-gradient(125deg,#1b1c22,#23242b,#1b1c22);
+  background: linear-gradient(125deg, #1b1c22, #23242b, #1b1c22);
   background-size: 200% 100%;
   animation: skeleton 2s ease infinite;
 }
@@ -362,7 +375,7 @@
   margin-top: 70px;
   padding: var(--space-7) 0;
   color: #868994;
-  font-size: .64rem;
+  font-size: 0.64rem;
 }
 
 .catalog-footer p {
@@ -371,7 +384,7 @@
 
 .footer-wordmark {
   font-weight: 800;
-  letter-spacing: .18em;
+  letter-spacing: 0.18em;
   color: #dbdade;
 }
 
@@ -426,7 +439,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .continue-body {
@@ -434,12 +447,12 @@
 }
 
 .continue-body h3 {
-  font-size: .9rem;
+  font-size: 0.9rem;
   margin: 0 0 var(--space-2);
 }
 
 .continue-body p {
-  font-size: .65rem;
+  font-size: 0.65rem;
   margin-bottom: var(--space-3);
 }
 

@@ -2,12 +2,14 @@ package learning
 
 import (
 	"context"
-	"courseforge/backend/internal/httpx"
-	"courseforge/backend/internal/identity"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"strings"
 	"time"
+
+	"courseforge/backend/internal/httpx"
+	"courseforge/backend/internal/identity"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Bookmark struct {

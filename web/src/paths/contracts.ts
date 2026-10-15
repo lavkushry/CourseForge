@@ -57,13 +57,15 @@ export function parsePath(value: unknown): LearningPath {
     goal_focus: Boolean(s.goal_focus),
     completed: Boolean(s.completed),
     watched_sources: Number(s.watched_sources || 0),
-    sources: Array.isArray(s.sources) ? s.sources.map((src: Record<string, unknown>) => ({
-      lesson_id: String(src.lesson_id || ''),
-      course_id: String(src.course_id || ''),
-      start: Number(src.start || 0),
-      chunk_id: typeof src.chunk_id === 'string' ? src.chunk_id : undefined,
-      title: typeof src.title === 'string' ? src.title : undefined,
-    })) : [],
+    sources: Array.isArray(s.sources)
+      ? s.sources.map((src: Record<string, unknown>) => ({
+          lesson_id: String(src.lesson_id || ''),
+          course_id: String(src.course_id || ''),
+          start: Number(src.start || 0),
+          chunk_id: typeof src.chunk_id === 'string' ? src.chunk_id : undefined,
+          title: typeof src.title === 'string' ? src.title : undefined,
+        }))
+      : [],
   }));
 
   return {

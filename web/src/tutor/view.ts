@@ -1,5 +1,6 @@
 import { svgIcon } from '../icons';
-import { ApiClient, ApiError, errorMessage } from '../api';
+import type { ApiClient } from '../api';
+import { errorMessage } from '../api';
 import type { Course } from '../contracts';
 import type { TutorSource } from '../learning/contracts';
 
@@ -41,10 +42,13 @@ export class TutorView {
     this.options.root.hidden = false;
     this.render();
 
-    void this.options.api.courses('', signal).then(res => {
-      this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
-      this.render();
-    }).catch(() => {});
+    void this.options.api
+      .courses('', signal)
+      .then(res => {
+        this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
+        this.render();
+      })
+      .catch(() => {});
   }
 
   deactivate(): void {
@@ -61,7 +65,11 @@ export class TutorView {
     headText.append(
       el('span', 'eyebrow', 'LOCAL AI STUDY PARTNER'),
       el('h1', 'page-title', 'Meet Your Personal Tutor'),
-      el('p', 'muted page-subtitle', 'Grounded explanations and study notes drawn exclusively from your masterclass lectures with clickable video timestamps.'),
+      el(
+        'p',
+        'muted page-subtitle',
+        'Grounded explanations and study notes drawn exclusively from your masterclass lectures with clickable video timestamps.',
+      ),
     );
     pageHead.append(headText);
     root.append(pageHead);
@@ -140,12 +148,13 @@ export class TutorView {
     const form = el('form', 'tutor-ask-form');
     const textarea = el('textarea', 'form-input tutor-textarea');
     textarea.id = 'tutor-question-input';
-    textarea.placeholder = 'Ask anything about your courses, architecture trade-offs, code, or interview problems… (Press Enter to submit)';
+    textarea.placeholder =
+      'Ask anything about your courses, architecture trade-offs, code, or interview problems… (Press Enter to submit)';
     textarea.rows = 3;
     textarea.required = true;
 
     // Support Enter to submit
-    textarea.addEventListener('keydown', (e) => {
+    textarea.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         form.requestSubmit();
@@ -165,7 +174,7 @@ export class TutorView {
     form.append(textarea, askFooter);
     formCard.append(form);
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const question = textarea.value.trim();
       if (!question || this.busy) return;
@@ -222,10 +231,7 @@ export class TutorView {
         const aiAvatar = el('div', 'ai-avatar-pill');
         aiAvatar.append(svgIcon('bulb'));
         const aiTitle = el('div', 'ai-title-wrap');
-        aiTitle.append(
-          el('strong', '', 'CourseForge AI Partner'),
-          el('span', 'tag mode-tag', h.mode.toUpperCase()),
-        );
+        aiTitle.append(el('strong', '', 'CourseForge AI Partner'), el('span', 'tag mode-tag', h.mode.toUpperCase()));
         assistHead.append(aiAvatar, aiTitle);
 
         const answerBody = el('div', 'tutor-response-body', h.answer);

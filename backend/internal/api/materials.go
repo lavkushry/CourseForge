@@ -14,6 +14,7 @@ import (
 
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -229,6 +230,7 @@ func (s *Server) materialUpdate(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+	s.invalidateCatalog(r)
 	httpx.JSON(w, 200, map[string]any{"version": version})
 }
 func (s *Server) materialRemove(w http.ResponseWriter, r *http.Request) {
@@ -259,5 +261,6 @@ func (s *Server) materialRemove(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+	s.invalidateCatalog(r)
 	httpx.JSON(w, 200, map[string]bool{"ok": true})
 }

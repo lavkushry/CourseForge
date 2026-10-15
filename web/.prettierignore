@@ -1,0 +1,6 @@
+dist
+node_modules
+evidence
+package-lock.json
+*.min.js
+*.min.css

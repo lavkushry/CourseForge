@@ -20,6 +20,7 @@ import (
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/jobs"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

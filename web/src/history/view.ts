@@ -1,15 +1,9 @@
 import { svgIcon } from '../icons';
 import type { HistoryItem } from '../contracts';
-import { ApiClient } from '../api';
+import type { ApiClient } from '../api';
+import { el, emptyState } from '../components';
 import { formatTime } from '../player/controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
 
 export interface HistoryViewOptions {
   root: HTMLElement;
@@ -29,14 +23,17 @@ export class HistoryView {
     this.loading = true;
     this.render();
 
-    void this.options.api.history('', signal).then(res => {
-      this.items = res.history || [];
-      this.loading = false;
-      this.render();
-    }).catch(() => {
-      this.loading = false;
-      this.render();
-    });
+    void this.options.api
+      .history('', signal)
+      .then(res => {
+        this.items = res.history || [];
+        this.loading = false;
+        this.render();
+      })
+      .catch(() => {
+        this.loading = false;
+        this.render();
+      });
   }
 
   deactivate(): void {
@@ -53,7 +50,11 @@ export class HistoryView {
     headText.append(
       el('span', 'eyebrow', 'CONTINUE WATCHING'),
       el('h1', 'page-title', 'Watch History'),
-      el('p', 'muted page-subtitle', 'Pick up right where you left off. Track your completion progress across all masterclass lectures.'),
+      el(
+        'p',
+        'muted page-subtitle',
+        'Pick up right where you left off. Track your completion progress across all masterclass lectures.',
+      ),
     );
     pageHead.append(headText);
 
@@ -89,15 +90,15 @@ export class HistoryView {
     }
 
     if (this.items.length === 0) {
-      const empty = el('div', 'catalog-empty history-empty-state');
-      const iconWrap = el('span', 'empty-symbol');
-      iconWrap.append(svgIcon('history'));
-      empty.append(
-        iconWrap,
-        el('h2', '', 'No watch history yet'),
-        el('p', 'muted', 'Start streaming any lesson from your library or discovery catalog to build your study timeline.'),
+      root.append(
+        emptyState({
+          className: 'catalog-empty history-empty-state',
+          icon: 'history',
+          title: 'No watch history yet',
+          description:
+            'Start streaming any lesson from your library or discovery catalog to build your study timeline.',
+        }),
       );
-      root.append(empty);
       return;
     }
 
@@ -128,7 +129,11 @@ export class HistoryView {
 
       // 2. Card Body Content
       const body = el('div', 'history-card-body');
-      const courseBadge = el('span', 'history-course-badge', toTitleCase((item.course_id || 'Masterclass').replace(/-/g, ' ')));
+      const courseBadge = el(
+        'span',
+        'history-course-badge',
+        toTitleCase((item.course_id || 'Masterclass').replace(/-/g, ' ')),
+      );
       const title = el('h3', 'history-lesson-title', cleanLessonTitle(item.title));
       title.title = item.title;
       const section = el('p', 'history-section-name', item.section_title || 'Core Lecture');
@@ -147,7 +152,10 @@ export class HistoryView {
       // 3. Card Footer with Action Button
       const footer = el('div', 'history-card-footer');
       const timeAgo = new Date(item.watched_at).toLocaleDateString(undefined, {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
       });
       footer.append(el('span', 'history-timestamp', `Watched ${timeAgo}`));
 

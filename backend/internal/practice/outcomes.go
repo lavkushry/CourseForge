@@ -12,6 +12,7 @@ import (
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/paths"
+
 	"github.com/jackc/pgx/v5"
 )
 

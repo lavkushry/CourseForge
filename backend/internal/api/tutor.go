@@ -218,7 +218,7 @@ Never fabricate timestamps or information not grounded in the course excerpts.`
 				}
 				fmt.Fprintf(&sb, "- **%s**\n  > %s\n\n", link, excerpt)
 			}
-			sb.WriteString(fmt.Sprintf("**Summary Focus (%s):** %s", req.Mode, modePrompt(req.Mode)))
+			fmt.Fprintf(&sb, "**Summary Focus (%s):** %s", req.Mode, modePrompt(req.Mode))
 			answer = sb.String()
 		} else {
 			answer = "I could not locate an exact lecture transcript matching this specific phrasing. Try asking about core course topics (e.g. Distributed Systems, Apache Spark, System Design, or Agentic AI)."

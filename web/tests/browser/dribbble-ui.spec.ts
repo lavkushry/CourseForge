@@ -27,7 +27,9 @@ test('Desktop: Dribbble 27155177 Theme verification at 1440x900', async ({ page,
   await expect.poll(() => page.locator('video').evaluate(v => v.currentTime)).toBeGreaterThan(0.5);
 
   // Seek forward to ~12s
-  await page.locator('video').evaluate(v => { v.currentTime = 12.5; });
+  await page.locator('video').evaluate(v => {
+    v.currentTime = 12.5;
+  });
   await page.waitForTimeout(500);
 
   // Pin player controls bar visible
@@ -121,7 +123,7 @@ test('Desktop: Catalog thumbnails & Dribbble course cards at 1440x900', async ({
   const images = firstCard.locator('img');
   const imgCount = await images.count();
   if (imgCount > 0) {
-    const naturalWidth = await images.first().evaluate((img: HTMLImageElement) => img.naturalWidth);
+    const _naturalWidth = await images.first().evaluate((img: HTMLImageElement) => img.naturalWidth);
     const src = await images.first().getAttribute('src');
     expect(src).toBeTruthy();
   }
@@ -219,7 +221,8 @@ test('In-Player: Up-Next countdown card with dynamic SVG artwork', async ({ page
       const img = upNext.querySelector<HTMLImageElement>('#upNextThumbImg');
       if (img) {
         img.style.display = 'block';
-        img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="%231a1024"/><circle cx="320" cy="180" r="40" fill="%23ff7952"/><text x="32" y="320" fill="white" font-size="24">UP NEXT</text></svg>';
+        img.src =
+          'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="%231a1024"/><circle cx="320" cy="180" r="40" fill="%23ff7952"/><text x="32" y="320" fill="white" font-size="24">UP NEXT</text></svg>';
       }
     }
   });

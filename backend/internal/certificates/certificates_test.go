@@ -20,6 +20,7 @@ import (
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/testutil"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

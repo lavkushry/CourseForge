@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"net/url"
@@ -13,26 +14,9 @@ import (
 
 	"courseforge/backend/internal/httpx"
 	"courseforge/backend/internal/identity"
+
 	"github.com/jackc/pgx/v5"
 )
-
-func (s *Server) RegisterCatalogRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/v1/public/courses", s.publicCourses)
-	mux.HandleFunc("GET /api/v1/public/courses/{id}", s.publicCourse)
-	mux.HandleFunc("GET /api/v1/courses/{id}/cover", s.cover)
-	for route, h := range map[string]http.HandlerFunc{
-		"GET /api/v1/search": s.search, "GET /api/v1/materials": s.materials, "GET /api/v1/materials/{id}/download": s.materialDownload,
-		"PATCH /api/v1/admin/courses/{id}": s.courseUpdate, "PUT /api/v1/admin/courses/{id}/organization": s.organize,
-		"PUT /api/v1/admin/materials/{id}": s.materialUpdate, "DELETE /api/v1/admin/materials/{id}": s.materialRemove,
-		"GET /api/v1/streaming/my-list": s.savedList, "POST /api/v1/streaming/my-list": s.savedCreate, "DELETE /api/v1/streaming/my-list/{type}/{id}": s.savedDelete,
-		"GET /api/v1/streaming/history": s.history, "DELETE /api/v1/streaming/history": s.historyClear,
-		"GET /api/v1/streaming/continue-watching": s.continueWatching, "POST /api/v1/streaming/analytics/event": s.analyticsEvent, "GET /api/v1/admin/streaming-analytics": s.analyticsReport,
-	} {
-		mux.Handle(route, s.Identity.Require(h))
-	}
-	mux.HandleFunc("GET /api/v1/streaming/home-feed", s.homeFeed)
-	mux.HandleFunc("GET /api/v1/streaming/trending", s.trending)
-}
 
 type CourseCard struct {
 	Course
@@ -84,6 +68,15 @@ func (s *Server) publicCourses(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, 400, "invalid_search", "Search is too long")
 		return
 	}
+	cacheKey := fmt.Sprintf("catalog/public/list/%s/%d/%s/%s", p.UserID, limit, cursor, q)
+	if cached, hit := s.cacheGet(r, cacheKey); hit {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Cache", "HIT")
+		w.WriteHeader(200)
+		_, _ = w.Write(cached)
+		return
+	}
 	rows, err := s.Pool.Query(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+` WHERE c.published AND c.id>$2 AND ($3='' OR POSITION(lower($3) IN lower(c.id||' '||c.title||' '||c.category||' '||c.instructor||' '||array_to_string(c.tags,' ')))>0) ORDER BY c.id LIMIT $4`, p.UserID, cursor, q, limit+1)
 	if err != nil {
 		s.databaseError(w, err)
@@ -108,21 +101,33 @@ func (s *Server) publicCourses(w http.ResponseWriter, r *http.Request) {
 		items = items[:limit]
 		next = nextCursor(items[len(items)-1].ID)
 	}
-	httpx.JSON(w, 200, paginated("courses", items, next))
+	payload := paginated("courses", items, next)
+	s.cacheSet(r, cacheKey, payload)
+	httpx.JSON(w, 200, payload)
 }
 func (s *Server) publicCourse(w http.ResponseWriter, r *http.Request) {
 	p, ok := s.optionalPrincipal(w, r)
 	if !ok {
 		return
 	}
-	var card CourseCard
-	err := scanCard(s.Pool.QueryRow(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE (c.id=$2 OR c.slug=$2) AND c.published", p.UserID, r.PathValue("id")), &card)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
 	limit, cursor, ok := pageArgs(w, r)
 	if !ok {
+		return
+	}
+	id := r.PathValue("id")
+	cacheKey := fmt.Sprintf("catalog/public/detail/%s/%s/%d/%s", p.UserID, id, limit, cursor)
+	if cached, hit := s.cacheGet(r, cacheKey); hit {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Cache", "HIT")
+		w.WriteHeader(200)
+		_, _ = w.Write(cached)
+		return
+	}
+	var card CourseCard
+	err := scanCard(s.Pool.QueryRow(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE (c.id=$2 OR c.slug=$2) AND c.published", p.UserID, id), &card)
+	if err != nil {
+		s.databaseError(w, err)
 		return
 	}
 	mark := lessonCursor{Flow: -1, Order: math.MinInt32}
@@ -158,7 +163,9 @@ func (s *Server) publicCourse(w http.ResponseWriter, r *http.Request) {
 		b, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
 		next = nextCursor(string(b))
 	}
-	httpx.JSON(w, 200, map[string]any{"course": card, "lessons": items, "next_cursor": next})
+	payload := map[string]any{"course": card, "lessons": items, "next_cursor": next}
+	s.cacheSet(r, cacheKey, payload)
+	httpx.JSON(w, 200, payload)
 }
 func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request) (identity.Principal, bool) {
 	p, _ := identity.FromContext(r.Context())
@@ -243,6 +250,7 @@ func (s *Server) courseUpdate(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+	s.invalidateCatalog(r)
 	httpx.JSON(w, 200, map[string]any{"id": r.PathValue("id"), "version": version})
 }
 func (s *Server) organize(w http.ResponseWriter, r *http.Request) {
@@ -310,5 +318,6 @@ func (s *Server) organize(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+	s.invalidateCatalog(r)
 	httpx.JSON(w, 200, map[string]any{"version": version})
 }

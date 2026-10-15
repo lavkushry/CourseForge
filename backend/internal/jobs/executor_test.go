@@ -37,7 +37,9 @@ func TestExecutorProtocolAndRedirectBoundary(t *testing.T) {
 	var escaped bool
 	hostile := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { escaped = true }))
 	defer hostile.Close()
-	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, hostile.URL, 307) }))
+	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, hostile.URL, http.StatusTemporaryRedirect)
+	}))
 	defer redirect.Close()
 	ex2, _ := NewHTTPExecutor(redirect.URL, "internal-only", time.Second)
 	defer ex2.Close()

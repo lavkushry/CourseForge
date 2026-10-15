@@ -9,11 +9,22 @@ export class SessionOwnership {
 
   constructor(private readonly transport: PlaybackTransport) {}
 
-  get current(): PlaybackSession | null { return this.session; }
-  get owns(): boolean { return this.state === 'owned'; }
-  get status(): OwnershipState { return this.state; }
+  get current(): PlaybackSession | null {
+    return this.session;
+  }
+  get owns(): boolean {
+    return this.state === 'owned';
+  }
+  get status(): OwnershipState {
+    return this.state;
+  }
 
-  async open(lessonId: string, takeOver: boolean, startPosition: number | undefined, signal: AbortSignal): Promise<PlaybackSession> {
+  async open(
+    lessonId: string,
+    takeOver: boolean,
+    startPosition: number | undefined,
+    signal: AbortSignal,
+  ): Promise<PlaybackSession> {
     const session = parsePlaybackSession(await this.transport.create(lessonId, takeOver, startPosition, signal));
     if (signal.aborted) {
       await this.transport.release(session.id).catch(() => undefined);
@@ -24,9 +35,13 @@ export class SessionOwnership {
     return session;
   }
 
-  lost(): void { this.state = 'lost'; }
+  lost(): void {
+    this.state = 'lost';
+  }
 
-  relinquish(): void { this.state = 'released'; }
+  relinquish(): void {
+    this.state = 'released';
+  }
 
   async release(keepalive = false): Promise<void> {
     const session = this.session;

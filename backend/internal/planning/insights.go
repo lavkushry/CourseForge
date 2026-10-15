@@ -1,10 +1,11 @@
 package planning
 
 import (
-	"courseforge/backend/internal/httpx"
 	"math"
 	"net/http"
 	"time"
+
+	"courseforge/backend/internal/httpx"
 )
 
 func (s *Service) insights(w http.ResponseWriter, r *http.Request) {

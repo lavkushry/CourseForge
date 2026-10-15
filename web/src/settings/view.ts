@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { AuthResponse } from '../contracts';
-import { ApiClient } from '../api';
+import type { ApiClient } from '../api';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -32,13 +32,15 @@ export class SettingsView {
     this.options.root.hidden = false;
     this.render();
 
-    void this.options.api.request<{ preferences: { daily_minutes?: number } }>('/planner/preferences', { signal })
+    void this.options.api
+      .request<{ preferences: { daily_minutes?: number } }>('/planner/preferences', { signal })
       .then(res => {
         if (res?.preferences?.daily_minutes) {
           this.dailyMinutes = res.preferences.daily_minutes;
           this.render();
         }
-      }).catch(() => {});
+      })
+      .catch(() => {});
   }
 
   deactivate(): void {
@@ -55,7 +57,11 @@ export class SettingsView {
     headText.append(
       el('span', 'eyebrow', 'STUDIO PREFERENCES & ACCOUNT'),
       el('h1', 'page-title', 'Studio Settings'),
-      el('p', 'muted page-subtitle', 'Configure your learning environment, visual themes, daily study budgets, and account credentials.'),
+      el(
+        'p',
+        'muted page-subtitle',
+        'Configure your learning environment, visual themes, daily study budgets, and account credentials.',
+      ),
     );
     pageHead.append(headText);
     root.append(pageHead);
@@ -75,8 +81,15 @@ export class SettingsView {
     modeWrap.append(el('label', 'input-label', 'Workspace Layout Mode'));
     const modeRow = el('div', 'theme-toggle-row');
     const currentMode = document.body.classList.contains('academy-studio-mode') ? 'studio' : 'normal';
-    for (const [mKey, mLabel] of [['normal', 'Normal Mode (Streaming)'], ['studio', 'Academy Studio (Sidebar)']] as const) {
-      const btn = el('button', currentMode === mKey ? 'button theme-choice-btn active' : 'button quiet theme-choice-btn', mLabel);
+    for (const [mKey, mLabel] of [
+      ['normal', 'Normal Mode (Streaming)'],
+      ['studio', 'Academy Studio (Sidebar)'],
+    ] as const) {
+      const btn = el(
+        'button',
+        currentMode === mKey ? 'button theme-choice-btn active' : 'button quiet theme-choice-btn',
+        mLabel,
+      );
       btn.type = 'button';
       btn.addEventListener('click', () => {
         window.dispatchEvent(new CustomEvent('courseforge:workspace-mode', { detail: mKey }));
@@ -93,8 +106,16 @@ export class SettingsView {
     const themeRow = el('div', 'theme-toggle-row');
     const currentTheme = document.documentElement.dataset.theme || localStorage.getItem('courseforge_theme') || 'dark';
 
-    for (const [tKey, tLabel] of [['dark', 'Dark (Default)'], ['light', 'Light'], ['system', 'System']] as const) {
-      const btn = el('button', currentTheme === tKey ? 'button theme-choice-btn active' : 'button quiet theme-choice-btn', tLabel);
+    for (const [tKey, tLabel] of [
+      ['dark', 'Dark (Default)'],
+      ['light', 'Light'],
+      ['system', 'System'],
+    ] as const) {
+      const btn = el(
+        'button',
+        currentTheme === tKey ? 'button theme-choice-btn active' : 'button quiet theme-choice-btn',
+        tLabel,
+      );
       btn.type = 'button';
       btn.addEventListener('click', () => {
         document.documentElement.dataset.theme = tKey;
@@ -108,10 +129,19 @@ export class SettingsView {
     const accentWrap = el('div', 'setting-group');
     accentWrap.append(el('label', 'input-label', 'Accent Glow'));
     const accentRow = el('div', 'accent-toggle-row');
-    const currentAccent = document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'indigo';
+    const currentAccent =
+      document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'indigo';
 
-    for (const [aKey, aLabel] of [['indigo', 'Indigo (Default)'], ['teal', 'Teal Glow'], ['rose', 'Crimson Rose']] as const) {
-      const btn = el('button', currentAccent === aKey ? 'button accent-choice-btn active' : 'button quiet accent-choice-btn', aLabel);
+    for (const [aKey, aLabel] of [
+      ['indigo', 'Indigo (Default)'],
+      ['teal', 'Teal Glow'],
+      ['rose', 'Crimson Rose'],
+    ] as const) {
+      const btn = el(
+        'button',
+        currentAccent === aKey ? 'button accent-choice-btn active' : 'button quiet accent-choice-btn',
+        aLabel,
+      );
       btn.type = 'button';
       btn.addEventListener('click', () => {
         document.documentElement.dataset.accent = aKey;
@@ -146,7 +176,11 @@ export class SettingsView {
       [60, '60 min'],
       [90, '90 min'],
     ] as const) {
-      const pill = el('button', this.dailyMinutes === mVal ? 'budget-choice-pill active' : 'budget-choice-pill', mLabel);
+      const pill = el(
+        'button',
+        this.dailyMinutes === mVal ? 'budget-choice-pill active' : 'budget-choice-pill',
+        mLabel,
+      );
       pill.type = 'button';
       pill.addEventListener('click', async () => {
         this.dailyMinutes = mVal;
@@ -207,9 +241,12 @@ export class SettingsView {
 
     const infoList = el('dl', 'account-meta-list');
     infoList.append(
-      el('dt', '', 'Learner ID:'), el('dd', '', this.options.account.id || 'Current User'),
-      el('dt', '', 'Email:'), el('dd', '', this.options.account.email || 'learner@courseforge.local'),
-      el('dt', '', 'Role:'), el('dd', '', (this.options.account.role || 'learner').toUpperCase()),
+      el('dt', '', 'Learner ID:'),
+      el('dd', '', this.options.account.id || 'Current User'),
+      el('dt', '', 'Email:'),
+      el('dd', '', this.options.account.email || 'learner@courseforge.local'),
+      el('dt', '', 'Role:'),
+      el('dd', '', (this.options.account.role || 'learner').toUpperCase()),
     );
     accountCard.append(infoList);
 

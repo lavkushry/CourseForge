@@ -1,7 +1,8 @@
 import { svgIcon } from '../icons';
-import type { Course, Lesson, Material, Note } from '../contracts';
-import { ApiClient, ApiError, errorMessage } from '../api';
-import { LearningApi } from '../learning/api';
+import type { Course, Lesson, Note } from '../contracts';
+import type { ApiClient } from '../api';
+import { errorMessage } from '../api';
+import type { LearningApi } from '../learning/api';
 import type { QuizResult, TutorSource } from '../learning/contracts';
 import { formatTime } from './controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
@@ -116,13 +117,17 @@ export class StudyRail {
     scrollLeftBtn.type = 'button';
     scrollLeftBtn.title = 'Scroll tabs left';
     scrollLeftBtn.setAttribute('aria-label', 'Scroll tabs left');
-    scrollLeftBtn.addEventListener('click', () => { tabBar.scrollBy({ left: -140, behavior: 'smooth' }); });
+    scrollLeftBtn.addEventListener('click', () => {
+      tabBar.scrollBy({ left: -140, behavior: 'smooth' });
+    });
 
     const scrollRightBtn = el('button', 'tab-scroll-btn tab-scroll-right', '›');
     scrollRightBtn.type = 'button';
     scrollRightBtn.title = 'Scroll tabs right';
     scrollRightBtn.setAttribute('aria-label', 'Scroll tabs right');
-    scrollRightBtn.addEventListener('click', () => { tabBar.scrollBy({ left: 140, behavior: 'smooth' }); });
+    scrollRightBtn.addEventListener('click', () => {
+      tabBar.scrollBy({ left: 140, behavior: 'smooth' });
+    });
 
     const tabBar = el('div', 'study-rail-tabs');
     tabBar.setAttribute('role', 'tablist');
@@ -149,12 +154,16 @@ export class StudyRail {
       tabBar.append(btn);
     }
 
-    tabBar.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        tabBar.scrollLeft += e.deltaY;
-      }
-    }, { passive: false });
+    tabBar.addEventListener(
+      'wheel',
+      e => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          tabBar.scrollLeft += e.deltaY;
+        }
+      },
+      { passive: false },
+    );
 
     tabsWrap.append(scrollLeftBtn, tabBar, scrollRightBtn);
     root.append(tabsWrap);
@@ -198,7 +207,11 @@ export class StudyRail {
     const head = el('div', 'panel-head');
     head.append(
       el('h3', '', 'Course Content'),
-      (() => { const sp = el('span', 'tag', `${this.lessons.length} Lectures`); sp.id = 'lesson-count'; return sp; })(),
+      (() => {
+        const sp = el('span', 'tag', `${this.lessons.length} Lectures`);
+        sp.id = 'lesson-count';
+        return sp;
+      })(),
     );
 
     const searchInput = el('input', 'form-input rail-search-input');
@@ -214,7 +227,11 @@ export class StudyRail {
 
     // Group lessons by section
     const filtered = this.lessonFilter
-      ? this.lessons.filter(l => l.title.toLowerCase().includes(this.lessonFilter) || l.section_title?.toLowerCase().includes(this.lessonFilter))
+      ? this.lessons.filter(
+          l =>
+            l.title.toLowerCase().includes(this.lessonFilter) ||
+            l.section_title?.toLowerCase().includes(this.lessonFilter),
+        )
       : this.lessons;
 
     const sections: Record<string, Lesson[]> = {};
@@ -246,7 +263,7 @@ export class StudyRail {
       details.append(summary);
 
       const ol = el('ol', 'rail-lesson-ol');
-      secLessons.forEach((l) => {
+      secLessons.forEach(l => {
         const li = el('li', 'rail-lesson-li');
         const isActive = this.activeLesson?.id === l.id;
         const isDone = this.learnedLessons.has(l.id);
@@ -297,14 +314,22 @@ export class StudyRail {
     const descBox = el('div', 'brief-desc-box');
     descBox.append(
       el('h4', '', 'Key Concepts & Takeaways'),
-      el('p', '', this.activeLesson.description || 'Deep-dive lecture covering foundational architectural principles, production implementations, and verified patterns from the CourseForge curriculum.'),
+      el(
+        'p',
+        '',
+        this.activeLesson.description ||
+          'Deep-dive lecture covering foundational architectural principles, production implementations, and verified patterns from the CourseForge curriculum.',
+      ),
     );
 
     const actionBox = el('div', 'brief-actions');
     const isCompleted = this.learnedLessons.has(this.activeLesson.id);
     const markBtn = el('button', isCompleted ? 'button' : 'button primary');
-    if (isCompleted) { markBtn.append(svgIcon('check'), ' Completed'); }
-    else { markBtn.textContent = 'Mark as Complete'; }
+    if (isCompleted) {
+      markBtn.append(svgIcon('check'), ' Completed');
+    } else {
+      markBtn.textContent = 'Mark as Complete';
+    }
     markBtn.type = 'button';
     markBtn.addEventListener('click', async () => {
       if (this.activeLesson) {
@@ -333,7 +358,11 @@ export class StudyRail {
     const materials = this.activeLesson?.materials || [];
     if (materials.length === 0) {
       panel.append(
-        el('div', 'empty-materials-card', 'No supplementary download files attached to this specific lecture. Code snippets are demonstrated directly on screen.'),
+        el(
+          'div',
+          'empty-materials-card',
+          'No supplementary download files attached to this specific lecture. Code snippets are demonstrated directly on screen.',
+        ),
       );
       return panel;
     }
@@ -341,10 +370,7 @@ export class StudyRail {
     const list = el('div', 'materials-list');
     for (const m of materials) {
       const card = el('div', 'material-item-card');
-      card.append(
-        el('strong', '', m.title),
-        el('a', 'button quiet', 'Download'),
-      );
+      card.append(el('strong', '', m.title), el('a', 'button quiet', 'Download'));
       const link = card.querySelector('a');
       if (link) {
         link.href = m.download_url;
@@ -440,7 +466,7 @@ export class StudyRail {
     if (!this.quizSubmitted) {
       const submitBtn = el('button', 'button primary', 'Submit Answers');
       submitBtn.type = 'submit';
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', e => {
         e.preventDefault();
         this.quizSubmitted = true;
         this.render();
@@ -449,7 +475,11 @@ export class StudyRail {
     } else {
       const resultBox = el('div', 'quiz-result-box');
       resultBox.append(
-        (() => { const b = el('strong', 'result-badge'); b.append(svgIcon('check-circle'), ' Quiz Mastered!'); return b; })(),
+        (() => {
+          const b = el('strong', 'result-badge');
+          b.append(svgIcon('check-circle'), ' Quiz Mastered!');
+          return b;
+        })(),
         el('p', '', 'Great job! Important retention cards have been scheduled in your Spaced Review deck.'),
       );
       panel.append(resultBox);
@@ -470,10 +500,7 @@ export class StudyRail {
     }
 
     const head = el('div', 'panel-head');
-    head.append(
-      el('h3', '', 'Timestamped Notes'),
-      el('span', 'tag', `${this.notes.length} Notes`),
-    );
+    head.append(el('h3', '', 'Timestamped Notes'), el('span', 'tag', `${this.notes.length} Notes`));
     panel.append(head);
 
     // Form to add note at current timestamp
@@ -489,7 +516,7 @@ export class StudyRail {
     const addBtn = el('button', 'button primary', `Capture Note at ${formatTime(currentSec)}`);
     addBtn.type = 'submit';
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const content = textarea.value.trim();
       if (!content) return;
@@ -513,21 +540,30 @@ export class StudyRail {
     // Fetch notes on first open
     if (!this.notesLoaded) {
       this.notesLoaded = true;
-      void this.options.api.notes(this.activeLesson.id).then(res => {
-        this.notes = res.notes;
-        this.render();
-      }).catch(() => {});
+      void this.options.api
+        .notes(this.activeLesson.id)
+        .then(res => {
+          this.notes = res.notes;
+          this.render();
+        })
+        .catch(() => {});
     }
 
     // List of saved notes
     const notesList = el('div', 'saved-notes-list');
     if (this.notes.length === 0) {
-      notesList.append(el('p', 'muted', 'No notes saved yet for this lesson. Use the box above to capture thoughts with exact video timestamps!'));
+      notesList.append(
+        el(
+          'p',
+          'muted',
+          'No notes saved yet for this lesson. Use the box above to capture thoughts with exact video timestamps!',
+        ),
+      );
     } else {
       for (const n of this.notes) {
         const item = el('div', 'note-card');
         const topRow = el('div', 'note-top');
-        
+
         const seekBtn = el('button', 'note-seek-pill');
         seekBtn.append(svgIcon('clock'), ' ' + formatTime(n.position));
         seekBtn.type = 'button';
@@ -565,46 +601,49 @@ export class StudyRail {
     }
 
     const head = el('div', 'panel-head');
-    head.append(
-      el('h3', '', 'Synchronized Transcript'),
-      el('span', 'tag', 'Interactive'),
-    );
+    head.append(el('h3', '', 'Synchronized Transcript'), el('span', 'tag', 'Interactive'));
     panel.append(head);
 
     // Asynchronously load real transcripts if not loaded
     if (!this.transcriptLoaded) {
       this.transcriptLoaded = true;
       const lessonId = this.activeLesson.id;
-      this.options.api.getLessonTranscripts(lessonId).then(res => {
-        if (this.activeLesson?.id === lessonId && res.chunks && res.chunks.length > 0) {
-          this.transcriptChunks = res.chunks.map(c => ({
-            start: c.start_seconds,
-            end: c.end_seconds,
-            text: c.text,
-          }));
-          this.render();
-        } else if (this.activeLesson?.id === lessonId && this.transcriptChunks.length === 0) {
-          this.populateSyntheticChunks();
-          this.render();
-        }
-      }).catch(() => {
-        if (this.transcriptChunks.length === 0) {
-          this.populateSyntheticChunks();
-          this.render();
-        }
-      });
+      this.options.api
+        .getLessonTranscripts(lessonId)
+        .then(res => {
+          if (this.activeLesson?.id === lessonId && res.chunks && res.chunks.length > 0) {
+            this.transcriptChunks = res.chunks.map(c => ({
+              start: c.start_seconds,
+              end: c.end_seconds,
+              text: c.text,
+            }));
+            this.render();
+          } else if (this.activeLesson?.id === lessonId && this.transcriptChunks.length === 0) {
+            this.populateSyntheticChunks();
+            this.render();
+          }
+        })
+        .catch(() => {
+          if (this.transcriptChunks.length === 0) {
+            this.populateSyntheticChunks();
+            this.render();
+          }
+        });
     }
 
     // Asynchronously load real chapters/splits if not loaded
     if (!this.chaptersLoaded) {
       this.chaptersLoaded = true;
       const lessonId = this.activeLesson.id;
-      this.options.api.getLessonChapters(lessonId).then(res => {
-        if (this.activeLesson?.id === lessonId && res.chapters && res.chapters.length > 0) {
-          this.chapters = res.chapters;
-          this.render();
-        }
-      }).catch(() => {});
+      this.options.api
+        .getLessonChapters(lessonId)
+        .then(res => {
+          if (this.activeLesson?.id === lessonId && res.chapters && res.chapters.length > 0) {
+            this.chapters = res.chapters;
+            this.render();
+          }
+        })
+        .catch(() => {});
     }
 
     // 1. Chapters / Video Splits Section
@@ -613,10 +652,14 @@ export class StudyRail {
       const chapHead = el('div', 'chapters-head');
       chapHead.append(
         el('h4', '', 'AI Video Splits & Key Topics'),
-        el('span', 'tag', `${this.chapters.length} Splits`)
+        el('span', 'tag', `${this.chapters.length} Splits`),
       );
 
-      const classifyBtn = el('button', 'button quiet small-btn', this.classifyingSplit ? 'Classifying…' : 'Re-classify Split');
+      const classifyBtn = el(
+        'button',
+        'button quiet small-btn',
+        this.classifyingSplit ? 'Classifying…' : 'Re-classify Split',
+      );
       classifyBtn.disabled = this.classifyingSplit;
       classifyBtn.addEventListener('click', async () => {
         if (!this.activeLesson) return;
@@ -641,7 +684,11 @@ export class StudyRail {
       for (const chap of this.chapters) {
         const pill = el('div', 'chapter-pill-card');
         const pTop = el('div', 'chapter-pill-top');
-        const pTime = el('button', 'chapter-time-btn', `${formatTime(chap.start_seconds)} - ${formatTime(chap.end_seconds)}`);
+        const pTime = el(
+          'button',
+          'chapter-time-btn',
+          `${formatTime(chap.start_seconds)} - ${formatTime(chap.end_seconds)}`,
+        );
         pTime.type = 'button';
         pTime.title = `Jump to ${chap.title}`;
         pTime.addEventListener('click', () => this.options.seekTo(chap.start_seconds));
@@ -767,7 +814,7 @@ export class StudyRail {
     askBtn.type = 'submit';
     askBtn.disabled = this.tutorBusy;
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const query = textarea.value.trim();
       if (!query || this.tutorBusy) return;
@@ -812,10 +859,7 @@ export class StudyRail {
       const historyList = el('div', 'tutor-history-list');
       for (const h of this.tutorHistory) {
         const item = el('div', 'tutor-history-card');
-        item.append(
-          el('strong', 'tutor-q-heading', `Q: ${h.question}`),
-          el('div', 'tutor-ans-body', h.answer),
-        );
+        item.append(el('strong', 'tutor-q-heading', `Q: ${h.question}`), el('div', 'tutor-ans-body', h.answer));
         if (h.sources.length > 0) {
           const sourcesBox = el('div', 'tutor-sources-box');
           sourcesBox.append(el('span', 'eyebrow', 'LECTURE SOURCES:'));

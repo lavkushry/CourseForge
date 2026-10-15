@@ -3,20 +3,22 @@ package paths
 import (
 	"bytes"
 	"context"
-	"courseforge/backend/internal/identity"
-	"courseforge/backend/internal/jobs"
-	"courseforge/backend/internal/planning"
-	"courseforge/backend/internal/testutil"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/jobs"
+	"courseforge/backend/internal/planning"
+	"courseforge/backend/internal/testutil"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type fixture struct {

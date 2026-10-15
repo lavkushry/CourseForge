@@ -13,11 +13,13 @@ import (
 	"syscall"
 	"time"
 
+	"courseforge/backend/internal/career"
 	"courseforge/backend/internal/jobs"
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/paths"
 	"courseforge/backend/internal/publication"
 	"courseforge/backend/internal/store"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -70,6 +72,16 @@ func run() error {
 	}
 	prefix := hex.EncodeToString(workerID)
 	var wg sync.WaitGroup
+	// Export workers also drain career resume LaTeX compile jobs (tectonic/latexmk)
+	// and poll apply-early careers boards (Greenhouse/Lever/Ashby) for in-app alerts.
+	if resource == "export" {
+		wg.Go(func() {
+			career.RunCompileLoop(ctx, pool, career.CompileLaTeX, time.Second)
+		})
+		wg.Go(func() {
+			career.RunAlertPollLoop(ctx, pool, nil, 15*time.Second)
+		})
+	}
 	for i := 0; i < parallel; i++ {
 		worker := prefix + "-" + strconv.Itoa(i)
 		wg.Go(func() {

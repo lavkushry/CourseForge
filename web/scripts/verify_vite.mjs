@@ -20,7 +20,11 @@ try {
   }
   process.env.COURSEFORGE_API_URL = `http://127.0.0.1:${upstreams[0].address().port}`;
   process.env.COURSEFORGE_MEDIA_URL = `http://127.0.0.1:${upstreams[1].address().port}`;
-  vite = await createServer({ configFile: './vite.config.ts', server: { host: '127.0.0.1', port: 0, hmr: false }, logLevel: 'silent' });
+  vite = await createServer({
+    configFile: './vite.config.ts',
+    server: { host: '127.0.0.1', port: 0, hmr: false },
+    logLevel: 'silent',
+  });
   await vite.listen();
   const origin = `http://127.0.0.1:${vite.httpServer.address().port}`;
   const cases = [
@@ -32,14 +36,25 @@ try {
     ['GET', '/api/v1/certificates/verify/synthetic-certificate', 'api'],
   ];
   for (const [method, path, expected] of cases) {
-    const response = await fetch(origin + path, { method, headers: { Range: 'bytes=0-15', Cookie: 'cf_session=synthetic', 'X-CSRF-Token': 'synthetic-csrf' } });
+    const response = await fetch(origin + path, {
+      method,
+      headers: { Range: 'bytes=0-15', Cookie: 'cf_session=synthetic', 'X-CSRF-Token': 'synthetic-csrf' },
+    });
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('X-Probe-Upstream'), expected);
-    for (const header of ['X-Range-Preserved', 'X-Cookie-Preserved', 'X-Csrf-Preserved']) assert.equal(response.headers.get(header), 'true');
+    for (const header of ['X-Range-Preserved', 'X-Cookie-Preserved', 'X-Csrf-Preserved'])
+      assert.equal(response.headers.get(header), 'true');
     const body = await response.text();
     if (method === 'HEAD') assert.equal(body, '');
   }
-  console.log(JSON.stringify({ status: 'passed', cases: cases.length, scope: 'actual Vite API/media/certificate routing, HEAD and Range/cookie/CSRF forwarding against isolated fixtures' }));
+  console.log(
+    JSON.stringify({
+      status: 'passed',
+      cases: cases.length,
+      scope:
+        'actual Vite API/media/certificate routing, HEAD and Range/cookie/CSRF forwarding against isolated fixtures',
+    }),
+  );
 } finally {
   await vite?.close();
   await Promise.all(upstreams.map(server => new Promise(resolve => server.close(resolve))));

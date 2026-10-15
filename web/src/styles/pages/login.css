@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: center;
   padding: 44px var(--space-6);
-  background: radial-gradient(ellipse at 20% 20%,#432b3720,transparent 50%),var(--bg);
+  background: radial-gradient(ellipse at 20% 20%, #432b3720, transparent 50%), var(--bg);
 }
 
 .login-panel {
@@ -16,7 +16,7 @@
   border: 1px solid #ffffff1d;
   border-radius: 16px;
   padding: 42px;
-  width: min(100%,440px);
+  width: min(100%, 440px);
   margin: auto 0;
   box-shadow: 0 30px 90px #0006;
 }
@@ -32,7 +32,7 @@
 }
 
 #login-form label {
-  font-size: .73rem;
+  font-size: 0.73rem;
   font-weight: 650;
   color: #d4d4da;
 }
@@ -41,20 +41,20 @@
   width: 100%;
   border: 1px solid #ffffff24;
   background: #101116;
-  padding: var(--space-3) 14px;
-  min-height: 48px;
+  padding: 10px 14px;
+  min-height: 44px;
   margin-bottom: var(--space-3);
   color: #fff;
 }
 
-#login-form button {
+#login-form > button[type='submit'] {
   margin-top: var(--space-2);
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .login-footer {
   color: var(--muted);
-  font-size: .72rem;
+  font-size: 0.72rem;
   margin: var(--space-6) 0 0;
 }
 
@@ -71,7 +71,7 @@
   aspect-ratio: 1;
   border: 1px solid #ffa48919;
   border-radius: 40% 60% 55% 45%;
-  background: linear-gradient(135deg,#ff795209,#bf71f309);
+  background: linear-gradient(135deg, #ff795209, #bf71f309);
   transform: rotate(-25deg);
   right: -8%;
   top: 6%;
@@ -109,13 +109,13 @@
   flex: 1;
   padding: 10px var(--space-4);
   border-radius: 9px;
-  font-size: .82rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #a1a3b5;
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all .2s ease;
+  transition: all 0.2s ease;
   text-align: center;
 }
 
@@ -139,22 +139,28 @@
 }
 
 .input-wrap input {
-  margin-bottom: 0;
-  padding-right: 48px;
+  margin-bottom: 0 !important;
+  padding-right: 48px !important;
+  min-height: 44px;
 }
 
 .password-toggle-btn {
   position: absolute;
   right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  min-height: 0;
   background: transparent;
   border: none;
   color: #9a9cb0;
-  font-size: .73rem;
+  font-size: 0.73rem;
   cursor: pointer;
   padding: 6px var(--space-2);
   border-radius: 6px;
   user-select: none;
-  transition: color .15s;
+  transition: color 0.15s;
+  line-height: 1;
 }
 
 .password-toggle-btn:hover {
@@ -165,7 +171,7 @@
 .auth-switch-text {
   margin-top: 18px;
   text-align: center;
-  font-size: .78rem;
+  font-size: 0.78rem;
   color: #9a9cb0;
 }
 
@@ -192,7 +198,7 @@
 }
 
 #register-form label {
-  font-size: .73rem;
+  font-size: 0.73rem;
   font-weight: 650;
   color: #d4d4da;
 }
@@ -201,16 +207,16 @@
   width: 100%;
   border: 1px solid #ffffff24;
   background: #101116;
-  padding: var(--space-3) 14px;
-  min-height: 48px;
+  padding: 10px 14px;
+  min-height: 44px;
   margin-bottom: var(--space-3);
   color: #fff;
   border-radius: 8px;
 }
 
-#register-form button[type="submit"] {
+#register-form > button[type='submit'] {
   margin-top: var(--space-2);
-  min-height: 48px;
+  min-height: 44px;
 }
 
 /* Guest Curriculum Preview on Login Page */
@@ -254,14 +260,16 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
   cursor: pointer;
 }
 
 .guest-card:hover {
   transform: translateY(-5px);
   border-color: #7c3aed;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
 }
 
 .guest-card-body {

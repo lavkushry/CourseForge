@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"courseforge/backend/internal/playback"
+
 	"golang.org/x/sync/singleflight"
 )
 
@@ -34,7 +35,6 @@ type Odysee struct {
 	now          func() time.Time
 	ctx          context.Context
 	cancel       context.CancelFunc
-	wg           sync.WaitGroup
 }
 
 var claimName = regexp.MustCompile(`^[A-Za-z0-9_-]{1,300}$`)
@@ -49,8 +49,8 @@ func NewOdysee(accounts []Account) *Odysee {
 		}
 	}
 	return &Odysee{
-		Accounts:     accounts,
-		byChannel:    byChannel,
+		Accounts:  accounts,
+		byChannel: byChannel,
 		client: &http.Client{
 			Timeout: 12 * time.Second,
 			Transport: &http.Transport{

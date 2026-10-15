@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseAuth, parseClaim, parsePlaybackSession, parsePreferences, parsePulseAck } from '../../src/validation';
-import { acknowledgement, session } from './fixtures';
+import { session } from './fixtures';
 
 describe('server contract validation', () => {
   it('requires account identity and CSRF before opening the authenticated interface', () => {
@@ -15,7 +15,14 @@ describe('server contract validation', () => {
   });
   it('rejects nonsensical credit and ownership acknowledgements', () => {
     const ack = { sequence: 1, position: 10, watched_seconds: 10, coverage: 10, owner: true, completed: false };
-    for (const change of [{ watched_seconds: -1 }, { coverage: 101 }, { position: NaN }, { sequence: Number.MAX_SAFE_INTEGER + 1 }, { completed: 'false' }, { owner: 1 }]) {
+    for (const change of [
+      { watched_seconds: -1 },
+      { coverage: 101 },
+      { position: NaN },
+      { sequence: Number.MAX_SAFE_INTEGER + 1 },
+      { completed: 'false' },
+      { owner: 1 },
+    ]) {
       expect(() => parsePulseAck({ ...ack, ...change })).toThrow();
     }
     expect(parsePulseAck(ack)).toEqual(ack);

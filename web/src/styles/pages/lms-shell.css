@@ -22,7 +22,7 @@
   color: #fff;
 }
 
-.mode-switch-pill[aria-pressed="true"] {
+.mode-switch-pill[aria-pressed='true'] {
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
   border-color: #a78bfa;
   color: #fff;
@@ -234,9 +234,9 @@ body.academy-studio-mode .workspace {
   position: sticky;
   top: 0;
   z-index: 120;
-  height: 68px;
-  min-height: 68px;
-  padding: 0 var(--space-7) 0 18px;
+  height: calc(68px + var(--safe-top));
+  min-height: calc(68px + var(--safe-top));
+  padding: var(--safe-top) var(--space-7) 0 18px;
   background: rgba(13, 13, 13, 0.94);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -244,6 +244,7 @@ body.academy-studio-mode .workspace {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  box-sizing: border-box;
 }
 
 .lms-header-left {
@@ -328,7 +329,12 @@ body.academy-studio-mode .workspace {
     justify-content: space-between;
   }
 
-  .lms-breadcrumb, .lms-header-search, #header-bell-btn, #account-name, .lms-rail-studio-head, .lms-rail-bottom {
+  .lms-breadcrumb,
+  .lms-header-search,
+  #header-bell-btn,
+  #account-name,
+  .lms-rail-studio-head,
+  .lms-rail-bottom {
     display: none;
   }
 
@@ -387,9 +393,12 @@ body.academy-studio-mode .workspace {
     display: none;
   }
 
-  #primary-nav.lms-left-rail .lms-nav-item {
+  #primary-nav.lms-left-rail .lms-nav-item:not([hidden]) {
     flex: 1 1 0;
+    width: auto;
+    max-width: none;
     height: 52px;
+    max-height: none;
     min-width: 0;
     border-radius: 12px;
     background: transparent;
@@ -407,7 +416,7 @@ body.academy-studio-mode .workspace {
     display: none;
   }
 
-  #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current='page'] {
     color: var(--lms-accent);
     background: rgba(229, 69, 3, 0.12);
   }
@@ -442,28 +451,50 @@ body.academy-studio-mode .workspace {
   .mobile-nav-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.45);
     z-index: 940;
   }
 
   body.mobile-menu-open #primary-nav.lms-left-rail {
     height: auto;
-    max-height: 82vh;
+    max-height: 82dvh;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    padding: var(--space-5) 14px 26px;
+    grid-auto-rows: minmax(76px, auto);
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-8) calc(var(--space-4) + env(safe-area-inset-right, 0px))
+      calc(var(--space-4) + env(safe-area-inset-bottom, 0px)) calc(var(--space-4) + env(safe-area-inset-left, 0px));
     background: #141418;
+    backdrop-filter: none;
     border-radius: 24px 24px 0 0;
     border-top: 1px solid rgba(229, 69, 3, 0.45);
-    box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.92);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+    overflow-x: hidden;
     overflow-y: auto;
     z-index: 960;
   }
 
-  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item {
-    height: 72px;
+  /* Drag handle */
+  body.mobile-menu-open #primary-nav.lms-left-rail::before {
+    content: '';
+    position: absolute;
+    top: var(--space-3);
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item:not([hidden]) {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    min-height: 76px;
+    padding: var(--space-3) var(--space-1);
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 16px;
@@ -471,14 +502,20 @@ body.academy-studio-mode .workspace {
     color: #e4e4e7;
   }
 
-  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item[aria-current="page"] {
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-item[aria-current='page'] {
     background: rgba(229, 69, 3, 0.18);
     border-color: var(--lms-accent);
     color: #fff;
   }
 
   body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-label {
-    font-size: 11.5px;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -506,7 +543,9 @@ body.academy-studio-mode .workspace {
   text-decoration: none;
   text-transform: none;
   white-space: nowrap;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 
 .lesson-badge-pill:hover {
@@ -564,7 +603,8 @@ body.academy-studio-mode .workspace {
   flex-shrink: 0;
 }
 
-.lesson-save-status, #save-status {
+.lesson-save-status,
+#save-status {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -577,8 +617,9 @@ body.academy-studio-mode .workspace {
   line-height: 1;
 }
 
-.lesson-save-status::before, #save-status::before {
-  content: "";
+.lesson-save-status::before,
+#save-status::before {
+  content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
@@ -611,11 +652,13 @@ body.academy-studio-mode .workspace {
 /* Fix Academy Studio full-width workspace & hide mobile-more-btn on desktop */
 
 @media (min-width: 1025px) {
-  #primary-nav.lms-left-rail #mobile-more-btn, #primary-nav.lms-left-rail .mobile-more-trigger {
+  #primary-nav.lms-left-rail #mobile-more-btn,
+  #primary-nav.lms-left-rail .mobile-more-trigger {
     display: none;
   }
 
-  .app-layout-shell, body.academy-studio-mode .app-layout-shell {
+  .app-layout-shell,
+  body.academy-studio-mode .app-layout-shell {
     display: block;
     grid-template-columns: none;
     width: 100%;
@@ -671,7 +714,8 @@ body.academy-studio-mode .workspace {
 }
 
 @media (max-width: 640px) {
-  #workspace-mode-toggle, #header-gear-btn {
+  #workspace-mode-toggle,
+  #header-gear-btn {
     display: none;
   }
 }
@@ -698,7 +742,7 @@ body.academy-studio-mode .workspace {
   border-radius: 12px;
   background: transparent;
   border: 1px solid transparent;
-  color: #9A9CA6;
+  color: #9a9ca6;
   font-size: 0.83rem;
   font-weight: 650;
   cursor: pointer;
@@ -760,7 +804,7 @@ body.academy-studio-mode .workspace {
   gap: 10px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #9A9CA6;
+  color: #9a9ca6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -861,7 +905,7 @@ body.academy-studio-mode .workspace {
   display: flex;
   justify-content: space-between;
   font-size: 0.76rem;
-  color: #A1A1AA;
+  color: #a1a1aa;
 }
 
 .quick-student-access-labels strong {
@@ -877,7 +921,7 @@ body.academy-studio-mode .workspace {
 /* Provision / Invite Student Card */
 
 .admin-invite-card {
-  background: linear-gradient(135deg, #1C1918 0%, var(--canvas) 100%);
+  background: linear-gradient(135deg, #1c1918 0%, var(--canvas) 100%);
   border: 1px solid rgba(229, 69, 3, 0.28);
   border-radius: 20px;
   padding: var(--space-5) var(--space-6);
@@ -956,7 +1000,7 @@ body.academy-studio-mode .workspace {
 }
 
 .link-code-box {
-  background: #1A1A1A;
+  background: #1a1a1a;
   padding: var(--space-1) 10px;
   border-radius: 8px;
   color: var(--success);
@@ -1087,7 +1131,8 @@ body.academy-studio-mode .workspace {
 
   /* Magnetic Slide-Up Drawer on Phone */
 
-  .magnetic-macos-drawer, #episode-dialog.magnetic-macos-drawer {
+  .magnetic-macos-drawer,
+  #episode-dialog.magnetic-macos-drawer {
     position: fixed;
     top: auto;
     bottom: 0;
@@ -1223,24 +1268,86 @@ body.academy-studio-mode .workspace {
 
 /* 5. Mobile & Tablet Touch Compliance (@media max-width: 640px) */
 
-@media (max-width: 640px) {
-  /* Touch target standard 44px min-height on mobile */
+@media (max-width: 1024px), (pointer: coarse) {
+  /* Touch target standard 44px min on phone/tablet / coarse pointers */
 
-  .button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn), button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(.theme-choice-btn):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(.mode-switch-pill):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(.admin-tab-btn):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(.note-seek-pill):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(.cinema-button):not(.carousel-nav-btn):not(.tab-scroll-btn), a.button:not([hidden]), .hero-play:not([hidden]), .run-checks-btn:not([hidden]), .tutor-submit-btn:not([hidden]), .review-reveal-btn:not([hidden]), .dialog-actions .button:not([hidden]), #login-form button[type="submit"]:not([hidden]), #register-form button[type="submit"]:not([hidden]), .planning-form > .button:not([hidden]), .weekly-setup-card > button.button:not([hidden]), .habits-card > button.button:not([hidden]), .new-path-btn:not([hidden]), .ai-gen-path-btn:not([hidden]), .paths-sidebar-head .button:not([hidden]), #load-more:not([hidden]), .auth-tab:not([hidden]), .close-drawer-btn:not([hidden]), .sidebar-mode-exit:not([hidden]), .cert-view-btn:not([hidden]), .cert-claim-btn:not([hidden]) {
-    min-height: 44px;
+  .button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(
+      .theme-choice-btn
+    ):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(
+      .mode-switch-pill
+    ):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(
+      .admin-tab-btn
+    ):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(
+      .note-seek-pill
+    ):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(
+      .cinema-button
+    ):not(.carousel-nav-btn):not(.tab-scroll-btn),
+  button.button:not([hidden]):not(.action-pill):not(.filter-pill):not(.mode-pill):not(.tutor-mode-btn):not(
+      .theme-choice-btn
+    ):not(.accent-choice-btn):not(.budget-choice-pill):not(.lms-playlist-pill):not(.study-rail-tab):not(
+      .mode-switch-pill
+    ):not(.mode-seg-btn):not(.suggestion-pill):not(.citation-link):not(.citation-link-card):not(.planning-tab):not(
+      .admin-tab-btn
+    ):not(.source-chip):not(.omni-chip):not(.list-button):not(.popover-chip):not(.sidebar-mode-exit):not(
+      .note-seek-pill
+    ):not(.chapter-time-btn):not(.transcript-seek-btn):not(.sr-only-actionable):not(.lms-circle-icon-btn):not(
+      .cinema-button
+    ):not(.carousel-nav-btn):not(.tab-scroll-btn),
+  a.button:not([hidden]),
+  .hero-play:not([hidden]),
+  .run-checks-btn:not([hidden]),
+  .tutor-submit-btn:not([hidden]),
+  .review-reveal-btn:not([hidden]),
+  .dialog-actions .button:not([hidden]),
+  #login-form button[type='submit']:not([hidden]),
+  #register-form button[type='submit']:not([hidden]),
+  .planning-form > .button:not([hidden]),
+  .weekly-setup-card > button.button:not([hidden]),
+  .habits-card > button.button:not([hidden]),
+  .new-path-btn:not([hidden]),
+  .ai-gen-path-btn:not([hidden]),
+  .paths-sidebar-head .button:not([hidden]),
+  #load-more:not([hidden]),
+  .auth-tab:not([hidden]),
+  .close-drawer-btn:not([hidden]),
+  .sidebar-mode-exit:not([hidden]),
+  .cert-view-btn:not([hidden]),
+  .cert-claim-btn:not([hidden]) {
+    min-height: var(--touch-min);
     padding: 10px var(--space-4);
     font-size: 0.88rem;
   }
 
-  .text-button:not([hidden]) {
-    min-height: 44px;
+  .text-button:not([hidden]),
+  .brand:not([hidden]) {
+    min-height: var(--touch-min);
     font-size: 0.86rem;
   }
 
-  /* Action pills comfortable mobile touch target */
+  /* Action pills / segmented controls: 44px touch target */
 
-  .action-pill:not([hidden]), .filter-pill:not([hidden]), .mode-pill:not([hidden]), .tutor-mode-btn:not([hidden]), .theme-choice-btn:not([hidden]), .accent-choice-btn:not([hidden]), .budget-choice-pill:not([hidden]), .lms-playlist-pill:not([hidden]), .study-rail-tab:not([hidden]), .planning-tab:not([hidden]), .admin-tab-btn:not([hidden]), .mode-switch-pill:not([hidden]), .citation-link:not([hidden]), .citation-link-card:not([hidden]), .source-chip:not([hidden]), .omni-chip:not([hidden]), .popover-chip:not([hidden]), .note-seek-pill:not([hidden]), .chapter-time-btn:not([hidden]), .transcript-seek-btn:not([hidden]) {
-    min-height: 36px;
+  .action-pill:not([hidden]),
+  .filter-pill:not([hidden]),
+  .mode-pill:not([hidden]),
+  .tutor-mode-btn:not([hidden]),
+  .theme-choice-btn:not([hidden]),
+  .accent-choice-btn:not([hidden]),
+  .budget-choice-pill:not([hidden]),
+  .lms-playlist-pill:not([hidden]),
+  .study-rail-tab:not([hidden]),
+  .planning-tab:not([hidden]),
+  .admin-tab-btn:not([hidden]),
+  .mode-switch-pill:not([hidden]),
+  .mode-seg-btn:not([hidden]),
+  .citation-link:not([hidden]),
+  .citation-link-card:not([hidden]),
+  .source-chip:not([hidden]),
+  .omni-chip:not([hidden]),
+  .popover-chip:not([hidden]),
+  .note-seek-pill:not([hidden]),
+  .chapter-time-btn:not([hidden]),
+  .transcript-seek-btn:not([hidden]) {
+    min-height: var(--touch-min);
     padding: 7px 14px;
     font-size: 0.78rem;
   }
@@ -1260,37 +1367,57 @@ body.academy-studio-mode .workspace {
 
   /* Icon buttons mobile touch sizing */
 
-  .lms-circle-icon-btn:not([hidden]), .cinema-button:not([hidden]), .carousel-nav-btn:not([hidden]), .tab-scroll-btn:not([hidden]), .lms-rail-exit-btn:not([hidden]), #rail-mode-expand:not([hidden]), #header-bell-btn:not([hidden]), #header-gear-btn:not([hidden]), #header-settings-btn:not([hidden]), #mobile-search-btn:not([hidden]), .syllabus-close-btn:not([hidden]), .note-del-btn:not([hidden]), #omni-search-clear:not([hidden]) {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    max-width: 40px;
-    max-height: 40px;
+  .lms-circle-icon-btn:not([hidden]),
+  .cinema-button:not([hidden]),
+  .carousel-nav-btn:not([hidden]),
+  .tab-scroll-btn:not([hidden]),
+  .lms-rail-exit-btn:not([hidden]),
+  #rail-mode-expand:not([hidden]),
+  #header-bell-btn:not([hidden]),
+  #header-gear-btn:not([hidden]),
+  #header-settings-btn:not([hidden]),
+  #mobile-search-btn:not([hidden]),
+  .syllabus-close-btn:not([hidden]),
+  .note-del-btn:not([hidden]),
+  #omni-search-clear:not([hidden]),
+  .lms-nav-item:not([hidden]) {
+    width: var(--touch-min);
+    height: var(--touch-min);
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    max-width: var(--touch-min);
+    max-height: var(--touch-min);
   }
 
   /* On mobile header, bell and gear buttons are accessed via 1-tap drawer */
 
-  #header-bell-btn, #header-bell-btn:not([hidden]), #header-gear-btn, #header-gear-btn:not([hidden]), #header-settings-btn, #header-settings-btn:not([hidden]) {
+  #header-bell-btn,
+  #header-bell-btn:not([hidden]),
+  #header-gear-btn,
+  #header-gear-btn:not([hidden]),
+  #header-settings-btn,
+  #header-settings-btn:not([hidden]) {
     display: none;
   }
 
   /* Card footers wrapping on mobile */
 
-  .course-card-footer, .history-card-footer {
+  .course-card-footer,
+  .history-card-footer {
     gap: 10px;
   }
 
-  .course-card-footer .list-button, .course-card-footer .button {
+  .course-card-footer .list-button,
+  .course-card-footer .button {
     min-height: 40px;
     height: 40px;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
   }
 
   .history-card-footer .history-resume-btn {
     min-height: 40px;
     height: 40px;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
   }
 
   /* Library controls stacked cleanly on mobile */
@@ -1300,7 +1427,9 @@ body.academy-studio-mode .workspace {
     gap: var(--space-3);
   }
 
-  .library-search-wrap, .library-status-filters, .library-selects-row {
+  .library-search-wrap,
+  .library-status-filters,
+  .library-selects-row {
     width: 100%;
   }
 
@@ -1328,7 +1457,8 @@ body.academy-studio-mode .workspace {
     min-width: 120px;
   }
 
-  .tutor-ask-footer .tutor-submit-btn, .editor-footer-bar .run-checks-btn {
+  .tutor-ask-footer .tutor-submit-btn,
+  .editor-footer-bar .run-checks-btn {
     width: 100%;
   }
 }
