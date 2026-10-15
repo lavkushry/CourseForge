@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -220,42 +221,59 @@ func (h *HybridResolver) findLocal(source playback.Source) string {
 	return ""
 }
 
+// odyseeRetryDelay is the pause before the single retry of a failed Odysee
+// resolve; it absorbs transient provider/API errors without masking outages.
+const odyseeRetryDelay = 300 * time.Millisecond
+
+// Resolve picks the media source for a lesson: Odysee claim, then a local
+// course file, then the simulator (development only). When none is available
+// it returns ErrProvider so the player shows its retry state; it never
+// substitutes a different video.
 func (h *HybridResolver) Resolve(ctx context.Context, source playback.Source) (Target, error) {
-	// Enrich with manifest if claim missing from DB
 	source = h.findClaim(source)
 
-	// 1. Resolve via Odysee if claim mapped
 	if source.ClaimName != "" && source.ClaimID != "" && h.Odysee != nil {
-		target, err := h.Odysee.Resolve(ctx, source)
-		if err == nil && target.URL != "" {
-			return target, nil
+		for attempt := 1; attempt <= 2; attempt++ {
+			target, err := h.Odysee.Resolve(ctx, source)
+			if err == nil && target.URL != "" {
+				logResolve(source, "odysee", attempt)
+				return target, nil
+			}
+			if attempt == 2 || ctx.Err() != nil {
+				break
+			}
+			select {
+			case <-time.After(odyseeRetryDelay):
+			case <-ctx.Done():
+			}
 		}
 	}
 
-	// 2. Resolve via local video file on disk
 	if localPath := h.findLocal(source); localPath != "" {
+		logResolve(source, "local", 1)
 		return Target{URL: "file://" + localPath}, nil
 	}
 
-	// 3. Fallback to simulator if configured
 	if h.Simulator != nil {
 		target, err := h.Simulator.Resolve(ctx, source)
 		if err == nil && target.URL != "" {
+			logResolve(source, "simulator", 1)
 			return target, nil
 		}
 	}
 
-	// 4. Smart fallback: if lecture video is currently syncing to Odysee, stream educational preview video
-	for _, fallbackFile := range []string{
-		"/tmp/courseforge-rewrite-media/lecture.mp4",
-		"/home/ubuntu/CourseForge/data/lecture.mp4",
-	} {
-		if fi, err := os.Stat(fallbackFile); err == nil && !fi.IsDir() && fi.Size() > 0 {
-			return Target{URL: "file://" + fallbackFile}, nil
-		}
-	}
-
+	logResolve(source, "none", 0)
 	return Target{}, ErrProvider
+}
+
+func logResolve(source playback.Source, chosen string, attempt int) {
+	level := slog.LevelInfo
+	if chosen == "none" {
+		level = slog.LevelWarn
+	}
+	slog.Log(context.Background(), level, "media source resolved",
+		"lesson_id", source.LessonID, "source", chosen, "attempt", attempt,
+		"has_claim", source.ClaimID != "")
 }
 
 // FromEnvironment is shared by embedded development delivery and the standalone
