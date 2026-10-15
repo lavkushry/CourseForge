@@ -188,6 +188,11 @@ func (s *Server) history(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.JSON(w, 200, paginated("history", items, next))
 }
+
+type continueWatchingResponse struct {
+	Items []HistoryItem `json:"items"`
+}
+
 func (s *Server) continueWatching(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
 	items, err := s.historyItems(r.Context(), p, 15, historyCursor{At: time.Now().Add(24 * time.Hour), ID: strings.Repeat("z", 512)}, true)
@@ -198,7 +203,7 @@ func (s *Server) continueWatching(w http.ResponseWriter, r *http.Request) {
 	if len(items) > 15 {
 		items = items[:15]
 	}
-	httpx.JSON(w, 200, map[string]any{"items": items})
+	httpx.JSON(w, 200, continueWatchingResponse{Items: items})
 }
 func (s *Server) historyClear(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
@@ -226,69 +231,93 @@ func (s *Server) historyClear(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.JSON(w, 200, map[string]bool{"ok": true, "cleared": true})
 }
-func (s *Server) trendingItems(ctx context.Context) ([]map[string]any, error) {
+
+// TrendingItem is one ranked lecture in the public trending list.
+type TrendingItem struct {
+	Rank            int     `json:"rank"`
+	LessonID        string  `json:"lesson_id"`
+	Title           string  `json:"title"`
+	CourseID        string  `json:"course_id"`
+	DurationSeconds float64 `json:"duration_seconds"`
+	Viewers         int64   `json:"viewers"`
+}
+
+// TrendingResponse is the GET /streaming/trending body.
+type TrendingResponse struct {
+	Items []TrendingItem `json:"items"`
+}
+
+// HomeFeedRow is one discovery row on the home feed.
+type HomeFeedRow struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Kind  string `json:"kind"`
+	Items any    `json:"items"`
+}
+
+// HomeFeedResponse is the GET /streaming/home-feed body.
+type HomeFeedResponse struct {
+	Hero []CourseCard  `json:"hero"`
+	Rows []HomeFeedRow `json:"rows"`
+}
+
+func (s *Server) trendingItems(ctx context.Context) ([]TrendingItem, error) {
 	rows, err := s.Pool.Query(ctx, `SELECT l.id,l.title,l.course_id,l.duration_seconds,COALESCE(t.viewers,0) FROM lessons l JOIN courses c ON c.id=l.course_id LEFT JOIN(SELECT lesson_id,count(*) viewers FROM playback_totals WHERE updated_at>now()-interval '7 days' AND watched_seconds>0 GROUP BY lesson_id)t ON t.lesson_id=l.id WHERE c.published ORDER BY COALESCE(t.viewers,0) DESC,l.id LIMIT 10`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := make([]map[string]any, 0, 10)
+	items := make([]TrendingItem, 0, 10)
 	for rows.Next() {
-		var id, title, course string
-		var duration float64
-		var viewers int64
-		if err = rows.Scan(&id, &title, &course, &duration, &viewers); err != nil {
+		var v TrendingItem
+		if err = rows.Scan(&v.LessonID, &v.Title, &v.CourseID, &v.DurationSeconds, &v.Viewers); err != nil {
 			return nil, err
 		}
-		items = append(items, map[string]any{"rank": len(items) + 1, "lesson_id": id, "title": title, "course_id": course, "duration_seconds": duration, "viewers": viewers})
+		v.Rank = len(items) + 1
+		items = append(items, v)
 	}
 	return items, rows.Err()
 }
+
 func (s *Server) trending(w http.ResponseWriter, r *http.Request) {
-	items, err := s.trendingItems(r.Context())
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	httpx.JSON(w, 200, map[string]any{"items": items})
+	key := "catalog/public/trending/" + cacheQueryKey(r)
+	s.serveCachedJSON(w, r, key, true, func(ctx context.Context) (any, error) {
+		items, err := s.trendingItems(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return TrendingResponse{Items: items}, nil
+	})
 }
-func (s *Server) homeFeed(w http.ResponseWriter, r *http.Request) {
-	p, ok := s.optionalPrincipal(w, r)
-	if !ok {
-		return
-	}
-	rows, err := s.Pool.Query(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE c.published ORDER BY c.id LIMIT 30", p.UserID)
+
+func (s *Server) buildHomeFeed(ctx context.Context, p identity.Principal) (HomeFeedResponse, error) {
+	rows, err := s.Pool.Query(ctx, "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE c.published ORDER BY c.id LIMIT 30", p.UserID)
 	if err != nil {
-		s.databaseError(w, err)
-		return
+		return HomeFeedResponse{}, err
 	}
 	courses := make([]CourseCard, 0, 30)
 	for rows.Next() {
 		var c CourseCard
 		if err = scanCard(rows, &c); err != nil {
 			rows.Close()
-			s.databaseError(w, err)
-			return
+			return HomeFeedResponse{}, err
 		}
 		courses = append(courses, c)
 	}
 	err = rows.Err()
 	rows.Close()
 	if err != nil {
-		s.databaseError(w, err)
-		return
+		return HomeFeedResponse{}, err
 	}
-	trending, err := s.trendingItems(r.Context())
+	trending, err := s.trendingItems(ctx)
 	if err != nil {
-		s.databaseError(w, err)
-		return
+		return HomeFeedResponse{}, err
 	}
 	continued := make([]HistoryItem, 0)
 	if p.UserID != "" && p.Verified {
-		continued, err = s.historyItems(r.Context(), p, 15, historyCursor{At: time.Now().Add(24 * time.Hour), ID: strings.Repeat("z", 512)}, true)
+		continued, err = s.historyItems(ctx, p, 15, historyCursor{At: time.Now().Add(24 * time.Hour), ID: strings.Repeat("z", 512)}, true)
 		if err != nil {
-			s.databaseError(w, err)
-			return
+			return HomeFeedResponse{}, err
 		}
 		if len(continued) > 15 {
 			continued = continued[:15]
@@ -298,8 +327,35 @@ func (s *Server) homeFeed(w http.ResponseWriter, r *http.Request) {
 	if len(hero) > 3 {
 		hero = hero[:3]
 	}
-	feed := []map[string]any{{"id": "continue-watching", "title": "Continue Watching", "kind": "lecture_card", "items": continued}, {"id": "trending-top-10", "title": "Top 10 This Week", "kind": "rank_card", "items": trending}, {"id": "featured-titles", "title": "Featured Titles", "kind": "course_card", "items": courses}}
-	httpx.JSON(w, 200, map[string]any{"hero": hero, "rows": feed})
+	return HomeFeedResponse{
+		Hero: hero,
+		Rows: []HomeFeedRow{
+			{ID: "continue-watching", Title: "Continue Watching", Kind: "lecture_card", Items: continued},
+			{ID: "trending-top-10", Title: "Top 10 This Week", Kind: "rank_card", Items: trending},
+			{ID: "featured-titles", Title: "Featured Titles", Kind: "course_card", Items: courses},
+		},
+	}, nil
+}
+
+func (s *Server) homeFeed(w http.ResponseWriter, r *http.Request) {
+	p, ok := s.optionalPrincipal(w, r)
+	if !ok {
+		return
+	}
+	// Only the anonymous/public variant is cacheable; authenticated feeds are personalized.
+	if p.UserID == "" {
+		key := "catalog/public/home-feed/" + cacheQueryKey(r)
+		s.serveCachedJSON(w, r, key, true, func(ctx context.Context) (any, error) {
+			return s.buildHomeFeed(ctx, p)
+		})
+		return
+	}
+	feed, err := s.buildHomeFeed(r.Context(), p)
+	if err != nil {
+		s.databaseError(w, err)
+		return
+	}
+	httpx.JSON(w, 200, feed)
 }
 func (s *Server) analyticsEvent(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())

@@ -54,6 +54,21 @@ func (s *Server) optionalPrincipal(w http.ResponseWriter, r *http.Request) (iden
 	}
 	return p, true
 }
+
+// PublicCoursesPage is the paginated anonymous/authenticated public catalog list.
+type PublicCoursesPage struct {
+	Courses    []CourseCard `json:"courses"`
+	Items      []CourseCard `json:"items"`
+	NextCursor string       `json:"next_cursor"`
+}
+
+// PublicCourseDetail is the public course preview payload.
+type PublicCourseDetail struct {
+	Course     CourseCard `json:"course"`
+	Lessons    []Lesson   `json:"lessons"`
+	NextCursor string     `json:"next_cursor"`
+}
+
 func (s *Server) publicCourses(w http.ResponseWriter, r *http.Request) {
 	p, ok := s.optionalPrincipal(w, r)
 	if !ok {
@@ -68,42 +83,32 @@ func (s *Server) publicCourses(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, 400, "invalid_search", "Search is too long")
 		return
 	}
+	anon := p.UserID == ""
 	cacheKey := fmt.Sprintf("catalog/public/list/%s/%d/%s/%s", p.UserID, limit, cursor, q)
-	if cached, hit := s.cacheGet(r, cacheKey); hit {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Cache", "HIT")
-		w.WriteHeader(200)
-		_, _ = w.Write(cached)
-		return
-	}
-	rows, err := s.Pool.Query(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+` WHERE c.published AND c.id>$2 AND ($3='' OR POSITION(lower($3) IN lower(c.id||' '||c.title||' '||c.category||' '||c.instructor||' '||array_to_string(c.tags,' ')))>0) ORDER BY c.id LIMIT $4`, p.UserID, cursor, q, limit+1)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	defer rows.Close()
-	items := make([]CourseCard, 0, limit+1)
-	for rows.Next() {
-		var c CourseCard
-		if err = scanCard(rows, &c); err != nil {
-			s.databaseError(w, err)
-			return
+	s.serveCachedJSON(w, r, cacheKey, anon, func(ctx context.Context) (any, error) {
+		rows, err := s.Pool.Query(ctx, "SELECT "+cardColumns+" FROM courses c "+cardJoin+` WHERE c.published AND c.id>$2 AND ($3='' OR POSITION(lower($3) IN lower(c.id||' '||c.title||' '||c.category||' '||c.instructor||' '||array_to_string(c.tags,' ')))>0) ORDER BY c.id LIMIT $4`, p.UserID, cursor, q, limit+1)
+		if err != nil {
+			return nil, err
 		}
-		items = append(items, c)
-	}
-	if err = rows.Err(); err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	next := ""
-	if len(items) > limit {
-		items = items[:limit]
-		next = nextCursor(items[len(items)-1].ID)
-	}
-	payload := paginated("courses", items, next)
-	s.cacheSet(r, cacheKey, payload)
-	httpx.JSON(w, 200, payload)
+		defer rows.Close()
+		items := make([]CourseCard, 0, limit+1)
+		for rows.Next() {
+			var c CourseCard
+			if err = scanCard(rows, &c); err != nil {
+				return nil, err
+			}
+			items = append(items, c)
+		}
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+		next := ""
+		if len(items) > limit {
+			items = items[:limit]
+			next = nextCursor(items[len(items)-1].ID)
+		}
+		return PublicCoursesPage{Courses: items, Items: items, NextCursor: next}, nil
+	})
 }
 func (s *Server) publicCourse(w http.ResponseWriter, r *http.Request) {
 	p, ok := s.optionalPrincipal(w, r)
@@ -115,57 +120,46 @@ func (s *Server) publicCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.PathValue("id")
+	anon := p.UserID == ""
 	cacheKey := fmt.Sprintf("catalog/public/detail/%s/%s/%d/%s", p.UserID, id, limit, cursor)
-	if cached, hit := s.cacheGet(r, cacheKey); hit {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Cache", "HIT")
-		w.WriteHeader(200)
-		_, _ = w.Write(cached)
-		return
-	}
-	var card CourseCard
-	err := scanCard(s.Pool.QueryRow(r.Context(), "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE (c.id=$2 OR c.slug=$2) AND c.published", p.UserID, id), &card)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
 	mark := lessonCursor{Flow: -1, Order: math.MinInt32}
 	if cursor != "" {
-		if err = json.Unmarshal([]byte(cursor), &mark); err != nil {
+		if err := json.Unmarshal([]byte(cursor), &mark); err != nil {
 			httpx.Error(w, 400, "invalid_cursor", "Invalid lesson cursor")
 			return
 		}
 	}
-	rows, err := s.Pool.Query(r.Context(), "SELECT id,course_id,title,sort_order,duration_seconds,section_title,flow_order FROM lessons WHERE course_id=$1 AND (flow_order,sort_order,id)>($2,$3,$4) ORDER BY flow_order,sort_order,id LIMIT $5", card.ID, mark.Flow, mark.Order, mark.ID, limit+1)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	defer rows.Close()
-	items := make([]Lesson, 0, limit+1)
-	for rows.Next() {
-		var l Lesson
-		if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder); err != nil {
-			s.databaseError(w, err)
-			return
+	s.serveCachedJSON(w, r, cacheKey, anon, func(ctx context.Context) (any, error) {
+		var card CourseCard
+		err := scanCard(s.Pool.QueryRow(ctx, "SELECT "+cardColumns+" FROM courses c "+cardJoin+" WHERE (c.id=$2 OR c.slug=$2) AND c.published", p.UserID, id), &card)
+		if err != nil {
+			return nil, err
 		}
-		items = append(items, l)
-	}
-	if err = rows.Err(); err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	next := ""
-	if len(items) > limit {
-		items = items[:limit]
-		last := items[len(items)-1]
-		b, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
-		next = nextCursor(string(b))
-	}
-	payload := map[string]any{"course": card, "lessons": items, "next_cursor": next}
-	s.cacheSet(r, cacheKey, payload)
-	httpx.JSON(w, 200, payload)
+		rows, err := s.Pool.Query(ctx, "SELECT id,course_id,title,sort_order,duration_seconds,section_title,flow_order FROM lessons WHERE course_id=$1 AND (flow_order,sort_order,id)>($2,$3,$4) ORDER BY flow_order,sort_order,id LIMIT $5", card.ID, mark.Flow, mark.Order, mark.ID, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		items := make([]Lesson, 0, limit+1)
+		for rows.Next() {
+			var l Lesson
+			if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder); err != nil {
+				return nil, err
+			}
+			items = append(items, l)
+		}
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+		next := ""
+		if len(items) > limit {
+			items = items[:limit]
+			last := items[len(items)-1]
+			b, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
+			next = nextCursor(string(b))
+		}
+		return PublicCourseDetail{Course: card, Lessons: items, NextCursor: next}, nil
+	})
 }
 func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request) (identity.Principal, bool) {
 	p, _ := identity.FromContext(r.Context())

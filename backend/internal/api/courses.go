@@ -22,6 +22,19 @@ func (s *Server) RegisterCourseRoutes(mux *http.ServeMux) {
 	}
 }
 
+type privateCoursesPage struct {
+	Courses    []Course `json:"courses"`
+	Items      []Course `json:"items"`
+	NextCursor string   `json:"next_cursor"`
+}
+
+type privateCourseDetail struct {
+	Course         Course   `json:"course"`
+	Lessons        []Lesson `json:"lessons"`
+	NextCursor     string   `json:"next_cursor"`
+	ResumeLessonID string   `json:"resume_lesson_id"`
+}
+
 func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
 	limit, cursor, ok := pageArgs(w, r)
@@ -34,41 +47,30 @@ func (s *Server) courses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cacheKey := "catalog/courses/list/" + p.UserID + "/" + p.Role + "/" + strconv.Itoa(limit) + "/" + cursor + "/" + search
-	if cached, hit := s.cacheGet(r, cacheKey); hit {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Cache", "HIT")
-		w.WriteHeader(200)
-		_, _ = w.Write(cached)
-		return
-	}
-	rows, err := s.Pool.Query(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE ($2='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id))) AND c.id>$3 AND ($4='' OR c.title ILIKE '%' || $4 || '%' ESCAPE '') ORDER BY c.id LIMIT $5`, p.UserID, p.Role, cursor, search, limit+1)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	defer rows.Close()
-	items := make([]Course, 0, limit+1)
-	for rows.Next() {
-		var c Course
-		if err = rows.Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug); err != nil {
-			s.databaseError(w, err)
-			return
+	s.serveCachedJSON(w, r, cacheKey, false, func(ctx context.Context) (any, error) {
+		rows, err := s.Pool.Query(ctx, `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE ($2='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id))) AND c.id>$3 AND ($4='' OR c.title ILIKE '%' || $4 || '%' ESCAPE '') ORDER BY c.id LIMIT $5`, p.UserID, p.Role, cursor, search, limit+1)
+		if err != nil {
+			return nil, err
 		}
-		items = append(items, c)
-	}
-	if err = rows.Err(); err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	next := ""
-	if len(items) > limit {
-		items = items[:limit]
-		next = nextCursor(items[len(items)-1].ID)
-	}
-	payload := paginated("courses", items, next)
-	s.cacheSet(r, cacheKey, payload)
-	httpx.JSON(w, 200, payload)
+		defer rows.Close()
+		items := make([]Course, 0, limit+1)
+		for rows.Next() {
+			var c Course
+			if err = rows.Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug); err != nil {
+				return nil, err
+			}
+			items = append(items, c)
+		}
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+		next := ""
+		if len(items) > limit {
+			items = items[:limit]
+			next = nextCursor(items[len(items)-1].ID)
+		}
+		return privateCoursesPage{Courses: items, Items: items, NextCursor: next}, nil
+	})
 }
 func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
@@ -78,64 +80,55 @@ func (s *Server) course(w http.ResponseWriter, r *http.Request) {
 	}
 	id := r.PathValue("id")
 	cacheKey := "catalog/courses/detail/" + p.UserID + "/" + p.Role + "/" + id + "/" + strconv.Itoa(limit) + "/" + cursor
-	if cached, hit := s.cacheGet(r, cacheKey); hit {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Cache", "HIT")
-		w.WriteHeader(200)
-		_, _ = w.Write(cached)
-		return
-	}
-	var c Course
-	err := s.Pool.QueryRow(r.Context(), `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))`, p.UserID, id, p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
-	if err != nil {
-		s.databaseError(w, err)
-		return
-	}
-	lessons := make([]Lesson, 0)
-	var resumeLessonID string
-	if c.Enrolled || p.Role == "admin" {
-		_ = s.Pool.QueryRow(r.Context(), `SELECT lesson_id FROM (SELECT lesson_id, watched_at AS last_time FROM watch_history WHERE user_id=$1 AND course_id=$2 UNION ALL SELECT p.lesson_id, p.updated_at AS last_time FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id=$1 AND l.course_id=$2 AND NOT p.completed) recent ORDER BY last_time DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
-		mark := lessonCursor{Flow: -1, Order: math.MinInt32}
-		if cursor != "" {
-			if err := json.Unmarshal([]byte(cursor), &mark); err != nil || len(mark.ID) > 512 {
-				httpx.Error(w, 400, "invalid_cursor", "Invalid lesson cursor")
-				return
-			}
+	if cursor != "" {
+		var mark lessonCursor
+		if err := json.Unmarshal([]byte(cursor), &mark); err != nil || len(mark.ID) > 512 {
+			httpx.Error(w, 400, "invalid_cursor", "Invalid lesson cursor")
+			return
 		}
-		rows, err := s.Pool.Query(r.Context(), "SELECT l.id,l.course_id,l.title,l.sort_order,l.duration_seconds,l.section_title,l.flow_order,COALESCE(pr.completed,false) FROM lessons l LEFT JOIN progress pr ON pr.lesson_id=l.id AND pr.user_id=$1 WHERE l.course_id=$2 AND (l.flow_order,l.sort_order,l.id)>($3,$4,$5) ORDER BY l.flow_order,l.sort_order,l.id LIMIT $6", p.UserID, c.ID, mark.Flow, mark.Order, mark.ID, limit+1)
+	}
+	s.serveCachedJSON(w, r, cacheKey, false, func(ctx context.Context) (any, error) {
+		var c Course
+		err := s.Pool.QueryRow(ctx, `SELECT c.id,c.title,c.description,c.published,EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id),c.version,c.instructor,c.category,c.tags,c.slug FROM courses c WHERE (c.id=$2 OR c.slug=$2) AND ($3='admin' OR (c.published AND EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)))`, p.UserID, id, p.Role).Scan(&c.ID, &c.Title, &c.Description, &c.Published, &c.Enrolled, &c.Version, &c.Instructor, &c.Category, &c.Tags, &c.Slug)
 		if err != nil {
-			s.databaseError(w, err)
-			return
+			return nil, err
 		}
-		defer rows.Close()
-		for rows.Next() {
-			var l Lesson
-			if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder, &l.Completed); err != nil {
-				s.databaseError(w, err)
-				return
+		lessons := make([]Lesson, 0)
+		var resumeLessonID string
+		if c.Enrolled || p.Role == "admin" {
+			_ = s.Pool.QueryRow(ctx, `SELECT lesson_id FROM (SELECT lesson_id, watched_at AS last_time FROM watch_history WHERE user_id=$1 AND course_id=$2 UNION ALL SELECT p.lesson_id, p.updated_at AS last_time FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.user_id=$1 AND l.course_id=$2 AND NOT p.completed) recent ORDER BY last_time DESC LIMIT 1`, p.UserID, c.ID).Scan(&resumeLessonID)
+			mark := lessonCursor{Flow: -1, Order: math.MinInt32}
+			if cursor != "" {
+				if err := json.Unmarshal([]byte(cursor), &mark); err != nil || len(mark.ID) > 512 {
+					return nil, err
+				}
 			}
-			lessons = append(lessons, l)
+			rows, err := s.Pool.Query(ctx, "SELECT l.id,l.course_id,l.title,l.sort_order,l.duration_seconds,l.section_title,l.flow_order,COALESCE(pr.completed,false) FROM lessons l LEFT JOIN progress pr ON pr.lesson_id=l.id AND pr.user_id=$1 WHERE l.course_id=$2 AND (l.flow_order,l.sort_order,l.id)>($3,$4,$5) ORDER BY l.flow_order,l.sort_order,l.id LIMIT $6", p.UserID, c.ID, mark.Flow, mark.Order, mark.ID, limit+1)
+			if err != nil {
+				return nil, err
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var l Lesson
+				if err = rows.Scan(&l.ID, &l.CourseID, &l.Title, &l.SortOrder, &l.Duration, &l.SectionTitle, &l.FlowOrder, &l.Completed); err != nil {
+					return nil, err
+				}
+				lessons = append(lessons, l)
+			}
+			if err = rows.Err(); err != nil {
+				return nil, err
+			}
+			next := ""
+			if len(lessons) > limit {
+				lessons = lessons[:limit]
+				last := lessons[len(lessons)-1]
+				raw, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
+				next = nextCursor(string(raw))
+			}
+			return privateCourseDetail{Course: c, Lessons: lessons, NextCursor: next, ResumeLessonID: resumeLessonID}, nil
 		}
-		if err = rows.Err(); err != nil {
-			s.databaseError(w, err)
-			return
-		}
-		next := ""
-		if len(lessons) > limit {
-			lessons = lessons[:limit]
-			last := lessons[len(lessons)-1]
-			mark, _ := json.Marshal(lessonCursor{Flow: last.FlowOrder, Order: last.SortOrder, ID: last.ID})
-			next = nextCursor(string(mark))
-		}
-		payload := map[string]any{"course": c, "lessons": lessons, "next_cursor": next, "resume_lesson_id": resumeLessonID}
-		s.cacheSet(r, cacheKey, payload)
-		httpx.JSON(w, 200, payload)
-		return
-	}
-	payload := map[string]any{"course": c, "lessons": lessons, "next_cursor": "", "resume_lesson_id": ""}
-	s.cacheSet(r, cacheKey, payload)
-	httpx.JSON(w, 200, payload)
+		return privateCourseDetail{Course: c, Lessons: lessons, NextCursor: "", ResumeLessonID: ""}, nil
+	})
 }
 
 type lessonCursor struct {
