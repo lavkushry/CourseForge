@@ -28,4 +28,4 @@ with sync_playwright() as p:
         page.screenshot(path=f'/home/ubuntu/CourseForge/live_{name}.png')
         context.close()
     browser.close()
-print(CAPTURED ALL)
+print('CAPTURED ALL')
