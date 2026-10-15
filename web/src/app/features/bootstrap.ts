@@ -14,6 +14,7 @@ import { ReviewsView } from '../../reviews/view';
 import { TutorView } from '../../tutor/view';
 import { LabsView } from '../../labs/view';
 import { PathsView } from '../../paths/view';
+import { CareerView } from '../../career/view';
 import { AdminView } from '../../admin/view';
 import { DiscoveryView } from '../../discovery/view';
 import { OmniSearch } from '../../search/omni';
@@ -130,6 +131,11 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.labsView = new LabsView({
       root: required<HTMLElement>('#labs-panel'),
       api: ctx.api,
+    });
+    ctx.careerView = new CareerView({
+      root: required<HTMLElement>('#career-panel'),
+      api: ctx.api,
+      feedback: ctx.feedback,
     });
     ctx.pathsView = new PathsView(
       required<HTMLElement>('#paths-panel'),

@@ -138,11 +138,16 @@ type Session struct {
 
 func (s *Service) loadSession(ctx context.Context, tx pgx.Tx, p identity.Principal, id string, lock bool) (Session, error) {
 	v := Session{}
-	sql := `SELECT l.id,l.slug,l.revision,r.filename,r.content,r.content_hash,l.created_at,l.updated_at FROM lab_sessions l JOIN lab_revisions r ON r.session_id=l.id AND r.revision=l.revision AND r.user_id=l.user_id WHERE l.id=$1 AND l.user_id=$2`
+	// Lock session alone: JOIN ... FOR UPDATE can discard the row after a concurrent revision bump.
+	sql := `SELECT l.id,l.slug,l.revision,l.created_at,l.updated_at FROM lab_sessions l WHERE l.id=$1 AND l.user_id=$2`
 	if lock {
 		sql += " FOR UPDATE OF l"
 	}
-	e := tx.QueryRow(ctx, sql, id, p.UserID).Scan(&v.SessionID, &v.Slug, &v.Revision, &v.Filename, &v.Content, &v.ContentHash, &v.CreatedAt, &v.UpdatedAt)
+	e := tx.QueryRow(ctx, sql, id, p.UserID).Scan(&v.SessionID, &v.Slug, &v.Revision, &v.CreatedAt, &v.UpdatedAt)
+	if e != nil {
+		return v, e
+	}
+	e = tx.QueryRow(ctx, `SELECT filename,content,content_hash FROM lab_revisions WHERE session_id=$1 AND user_id=$2 AND revision=$3`, v.SessionID, p.UserID, v.Revision).Scan(&v.Filename, &v.Content, &v.ContentHash)
 	if e != nil {
 		return v, e
 	}

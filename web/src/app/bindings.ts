@@ -103,6 +103,9 @@ export function installBindings(ctx: AppContext): void {
     on('#nav-paths', () => {
       void ctx.showPaths();
     });
+    on('#nav-career', () => {
+      void ctx.showCareer();
+    });
     on('#nav-settings', () => {
       void ctx.showSettings();
     });
@@ -130,21 +133,38 @@ export function installBindings(ctx: AppContext): void {
     on('#crumb-section', () => {
       void ctx.loadCatalog(false, 'courses');
     });
+    const syncMoreButton = (open: boolean) => {
+      const more = document.querySelector<HTMLElement>('#mobile-more-btn');
+      if (!more) return;
+      more.setAttribute('aria-expanded', String(open));
+      more.setAttribute('aria-label', open ? 'Close menu' : 'More menu options');
+      const label = more.querySelector('.lms-nav-label');
+      if (label) label.textContent = open ? 'Close' : 'Menu';
+    };
     const closeMobileMenu = () => {
       document.body.classList.remove('mobile-menu-open');
       document.querySelector('#mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
       const bd = document.querySelector<HTMLElement>('#mobile-nav-backdrop');
       if (bd) bd.hidden = true;
+      syncMoreButton(false);
     };
     const toggleMobileMenu = () => {
       const open = document.body.classList.toggle('mobile-menu-open');
       document.querySelector('#mobile-menu-toggle')?.setAttribute('aria-expanded', String(open));
       const bd = document.querySelector<HTMLElement>('#mobile-nav-backdrop');
       if (bd) bd.hidden = !open;
+      syncMoreButton(open);
     };
     on('#mobile-menu-toggle', toggleMobileMenu);
     on('#mobile-more-btn', toggleMobileMenu);
     on('#mobile-nav-backdrop', closeMobileMenu);
+    document.addEventListener(
+      'keydown',
+      e => {
+        if (e.key === 'Escape' && document.body.classList.contains('mobile-menu-open')) closeMobileMenu();
+      },
+      { signal },
+    );
     for (const navBtn of document.querySelectorAll<HTMLButtonElement>('#primary-nav [data-catalog-view]')) {
       navBtn.addEventListener('click', closeMobileMenu, { signal });
     }
@@ -386,12 +406,18 @@ export function installBindings(ctx: AppContext): void {
     );
     required<HTMLSelectElement>('#speed').addEventListener(
       'change',
-      event => ctx.preferences?.update({ speed: Number((event.target as HTMLSelectElement).value) }),
+      event =>
+        ctx.preferences?.update({
+          speed: Number((event.target as HTMLSelectElement).value),
+        }),
       { signal },
     );
     required<HTMLInputElement>('#autoplay').addEventListener(
       'change',
-      event => ctx.preferences?.update({ autoplay: (event.target as HTMLInputElement).checked }),
+      event =>
+        ctx.preferences?.update({
+          autoplay: (event.target as HTMLInputElement).checked,
+        }),
       { signal },
     );
     document.addEventListener(

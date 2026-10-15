@@ -15,6 +15,7 @@ import type { PlanningView } from '../planning/view';
 import type { ReviewsView } from '../reviews/view';
 import type { TutorView } from '../tutor/view';
 import type { LabsView } from '../labs/view';
+import type { CareerView } from '../career/view';
 import type { OmniSearch } from '../search/omni';
 import type { PlayerController, PlayerState } from '../player/controller';
 import type { PreferenceStore } from '../player/preferences';
@@ -54,6 +55,7 @@ export type AppContext = {
   reviewsView: ReviewsView | null;
   tutorView: TutorView | null;
   labsView: LabsView | null;
+  careerView: CareerView | null;
   omniSearch: OmniSearch | null;
   lessonCursor: string | null;
   noteCursor: string | null;
@@ -77,6 +79,7 @@ export type AppContext = {
   showTutor(): Promise<void>;
   showLabs(): Promise<void>;
   showPaths(): Promise<void>;
+  showCareer(): Promise<void>;
   showAdmin(): Promise<void>;
   openCourseSyllabus(course: Course): Promise<void>;
   loadCatalog(_append?: boolean, view?: CatalogView): Promise<void>;
@@ -133,6 +136,7 @@ export function createBaseContext(app: HTMLElement): AppContext {
     reviewsView: null,
     tutorView: null,
     labsView: null,
+    careerView: null,
     omniSearch: null,
     lessonCursor: null,
     noteCursor: null,

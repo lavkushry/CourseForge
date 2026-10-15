@@ -5,7 +5,11 @@ import { errorMessage, isAbort } from '../api';
 import { required } from '../components';
 
 export function installRouter(ctx: AppContext): void {
-  ctx.newNavigation = function newNavigation(): { signal: AbortSignal; generation: number; current(): boolean } {
+  ctx.newNavigation = function newNavigation(): {
+    signal: AbortSignal;
+    generation: number;
+    current(): boolean;
+  } {
     ctx.learning?.close();
     ctx.pathsView?.deactivate();
     ctx.adminView?.deactivate();
@@ -14,6 +18,7 @@ export function installRouter(ctx: AppContext): void {
     ctx.reviewsView?.deactivate();
     ctx.tutorView?.deactivate();
     ctx.labsView?.deactivate();
+    ctx.careerView?.deactivate();
     ctx.syllabusDialog?.close();
     ctx.navigationScope.abort();
     ctx.navigationScope = new AbortController();
@@ -35,6 +40,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#reviews-panel').hidden = true;
     required<HTMLElement>('#tutor-panel').hidden = true;
     required<HTMLElement>('#labs-panel').hidden = true;
+    required<HTMLElement>('#career-panel').hidden = true;
     required<HTMLElement>('#settings-panel').hidden = true;
   };
 
@@ -78,6 +84,7 @@ export function installRouter(ctx: AppContext): void {
       tutor: ['Studio', 'AI Study Partner'],
       labs: ['Studio', 'Cloud IDE Labs'],
       paths: ['Studio', 'Learning Roadmaps'],
+      career: ['Studio', 'Career & Resume'],
       settings: ['Studio', 'Studio Settings'],
       admin: ['Studio', 'Command Center'],
     };
@@ -237,6 +244,21 @@ export function installRouter(ctx: AppContext): void {
     await ctx.pathsView?.activate(navigation.signal);
   };
 
+  ctx.showCareer = async function showCareer(): Promise<void> {
+    if (!ctx.user) return;
+    const navigation = ctx.newNavigation();
+    await ctx.controller?.close();
+    if (!navigation.current()) return;
+    ctx.selectedCourse = null;
+    ctx.selectedLesson = null;
+    ctx.lessons = [];
+    ctx.hideAllWorkspaces();
+    required<HTMLElement>('#career-panel').hidden = false;
+    ctx.setActiveNav('career');
+    ctx.feedback('');
+    ctx.careerView?.activate(navigation.signal);
+  };
+
   ctx.showAdmin = async function showAdmin(): Promise<void> {
     if (!ctx.user || ctx.user.role !== 'admin') return;
     const navigation = ctx.newNavigation();
@@ -265,7 +287,9 @@ export function installRouter(ctx: AppContext): void {
     ctx.setActiveNav(view);
     ctx.feedback('');
     void ctx.api
-      .request<{ courses: Course[] }>('/public/courses?limit=100', { signal: navigation.signal })
+      .request<{ courses: Course[] }>('/public/courses?limit=100', {
+        signal: navigation.signal,
+      })
       .then(res => {
         if (res?.courses) ctx.omniSearch?.setCourses(res.courses);
       })
