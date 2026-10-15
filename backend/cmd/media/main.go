@@ -50,7 +50,7 @@ func run() error {
 	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
 		MaxConns:          c.MaxConnections,
 		MinConns:          c.MinConnections,
-		MaxConnLifetime:      c.MaxConnLifetime,
+		MaxConnLifetime:   c.MaxConnLifetime,
 		MaxConnIdleTime:   c.MaxConnIdleTime,
 		HealthCheckPeriod: c.HealthCheckPeriod,
 	})
