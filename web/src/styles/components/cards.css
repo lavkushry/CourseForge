@@ -65,9 +65,9 @@
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 61%;
-  padding: 64px 52px;
 }
+
+/* Width/padding are per-breakpoint: layout.css below 1025px, polish.css above. */
 
 .hero-kicker {
   font-size: 0.6rem;
@@ -476,4 +476,29 @@
 
 .watch-progress::-moz-progress-bar {
   background: var(--accent);
+}
+
+/* Phones: the hero CTA row becomes a 2-column grid with the primary action
+   on its own full-width row, so "Continue course" never overflows its button
+   (it previously flex-shrank below its text width at 320–375px). */
+@media (max-width: 480px) {
+  .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .hero-actions > .button:not([hidden]) {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .hero-actions > .hero-play:not([hidden]) {
+    grid-column: 1 / -1;
+  }
 }
