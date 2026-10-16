@@ -233,19 +233,13 @@ func (h *HybridResolver) Resolve(ctx context.Context, source playback.Source) (T
 	source = h.findClaim(source)
 
 	if source.ClaimName != "" && source.ClaimID != "" && h.Odysee != nil {
-		for attempt := 1; attempt <= 2; attempt++ {
-			target, err := h.Odysee.Resolve(ctx, source)
-			if err == nil && target.URL != "" {
-				logResolve(source, "odysee", attempt)
-				return target, nil
-			}
-			if attempt == 2 || ctx.Err() != nil {
-				break
-			}
-			select {
-			case <-time.After(odyseeRetryDelay):
-			case <-ctx.Done():
-			}
+		target, attempt, err := resolveWithRetry(ctx, h.Odysee, source)
+		if err == nil {
+			logResolve(source, "odysee", attempt)
+			return target, nil
+		}
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return Target{}, ctxErr
 		}
 	}
 
@@ -264,6 +258,31 @@ func (h *HybridResolver) Resolve(ctx context.Context, source playback.Source) (T
 
 	logResolve(source, "none", 0)
 	return Target{}, ErrProvider
+}
+
+// resolveWithRetry calls r once and, on failure, once more after
+// odyseeRetryDelay. It stops immediately when ctx is cancelled.
+func resolveWithRetry(ctx context.Context, r Resolver, source playback.Source) (Target, int, error) {
+	var lastErr error
+	for attempt := 1; attempt <= 2; attempt++ {
+		target, err := r.Resolve(ctx, source)
+		if err == nil && target.URL != "" {
+			return target, attempt, nil
+		}
+		if err == nil {
+			err = ErrProvider
+		}
+		lastErr = err
+		if attempt == 2 {
+			break
+		}
+		select {
+		case <-time.After(odyseeRetryDelay):
+		case <-ctx.Done():
+			return Target{}, attempt, ctx.Err()
+		}
+	}
+	return Target{}, 2, lastErr
 }
 
 func logResolve(source playback.Source, chosen string, attempt int) {
