@@ -397,7 +397,8 @@ body.academy-studio-mode .workspace {
     flex: 1 1 0;
     width: auto;
     max-width: none;
-    height: 52px;
+    height: auto;
+    min-height: 52px;
     max-height: none;
     min-width: 0;
     border-radius: 12px;
@@ -434,15 +435,19 @@ body.academy-studio-mode .workspace {
     height: 18px;
   }
 
+  /* Dock labels: full words always; a two-word label may wrap to a second
+     line on the narrowest phones (320px) rather than being ellipsised. */
   #primary-nav.lms-left-rail .lms-nav-label {
     position: static;
     opacity: 1;
     font-size: 10px;
     font-weight: 600;
     line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: normal;
+    text-overflow: clip;
     max-width: 100%;
   }
 
@@ -716,6 +721,47 @@ body.academy-studio-mode .workspace {
 @media (max-width: 640px) {
   #workspace-mode-toggle,
   #header-gear-btn {
+    display: none;
+  }
+}
+
+/* Phone header: brand side flexes and shrinks, action side keeps its size,
+   so the search button can never be drawn over the wordmark. */
+@media (max-width: 1024px) {
+  .site-header.lms-top-header .lms-header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .site-header.lms-top-header .brand {
+    min-width: 0;
+    gap: var(--space-2);
+  }
+
+  .site-header.lms-top-header .brand-wordmark {
+    min-width: 0;
+    font-size: clamp(14px, 4.2vw, 16px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-header.lms-top-header {
+    padding: 0 var(--space-2);
+  }
+
+  .site-header.lms-top-header .lms-header-left {
+    gap: var(--space-2);
+  }
+
+  .site-header.lms-top-header .account.lms-header-right {
+    gap: var(--space-1);
+  }
+
+  /* Decorative (aria-hidden) avatar; "Sign out" stays visible. */
+  .site-header.lms-top-header .account-avatar {
     display: none;
   }
 }
@@ -1379,8 +1425,7 @@ body.academy-studio-mode .workspace {
   #mobile-search-btn:not([hidden]),
   .syllabus-close-btn:not([hidden]),
   .note-del-btn:not([hidden]),
-  #omni-search-clear:not([hidden]),
-  .lms-nav-item:not([hidden]) {
+  #omni-search-clear:not([hidden]) {
     width: var(--touch-min);
     height: var(--touch-min);
     min-width: var(--touch-min);

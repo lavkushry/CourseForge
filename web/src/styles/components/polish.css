@@ -664,7 +664,6 @@ button.note-del-btn:not([hidden]),
 @media (max-width: 1024px), (pointer: coarse) {
   .lms-circle-icon-btn:not([hidden]),
   button.lms-circle-icon-btn:not([hidden]),
-  .lms-nav-item:not([hidden]),
   .mode-switch-pill:not([hidden]),
   .cinema-button:not([hidden]),
   .tab-scroll-btn:not([hidden]),
@@ -686,6 +685,13 @@ button.note-del-btn:not([hidden]),
   .button:not([hidden]),
   .text-button:not([hidden]),
   .brand:not([hidden]) {
+    min-height: var(--touch-min) !important;
+  }
+
+  /* Navigation items carry a text label, so the touch target is a floor, not
+     a fixed box: a 44px cap is what clipped "Daily Plan" / "Courses". */
+  .lms-nav-item:not([hidden]) {
+    min-width: var(--touch-min) !important;
     min-height: var(--touch-min) !important;
   }
 }
