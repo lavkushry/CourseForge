@@ -35,6 +35,9 @@ export async function probeMedia(
       504: 'The video source took too long to respond. Your saved progress is safe.',
     };
     const retry = Number(response.headers.get('Retry-After'));
+    // A lesson with no configured source is not an outage; say so honestly.
+    if (response.status === 503 && response.headers.get('X-CourseForge-Media') === 'no-source')
+      throw new ApiError("This video isn't available yet. Your saved progress is safe.", 503, 'media_not_ready');
     throw new ApiError(
       messages[response.status] || 'This video could not open. Retry the lesson or return to the course.',
       response.status,

@@ -132,14 +132,7 @@ export class PlayerController {
         onFailure: error => this.failure(current, error),
         clock: this.clock,
       });
-      await this.options.video.load(
-        session.media_url,
-        session.position,
-        session.preferences.speed,
-        lesson.captions ?? [],
-        scope.signal,
-        mediaOptions(session),
-      );
+      await this.loadMedia(current, session, session.position, session.preferences.speed, scope.signal);
       if (!this.isCurrent(current)) return;
       current.loaded = true;
       current.reloading = false;
@@ -396,6 +389,38 @@ export class PlayerController {
     });
   }
 
+  // A 409 playback_conflict from the media gateway means this session's lease
+  // lapsed (page hidden, lease expired) while access is intact. Reclaim it once
+  // without takeover and load again. If another window owns playback, or the
+  // retry conflicts again, the 409 propagates to the existing conflict prompt.
+  private async loadMedia(
+    current: CurrentLesson,
+    session: PlaybackSession,
+    position: number,
+    speed: number,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const load = () =>
+      this.options.video.load(
+        session.media_url,
+        position,
+        speed,
+        current.lesson.captions ?? [],
+        signal,
+        mediaOptions(session),
+      );
+    try {
+      await load();
+    } catch (error) {
+      if (signal.aborted || !(error instanceof ApiError && error.status === 409)) throw error;
+      const claim = await current.ownership.claim(false, signal);
+      if (!claim.owner) throw new ApiError('Playback belongs to another window.', 409, 'playback_conflict');
+      current.sequence = claim.sequence;
+      current.position = claim.position;
+      await load();
+    }
+  }
+
   private async reload(current: CurrentLesson, signal: AbortSignal): Promise<void> {
     if (!this.canPlay(current)) return;
     const session = current.ownership.current;
@@ -404,14 +429,7 @@ export class PlayerController {
     current.reloading = true;
     current.baseline.running = false;
     try {
-      await this.options.video.load(
-        session.media_url,
-        position,
-        this.options.preferences().speed,
-        current.lesson.captions ?? [],
-        signal,
-        mediaOptions(session),
-      );
+      await this.loadMedia(current, session, position, this.options.preferences().speed, signal);
       if (!this.isCurrent(current) || signal.aborted) return;
       current.loaded = true;
       current.reloading = false;

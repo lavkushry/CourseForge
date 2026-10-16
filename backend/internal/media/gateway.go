@@ -4,6 +4,7 @@ package media
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,6 +19,13 @@ import (
 )
 
 var ErrProvider = errors.New("media provider unavailable")
+
+// ErrNoSource means the lesson has no Odysee claim, local file or simulator.
+// It wraps ErrProvider so existing callers keep treating it as unavailable.
+var ErrNoSource = fmt.Errorf("%w: lesson has no media source", ErrProvider)
+
+// MediaStatusHeader distinguishes "not available yet" from a transient 503.
+const MediaStatusHeader = "X-CourseForge-Media"
 
 type Target struct{ URL, Referer string }
 type Resolver interface {
@@ -97,6 +105,29 @@ func (g *Gateway) valid(raw string) bool {
 			strings.HasSuffix(h, ".cdn77.org") || strings.HasSuffix(h, ".cdn77.com") ||
 			h == "spee.ch")
 }
+
+// authFailure maps an AuthorizeMedia error. A lost lease with intact access is
+// 409 playback_conflict (reclaimable); a real denial stays 403.
+func authFailure(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, playback.ErrConflict):
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		_, _ = w.Write([]byte(`{"code":"playback_conflict","error":"Playback lease is not held by this session."}`))
+	case errors.Is(err, playback.ErrDenied):
+		http.Error(w, "Playback access ended.", http.StatusForbidden)
+	default:
+		busy(w)
+	}
+}
+
+// notReady reports a lesson with no configured media source. It is not a
+// transient outage, so it carries no Retry-After.
+func notReady(w http.ResponseWriter) {
+	w.Header().Set(MediaStatusHeader, "no-source")
+	http.Error(w, "This video isn't available yet.", http.StatusServiceUnavailable)
+}
+
 func busy(w http.ResponseWriter) {
 	w.Header().Set("Retry-After", "5")
 	http.Error(w, "Media is temporarily unavailable. Retry shortly.", http.StatusServiceUnavailable)
@@ -111,11 +142,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
 	if err != nil {
-		if errors.Is(err, playback.ErrDenied) {
-			http.Error(w, "Playback access ended.", http.StatusForbidden)
-		} else {
-			busy(w)
-		}
+		authFailure(w, err)
 		return
 	}
 	rangeValue := r.Header.Get("Range")
@@ -179,6 +206,10 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = controller.SetWriteDeadline(time.Time{})
 	}()
 	target, err := g.resolver.Resolve(ctx, source)
+	if errors.Is(err, ErrNoSource) {
+		notReady(w)
+		return
+	}
 	if err != nil || !g.valid(target.URL) {
 		busy(w)
 		return
