@@ -543,8 +543,16 @@ button.note-del-btn:not([hidden]),
 .hero-content {
   position: relative;
   z-index: 3;
-  max-width: 62%;
-  padding: 56px 48px;
+}
+
+/* Desktop hero width only. Below 1025px the responsive rules in layout.css
+   (90% / 100% width, smaller padding) must apply; this rule used to override
+   them at every width, squeezing the hero to 62% on phones. */
+@media (min-width: 1025px) {
+  .hero-content {
+    max-width: 62%;
+    padding: 56px 48px;
+  }
 }
 
 .hero-kicker,

@@ -9,6 +9,7 @@ async function signIn(page: Page) {
   await page.getByLabel('Password', { exact: true }).fill('CourseForgeDemo2026!');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.locator('#catalog')).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('.hero-play').first()).toBeVisible({ timeout: 15_000 });
 }
 
 function overlaps(a: Box, b: Box) {
@@ -17,6 +18,29 @@ function overlaps(a: Box, b: Box) {
 
 async function assertHeaderAndNavFit(page: Page) {
   const viewport = page.viewportSize()!;
+
+  // Home hero CTAs ("Continue course" etc.): text stays inside its button.
+  const ctas = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.hero-actions > .button')]
+      .filter(el => el.getBoundingClientRect().width > 0)
+      .map(el => {
+        const r = el.getBoundingClientRect();
+        return {
+          text: el.textContent?.trim() ?? '',
+          overflow: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1,
+          left: r.left,
+          right: r.right,
+          h: r.height,
+        };
+      }),
+  );
+  expect(ctas.length, 'hero CTAs rendered').toBeGreaterThan(0);
+  for (const cta of ctas) {
+    expect(cta.overflow, `hero CTA text overflows: ${cta.text}`).toBe(false);
+    expect(cta.left, `hero CTA off-screen: ${cta.text}`).toBeGreaterThanOrEqual(-0.5);
+    expect(cta.right, `hero CTA off-screen: ${cta.text}`).toBeLessThanOrEqual(viewport.width + 0.5);
+    if (viewport.width <= 1024) expect(cta.h, `hero CTA touch target: ${cta.text}`).toBeGreaterThanOrEqual(44);
+  }
 
   const labels = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('#primary-nav .lms-nav-item .lms-nav-label')]
