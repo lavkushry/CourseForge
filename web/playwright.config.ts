@@ -27,12 +27,12 @@ export default defineConfig({
     {
       name: 'iphone-14',
       use: { ...devices['iPhone 14'] },
-      testMatch: /(responsive-layout|mobile-menu-sheet)\.spec\.ts/,
+      testMatch: /(responsive-layout|mobile-menu-sheet|header-bottom-nav-fit)\.spec\.ts/,
     },
     {
       name: 'iphone-se',
       use: { ...devices['iPhone SE'], viewport: { width: 375, height: 667 } },
-      testMatch: /mobile-menu-sheet\.spec\.ts/,
+      testMatch: /(mobile-menu-sheet|header-bottom-nav-fit)\.spec\.ts/,
     },
     {
       name: 'ipad-pro-11-portrait',
@@ -40,7 +40,7 @@ export default defineConfig({
         ...devices['iPad Pro 11'],
         viewport: { width: 834, height: 1194 },
       },
-      testMatch: /(responsive-layout|mobile-menu-sheet)\.spec\.ts/,
+      testMatch: /(responsive-layout|mobile-menu-sheet|header-bottom-nav-fit)\.spec\.ts/,
     },
     {
       name: 'ipad-pro-11-landscape',
@@ -48,7 +48,7 @@ export default defineConfig({
         ...devices['iPad Pro 11 landscape'],
         viewport: { width: 1194, height: 834 },
       },
-      testMatch: /responsive-layout\.spec\.ts/,
+      testMatch: /(responsive-layout|header-bottom-nav-fit)\.spec\.ts/,
     },
     {
       name: 'desktop-1366',
@@ -56,7 +56,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1366, height: 768 },
       },
-      testMatch: /responsive-layout\.spec\.ts/,
+      testMatch: /(responsive-layout|header-bottom-nav-fit)\.spec\.ts/,
     },
     {
       name: 'desktop-1920',
@@ -64,7 +64,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
-      testMatch: /responsive-layout\.spec\.ts/,
+      testMatch: /(responsive-layout|header-bottom-nav-fit)\.spec\.ts/,
     },
   ],
   webServer: {
