@@ -7,6 +7,8 @@
 *.p12
 *.pfx
 *.kubeconfig
+# TLS certificates mounted into the web container
+deploy/ssl/
 kubeconfig
 .kube/
 
