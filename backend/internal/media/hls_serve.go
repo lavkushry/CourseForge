@@ -54,7 +54,7 @@ func (g *Gateway) hlsRoot(w http.ResponseWriter, r *http.Request) (root string, 
 	}
 	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
 	if err != nil {
-		http.Error(w, "Playback access ended.", http.StatusForbidden)
+		authFailure(w, err)
 		return "", "", false
 	}
 	loc, has := g.authority.(HLSLocator)

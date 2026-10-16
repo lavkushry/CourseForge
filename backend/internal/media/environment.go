@@ -257,6 +257,9 @@ func (h *HybridResolver) Resolve(ctx context.Context, source playback.Source) (T
 	}
 
 	logResolve(source, "none", 0)
+	if source.ClaimName == "" || source.ClaimID == "" {
+		return Target{}, ErrNoSource
+	}
 	return Target{}, ErrProvider
 }
 
