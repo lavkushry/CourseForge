@@ -48,6 +48,26 @@ def actual_api(tmp_path,monkeypatch):
         yield LocalAdapter(c),vid,c
 
 
+def test_processed_lecture_is_searchable_without_another_tutor_step(actual_api):
+    _harness, vid, client = actual_api
+    detail = client.get('/api/videos/' + vid)
+    assert detail.status_code == 200, detail.text
+    body = detail.json()
+    kinds = {chunk['kind'] for chunk in body['chunks']}
+    assert {'speech', 'concept', 'flashcard', 'checkpoint'} <= kinds
+    assert body['checkpoints'] and body['checkpoints'][0]['prompt']
+    quiz = client.get('/api/videos/' + vid + '/quiz')
+    assert quiz.status_code == 200, quiz.text
+    questions = quiz.json()['questions']
+    assert questions and 'correct_index' not in questions[0]
+    found = client.get('/api/search', params={'q': 'Python functions'})
+    assert found.status_code == 200, found.text
+    assert any('Python' in (moment.get('text') or '') for moment in found.json().get('moments', []))
+    due = client.get('/api/reviews/due')
+    assert due.status_code == 200, due.text
+    assert any(card['video_id'] == vid for card in due.json().get('cards', []))
+
+
 def test_real_media_note_and_focus_lifecycle(actual_api):
     harness,vid,client=actual_api
     assert harness.health()
