@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -99,15 +101,48 @@ func pageArgs(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 }
 func nextCursor(id string) string { return httpx.EncodeCursor(id) }
 
-func (s *Server) cacheGet(ctx context.Context, key string) ([]byte, bool) {
+// cachedBody is a pre-encoded JSON response plus its strong ETag. The ETag is
+// computed once when the body is built, not re-hashed on every cache hit.
+type cachedBody struct {
+	body []byte
+	etag string
+}
+
+// cacheEntryPrefix versions the stored layout: prefix + etag + "\n" + body.
+// Entries without it (older builds, other writers) are treated as misses.
+const cacheEntryPrefix = "cfj1"
+
+func newCachedBody(body []byte) cachedBody { return cachedBody{body: body, etag: etagOf(body)} }
+
+func encodeCacheEntry(c cachedBody) []byte {
+	out := make([]byte, 0, len(cacheEntryPrefix)+len(c.etag)+1+len(c.body))
+	out = append(out, cacheEntryPrefix...)
+	out = append(out, c.etag...)
+	out = append(out, '\n')
+	return append(out, c.body...)
+}
+
+func decodeCacheEntry(b []byte) (cachedBody, bool) {
+	if !bytes.HasPrefix(b, []byte(cacheEntryPrefix)) {
+		return cachedBody{}, false
+	}
+	rest := b[len(cacheEntryPrefix):]
+	i := bytes.IndexByte(rest, '\n')
+	if i <= 0 {
+		return cachedBody{}, false
+	}
+	return cachedBody{etag: string(rest[:i]), body: rest[i+1:]}, true
+}
+
+func (s *Server) cacheGet(ctx context.Context, key string) (cachedBody, bool) {
 	if s.Cache == nil || s.CacheTTL <= 0 || key == "" {
-		return nil, false
+		return cachedBody{}, false
 	}
 	b, ok, err := s.Cache.Get(ctx, key)
 	if err != nil || !ok {
-		return nil, false
+		return cachedBody{}, false
 	}
-	return b, true
+	return decodeCacheEntry(b)
 }
 
 func etagOf(body []byte) string {
@@ -123,53 +158,57 @@ func cacheQueryKey(r *http.Request) string {
 }
 
 // writeJSONBytes serves pre-encoded JSON. Anonymous public catalog/feed responses
-// get ETag + Cache-Control; personalized responses stay no-store.
-func (s *Server) writeJSONBytes(w http.ResponseWriter, r *http.Request, status int, body []byte, public bool, xCache string) {
+// get ETag + Cache-Control; personalized responses stay no-store. An empty etag
+// is computed here; cached bodies pass the one computed at build time.
+func (s *Server) writeJSONBytes(w http.ResponseWriter, r *http.Request, status int, body []byte, etag string, public bool, xCache string) {
+	h := w.Header()
+	if xCache != "" {
+		h.Set("X-Cache", xCache)
+	}
 	if public {
-		etag := etagOf(body)
-		w.Header().Set("ETag", etag)
-		w.Header().Set("Cache-Control", publicCacheControl)
-		// Auth is cookie-based: the anonymous variant must never be reused for a signed-in user.
-		w.Header().Add("Vary", "Cookie")
-		if xCache != "" {
-			w.Header().Set("X-Cache", xCache)
+		if etag == "" {
+			etag = etagOf(body)
 		}
+		h.Set("ETag", etag)
+		h.Set("Cache-Control", publicCacheControl)
+		// Auth is cookie-based: the anonymous variant must never be reused for a signed-in user.
+		h.Add("Vary", "Cookie")
 		if status == http.StatusOK {
 			if inm := r.Header.Get("If-None-Match"); inm != "" && inm == etag {
 				w.WriteHeader(http.StatusNotModified)
 				return
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-		_, _ = w.Write(body)
-		return
+	} else {
+		h.Set("Cache-Control", "no-store")
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	if xCache != "" {
-		w.Header().Set("X-Cache", xCache)
-	}
+	h.Set("Content-Type", "application/json")
+	// A known length lets net/http send the body in one write instead of
+	// chunked framing with extra flushes.
+	h.Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
 }
 
 // cachedJSON returns pre-encoded JSON for key, collapsing concurrent misses with singleflight.
-func (s *Server) cachedJSON(ctx context.Context, key string, build func(context.Context) (any, error)) (body []byte, hit bool, err error) {
-	if b, ok := s.cacheGet(ctx, key); ok {
-		return b, true, nil
+func (s *Server) cachedJSON(ctx context.Context, key string, build func(context.Context) (any, error)) (cachedBody, bool, error) {
+	if c, ok := s.cacheGet(ctx, key); ok {
+		return c, true, nil
 	}
 	if s.Cache == nil || s.CacheTTL <= 0 || key == "" {
 		payload, err := build(ctx)
 		if err != nil {
-			return nil, false, err
+			return cachedBody{}, false, err
 		}
 		b, err := json.Marshal(payload)
-		return b, false, err
+		if err != nil {
+			return cachedBody{}, false, err
+		}
+		return newCachedBody(b), false, nil
 	}
 	v, err, _ := s.flights.Do(key, func() (any, error) {
-		if b, ok := s.cacheGet(ctx, key); ok {
-			return b, nil
+		if c, ok := s.cacheGet(ctx, key); ok {
+			return c, nil
 		}
 		buildCtx := context.WithoutCancel(ctx)
 		payload, err := build(buildCtx)
@@ -180,17 +219,18 @@ func (s *Server) cachedJSON(ctx context.Context, key string, build func(context.
 		if err != nil {
 			return nil, err
 		}
-		_ = s.Cache.Set(buildCtx, key, b, s.CacheTTL)
-		return b, nil
+		c := newCachedBody(b)
+		_ = s.Cache.Set(buildCtx, key, encodeCacheEntry(c), s.CacheTTL)
+		return c, nil
 	})
 	if err != nil {
-		return nil, false, err
+		return cachedBody{}, false, err
 	}
-	return v.([]byte), false, nil
+	return v.(cachedBody), false, nil
 }
 
 func (s *Server) serveCachedJSON(w http.ResponseWriter, r *http.Request, key string, public bool, build func(context.Context) (any, error)) {
-	body, hit, err := s.cachedJSON(r.Context(), key, build)
+	c, hit, err := s.cachedJSON(r.Context(), key, build)
 	if err != nil {
 		s.databaseError(w, err)
 		return
@@ -199,7 +239,7 @@ func (s *Server) serveCachedJSON(w http.ResponseWriter, r *http.Request, key str
 	if hit {
 		xCache = "HIT"
 	}
-	s.writeJSONBytes(w, r, http.StatusOK, body, public, xCache)
+	s.writeJSONBytes(w, r, http.StatusOK, c.body, c.etag, public, xCache)
 }
 
 func (s *Server) invalidateCatalog(r *http.Request) {
