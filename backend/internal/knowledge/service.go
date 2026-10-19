@@ -61,6 +61,7 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/chapters", auth.Require(http.HandlerFunc(s.getChaptersHTTP)))
 	mux.Handle("POST /api/v1/knowledge/lessons/{id}/ask", auth.Require(http.HandlerFunc(s.askHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/concepts", auth.Require(http.HandlerFunc(s.getConceptsHTTP)))
+	mux.Handle("GET /api/v1/knowledge/lessons/{id}/spatial-candidates", auth.Require(http.HandlerFunc(s.getSpatialHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/recall", auth.Require(http.HandlerFunc(s.getRecallHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/summaries", auth.Require(http.HandlerFunc(s.getSummariesHTTP)))
 	mux.Handle("GET /api/v1/knowledge/lessons/{id}/flashcards", auth.Require(http.HandlerFunc(s.getFlashcardsHTTP)))
@@ -77,6 +78,7 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 	mux.Handle("POST /api/v1/knowledge/worker/jobs/{id}/fail", s.requireWorker(s.failHTTP))
 	mux.Handle("PUT /api/v1/knowledge/worker/jobs/{id}/ingest", s.requireWorker(s.ingestHTTP))
 	mux.Handle("PUT /api/v1/knowledge/worker/jobs/{id}/index", s.requireWorker(s.indexHTTP))
+	mux.Handle("PUT /api/v1/knowledge/worker/jobs/{id}/spatial", s.requireWorker(s.spatialHTTP))
 }
 
 func (s *Service) requireWorker(next http.HandlerFunc) http.Handler {

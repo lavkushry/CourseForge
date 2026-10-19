@@ -1,0 +1,85 @@
+{
+  "lesson_id": "fixture-request-path",
+  "note": "Synthetic lecture artifacts shaped like knowledge-worker ingest. No indexed real lecture with transcript, keyframes, OCR, and concepts was on this machine.",
+  "segments": [
+    {"start_ms": 0, "end_ms": 8000, "text": "Welcome back. Today we keep going from the last session."},
+    {"start_ms": 20000, "end_ms": 36000, "text": "The request path consists of an API gateway that flows into auth, then orders, then the queue."},
+    {"start_ms": 60000, "end_ms": 72000, "text": "Run this command to roll the deployment forward."},
+    {"start_ms": 90000, "end_ms": 108000, "text": "Look at the three layers drawn on the slide."},
+    {"start_ms": 130000, "end_ms": 148000, "text": "The data plane sits between the workers and the control plane."}
+  ],
+  "keyframes": [
+    {
+      "id": "kf_welcome",
+      "ordinal": 0,
+      "time_ms": 2000,
+      "path": "keyframes/welcome.jpg",
+      "ocr": {"text": "Welcome\nCourse overview", "tags": ["slide"]}
+    },
+    {
+      "id": "kf_request",
+      "ordinal": 1,
+      "time_ms": 24000,
+      "path": "keyframes/request-path.jpg",
+      "ocr": {"text": "API Gateway\nAuth\nOrders\nQueue", "tags": ["slide"]},
+      "vision_caption": "Architecture diagram of four boxes connected by arrows: API gateway, auth, orders, and a queue."
+    },
+    {
+      "id": "kf_command",
+      "ordinal": 2,
+      "time_ms": 64000,
+      "path": "keyframes/kubectl.jpg",
+      "ocr": {"text": "sudo kubectl apply -f deploy.yaml", "tags": ["command", "code"]}
+    },
+    {
+      "id": "kf_layers",
+      "ordinal": 3,
+      "time_ms": 94000,
+      "path": "keyframes/layers.jpg",
+      "ocr": {"text": "", "tags": []},
+      "vision_caption": "A topology diagram showing presentation, application, and data layers."
+    }
+  ],
+  "concepts": [
+    {
+      "id": "kco_welcome",
+      "ordinal": 0,
+      "title": "Welcome",
+      "summary": "Session introduction",
+      "start_ms": 0,
+      "end_ms": 18000
+    },
+    {
+      "id": "kco_request",
+      "ordinal": 1,
+      "title": "Request path",
+      "summary": "API gateway flows into auth, orders, and the queue",
+      "start_ms": 18000,
+      "end_ms": 55000
+    },
+    {
+      "id": "kco_deploy",
+      "ordinal": 2,
+      "title": "Deploy command",
+      "summary": "Apply the deployment manifest",
+      "start_ms": 55000,
+      "end_ms": 85000
+    },
+    {
+      "id": "kco_layers",
+      "ordinal": 3,
+      "title": "Service layers",
+      "summary": "Presentation, application, and data layers in the topology",
+      "start_ms": 85000,
+      "end_ms": 120000
+    },
+    {
+      "id": "kco_dataplane",
+      "ordinal": 4,
+      "title": "Data plane",
+      "summary": "Workers sit between the control plane",
+      "start_ms": 120000,
+      "end_ms": 150000
+    }
+  ]
+}

@@ -10,7 +10,7 @@ retrieval, cited answers with abstention, and a learning layer (concepts, pause
 Browser (web/src/knowledge)
     │  Ask / chapters / recall / review / hotspots
     ▼
-Go API (backend/internal/knowledge) ── PostgreSQL (migrations 030–032)
+Go API (backend/internal/knowledge) ── PostgreSQL (migrations 030–033)
     │                                      │
     │ hybrid BM25 + dense                  │ knowledge_* tables
     ▼                                      │
@@ -18,7 +18,7 @@ Qdrant collection: courseforge_knowledge ◄─┘
     ▲
     │ index vectors (never other collections)
 Python worker (services/knowledge-worker)
-    ASR → scenes/OCR → chapters → chunks → embeddings
+    ASR → scenes/OCR → chapters → chunks → embeddings → spatial candidates
 ```
 
 | Layer | Path | Role |
@@ -55,7 +55,13 @@ Do not mix worker code into the Go module. Keep Odysee credentials out of browse
 responses and logs. Learner isolation and playback ownership stay on the Go API.
 
 Migrations are additive only (`030_knowledge.sql`, `031_knowledge_retrieval.sql`,
-`032_knowledge_learning.sql`). Career/remediation consumers use the bridge
+`032_knowledge_learning.sql`, `033_knowledge_spatial.sql`). After chapters and
+chunks are stored, the worker ranks spatial-view candidates from those
+artifacts (OCR, optional vision captions, concept graph, transcript). It does
+not render 3D or AR/VR assets. A missing signal is scored as zero and cannot
+fail the job. Read them with `GET /api/v1/knowledge/lessons/{id}/spatial-candidates`
+or, offline, `python -m knowledge_worker.spatial score bundle.json`.
+Career/remediation consumers use the bridge
 documented in `backend/internal/knowledge/CAREER_BRIDGE.md` — do not query
 `knowledge_*` tables from outside the package.
 
