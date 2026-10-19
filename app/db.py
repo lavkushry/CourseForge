@@ -108,6 +108,8 @@ def init_db(path: Path | None = None) -> None:
     ensure_focus_schema(path)
     from .streaming import ensure_schema as ensure_streaming_schema
     ensure_streaming_schema(path)
+    from .learning_object import ensure_schema as ensure_learning_object_schema
+    ensure_learning_object_schema(path)
     from .migrations import migrate
     migrate(path)
 

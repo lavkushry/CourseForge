@@ -743,6 +743,11 @@ async function renderLessonBrief(video){
   }
 }
 
+function armCheckpoints(list){
+  state.lessonCheckpoints=(Array.isArray(list)?list:[]).map(item=>({
+    id:item.id,start:Number(item.start)||0,prompt:item.prompt||'',answer:item.answer||'',concept:item.concept||'',fired:false
+  }));
+}
 async function openVideo(id,at=null){
   const existingMedia=window.CourseForgeNative?.video();
   if(id===state.currentVideoId&&at!==null&&existingMedia&&!existingMedia.error&&existingMedia.readyState>=1&&Number.isFinite(existingMedia.duration)){
@@ -752,7 +757,10 @@ async function openVideo(id,at=null){
   const generation=++openingGeneration,current=()=>generation===openingGeneration;
   window.CourseForgeStudio?.cancelNext();window.CourseForgeNative?.stop();await window.CourseForgePlayerSession?.close();window.CourseForgeAcademy?.stopActivity();
   const cached=state.videos.find(v=>v.id===id);
-  const {video,chunks}=cached?{video:cached,chunks:[]}:await request(`/api/videos/${encodeURIComponent(id)}`);if(!current())return;
+  const loaded=cached?null:await request(`/api/videos/${encodeURIComponent(id)}`);if(!current())return;
+  const video=cached?cached:loaded.video;
+  const chunks=cached?[]:(loaded.chunks||[]);
+  armCheckpoints(cached?[]:loaded.checkpoints);
   state.selectedId=id;state.currentVideoId=id;state.currentCourse=video.course;if(window.CourseForgeAccount){if(!window.CourseForgeAccount.lastLessons)window.CourseForgeAccount.lastLessons={};window.CourseForgeAccount.lastLessons[video.course]=id;}
   updateBreadcrumbs(video.course,lessonTitle(video.title));
   renderLessonMaterials(video);
@@ -801,6 +809,7 @@ async function openVideo(id,at=null){
     if(!current())return;const timeline=$('#timeline');timeline.replaceChildren();
     if(!result.chunks.length)timeline.append(make('p','muted','A transcript is not available for this lesson yet.'));
     for(const chunk of result.chunks){const item=make('button','timeline-btn');item.type='button';item.append(make('span','',prettyTime(chunk.start)),make('div','',chunk.text||''));item.onclick=()=>openVideo(id,chunk.start).catch(error=>toast(error.message,true));timeline.append(item);}
+    armCheckpoints(result.checkpoints);
   }).catch(()=>{});
   try{
     if(!video.cloud_ready){renderFailure('This lesson isn’t ready yet. Choose another lesson to keep learning.');return;}
