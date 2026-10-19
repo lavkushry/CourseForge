@@ -282,6 +282,7 @@ export function installRouter(ctx: AppContext): void {
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
     ctx.lessons = [];
+    if (location.hash.startsWith('#classroom')) history.replaceState(null, '', location.pathname + location.search);
     ctx.hideAllWorkspaces();
     required<HTMLElement>('#catalog').hidden = false;
     ctx.setActiveNav(view);

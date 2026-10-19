@@ -1,0 +1,281 @@
+/* Locked focus workspace: command bar, curriculum drawer, stage, context dock. */
+
+body:has(#classroom.focus-workspace:not([hidden])) {
+  overflow: hidden;
+  height: 100dvh;
+}
+
+body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+  height: calc(100dvh - 64px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+body:has(#classroom.focus-workspace:not([hidden])) .workspace {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+}
+
+.focus-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+
+.focus-workspace .classroom-heading {
+  flex: 0 0 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0 12px;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  background: #101116;
+}
+
+.focus-workspace .classroom-heading-left {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  flex-wrap: nowrap;
+}
+
+.focus-workspace .classroom-heading-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.focus-workspace #episodes {
+  display: none;
+}
+
+.focus-workspace .back-to-courses-btn span {
+  display: none;
+}
+
+.focus-workspace #course-name,
+.focus-workspace #classroom-header-title {
+  display: inline;
+  max-width: 28vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.focus-crumb-sep {
+  color: var(--muted);
+  margin: 0 6px;
+}
+
+.focus-icon-btn {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.focus-icon-btn[aria-pressed='false'] {
+  opacity: 0.55;
+}
+
+.focus-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+}
+
+.focus-progress svg {
+  width: 22px;
+  height: 22px;
+  transform: rotate(-90deg);
+}
+
+.focus-progress-track,
+.focus-progress-value {
+  fill: none;
+  stroke-width: 3;
+}
+
+.focus-progress-track {
+  stroke: #2a2c36;
+}
+
+.focus-progress-value {
+  stroke: #d7a15e;
+  stroke-linecap: round;
+  stroke-dasharray: 94.2;
+  stroke-dashoffset: 94.2;
+}
+
+.focus-progress span {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-workspace .classroom-mode-switch {
+  display: none;
+}
+
+.focus-workspace .classroom-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  grid-template-columns: none;
+}
+
+.focus-workspace .lesson-sidebar.study-rail {
+  order: -1;
+  flex: 0 0 320px;
+  width: 320px;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  position: relative;
+  top: auto;
+  border-radius: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.focus-workspace.drawer-collapsed #study-rail {
+  display: none;
+}
+
+.focus-workspace .lesson-column {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 12px 16px 20px;
+}
+
+.focus-workspace .player-wrap {
+  width: min(100%, 1100px);
+  margin-inline: auto;
+  flex: 0 0 auto;
+}
+
+.focus-drawer-head {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.focus-drawer-title {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.focus-workspace .study-rail-panel,
+.focus-workspace .rail-sections-list {
+  min-height: 0;
+}
+
+.focus-workspace .rail-sections-list {
+  overflow: auto;
+  max-height: calc(100dvh - 180px);
+}
+
+.focus-dock {
+  width: min(100%, 1100px);
+  margin: 12px auto 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #14151d;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.focus-dock-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+}
+
+.focus-dock-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.focus-dock-tab.active {
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.focus-dock-panel {
+  overflow: auto;
+  max-height: 320px;
+  padding: 8px 12px 16px;
+}
+
+.transcript-row.is-current {
+  background: rgba(215, 161, 94, 0.16);
+  border-radius: 8px;
+}
+
+.focus-workspace .lesson-meta-bar {
+  width: min(100%, 1100px);
+  margin-inline: auto;
+}
+
+.focus-workspace details.shortcuts {
+  width: min(100%, 1100px);
+  margin: 8px auto 0;
+}
+
+@media (max-width: 900px) {
+  .focus-workspace .focus-body,
+  .focus-workspace .classroom-grid {
+    position: relative;
+  }
+
+  .focus-workspace .lesson-sidebar.study-rail {
+    position: absolute;
+    z-index: 6;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(320px, 88vw);
+    flex-basis: auto;
+    box-shadow: 12px 0 40px #0008;
+  }
+
+  .focus-workspace .classroom-heading-actions .lms-playlist-pill span {
+    display: none;
+  }
+}

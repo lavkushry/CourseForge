@@ -5,6 +5,7 @@ import { button, el as element, required } from '../components';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
 import { formatTime } from '../player/controller';
 import type { PlayerState } from '../player/controller';
+import { readFocusLink, writeFocusLink } from './focus-link';
 
 export function installClassroom(ctx: AppContext): void {
   ctx.resumeLesson = async function resumeLesson(courseId: string, lessonId: string): Promise<void> {
@@ -155,6 +156,8 @@ export function installClassroom(ctx: AppContext): void {
         }
         if (fill) fill.style.width = `${pct}%`;
       }
+      const headerTitle = document.querySelector<HTMLElement>('#classroom-header-title');
+      if (headerTitle) headerTitle.textContent = cleanLessonTitle(response.lesson.title);
       const moduleBadge = document.querySelector<HTMLElement>('#lesson-module-badge');
       if (moduleBadge) moduleBadge.textContent = formatModuleBadge(response.lesson.section_title);
       const subCourse = document.querySelector<HTMLElement>('#course-name-sub');
@@ -165,7 +168,10 @@ export function installClassroom(ctx: AppContext): void {
       ctx.learning?.open(response.lesson, navigation.signal);
       if (!ctx.learnedLoaded) void ctx.loadLearnedStatus();
       ctx.studyRail?.updateContext(ctx.selectedCourse, ctx.lessons, ctx.selectedLesson, ctx.learnedLessons);
-      await ctx.controller?.open(response.lesson, takeOver);
+      const link = readFocusLink();
+      const start = link && link.lessonId === response.lesson.id && link.t > 0 ? link.t : undefined;
+      await ctx.controller?.open(response.lesson, takeOver, start);
+      if (ctx.selectedCourse) writeFocusLink(ctx.selectedCourse.id, response.lesson.id, start ?? ctx.controller?.position ?? 0);
       const upcoming = ctx.nextLesson();
       if (upcoming) void ctx.prefetchLesson(upcoming.id);
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
@@ -199,6 +205,19 @@ export function installClassroom(ctx: AppContext): void {
 
   ctx.renderLessons = function renderLessons(): void {
     ctx.studyRail?.updateContext(ctx.selectedCourse, ctx.lessons, ctx.selectedLesson, ctx.learnedLessons);
+    const done = ctx.lessons.filter(lesson => ctx.learnedLessons.has(lesson.id)).length;
+    const total = ctx.lessons.length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const progressLabel = document.querySelector('#focus-progress-label');
+    if (progressLabel) progressLabel.textContent = `${pct}%`;
+    const progressHost = document.querySelector('#focus-progress');
+    if (progressHost) progressHost.setAttribute('aria-label', `${pct}% of lessons completed`);
+    const ring = document.querySelector<SVGCircleElement>('#focus-progress-ring');
+    if (ring) {
+      const circumference = 2 * Math.PI * 15;
+      ring.style.strokeDasharray = `${circumference}`;
+      ring.style.strokeDashoffset = `${circumference * (1 - pct / 100)}`;
+    }
     const countEl = document.querySelector('#lesson-count');
     if (countEl) countEl.textContent = `${ctx.lessons.length} ${ctx.lessons.length === 1 ? 'lesson' : 'lessons'}`;
     for (const selector of ['#more-lessons', '#drawer-more-lessons']) {

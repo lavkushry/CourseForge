@@ -3,6 +3,19 @@ import type { Clock, Timer } from './clock';
 
 // Completion credit does not trigger navigation. Only a real ended event can
 // start this countdown, and disabling autoplay cancels it immediately.
+/** True once playback crosses the threshold during continuous play, not after it. */
+export function crossedPlaybackThreshold(
+  previous: number,
+  current: number,
+  duration: number,
+  threshold = 0.98,
+): boolean {
+  if (!(duration > 0) || !Number.isFinite(previous) || !Number.isFinite(current)) return false;
+  const before = previous / duration;
+  const after = current / duration;
+  return before < threshold && after >= threshold && after < 1;
+}
+
 export class EndNavigation {
   private timer: Timer | undefined;
   private generation = 0;
