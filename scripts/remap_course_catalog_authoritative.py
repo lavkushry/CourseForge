@@ -43,6 +43,10 @@ COURSE_CLAIM_PREFIXES = {
     "Advanced Agentic AI And Gen AI By Prudhvi Sir Nareshit 2026": ["agentic-genai-"],
     "Arpit Bhaiyani - System Design Course": ["arpit-bhayani-sd-"],
     "Azure Data Bricks by Sameer Sir Durgasoft": ["sameer-azure-", "sameer-azure-databricks-", "adb-sameer-"],
+    "Azure Data Engineering 2026 (Bhaskar Jogi)": ["bhaskar-jogi-azure-"],
+    "DevOps with Multi-Cloud & AI (Veerababu)": ["veerababu-devops-"],
+    "Namaste Node.js": ["namaste-nodejs-"],
+    "NeetCode System Design Course": ["neetcode-sd-"],
     "Codebasics Data Engineering Bootcamp 1.0": ["codebasics-de-"],
     "Daksh 3 ssc cgl 2025": ["daksh-ssc-cgl-"],
     "Grow Data Skills Complete Data Engineering With Azure": ["grow-data-skills-azure-"],
@@ -960,9 +964,7 @@ DELETE FROM notes WHERE lesson_id IN (
 DELETE FROM transcript_chunks WHERE lesson_id IN (
     SELECT id FROM lessons WHERE course_id = {escape_sql(ckey)} AND id NOT IN ({valid_ids_sql})
 );
-DELETE FROM lesson_chapters WHERE lesson_id IN (
-    SELECT id FROM lessons WHERE course_id = {escape_sql(ckey)} AND id NOT IN ({valid_ids_sql})
-);
+
 DELETE FROM lessons WHERE course_id = {escape_sql(ckey)} AND id NOT IN ({valid_ids_sql});
 """)
 
