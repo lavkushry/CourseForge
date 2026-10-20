@@ -46,7 +46,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       getCurrentPosition: () => ctx.controller?.position ?? 0,
       seekTo: sec => ctx.controller?.seek(sec),
       onPlayLesson: lesson => {
-        void ctx.loadLesson(lesson, true, true);
+        void ctx.loadLesson(lesson, true, false);
       },
       onMarkComplete: async lessonId => {
         await ctx.markComplete(lessonId);

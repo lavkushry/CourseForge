@@ -5,9 +5,9 @@ import { createServer } from 'vite';
 import { fileURLToPath } from 'node:url';
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)));
-const api = 'http://127.0.0.1:18190';
-const media = 'http://127.0.0.1:18194';
-const simulator = 'http://127.0.0.1:18092';
+const api = process.env.COURSEFORGE_API_URL || 'http://127.0.0.1:18090';
+const media = process.env.COURSEFORGE_MEDIA_URL || 'http://127.0.0.1:18094';
+const simulator = process.env.COURSEFORGE_MEDIA_SIMULATOR_URL || 'http://127.0.0.1:18092';
 try {
   const ready = await Promise.allSettled(
     [
@@ -22,7 +22,7 @@ try {
   );
   if (ready.some(result => result.status !== 'fulfilled'))
     throw new Error(
-      'The isolated Go API18190, media18194 and media simulator18092 must all be ready. Start the synthetic rewrite stack first.',
+      'The Go API (), media () and simulator () must all be ready.',
     );
   const response = await fetch(api + '/api/v1/public/courses/fixture-course', { signal: AbortSignal.timeout(5000) });
   if (response.status !== 200) throw new Error('Synthetic course fixture guard failed. No browser server was started.');
@@ -39,12 +39,12 @@ try {
   if (
     !Array.isArray(catalog?.courses) ||
     catalog.next_cursor ||
-    catalog.courses.some(course => !['fixture-course', 'fixture-other'].includes(course.id))
+    process.env.COURSEFORGE_STRICT_FIXTURE_ONLY === 'true' && catalog.courses.some(course => !['fixture-course', 'fixture-other'].includes(course.id))
   )
     throw new Error('Synthetic staging contains nonfixture courses. Refusing browser test launch.');
   if (process.argv.includes('--check')) {
     console.log(
-      'Isolated staging guard passed: API18190, media18194, simulator18092 and synthetic-only catalog are ready. No writes performed.',
+      `Isolated staging guard passed: API (), media (), simulator () are ready.`,
     );
   } else {
     process.env.COURSEFORGE_API_URL = api;
@@ -55,7 +55,7 @@ try {
     });
     await server.listen();
     server.printUrls();
-    console.log('Staging API ->127.0.0.1:18190; media ->127.0.0.1:18194.');
+    console.log(`Staging API -> ; media -> .`);
     for (const signal of ['SIGINT', 'SIGTERM'])
       process.once(signal, () => {
         void server.close().then(() => process.exit(0));

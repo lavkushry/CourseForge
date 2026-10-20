@@ -143,7 +143,7 @@ def create_claim_and_wait(
         "name": claim_name,
         "title": title,
         "description": f"{title}\nCourse: {course_desc}",
-        "bid": "0.00003",
+        "bid": "0.0001",
         "languages": ["en"],
         "tags": tags,
         "thumbnail_url": thumb_url,
@@ -393,3 +393,20 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def check_claim_exists(claim_name: str) -> dict | None:
+    try:
+        req = urllib.request.Request(
+            "https://api.na-backend.odysee.com/api/v1/proxy?m=claim_search",
+            data=json.dumps({"jsonrpc": "2.0", "method": "claim_search", "params": {"name": claim_name}, "id": int(time.time() * 1000)}).encode(),
+            headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            res = json.loads(resp.read().decode())
+            items = (res.get("result") or {}).get("items") or []
+            if items:
+                return {"claim_id": items[0]["claim_id"], "name": items[0]["name"]}
+    except Exception:
+        pass
+    return None

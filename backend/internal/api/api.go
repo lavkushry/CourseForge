@@ -65,15 +65,22 @@ type Course struct {
 	Tags        []string `json:"tags"`
 	Slug        *string  `json:"slug"`
 }
+type LessonMaterial struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	DownloadURL string `json:"download_url"`
+}
+
 type Lesson struct {
-	ID           string  `json:"id"`
-	CourseID     string  `json:"course_id"`
-	Title        string  `json:"title"`
-	SortOrder    int     `json:"sort_order"`
-	Duration     float64 `json:"duration_seconds"`
-	SectionTitle string  `json:"section_title"`
-	FlowOrder    float64 `json:"flow_order"`
-	Completed    bool    `json:"completed,omitempty"`
+	ID           string           `json:"id"`
+	CourseID     string           `json:"course_id"`
+	Title        string           `json:"title"`
+	SortOrder    int              `json:"sort_order"`
+	Duration     float64          `json:"duration_seconds"`
+	SectionTitle string           `json:"section_title"`
+	FlowOrder    float64          `json:"flow_order"`
+	Completed    bool             `json:"completed,omitempty"`
+	Materials    []LessonMaterial `json:"materials,omitempty"`
 }
 type Progress struct {
 	LessonID          string     `json:"lesson_id"`

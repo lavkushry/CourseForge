@@ -81,12 +81,19 @@ export function toTitleCase(str: string): string {
 }
 
 export function cleanLessonTitle(raw: string): string {
-  if (!raw) return '';
+  if (!raw) return "";
   let t = raw.trim();
-  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s-]+)\]\s*)+/i, '');
-  const modMatch = t.match(
-    /^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s*[-—:]\s*(.+)$/i,
-  );
+  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s-]+)\]\s*)+/i, "");
+  const modMatch =
+    t.match(
+      /^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^\n]+\))?\s*[-—:]\s*(.+)$/i,
+    ) ||
+    t.match(
+      /^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s*[-—:]\s*(.+)$/i,
+    ) ||
+    t.match(
+      /^(?:module|week|milestone|section|part|chapter|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s+([A-Za-z].+)$/i,
+    );
   if (modMatch && modMatch[1] && modMatch[1].trim().length >= 2) {
     t = modMatch[1].trim();
   }
@@ -94,6 +101,7 @@ export function cleanLessonTitle(raw: string): string {
   if (numMatch && numMatch[1] && numMatch[1].trim().length >= 2) {
     t = numMatch[1].trim();
   }
+  t = t.replace(/\s+\d{8}$/, "");
   return t || raw.trim();
 }
 

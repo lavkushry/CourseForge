@@ -370,13 +370,26 @@ export class StudyRail {
     const list = el('div', 'materials-list');
     for (const m of materials) {
       const card = el('div', 'material-item-card');
-      card.append(el('strong', '', m.title), el('a', 'button quiet', 'Download'));
-      const link = card.querySelector('a');
-      if (link) {
-        link.href = m.download_url;
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
-      }
+      const info = el('div', 'material-item-info');
+
+      let pillText = 'RESOURCE';
+      const low = (m.title || '').toLowerCase();
+      if (low.includes('.pdf') || low.includes('notes') || low.includes('cheatsheet')) pillText = 'PDF';
+      else if (low.includes('.ipynb') || low.includes('notebook')) pillText = 'NOTEBOOK';
+      else if (low.includes('.zip') || low.includes('.rar') || low.includes('.tar')) pillText = 'ARCHIVE';
+      else if (low.includes('.sql') || low.includes('.py') || low.includes('code')) pillText = 'CODE';
+      else if (low.includes('.csv') || low.includes('.json') || low.includes('dataset')) pillText = 'DATASET';
+
+      const badge = el('span', 'material-type-pill', pillText);
+      const title = el('div', 'material-item-title', m.title);
+      title.title = m.title;
+      info.append(badge, title);
+
+      const link = el('a', 'material-download-btn', 'Download');
+      link.href = m.download_url;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+      card.append(info, link);
       list.append(card);
     }
 

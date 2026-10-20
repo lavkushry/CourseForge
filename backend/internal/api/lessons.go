@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"courseforge/backend/internal/access"
 	"courseforge/backend/internal/httpx"
@@ -28,6 +29,7 @@ func (s *Server) checkLesson(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return true
 }
+
 func (s *Server) lesson(w http.ResponseWriter, r *http.Request) {
 	if !s.checkLesson(w, r) {
 		return
@@ -38,6 +40,33 @@ func (s *Server) lesson(w http.ResponseWriter, r *http.Request) {
 		s.databaseError(w, err)
 		return
 	}
+
+	mRows, err := s.Pool.Query(r.Context(), `
+		SELECT m.id, m.title
+		FROM materials m
+		WHERE m.course_id = $1
+		  AND NOT m.removed
+		  AND (
+		      m.lesson_id = $2
+		      OR (m.scope = 'section' AND m.section_title = $3)
+		      OR m.scope = 'course'
+		  )
+		ORDER BY m.position, m.id
+	`, l.CourseID, l.ID, l.SectionTitle)
+	if err == nil {
+		defer mRows.Close()
+		for mRows.Next() {
+			var mID, mTitle string
+			if err := mRows.Scan(&mID, &mTitle); err == nil {
+				l.Materials = append(l.Materials, LessonMaterial{
+					ID:          mID,
+					Title:       mTitle,
+					DownloadURL: "/api/v1/materials/" + url.PathEscape(mID) + "/download",
+				})
+			}
+		}
+	}
+
 	p, _ := identity.FromContext(r.Context())
 	v := Progress{LessonID: l.ID}
 	err = s.Pool.QueryRow(r.Context(), "SELECT percent,position,completed,explicit_completed,revision,updated_at FROM progress WHERE user_id=$1 AND lesson_id=$2", p.UserID, l.ID).Scan(&v.Percent, &v.Position, &v.Completed, &v.ExplicitCompleted, &v.Revision, &v.UpdatedAt)

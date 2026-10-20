@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 """
-Automated Odysee Multi-Wallet Autonomous Fuel Daemon (Method 3 + Method 4):
-1. Method 3 (Reward Claimer):
-   - Audits each worker account against Odysee's Rewards API.
-   - Automatically claims all eligible welcome, watch, streaming rewards.
-
-2. Method 4 (Liquidity Rebalancer & Tip Recycler):
-   - Trims channel bids to 0.001 LBC to keep maximum LBC liquid and spendable.
-   - Audits all 5 worker channels for incoming tips/supports via support_list.
-   - Executes support_abandon to unlock tips straight into liquid available spendable balance.
-   - Balances funds across all 5 workers: transfers micro-tips from surplus accounts
-     to low-balance workers, then immediately unlocks them.
+Autonomous Smart Odysee Multi-Wallet Rebalancer & Fuel Daemon:
+- Audits all 7 worker accounts.
+- Trims channel bids to 0.001 LBC to keep maximum LBC liquid and spendable.
+- Automatically claims any eligible API rewards.
+- Unlocks any legacy pending tips/supports via support_abandon.
+- Smart Liquidity Rebalancing: Uses direct on-chain wallet_send to evenly
+  distribute funds across all 7 workers with minimal miner fees (~0.00012 LBC).
 """
-from __future__ import annotations
-
 import json
 import time
 import urllib.parse
@@ -24,6 +18,13 @@ ODYSEE_PROXY = "https://api.na-backend.odysee.com/api/v1/proxy"
 ODYSEE_API = "https://api.odysee.com"
 
 ACCOUNTS = [
+    {
+        "id": 0,
+        "name": "Worker #0 (@lavkushry)",
+        "token": "3Nj7vMUEayo8PLWgYTLMfpbcbtSzVj9f",
+        "channel_id": "29a2037dd2bf5e8d3c5eaee36243368fd8410fba",
+        "wallet_address": "bUm3onjke3sVGWH27GWiguXxF5gh4wj3bv",
+    },
     {
         "id": 1,
         "name": "Worker #1 (@courseforge-vault-3)",
@@ -59,10 +60,17 @@ ACCOUNTS = [
         "channel_id": "0ee459506ea893bd2692a680ffb64780080732d0",
         "wallet_address": "bTn9To86BbkqHKgSvawiP4U8wwuP1rJCs4",
     },
+    {
+        "id": 6,
+        "name": "Worker #6 (@courseforge-vault-6)",
+        "token": "FFR6ckhays2Jj4VUnfAE84TWevBWeT1b",
+        "channel_id": "b724ab1577929a9c337e809848d04870f097a550",
+        "wallet_address": "bPoSFKHAHpFLJKqzFZxYaAoAmu67RRr4VJ",
+    },
 ]
 
 
-def rpc_call(auth_token: str, method: str, params: dict) -> dict:
+def rpc_call(auth_token: str, method: str, params: dict, timeout: int = 25) -> dict:
     req = urllib.request.Request(
         f"{ODYSEE_PROXY}?m={method}",
         data=json.dumps({"jsonrpc": "2.0", "method": method, "params": params, "id": int(time.time() * 1000)}).encode(),
@@ -72,11 +80,11 @@ def rpc_call(auth_token: str, method: str, params: dict) -> dict:
             "User-Agent": "Mozilla/5.0",
         },
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode())
 
 
-def api_post(endpoint: str, data: dict) -> dict:
+def api_post(endpoint: str, data: dict, timeout: int = 20) -> dict:
     encoded = urllib.parse.urlencode(data).encode()
     req = urllib.request.Request(
         f"{ODYSEE_API}/{endpoint.lstrip('/')}",
@@ -86,7 +94,7 @@ def api_post(endpoint: str, data: dict) -> dict:
             "User-Agent": "Mozilla/5.0",
         },
     )
-    with urllib.request.urlopen(req, timeout=20) as resp:
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode())
 
 
@@ -119,7 +127,7 @@ def trim_channel_bids(acc: dict):
 
 
 def harvest_rewards(acc: dict) -> float:
-    """Method 3: Automatically claim any pending/available rewards on Odysee API."""
+    """Automatically claim any pending/available rewards on Odysee API."""
     token = acc["token"]
     addr = acc["wallet_address"]
     name = acc["name"]
@@ -147,21 +155,21 @@ def harvest_rewards(acc: dict) -> float:
                         amt = float(c_res.get("data", {}).get("reward_amount", 0.0))
                         txid = (c_res.get("data", {}).get("transaction_id") or "")[:10]
                         claimed_total += amt
-                        print(f"  🎁 [{name}] Method 3 Reward Claimed: '{r_title}' -> +{amt:.4f} LBC (tx: {txid}...)")
+                        print(f"  🎁 [{name}] Reward Claimed: '{r_title}' -> +{amt:.4f} LBC (tx: {txid}...)")
                 except Exception:
                     pass
-    except Exception as e:
-        print(f"  ⚠️ [{name}] Method 3 reward audit note: {e}")
+    except Exception:
+        pass
 
     return claimed_total
 
 
 def unlock_all_tips(acc: dict) -> float:
-    """Method 4: Check if account has any tips in support_list and abandon them to available balance."""
+    """Check if account has any tips in support_list and abandon them to available balance."""
     token = acc["token"]
     unlocked = 0.0
     try:
-        res = rpc_call(token, "support_list", {})
+        res = rpc_call(token, "support_list", {}, timeout=30)
         items = (res.get("result") or {}).get("items") or []
         for it in items:
             txid = it.get("txid")
@@ -172,6 +180,7 @@ def unlock_all_tips(acc: dict) -> float:
                     rpc_call(token, "support_abandon", {"txid": txid, "nout": nout})
                     unlocked += amt
                     print(f"  🔓 [{acc['name']}] Unlocked tip of {amt:.4f} LBC (txid: {txid[:10]}...)")
+                    time.sleep(1)
                 except Exception:
                     pass
     except Exception:
@@ -179,59 +188,62 @@ def unlock_all_tips(acc: dict) -> float:
     return unlocked
 
 
-def send_tip(from_acc: dict, to_acc: dict, amount: float) -> bool:
-    """Send a tip of amount LBC from from_acc to to_acc channel."""
+def direct_wallet_send(from_acc: dict, to_acc: dict, amount: float) -> bool:
+    """
+    Direct on-chain wallet transfer:
+    - Costs only ~0.00012 LBC miner fee (no double fee).
+    - Lands directly in spendable available balance immediately.
+    """
     token = from_acc["token"]
-    dest_claim_id = to_acc["channel_id"]
+    dest_address = to_acc["wallet_address"]
     amt_str = f"{amount:.4f}"
-    print(f"  💸 Transferring {amt_str} LBC from [{from_acc['name']}] -> [{to_acc['name']}]...")
+    print(f"  💸 Transferring {amt_str} LBC from [{from_acc['name']}] -> [{to_acc['name']}] ({dest_address})...")
     try:
         res = rpc_call(
             token,
-            "support_create",
+            "wallet_send",
             {
-                "claim_id": dest_claim_id,
                 "amount": amt_str,
-                "tip": True,
+                "addresses": [dest_address],
             },
+            timeout=30,
         )
         if res.get("error"):
             print(f"    ❌ Error: {res.get('error')}")
             return False
-        print(f"    ✅ Sent {amt_str} LBC successfully!")
+        txid = res.get("result", {}).get("txid", "")[:12]
+        fee = res.get("result", {}).get("total_fee", "0.00012")
+        print(f"    ✅ Sent {amt_str} LBC successfully! (tx: {txid}..., miner fee: {fee} LBC)")
         return True
     except Exception as e:
-        print(f"    ❌ Exception sending tip: {e}")
+        print(f"    ❌ Exception sending wallet transfer: {e}")
         return False
 
 
 def main():
     print("=" * 80)
-    print("💰 ODYSEE MULTI-WALLET AUTONOMOUS FUEL & REBALANCE DAEMON (METHOD 3 + 4)")
+    print(f"💰 AUTONOMOUS SMART ODYSEE MULTI-WALLET REBALANCER ({time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())})")
     print("=" * 80)
 
-    # Step 0: Ensure channel bids are trimmed
+    # Step 0: Ensure channel bids are trimmed to 0.001 LBC
     for acc in ACCOUNTS:
         trim_channel_bids(acc)
 
-    # Step 1: Harvest any available Odysee Rewards (Method 3)
-    print()
-    print("🎁 Step 1 (Method 3): Harvesting available Odysee API rewards across all accounts...")
+    # Step 1: Harvest any available Odysee Rewards
+    print("\n🎁 Step 1: Harvesting available Odysee API rewards across all accounts...")
     total_rewards = 0.0
     for acc in ACCOUNTS:
         total_rewards += harvest_rewards(acc)
     if total_rewards == 0.0:
-        print("   No immediate rewards ready to claim (or already harvested).")
+        print("   No pending rewards ready to claim.")
 
-    # Step 2: Unlock any pending tips on all 5 accounts (Method 4)
-    print()
-    print("🔍 Step 2 (Method 4): Unlocking any pending tips/supports across all 5 accounts...")
+    # Step 2: Unlock any pending tips across all accounts
+    print("\n🔍 Step 2: Unlocking any pending tips/supports into liquid balance...")
     for acc in ACCOUNTS:
         unlock_all_tips(acc)
 
     # Step 3: Read current available balances
-    print()
-    print("📊 Step 3: Reading available balances...")
+    print("\n📊 Step 3: Reading available liquid balances...")
     balances = {}
     for acc in ACCOUNTS:
         bal = get_balance(acc["token"])
@@ -239,48 +251,46 @@ def main():
         print(f"   [{acc['name']}]: {bal:.6f} LBC")
 
     total_avail = sum(balances.values())
-    print()
-    print(f"   Total Pooled Available: {total_avail:.6f} LBC")
-
     target = round(total_avail / len(ACCOUNTS), 4)
-    print(f"   Ideal Target Per Account: ~{target:.4f} LBC")
-    print()
+    print(f"\n   Total Pooled Available: {total_avail:.6f} LBC across {len(ACCOUNTS)} workers")
+    print(f"   Ideal Balanced Target Per Account: ~{target:.4f} LBC")
 
-    # Step 4: Rebalance from surplus accounts to deficit accounts
-    print("🔄 Step 4 (Method 4): Rebalancing liquidity across workers...")
-    surplus_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] > target + 0.0005]
-    low_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] < target - 0.0005]
+    # Step 4: Rebalance from surplus accounts to deficit accounts via direct wallet_send
+    print("\n🔄 Step 4: Smart Liquidity Rebalancing (Direct crypto transfer)...")
+    surplus_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] > target + 0.001]
+    low_accs = [acc for acc in ACCOUNTS if balances[acc["id"]] < target - 0.001]
 
-    for low in low_accs:
-        needed = target - balances[low["id"]]
-        if needed <= 0.001:
-            continue
-        for sur in surplus_accs:
-            avail_sur = balances[sur["id"]] - target
-            if avail_sur <= 0.0005:
+    if not low_accs or not surplus_accs or target < 0.002:
+        print("   ✅ Balances already evenly distributed or pool below transfer threshold. No rebalancing needed.")
+    else:
+        for low in low_accs:
+            needed = target - balances[low["id"]]
+            if needed < 0.002:
                 continue
-            to_send = round(min(needed, avail_sur), 4)
-            if to_send >= 0.001:
-                ok = send_tip(sur, low, to_send)
-                if ok:
-                    balances[sur["id"]] -= to_send
-                    time.sleep(2)
-                    unlock_all_tips(low)
-                    needed -= to_send
-                    if needed <= 0.001:
-                        break
+            for sur in surplus_accs:
+                avail_sur = balances[sur["id"]] - target
+                if avail_sur < 0.002:
+                    continue
+                to_send = round(min(needed, avail_sur), 4)
+                if to_send >= 0.002:
+                    ok = direct_wallet_send(sur, low, to_send)
+                    if ok:
+                        balances[sur["id"]] -= to_send
+                        balances[low["id"]] += to_send
+                        time.sleep(2)
+                        needed -= to_send
+                        if needed < 0.002:
+                            break
 
     # Step 5: Final verification
     time.sleep(1)
-    print()
-    print("=" * 80)
-    print("🏁 FINAL FUEL & LIQUIDITY STATUS ACROSS ALL 5 WORKERS")
+    print("\n" + "=" * 80)
+    print("🏁 FINAL REBALANCED LIQUIDITY STATUS ACROSS ALL 7 WORKERS")
     print("=" * 80)
     for acc in ACCOUNTS:
-        unlock_all_tips(acc)
         final_bal = get_balance(acc["token"])
-        claims_capacity = int(final_bal / 0.00005)
-        print(f"   ✅ {acc['name']:<35} : {final_bal:.6f} LBC  (~{claims_capacity:,} claims)")
+        claims_capacity = int(final_bal / 0.00046) if final_bal > 0 else 0
+        print(f"   ✅ {acc['name']:<35} : {final_bal:.6f} LBC  (~{claims_capacity} video claims capacity)")
     print("=" * 80)
     print()
 

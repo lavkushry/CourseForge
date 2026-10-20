@@ -4,53 +4,53 @@
   "coverage": {
     "sqlite_courses": 27,
     "sqlite_lessons": 3870,
-    "sqlite_provider_rows": 1012,
-    "sqlite_valid_owned_provider_rows": 1010,
+    "sqlite_provider_rows": 3768,
+    "sqlite_valid_owned_provider_rows": 3766,
     "postgres_courses": 30,
     "postgres_lessons": 3875,
-    "postgres_provider_rows": 983,
-    "postgres_unmapped_lessons": 2892,
+    "postgres_provider_rows": 3766,
+    "postgres_unmapped_lessons": 109,
     "source_lessons_missing_destination": 0,
     "destination_extra_lessons": 5,
     "destination_extra_courses": 3,
-    "exact_legacy_mappings_missing_destination": 27,
+    "exact_legacy_mappings_missing_destination": 0,
     "overlapping_provider_disagreements": 0,
     "manifest_entries": [
-      1010,
-      1010
+      3766,
+      3766
     ],
     "manifest_content_equal": true
   },
   "catalog_losses": {
     "course_identity_mismatches": 0,
     "title_mismatches": 0,
-    "flow_order_mismatches": 145,
+    "flow_order_mismatches": 0,
     "section_title_mismatches": 3870,
     "courses_with_changed_lesson_sequence": 0,
     "publication_mismatches": 0,
-    "description_mismatches": 25,
+    "description_mismatches": 1,
     "legacy_organization_rows": 0,
     "legacy_material_metadata_rows": 0,
-    "destination_material_rows": 0,
+    "destination_material_rows": 947,
     "legacy_covers_declared": 25,
     "destination_covers_declared": 27
   },
   "mapping_repair_dry_run": {
-    "eligible_missing_mapping_inserts": 27,
+    "eligible_missing_mapping_inserts": 0,
     "rejected_lesson_identities": 0,
     "reason_counts": {
       "ambiguous_or_unqualified_manifest_key": 16,
-      "existing_mapping_agrees": 983,
+      "existing_mapping_agrees": 3766,
       "orphan_legacy_provider": 2
     },
-    "proposal_sha256": "2f37db8dc5d1cfad4bc73140dffac502539c55d577e1738c9ea00ecef409f462"
+    "proposal_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   "snapshot_sha256": {
-    "legacy_selected_content": "525ebccc9c06674230969a8b0443c1f0b782d321e95f8e50ccb4ce7f05a07f61",
-    "destination_selected_content": "20448973e00075783bfeed6e9ebb7bbe1e7503a170a1e5dc6f3e7fd395814584",
+    "legacy_selected_content": "d002bcdf0b9a177df8700ab37b2b220807282aee67885a52cbeb312893b15645",
+    "destination_selected_content": "72b19aa9dc92ddc8b945f2dd1685006492a5960dc4ba9e93472fc9f7311948a9",
     "manifests": [
-      "3c56add749b9599a47237a294c9206645cfda723c2577e4931387dc6d0e7fd36",
-      "3c56add749b9599a47237a294c9206645cfda723c2577e4931387dc6d0e7fd36"
+      "74c56b926853412ff57b98aa700738f0d60ba3f18a531d037260610cca301805",
+      "74c56b926853412ff57b98aa700738f0d60ba3f18a531d037260610cca301805"
     ]
   },
   "courses": [
@@ -68,30 +68,30 @@
       "course_id": "Arpit Bhaiyani - System Design Course",
       "source_lessons": 52,
       "destination_lessons": 52,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 52,
+      "destination_mappings": 52,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 52,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Azure Data Bricks by Sameer Sir Durgasoft",
       "source_lessons": 40,
       "destination_lessons": 40,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 40,
+      "destination_mappings": 40,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 40,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Codebasics Data Engineering Bootcamp 1.0",
       "source_lessons": 303,
       "destination_lessons": 303,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 290,
+      "destination_mappings": 290,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 303,
+      "unmapped_after_proposed_repair": 13,
       "ordered_stable_ids_match": true
     },
     {
@@ -119,8 +119,8 @@
       "source_lessons": 81,
       "destination_lessons": 81,
       "source_valid_mappings": 81,
-      "destination_mappings": 60,
-      "eligible_mapping_inserts": 21,
+      "destination_mappings": 81,
+      "eligible_mapping_inserts": 0,
       "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
@@ -128,100 +128,100 @@
       "course_id": "Gaurav Sen System Design Simplified (HLD)",
       "source_lessons": 161,
       "destination_lessons": 161,
-      "source_valid_mappings": 6,
-      "destination_mappings": 0,
-      "eligible_mapping_inserts": 6,
-      "unmapped_after_proposed_repair": 155,
+      "source_valid_mappings": 161,
+      "destination_mappings": 161,
+      "eligible_mapping_inserts": 0,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Harkirat 100x combined bootcamp Coursedost",
       "source_lessons": 313,
       "destination_lessons": 313,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 309,
+      "destination_mappings": 309,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 313,
+      "unmapped_after_proposed_repair": 4,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Keerti Purswani Agentic AI System Design Course 2026",
       "source_lessons": 17,
       "destination_lessons": 17,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 17,
+      "destination_mappings": 17,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 17,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Namaste AI",
       "source_lessons": 24,
       "destination_lessons": 24,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 24,
+      "destination_mappings": 24,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 24,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Namaste SQL Coursedost",
       "source_lessons": 18,
       "destination_lessons": 18,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 16,
+      "destination_mappings": 16,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 18,
+      "unmapped_after_proposed_repair": 2,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Sanket Advanced System Design HLD LLD 2026",
       "source_lessons": 506,
       "destination_lessons": 506,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 506,
+      "destination_mappings": 506,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 506,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Sanket Singh Complete AI Engineer Bootcamp 2026",
       "source_lessons": 110,
       "destination_lessons": 110,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 110,
+      "destination_mappings": 110,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 110,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Sanket Singh System Design 2.0 2026",
       "source_lessons": 507,
       "destination_lessons": 507,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 507,
+      "destination_mappings": 507,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 507,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Sanket Singh Top Coding Interview Problem",
       "source_lessons": 454,
       "destination_lessons": 454,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 448,
+      "destination_mappings": 448,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 454,
+      "unmapped_after_proposed_repair": 6,
       "ordered_stable_ids_match": true
     },
     {
       "course_id": "Sanket Spring boot",
       "source_lessons": 255,
       "destination_lessons": 255,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 255,
+      "destination_mappings": 255,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 255,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
@@ -258,10 +258,10 @@
       "course_id": "Vimal Daga Courses 2025",
       "source_lessons": 27,
       "destination_lessons": 27,
-      "source_valid_mappings": 0,
-      "destination_mappings": 0,
+      "source_valid_mappings": 27,
+      "destination_mappings": 27,
       "eligible_mapping_inserts": 0,
-      "unmapped_after_proposed_repair": 27,
+      "unmapped_after_proposed_repair": 0,
       "ordered_stable_ids_match": true
     },
     {
@@ -339,5 +339,5 @@
     "document_manifest_known_course_entries": 138,
     "document_manifest_sha256": "3266edb2a8406debdd62e5d6bf64ff5cc8ca92309b36df141709e3f6c3f1b3b3"
   },
-  "observed_at_utc": "2026-10-13T02:01:22.371900+00:00"
+  "observed_at_utc": "2026-10-20T13:19:16.500108+00:00"
 }

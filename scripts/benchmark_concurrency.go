@@ -83,14 +83,20 @@ func runBenchmark(targetURL string, concurrency int, totalRequests int, port str
 		Timeout:   10 * time.Second,
 	}
 
-	// Warm up
-	for i := 0; i < 20; i++ {
-		resp, err := client.Get(targetURL)
-		if err == nil {
-			io.Copy(io.Discard, resp.Body)
-			resp.Body.Close()
-		}
+	// Warm up all worker connections
+	var warmWg sync.WaitGroup
+	for i := 0; i < concurrency; i++ {
+		warmWg.Add(1)
+		go func() {
+			defer warmWg.Done()
+			resp, err := client.Get(targetURL)
+			if err == nil {
+				io.Copy(io.Discard, resp.Body)
+				resp.Body.Close()
+			}
+		}()
 	}
+	warmWg.Wait()
 
 	results := make([]Result, totalRequests)
 	var wg sync.WaitGroup
@@ -216,12 +222,18 @@ func main() {
 	// 1. Direct Go API Ready check (18090)
 	runBenchmark("http://127.0.0.1:18090/health/ready", *concurrency, *total, "18090")
 
-	// 2. Direct Go Media Gateway Ready check (18094)
+	// 2. Replica Go API Ready check (18091)
+	runBenchmark("http://127.0.0.1:18091/health/ready", *concurrency, *total, "18091")
+
+	// 3. Direct Go Media Gateway Ready check (18094)
 	runBenchmark("http://127.0.0.1:18094/health/ready", *concurrency, *total, "18094")
 
-	// 3. Production Gateway Root UI (8000)
-	runBenchmark("http://127.0.0.1:8000/", *concurrency, *total, "8000")
-
 	// 4. Production Gateway Health (8000)
-	runBenchmark("http://127.0.0.1:8000/health", *concurrency, *total, "8000")
+	runBenchmark("https://127.0.0.1:8000/health", *concurrency, *total, "8000")
+
+	// 5. Production Gateway Root UI (8000)
+	runBenchmark("https://127.0.0.1:8000/", *concurrency, *total, "8000")
+
+	// 6. Production Load-Balanced API Cluster (8000 -> 18090/18091)
+	runBenchmark("https://127.0.0.1:8000/api/health", *concurrency, *total, "8000")
 }

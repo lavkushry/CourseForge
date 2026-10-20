@@ -87,7 +87,7 @@ export function installClassroom(ctx: AppContext): void {
         const contId = targetLessonId || ctx.discovery?.getContinuation(id)?.id || response.resume_lesson_id;
         const targetLesson = (contId && response.lessons.find(l => l.id === contId)) || response.lessons[0];
         if (targetLesson) {
-          await ctx.loadLesson(targetLesson, autoplay, true);
+          await ctx.loadLesson(targetLesson, autoplay, false);
           return;
         }
       }
@@ -225,7 +225,7 @@ export function installClassroom(ctx: AppContext): void {
           '',
           () => {
             ctx.closeEpisodes();
-            void ctx.loadLesson(lesson, true, true);
+            void ctx.loadLesson(lesson, true, false);
           },
           'lesson-choice',
         );

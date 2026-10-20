@@ -108,6 +108,8 @@ API_HASH = "b18441a1ff607e10a989891a5462e627"
 # Multi-Token Odysee Parallel Pool & Channel Mapping
 # ----------------------------------------------------------------------
 ODYSEE_TOKENS = [
+    "3Nj7vMUEayo8PLWgYTLMfpbcbtSzVj9f",  # Primary Funded Worker: 0.1006 LBC available!
+    "FFR6ckhays2Jj4VUnfAE84TWevBWeT1b",  # Worker 6 (rahulnishamk@gmail.com - 182 claims mapped)
     "9ryTA4sULdxnA3hZZPaPVVQDJvBa4G5u",
     "31feNHAQyrk5KCXnxwQuFQbRg83hAGr7",
     "Cf98LFvmLBNQsqbmy1mZXxmP2wnbHroZ",
@@ -115,6 +117,8 @@ ODYSEE_TOKENS = [
     "8kB1fxCZRqnm4KdMCAzkfJH9bJpkKh1N",
 ]
 TOKEN_CHANNELS = {
+    "3Nj7vMUEayo8PLWgYTLMfpbcbtSzVj9f": "29a2037dd2bf5e8d3c5eaee36243368fd8410fba",
+    "FFR6ckhays2Jj4VUnfAE84TWevBWeT1b": "b724ab1577929a9c337e809848d04870f097a550",
     "9ryTA4sULdxnA3hZZPaPVVQDJvBa4G5u": "97af564bce47e5ed942e992d720da25fa173b00c",
     "31feNHAQyrk5KCXnxwQuFQbRg83hAGr7": "096b6b7c7e831d4c2051d173cd1c528998df2e98",
     "Cf98LFvmLBNQsqbmy1mZXxmP2wnbHroZ": "8fb43b578a5c8508b03bfd75e8dfe2a6f9ba1cde",
@@ -215,6 +219,30 @@ def do_odysee_upload_sync(
 
     print(f"\n📤 [Odysee Worker #{worker_id+1} Starting] [{course_key} Video {v_idx:03d}/{total_vids}] ({size_mb:.1f} MB)...", flush=True)
 
+    # Smart LBC Deduplication Pre-check: Avoid all upload & fees if claim already exists
+    existing = obu.check_claim_exists(claim_name)
+    if existing and existing.get("claim_id"):
+        claim_id = existing["claim_id"]
+        odysee_url = f"https://odysee.com/{claim_name}:{claim_id}"
+        stream_url = f"https://odysee.com/$/stream/{claim_name}/{claim_id}"
+        with MANIFEST_LOCK:
+            manifest = load_manifest()
+            manifest[m_key] = {
+                "video_id": v_item["video_id"],
+                "course": course_key,
+                "title": title,
+                "claim_name": claim_name,
+                "claim_id": claim_id,
+                "odysee_url": odysee_url,
+                "stream_url": stream_url,
+                "uploaded_at": utcnow(),
+            }
+            save_manifest(manifest)
+            record_claim_in_db(v_item["video_id"], claim_name, claim_id)
+            total_all = sum(1 for v in manifest.values() if v.get("claim_id"))
+        print(f"  ⚡ [Smart Deduplication] [{course_key} Video {v_idx:03d}/{total_vids}] Already on Odysee! 0 LBC spent -> {odysee_url}", flush=True)
+        return True
+
     thumb_file = obu.extract_thumbnail(target_mp4)
     thumb_url = obu.upload_thumbnail(thumb_file) if thumb_file else "https://odysee.com/public/favicon.png"
     if thumb_file and thumb_file.exists():
@@ -241,7 +269,11 @@ def do_odysee_upload_sync(
             outputs = sdk_res.get("outputs") or [{}]
             claim_id = outputs[0].get("claim_id", "")
             if not claim_id:
-                raise RuntimeError(f"Missing claim_id in {sdk_res}")
+                existing = obu.check_claim_exists(claim_name)
+                if existing and existing.get("claim_id"):
+                    claim_id = existing["claim_id"]
+                else:
+                    raise RuntimeError(f"Missing claim_id in {sdk_res}")
 
             odysee_url = f"https://odysee.com/{claim_name}:{claim_id}"
             stream_url = f"https://odysee.com/$/stream/{claim_name}/{claim_id}"
@@ -291,7 +323,7 @@ async def main():
                     pass
 
     # Create 3 dedicated token rotators staggered across the 3 accounts
-    worker_rotators = [OdyseeTokenRotator(ODYSEE_TOKENS, start_idx=i) for i in range(5)]
+    worker_rotators = [OdyseeTokenRotator(ODYSEE_TOKENS, start_idx=i) for i in range(len(ODYSEE_TOKENS))]
 
     client = TelegramClient(SESSION_PATH, API_ID, API_HASH)
     await client.connect()
@@ -392,7 +424,7 @@ async def main():
                 unmapped_videos.sort(key=lambda x: (0 if x["idx"] >= 151 else 1, x["idx"]))
 
             NUM_DL_WORKERS = 1
-            NUM_UP_WORKERS = 5
+            NUM_UP_WORKERS = len(ODYSEE_TOKENS)
 
             dl_queue: asyncio.Queue = asyncio.Queue()
             for v in unmapped_videos:

@@ -1,6 +1,6 @@
 import { svgIcon } from '../icons';
 import type { Course, Lesson } from '../contracts';
-import { artwork } from './view';
+import { artwork, cleanLessonTitle } from './view';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -197,7 +197,7 @@ export class SyllabusDialog {
         const lNum = el('span', 'lesson-idx', String(idx + 1).padStart(2, '0'));
         const lDetails = el('div', 'lesson-main-info');
         lDetails.append(
-          el('strong', 'lesson-row-title', l.title),
+          el('strong', 'lesson-row-title', cleanLessonTitle(l.title)),
           el('span', 'lesson-row-time', formatDuration(l.duration_seconds)),
         );
 

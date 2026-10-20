@@ -1,5 +1,5 @@
 {
-  "observed_at": "2026-10-13T07:02:02.607607+00:00",
+  "observed_at": "2026-10-20T13:07:57.163144+00:00",
   "command": "python3 scripts/rewrite_planning_smoke.py --isolated-staging",
   "contract": "docs/rewrite/PLANNING_CONTRACT.md",
   "scope": "Two fixed isolated staging replicas; one synthetic disposable account; no production/provider/media/AI/load calls",
@@ -183,7 +183,7 @@
       "replica": 2
     },
     {
-      "name": "private read /focus/analytics/2026-10-12",
+      "name": "private read /focus/analytics/2026-10-19",
       "passed": true,
       "expected_status": 200,
       "actual_status": 200,

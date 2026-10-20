@@ -66,6 +66,9 @@ describe('dribbble LMS title and badge refinement helpers', () => {
     expect(cleanLessonTitle('[Module 05 Study 31] NOTES')).toBe('NOTES');
     expect(cleanLessonTitle('Lesson 1 — Playback and progress')).toBe('Lesson 1 — Playback and progress');
     expect(cleanLessonTitle('Lesson 2')).toBe('Lesson 2');
+    expect(cleanLessonTitle('[226] Week 18 Web Development React Part 1 15052026')).toBe('Web Development React Part 1');
+    expect(cleanLessonTitle('[044] Module 12 (Case Study 1 — Payment Tracking App (Splitwise) Design & Machine Coding) - Simplified Balances algorithm 1')).toBe('Simplified Balances algorithm 1');
+    expect(cleanLessonTitle('[045] Module 08 (LangChain) Day 44 Tool Calling, Custom Tools & LangChain Agents')).toBe('Day 44 Tool Calling, Custom Tools & LangChain Agents');
   });
 
   it('shortens module badges concisely to Title Case Module X / Week X', () => {

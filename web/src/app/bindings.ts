@@ -264,7 +264,7 @@ export function installBindings(ctx: AppContext): void {
       else void ctx.controller?.requestPlay(ctx.controller?.state === 'lost');
     });
     on('#resume-here', () => {
-      void ctx.controller?.requestPlay(true);
+      void ctx.controller?.requestPlay(ctx.controller?.state === 'lost');
     });
     on('#retry-lesson', () => {
       if (ctx.selectedLesson && ctx.controller?.lesson?.id !== ctx.selectedLesson.id)
