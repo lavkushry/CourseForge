@@ -403,9 +403,9 @@ export function installShell(ctx: AppContext): void {
       <section id="career-panel" class="career-panel-host" hidden></section>
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
-      <section id="classroom" class="classroom focus-workspace" hidden>
+      <section id="classroom" class="classroom focus-workspace drawer-collapsed" hidden>
         <div class="classroom-heading">
-          <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="true" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Curriculum</button>
+          <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Curriculum</button>
           <div class="classroom-heading-left">
             <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>

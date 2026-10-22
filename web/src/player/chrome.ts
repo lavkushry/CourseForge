@@ -164,28 +164,14 @@ export function mountPlayerChrome(
     return node;
   };
 
-  // All essential commands remain descendants of the fullscreen element.
+  // Streaming watch chrome: keep the top row empty of LMS clutter.
+  // Capture / lessons / workbench live in the heading and meta bar instead.
+  // Theater + lock stay as discreet cinema controls.
   const top = ui('div', 'cinema-top-actions');
   top.slot = 'top-chrome';
-  const capture = delegate('Capture lesson timestamp', '#capture', 'edit');
-  const episodes = delegate('Course lessons', '#episodes', 'grid');
-  episodes.setAttribute('aria-haspopup', 'dialog');
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
-  const workbench = document.createElement('button');
-  workbench.type = 'button';
-  workbench.className = 'cinema-button';
-  workbench.title = 'Open In-Situ Shadow Workbench & Crucible';
-  workbench.setAttribute('aria-label', 'Open Shadow Workbench');
-  workbench.append(svgIcon('code'));
-  workbench.addEventListener(
-    'click',
-    () => {
-      openShadowWorkbenchModal(wrap, actions.getLessonId?.() || '');
-    },
-    { signal },
-  );
-  top.append(capture, episodes, workbench, theater, lock);
+  top.append(theater, lock);
   media.append(top);
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations
@@ -514,23 +500,24 @@ export function mountPlayerChrome(
 
   const dialog = document.querySelector<HTMLDialogElement>('#episode-dialog');
   const previousParent = dialog?.parentElement;
+  const lessonsBtn = document.querySelector<HTMLButtonElement>('#episodes');
   if (dialog) {
     wrap.append(dialog);
     let openedFromInPlayer = false;
-    episodes.addEventListener(
+    lessonsBtn?.addEventListener(
       'click',
       () => {
         openedFromInPlayer = true;
-        episodes.setAttribute('aria-expanded', String(dialog.open));
+        lessonsBtn.setAttribute('aria-expanded', String(dialog.open));
       },
       { signal },
     );
     dialog.addEventListener(
       'close',
       () => {
-        episodes.setAttribute('aria-expanded', 'false');
+        lessonsBtn?.setAttribute('aria-expanded', 'false');
         if (openedFromInPlayer && wrap.isConnected && !signal.aborted) {
-          episodes.focus();
+          lessonsBtn?.focus();
         }
         openedFromInPlayer = false;
       },
@@ -644,7 +631,7 @@ export function mountPlayerChrome(
   );
 }
 
-async function openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
+async function _openShadowWorkbenchModal(wrap: HTMLElement, lessonId: string) {
   const existingModal = wrap.querySelector<HTMLDialogElement>('#shadow-workbench-dialog');
   if (existingModal) {
     existingModal.remove();

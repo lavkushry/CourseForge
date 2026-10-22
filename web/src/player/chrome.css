@@ -246,8 +246,19 @@
   justify-content: flex-end !important;
   width: 100% !important;
   padding: max(8px, var(--safe-top)) max(12px, var(--safe-right)) 8px max(12px, var(--safe-left)) !important;
-  background: linear-gradient(to bottom, rgba(8, 9, 11, 0.75) 0%, transparent 100%) !important;
-  gap: 6px !important;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, transparent 100%) !important;
+  gap: 4px !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease !important;
+}
+
+/* Reveal theater/lock only while the control bar is visible — YouTube restraint. */
+.player-enhanced:hover .cinema-top-actions,
+.player-enhanced:focus-within .cinema-top-actions,
+.player-enhanced media-controller[mediahasuseractive]:not([mediaended]) .cinema-top-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .player-enhanced .cinema-center-actions {

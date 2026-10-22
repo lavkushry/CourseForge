@@ -326,14 +326,21 @@ export function installBindings(ctx: AppContext): void {
     };
     on('#focus-curriculum', toggleDrawer);
     on('#focus-search', () => ctx.omniSearch?.open());
-    const narrowCurriculum = window.matchMedia('(max-width: 900px)');
-    const collapseCurriculum = () => {
-      if (!narrowCurriculum.matches) return;
+    // Immersive watch default: curriculum stays closed until the learner opens it
+    // (Ctrl/Cmd+B or the Curriculum control). Narrow screens stay collapsed too.
+    const ensureImmersiveWatch = () => {
       required('#classroom').classList.add('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
     };
-    collapseCurriculum();
-    narrowCurriculum.addEventListener('change', collapseCurriculum, { signal });
+    ensureImmersiveWatch();
+    const narrowCurriculum = window.matchMedia('(max-width: 900px)');
+    narrowCurriculum.addEventListener(
+      'change',
+      () => {
+        if (narrowCurriculum.matches) ensureImmersiveWatch();
+      },
+      { signal },
+    );
     document.addEventListener(
       'keydown',
       event => {

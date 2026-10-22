@@ -23,6 +23,12 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
   await expect(page.getByRole('tab', { name: 'Transcript' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Notes' })).toBeVisible();
 
+  // Immersive watch starts with the curriculum closed; open it for rail geometry checks.
+  await expect(page.locator('#classroom')).toHaveClass(/drawer-collapsed/);
+  await page.locator('#focus-curriculum').click();
+  await expect(page.locator('#classroom')).not.toHaveClass(/drawer-collapsed/);
+  await expect(page.locator('#study-rail')).toBeVisible();
+
   const boxes = await page.evaluate(() => {
     const rect = (id: string) => {
       const node = document.querySelector(id);
