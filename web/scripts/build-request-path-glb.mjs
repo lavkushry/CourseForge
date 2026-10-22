@@ -89,21 +89,7 @@ function arrow() {
   };
 }
 
-function concatGeometry(parts) {
-  const positions = [];
-  const normals = [];
-  const indices = [];
-  for (const part of parts) {
-    const offset = positions.length / 3;
-    positions.push(...part.positions);
-    normals.push(...part.normals);
-    indices.push(...part.indices.map(index => index + offset));
-  }
-  return { positions, normals, indices };
-}
-
 const parts = [box(0.62, 0.36, 0.28), arrow()];
-const geometry = parts.map(part => part);
 const bufferParts = [];
 const bufferViews = [];
 const accessors = [];
@@ -141,7 +127,7 @@ function pushArray(array, componentType, type, target) {
   return accessors.length - 1;
 }
 
-const meshes = geometry.map(part => {
+const meshes = parts.map(part => {
   const position = pushArray(Float32Array.from(part.positions), 5126, 'VEC3', 34962);
   const normal = pushArray(Float32Array.from(part.normals), 5126, 'VEC3', 34962);
   const indices = pushArray(Uint16Array.from(part.indices), 5123, 'SCALAR', 34963);
