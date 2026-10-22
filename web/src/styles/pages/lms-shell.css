@@ -251,6 +251,7 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: 18px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -276,11 +277,12 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 13px;
   color: #8e8e93;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   padding-left: var(--space-2);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -309,6 +311,8 @@ body.academy-studio-mode .workspace {
 .lms-breadcrumb .crumb-current {
   color: #fff;
   font-weight: 600;
+  flex: 0 1 280px;
+  min-width: 0;
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -318,7 +322,23 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* The search pill also holds an icon and the shortcut key. A 100% input
+   paints under that key and clips the placeholder. */
+.site-header.lms-top-header .lms-header-search {
+  flex: 0 0 260px;
+  width: 260px;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.site-header.lms-top-header .lms-header-search input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
 }
 
 /* ==========================================================================
