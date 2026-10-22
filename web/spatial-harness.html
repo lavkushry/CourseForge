@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spatial AR overlay</title>
+    <style>
+      body {
+        margin: 0;
+        font: 16px/1.4 system-ui, sans-serif;
+        background: #0b1016;
+        color: #e8eef5;
+      }
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 1.25rem;
+      }
+      #player-wrap {
+        position: relative;
+        background: #05070c;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      video {
+        display: block;
+        width: 100%;
+        background: #05070c;
+      }
+      #playhead,
+      .meta {
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="meta">Lecture <span id="lecture-id"></span> · keyframe <span id="keyframe-time"></span></p>
+      <div id="player-wrap">
+        <video id="lesson-video" controls playsinline preload="auto" src="/spatial/clock.mp4"></video>
+      </div>
+      <p>Playhead <span id="playhead">0:00.000</span></p>
+      <section id="citations" aria-label="Tutor citations"></section>
+    </main>
+    <script type="module" src="/src/spatial/harness.ts"></script>
+  </body>
+</html>

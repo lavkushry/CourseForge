@@ -6,6 +6,8 @@ import type { LearningApi } from '../learning/api';
 import type { QuizResult, TutorSource } from '../learning/contracts';
 import { formatTime } from './controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
+import { spatialCitationButton } from '../spatial/entry';
+import { seekLectureClock } from '../spatial/overlay';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -985,6 +987,10 @@ export class StudyRail {
               this.options.seekTo(s.start_seconds);
             });
             sourcesBox.append(cite);
+            const ar = spatialCitationButton(s, seconds => {
+              seekLectureClock(seconds, position => this.options.seekTo(position));
+            });
+            if (ar) sourcesBox.append(ar);
           }
           item.append(sourcesBox);
         }

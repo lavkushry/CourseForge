@@ -9,6 +9,8 @@ import { NativeVideoAdapter } from '../player/video';
 import { mountPlayerChrome } from '../player/chrome';
 import { mountPlayerGestures } from '../player/gestures';
 import { PlayerTelemetry } from '../player/telemetry';
+import { mountSpatialPlayerEntry } from '../spatial/entry';
+import { seekLectureClock } from '../spatial/overlay';
 import * as playbackApi from '../api/playback';
 import { readFocusLink } from './focus-link';
 
@@ -722,6 +724,16 @@ export function installShell(ctx: AppContext): void {
       },
       ctx.pageScope.signal,
     );
+    mountSpatialPlayerEntry({
+      wrap: playerWrap,
+      video,
+      getLessonId: () => ctx.selectedLesson?.id ?? '',
+      onPause: () => ctx.controller?.pause(),
+      onReturn: seconds => {
+        seekLectureClock(seconds, position => ctx.controller?.seek(position));
+      },
+      signal: ctx.pageScope.signal,
+    });
     video.addEventListener('playing', () => telemetry.markPlaying(), {
       signal: ctx.pageScope.signal,
     });

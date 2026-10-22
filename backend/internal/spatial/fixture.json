@@ -1,0 +1,46 @@
+{
+  "provenance": {
+    "source": "backend/internal/knowledge/knowledge_test.go TestIndexChaptersAndAskWithCitations",
+    "lecture_id": "lesson",
+    "lesson_title": "Lecture",
+    "chapter_title": "Containers",
+    "concept_slug": "containers",
+    "source_chunk_id": "kc_1",
+    "start_ms": 0,
+    "end_ms": 4000,
+    "transcript": "docker containers package applications",
+    "note": "Gate decisions are the learning-surface contract. This file is a stored artifact for that lecture moment. It is not an upload-processing result."
+  },
+  "assets": [
+    {
+      "lecture_id": "lesson",
+      "concept_ids": ["containers"],
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "asset_url": "/api/v1/lessons/lesson/spatial/scene?kind=3d",
+      "kind": "3d",
+      "decision": "release",
+      "evidence": "docker containers package applications"
+    },
+    {
+      "lecture_id": "lesson",
+      "concept_ids": ["containers"],
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "asset_url": "/api/v1/lessons/lesson/spatial/scene?kind=ar",
+      "kind": "ar",
+      "decision": "label",
+      "evidence": "docker containers package applications"
+    },
+    {
+      "lecture_id": "lesson",
+      "concept_ids": ["containers"],
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "asset_url": "/api/v1/lessons/lesson/spatial/scene?kind=vr",
+      "kind": "vr",
+      "decision": "hold",
+      "evidence": "docker containers package applications"
+    }
+  ]
+}

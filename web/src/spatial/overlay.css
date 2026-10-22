@@ -1,0 +1,120 @@
+.spatial-ar-entry {
+  position: absolute;
+  z-index: 30;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #8fd0ff;
+  border-radius: 999px;
+  background: #102033ee;
+  color: #f4fbff;
+  font: 600 0.82rem/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.spatial-ar-entry[hidden] {
+  display: none;
+}
+
+.spatial-ar-dialog {
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  border: 1px solid #2a3c52;
+  border-radius: 16px;
+  background: #0c1218;
+  color: #e8eef5;
+}
+
+.spatial-ar-dialog::backdrop {
+  background: #05070ccc;
+}
+
+.spatial-ar-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1rem 1.1rem;
+}
+
+.spatial-ar-dialog__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.spatial-ar-dialog__heading h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.spatial-ar-timestamp {
+  margin: 0.2rem 0 0;
+  color: #9fd4ff;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.spatial-ar-viewer {
+  width: 100%;
+  height: min(420px, 55vh);
+  background: #101820;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.spatial-ar-hotspot {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  background: #102033;
+  color: #f4fbff;
+  font: 600 0.78rem/1.2 system-ui, sans-serif;
+}
+
+.spatial-ar-status,
+.spatial-ar-limits,
+.spatial-ar-evidence {
+  margin: 0;
+  color: #c5d0dc;
+  font-size: 0.88rem;
+}
+
+.spatial-ar-evidence li {
+  margin: 0.2rem 0;
+}
+
+.spatial-ar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.spatial-ar-return,
+.spatial-ar-close {
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font: 650 0.88rem/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.spatial-ar-return {
+  border: 0;
+  background: #d7ecff;
+  color: #102033;
+}
+
+.spatial-ar-close {
+  border: 1px solid #3d5168;
+  background: transparent;
+  color: #e8eef5;
+}
+
+.spatial-ar-cite {
+  border-style: dashed;
+}

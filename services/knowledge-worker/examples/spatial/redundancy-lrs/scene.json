@@ -1,0 +1,162 @@
+{
+  "lecture_id": "54e8ac4d86229d113a38dccada0d7007b7251ad7",
+  "lecture_title": "[016] Redundancy Levels in Storage Account",
+  "labels": [
+    "Primary region",
+    "Datacenter",
+    "LRS",
+    "Storage Account",
+    "Copy 1",
+    "Copy2",
+    "Copy3"
+  ],
+  "nodes": [
+    {
+      "label": "Primary region",
+      "parent": null,
+      "concept_id": "kco_1762dd4585e7562a",
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        11.56,
+        3.38,
+        2.35
+      ],
+      "color": [
+        0.18,
+        0.36,
+        0.56,
+        0.55
+      ]
+    },
+    {
+      "label": "Datacenter",
+      "parent": "Primary region",
+      "concept_id": "kco_ff9f72c9530defce",
+      "translation": [
+        0.0,
+        -0.19,
+        0.12
+      ],
+      "scale": [
+        10.72,
+        2.76,
+        1.95
+      ],
+      "color": [
+        0.16,
+        0.48,
+        0.46,
+        0.62
+      ]
+    },
+    {
+      "label": "LRS",
+      "parent": "Datacenter",
+      "concept_id": "kco_d0921512d96c6cfb",
+      "translation": [
+        0.0,
+        -0.38,
+        0.24
+      ],
+      "scale": [
+        9.88,
+        2.14,
+        1.55
+      ],
+      "color": [
+        0.45,
+        0.36,
+        0.18,
+        0.7
+      ]
+    },
+    {
+      "label": "Storage Account",
+      "parent": "LRS",
+      "concept_id": "kco_e6f077b028706c91",
+      "translation": [
+        0.0,
+        -0.57,
+        0.36
+      ],
+      "scale": [
+        9.04,
+        1.52,
+        1.15
+      ],
+      "color": [
+        0.55,
+        0.28,
+        0.22,
+        0.78
+      ]
+    },
+    {
+      "label": "Copy 1",
+      "parent": "Storage Account",
+      "concept_id": "kco_36a990173c5f3d3d",
+      "translation": [
+        -2.68,
+        -0.76,
+        0.48
+      ],
+      "scale": [
+        2.84,
+        0.9,
+        0.75
+      ],
+      "color": [
+        0.36,
+        0.28,
+        0.48,
+        0.84
+      ]
+    },
+    {
+      "label": "Copy2",
+      "parent": "Storage Account",
+      "concept_id": "kco_93854feadfb1056b",
+      "translation": [
+        0.17,
+        -0.76,
+        0.48
+      ],
+      "scale": [
+        2.5,
+        0.9,
+        0.75
+      ],
+      "color": [
+        0.36,
+        0.28,
+        0.48,
+        0.84
+      ]
+    },
+    {
+      "label": "Copy3",
+      "parent": "Storage Account",
+      "concept_id": "kco_21ab233f32feb398",
+      "translation": [
+        2.85,
+        -0.76,
+        0.48
+      ],
+      "scale": [
+        2.5,
+        0.9,
+        0.75
+      ],
+      "color": [
+        0.36,
+        0.28,
+        0.48,
+        0.84
+      ]
+    }
+  ]
+}

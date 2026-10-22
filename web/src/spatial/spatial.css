@@ -1,0 +1,139 @@
+.spatial-explore {
+  position: relative;
+  z-index: 8;
+}
+
+.spatial-marker {
+  position: absolute;
+  z-index: 8;
+}
+
+.spatial-explore-button,
+.spatial-explore-mode,
+.spatial-return {
+  font: inherit;
+}
+
+.spatial-explore-button {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(12, 16, 24, 0.88);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.spatial-plan-offer .spatial-explore-button,
+.tutor-sources-box .spatial-explore-button,
+.spatial-plan-action .spatial-explore-button {
+  background: transparent;
+  color: inherit;
+  border-color: var(--line, rgba(148, 163, 184, 0.45));
+}
+
+.spatial-explore-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 11rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border-radius: 10px;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.spatial-marker .spatial-explore-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.spatial-explore-mode {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #f8fafc;
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+}
+
+.spatial-explore-mode:hover,
+.spatial-explore-mode:focus-visible,
+.spatial-explore-button:focus-visible,
+.spatial-return:focus-visible {
+  outline: 2px solid #ff987b;
+  outline-offset: 2px;
+}
+
+.spatial-plan-offer {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.spatial-plan-note,
+.spatial-ground-truth {
+  margin: 0;
+}
+
+.spatial-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: min(32rem, calc(100vw - 2rem));
+}
+
+.spatial-dialog::backdrop {
+  background: rgba(5, 6, 9, 0.72);
+}
+
+.spatial-dialog-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 14px;
+  background: #0f141d;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.spatial-dialog-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.spatial-ground-truth,
+.spatial-plan-note {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.spatial-label-warning {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(180, 83, 9, 0.18);
+  color: #fde68a;
+}
+
+.spatial-stage {
+  min-height: 4.5rem;
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.spatial-evidence {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.citation-link-card,
+.citation-link {
+  margin-right: 0.4rem;
+}

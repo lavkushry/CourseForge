@@ -2,6 +2,8 @@ import { svgIcon, type IconName } from '../icons';
 import { ApiError, errorMessage, isAbort } from '../api';
 import type { Lesson } from '../contracts';
 import { formatTime } from '../player/controller';
+import { spatialCitationButton } from '../spatial/entry';
+import { seekLectureClock } from '../spatial/overlay';
 import type { LearningApi } from './api';
 import { Commands } from './api';
 import type { Card, QuizResult, ReviewAttempt, TutorSource } from './contracts';
@@ -721,6 +723,12 @@ export class LearningView {
               'text-button source-time',
             );
             srcRow.append(tsBtn, el('p', 'source-text', src.text));
+            const ar = spatialCitationButton(src, seconds => {
+              if (src.lesson_id === ctx.lesson.id) {
+                seekLectureClock(seconds, position => this.seek(position));
+              }
+            });
+            if (ar) srcRow.append(ar);
             sourcesDetails.append(srcRow);
           }
           itemBox.append(sourcesDetails);
