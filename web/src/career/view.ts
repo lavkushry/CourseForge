@@ -111,7 +111,10 @@ export class CareerView implements CareerStudioHost {
       await this.loadSelectedApplication();
       this.render();
     } catch (err) {
-      if (!isAbort(err)) this.options.feedback(errorMessage(err), true);
+      if (!isAbort(err)) {
+        this.options.feedback(errorMessage(err), true);
+        this.render();
+      }
     }
   }
 

@@ -167,6 +167,7 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     );
 
     const textarea = el('textarea', 'code-editor-textarea');
+    textarea.setAttribute('aria-label', `${this.activeLab.title} starter code`);
     textarea.value = this.activeLab.starterCode;
     textarea.rows = 14;
     textarea.spellcheck = false;

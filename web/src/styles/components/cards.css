@@ -54,12 +54,13 @@
 
 .featured-course {
   position: relative;
-  min-height: 490px;
+  min-height: 520px;
   isolation: isolate;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #17191c;
-  box-shadow: 0 20px 70px #0004;
+  background: #121214;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  margin: 0 0 var(--row-gap, 2.25rem);
 }
 
 .hero-content {
@@ -122,9 +123,11 @@
 }
 
 .hero-play {
-  min-height: 48px;
-  padding: var(--space-3) 22px;
-  font-size: 0.88rem;
+  min-height: 52px;
+  padding: var(--space-3) 28px;
+  font-size: 0.95rem;
+  font-weight: 750;
+  border-radius: 6px;
 }
 
 .hero-footnote {
@@ -207,8 +210,9 @@
   aspect-ratio: auto;
   height: 100%;
   background:
-    radial-gradient(ellipse at 85% 65%, #914948 0, transparent 65%), linear-gradient(125deg, #1a1a21, #32202e);
-  --art-hue: 22;
+    radial-gradient(ellipse at 85% 65%, #a84a32 0, transparent 65%),
+    linear-gradient(125deg, #141416, #2a1814);
+  --art-hue: 18;
 }
 
 .hero-art::after {
@@ -216,8 +220,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, #16171eef 0, #16171ede 30%, #16171e60 68%, #16171e00),
-    linear-gradient(0deg, #12131899, transparent 65%);
+    linear-gradient(90deg, #0d0d0df2 0, #0d0d0de8 28%, #0d0d0d55 68%, transparent),
+    linear-gradient(0deg, #0d0d0dcc, transparent 62%);
   z-index: 2;
 }
 
@@ -226,7 +230,7 @@
   top: -15%;
   right: -2%;
   border-color: #ffc5b455;
-  background: linear-gradient(145deg, #e7b8b645, #d5644635 55%, #481f7c);
+  background: linear-gradient(145deg, #e7b8b645, #d5644635 55%, #3a1a10);
   box-shadow:
     inset 20px 20px 80px #ffcb8826,
     0 70px 150px #0005;
@@ -263,17 +267,19 @@
   flex-direction: column;
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   overflow: hidden;
-  background: var(--panel);
+  background: var(--surface-elevated, var(--panel));
   transition:
-    transform 0.2s,
-    border-color 0.2s;
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s,
+    box-shadow 0.25s ease;
 }
 
 .course-card:hover {
-  border-color: #ffffff35;
-  transform: translateY(-3px);
+  border-color: var(--accent-border);
+  transform: translateY(-4px);
+  box-shadow: var(--lift-shadow);
 }
 
 .cover-button {
@@ -401,13 +407,23 @@
 }
 
 .continue-card {
-  flex: 0 0 320px;
+  flex: 0 0 300px;
   min-width: 0;
-  background: #181920;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  background: var(--surface-elevated, #181920);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--poster-radius, 6px);
   overflow: hidden;
   scroll-snap-align: start;
+  transition:
+    transform 0.25s ease,
+    border-color 0.2s,
+    box-shadow 0.25s ease;
+}
+
+.continue-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: var(--accent-border);
+  box-shadow: var(--lift-shadow);
 }
 
 .continue-open {
@@ -478,13 +494,40 @@
   background: var(--accent);
 }
 
-/* Phones: the hero CTA row becomes a 2-column grid with the primary action
-   on its own full-width row, so "Continue course" never overflows its button
-   (it previously flex-shrank below its text width at 320–375px). */
+/* Phones: keep the hero actions on the first screen, above the bottom dock.
+   The primary action keeps its own row. The three secondary actions share
+   the next row so "+ My List" is not clipped under the dock. */
 @media (max-width: 480px) {
+  .featured-course {
+    min-height: 0;
+  }
+
+  .hero-content {
+    padding: 16px var(--space-4) 12px;
+  }
+
+  .hero-kicker {
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: 1.85rem;
+    margin-bottom: 8px;
+  }
+
+  .hero-description {
+    margin-bottom: 8px;
+    -webkit-line-clamp: 2;
+  }
+
+  .hero-metadata {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
   .hero-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-2);
   }
 
@@ -496,6 +539,23 @@
     text-align: center;
     white-space: normal;
     overflow-wrap: break-word;
+  }
+
+  #featured-course .hero-actions > .button:not(.hero-play):not([hidden]) {
+    height: auto;
+    min-height: 44px;
+    max-height: none;
+    padding: 8px 4px;
+    gap: 4px;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  #featured-course .hero-actions > .button:not(.hero-play):not([hidden]) .svg-icon {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
   }
 
   .hero-actions > .hero-play:not([hidden]) {

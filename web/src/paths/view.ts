@@ -51,7 +51,7 @@ export class PathsView {
     const aiBtn = button('AI Generate', () => void this.showAiGenerateModal(), 'button quiet ai-gen-path-btn');
     aiBtn.prepend(svgIcon('sparkle'));
     sideHead.append(
-      el('h2', '', 'Learning Roadmaps'),
+      el('h1', 'paths-page-title', 'Learning roadmaps'),
       aiBtn,
       button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn'),
     );
@@ -71,7 +71,8 @@ export class PathsView {
       );
     } else {
       for (const p of this.paths) {
-        const item = el('div', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`);
+        const item = el('button', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`) as HTMLButtonElement;
+        item.type = 'button';
         item.append(
           el('strong', '', p.goal),
           el(
@@ -102,7 +103,7 @@ export class PathsView {
       const head = el('div', 'path-header');
       head.append(
         el('span', 'eyebrow', `LEARNING ROADMAP · ${p.provenance.toUpperCase()}`),
-        el('h1', '', p.goal),
+        el('h2', '', p.goal),
         el('p', 'muted', `Covering: ${p.course_ids.join(', ')}`),
         el('div', 'path-stats-row'),
       );
@@ -361,8 +362,8 @@ export class PathsView {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
       <linearGradient id="activeNodeGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#8b5cf6"/>
-        <stop offset="100%" stop-color="#c4b5fd"/>
+        <stop offset="0%" stop-color="#ff7952"/>
+        <stop offset="100%" stop-color="#e54503"/>
       </linearGradient>
       <linearGradient id="doneNodeGrad" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#10b981"/>
@@ -385,7 +386,7 @@ export class PathsView {
       line.setAttribute('y1', String(yCenter));
       line.setAttribute('x2', String(x2));
       line.setAttribute('y2', String(yCenter));
-      line.setAttribute('stroke', isSegmentDone ? '#10b981' : isSegmentActive ? '#8b5cf6' : '#2b2d42');
+      line.setAttribute('stroke', isSegmentDone ? '#10b981' : isSegmentActive ? '#ff7952' : '#2b2d42');
       line.setAttribute('stroke-width', '4');
       line.setAttribute('stroke-dasharray', isSegmentDone ? 'none' : isSegmentActive ? '4 3' : 'none');
       svg.append(line);
@@ -410,7 +411,7 @@ export class PathsView {
         pulse.setAttribute('cx', String(x));
         pulse.setAttribute('cy', String(yCenter));
         pulse.setAttribute('r', '24');
-        pulse.setAttribute('fill', 'rgba(139, 92, 246, 0.25)');
+        pulse.setAttribute('fill', 'rgba(255, 121, 82, 0.25)');
         g.append(pulse);
       }
 
@@ -419,7 +420,7 @@ export class PathsView {
       circle.setAttribute('cy', String(yCenter));
       circle.setAttribute('r', '18');
       circle.setAttribute('fill', isDone ? 'url(#doneNodeGrad)' : isCurrent ? 'url(#activeNodeGrad)' : '#161824');
-      circle.setAttribute('stroke', isDone ? '#10b981' : isCurrent ? '#8b5cf6' : '#393c54');
+      circle.setAttribute('stroke', isDone ? '#10b981' : isCurrent ? '#ff7952' : '#393c54');
       circle.setAttribute('stroke-width', '2.5');
       g.append(circle);
 
@@ -439,7 +440,7 @@ export class PathsView {
       label.setAttribute('text-anchor', 'middle');
       label.setAttribute('font-size', '10.5');
       label.setAttribute('font-weight', '600');
-      label.setAttribute('fill', isCurrent ? '#c4b5fd' : isDone ? '#6ee7b7' : '#70748e');
+      label.setAttribute('fill', isCurrent ? '#ffb395' : isDone ? '#6ee7b7' : '#70748e');
       const truncatedTitle = step.title.length > 18 ? step.title.slice(0, 16) + '…' : step.title;
       label.textContent = truncatedTitle;
       g.append(label);

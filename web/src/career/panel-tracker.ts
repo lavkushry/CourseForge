@@ -9,7 +9,7 @@ import {
 } from './contracts';
 import type { CareerApi } from './api';
 import type { CareerStudioHost } from './view-host';
-import { REJECTION_REASONS, STATUSES, VERSION_TYPES, renderImportReport } from './view-helpers';
+import { REJECTION_REASONS, STATUSES, VERSION_TYPES, labeledField, renderImportReport } from './view-helpers';
 
 export function renderTracker(host: CareerStudioHost): HTMLElement {
   const panel = el('section', 'career-panel');
@@ -45,7 +45,16 @@ export function renderTracker(host: CareerStudioHost): HTMLElement {
   posting.title = 'Posting date';
   const submit = el('button', 'button primary', 'Add application') as HTMLButtonElement;
   submit.type = 'submit';
-  form.append(company, role, track, status, versionType, rejection, posting, submit);
+  form.append(
+    labeledField('Company', company),
+    labeledField('Role title', role),
+    labeledField('Role track', track),
+    labeledField('Status', status),
+    labeledField('Resume version', versionType),
+    labeledField('Rejection reason', rejection),
+    labeledField('Posting date', posting),
+    submit,
+  );
   form.addEventListener('submit', ev => {
     ev.preventDefault();
     void addTrackedApplication(host, {
@@ -96,7 +105,7 @@ export function renderTracker(host: CareerStudioHost): HTMLElement {
   const commitBtn = el('button', 'button primary', 'Import CSV') as HTMLButtonElement;
   commitBtn.type = 'button';
   commitBtn.addEventListener('click', () => void runAppImport(host, csvArea.value, false));
-  csvForm.append(csvArea, dryBtn, commitBtn);
+  csvForm.append(labeledField('Applications CSV', csvArea), dryBtn, commitBtn);
   panel.append(csvForm);
   if (host.appImportReport) panel.append(renderImportReport(host.appImportReport));
   return panel;

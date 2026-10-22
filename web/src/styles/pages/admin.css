@@ -49,8 +49,8 @@
 
 .admin-tab-btn.active {
   background: #29243f;
-  border-color: #7c3aed;
-  color: #c4b5fd;
+  border-color: var(--lms-accent);
+  color: #ffb395;
 }
 
 .admin-content {
@@ -170,7 +170,7 @@
 
 .badge-stat {
   font-weight: 700;
-  color: #a78bfa;
+  color: var(--coral);
 }
 
 .admin-export-grid {

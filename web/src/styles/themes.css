@@ -44,3 +44,36 @@ html[data-theme='light'] .momentum-stat-card {
   color: var(--text);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
+
+/* Keyboard focus must stay visible after later :focus { outline: none } rules. */
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  z-index: 2000;
+  transform: translateY(-160%);
+  background: #fff;
+  color: #111;
+  padding: 8px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: none;
+}
+
+:is(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring, #ffaf96) !important;
+  outline-offset: 2px !important;
+}
+
+html[data-theme='light'] :is(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline-color: #9a3412 !important;
+}

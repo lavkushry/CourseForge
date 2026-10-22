@@ -44,6 +44,18 @@
   gap: 0.8rem;
 }
 
+.paths-page-title {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+button.path-nav-item {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
 .path-nav-item {
   background: #181926;
   border: 1px solid #232533;
@@ -57,8 +69,8 @@
 
 .path-nav-item:hover,
 .path-nav-item.active {
-  border-color: #a78bfa;
-  background: #201e30;
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .path-nav-item strong {
@@ -78,16 +90,17 @@
 }
 
 .path-progress::-webkit-progress-value {
-  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  background: linear-gradient(90deg, var(--coral), var(--lms-accent));
 }
 
 .paths-main {
-  background: #13141e;
-  border: 1px solid #232533;
-  border-radius: 14px;
+  background: var(--surface-elevated, #13141e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--poster-radius, 6px);
   padding: 1.8rem;
   display: grid;
   gap: 1.5rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .path-header {
@@ -146,7 +159,7 @@
 
 .step-index-badge {
   background: #2e2640;
-  color: #c4b5fd;
+  color: #ffb395;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 3px var(--space-2);
@@ -227,19 +240,19 @@
 }
 
 .skill-node-group:hover circle {
-  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+  filter: drop-shadow(0 0 8px var(--accent-glow));
 }
 
 .ai-gen-path-btn {
-  color: #c4b5fd;
-  border-color: #7c3aed40;
-  background: #7c3aed15;
+  color: #ffb395;
+  border-color: rgba(255, 121, 82, 0.25);
+  background: var(--accent-soft);
   font-size: 0.8rem;
 }
 
 .ai-gen-path-btn:hover {
-  background: #7c3aed30;
-  border-color: #7c3aed80;
+  background: rgba(255, 121, 82, 0.22);
+  border-color: var(--accent-border);
 }
 
 .new-path-dialog {

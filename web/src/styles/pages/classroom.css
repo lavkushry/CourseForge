@@ -425,7 +425,7 @@ media-volume-range {
 .classroom.theater #player-wrap {
   box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.9),
-    0 0 120px rgba(124, 58, 237, 0.15);
+    0 0 120px var(--accent-glow);
   border-radius: 14px;
 }
 
@@ -440,16 +440,16 @@ media-volume-range {
 }
 
 .study-rail {
-  background: #14151d;
+  background: var(--surface-elevated, #14151d);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 120px);
   position: sticky;
   top: 96px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
 .study-rail-tabs {
@@ -734,9 +734,9 @@ media-volume-range {
 }
 
 .transcript-seek-btn {
-  border: 1px solid rgba(167, 139, 250, 0.3);
-  background: rgba(167, 139, 250, 0.1);
-  color: #c4b5fd;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-soft);
+  color: #ffb395;
   font-size: 0.72rem;
   padding: 3px 6px;
   border-radius: 4px;
@@ -984,7 +984,7 @@ body.in-zen-studio .classroom-grid {
 .form-input:focus,
 .text-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* ==========================================================================
@@ -1484,15 +1484,15 @@ media-controller {
   position: absolute;
   z-index: 20;
   right: 20px;
-  bottom: 75px;
-  width: min(340px, calc(100% - 40px));
-  background: rgba(18, 19, 26, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  bottom: 78px;
+  width: min(360px, calc(100% - 40px));
+  background: rgba(13, 13, 13, 0.96);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
   padding: var(--space-3);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px var(--accent-glow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -1572,14 +1572,15 @@ media-controller {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: var(--space-1) 10px;
+  padding: var(--space-1) 12px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 6px;
-  background: var(--coral);
+  background: linear-gradient(135deg, var(--coral), var(--lms-accent));
   color: #fff;
   border: none;
   cursor: pointer;
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .btn-up-next-watch .svg-icon {

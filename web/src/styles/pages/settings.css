@@ -2,12 +2,13 @@
 
 .daily-preferences-card {
   padding: var(--space-5) 22px;
-  background: #0f121d;
+  background: var(--surface-elevated, #0f121d);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .daily-preferences-top {
@@ -64,10 +65,10 @@
 }
 
 .budget-choice-pill.active {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: #8b5cf6;
+  background: var(--accent-soft);
+  border-color: var(--accent);
   color: #fff;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .checklist-summary-badge {
@@ -109,18 +110,19 @@
   flex-direction: column;
   gap: 10px;
   padding: var(--space-5);
-  background: #0f121d;
+  background: var(--surface-elevated, #0f121d);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.25s ease,
+    border-color 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
 .recommended-task-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(139, 92, 246, 0.35);
+  border-color: var(--accent-border);
 }
 
 .task-card-top {
@@ -133,7 +135,7 @@
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #a78bfa;
+  color: var(--coral);
   text-transform: uppercase;
 }
 

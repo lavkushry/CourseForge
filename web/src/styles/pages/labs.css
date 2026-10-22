@@ -26,9 +26,9 @@
   align-items: flex-start;
   gap: var(--space-1);
   padding: var(--space-3) 14px;
-  border: 1px solid var(--line);
-  background: #14151d;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-elevated, #14151d);
+  border-radius: var(--poster-radius, 6px);
   text-align: left;
   color: #cfd2dc;
   cursor: pointer;
@@ -36,13 +36,13 @@
 }
 
 .lab-picker-card:hover {
-  background: #1e1f29;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--surface-hover, #1e1f29);
+  border-color: var(--accent-border);
 }
 
 .lab-picker-card.active {
   border-color: var(--accent);
-  background: rgba(255, 121, 82, 0.08);
+  background: var(--accent-soft);
 }
 
 .lab-picker-card strong {
@@ -172,7 +172,7 @@
 .editor-file-tab .svg-icon {
   width: 14px;
   height: 14px;
-  color: #a78bfa;
+  color: var(--coral);
 }
 
 .editor-lang-tag {
@@ -246,7 +246,7 @@
   }
 
   .settings-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .labs-layout-grid {
