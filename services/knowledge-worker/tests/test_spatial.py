@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from knowledge_worker.spatial import rank_spatial_candidates, score_bundle
+from knowledge_worker.spatial import _agreement, rank_spatial_candidates, score_bundle
 
 FIXTURE = Path(__file__).parent / "fixtures" / "spatial_lecture.json"
 
@@ -25,11 +25,14 @@ def test_fixture_ranks_diagram_above_speech_and_skips_commands():
     top = candidates[0]
     assert top["confidence"] > candidates[-1]["confidence"]
     assert top["signals"]["on_screen_diagram"] == 1.0
-    assert top["concept_ids"] == ["kco_request"]
-    assert "API Gateway" in top["ocr_snippet"]
-    assert "arrows" in top["vision_snippet"]
-    assert top["start_ms"] < top["end_ms"]
-    assert "spatial view" in top["reason"].lower()
+    assert top["concept_ids"] == ["kco_layers"]
+    assert top["signals"]["concept_agreement"] > 0.8
+    request = next(item for item in candidates if item["concept_ids"] == ["kco_request"])
+    assert "API Gateway" in request["ocr_snippet"]
+    assert "arrows" in request["vision_snippet"]
+    assert request["signals"]["on_screen_diagram"] == 1.0
+    assert request["start_ms"] < request["end_ms"]
+    assert "spatial view" in request["reason"].lower()
     assert all("kubectl" not in item["ocr_snippet"] for item in candidates)
     speech = candidates[-1]
     assert speech["signals"]["on_screen_diagram"] == 0
@@ -88,3 +91,8 @@ def test_academy_seconds_and_embedded_caption_are_read():
     assert "Architecture diagram" in candidates[0]["vision_snippet"]
     assert "API Gateway" in candidates[0]["ocr_snippet"]
     assert candidates[0]["concept_ids"] == ["kco_path"]
+
+
+def test_concept_agreement_ignores_ocr_that_only_matches_the_caption():
+    assert _agreement(set(), "layers components", "layers components") == 0
+    assert _agreement({"queue"}, "queue gateway", "unrelated caption") > 0

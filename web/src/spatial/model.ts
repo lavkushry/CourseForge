@@ -11,6 +11,7 @@ export interface SpatialAsset {
   kind: SpatialKind;
   decision: SpatialDecision;
   evidence?: string;
+  labels?: string[];
 }
 
 export interface SpatialScene {
@@ -20,6 +21,7 @@ export interface SpatialScene {
   end_seconds: number;
   kind: SpatialKind;
   evidence: string;
+  labels?: string[];
 }
 
 export interface LectureWatch {
@@ -110,6 +112,10 @@ export function parseSpatialAsset(value: unknown): SpatialAsset | null {
     decision: record.decision,
   };
   if (typeof record.evidence === 'string' && record.evidence.trim() !== '') asset.evidence = record.evidence;
+  if (Array.isArray(record.labels)) {
+    const labels = record.labels.filter((label): label is string => typeof label === 'string' && label.trim() !== '');
+    if (labels.length > 0) asset.labels = labels;
+  }
   return asset;
 }
 

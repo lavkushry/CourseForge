@@ -20,6 +20,9 @@ function query(course: string, cursor = '') {
 }
 export class LearningApi {
   constructor(private readonly api: ApiClient) {}
+  get transport(): ApiClient {
+    return this.api;
+  }
   courseStatus(course: string, signal: AbortSignal, cursor = '') {
     return this.api
       .request(`/courses/${id(course)}/quizzes/status?${query('', cursor)}`, {

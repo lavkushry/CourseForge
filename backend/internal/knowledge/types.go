@@ -232,17 +232,18 @@ type SpatialSignals struct {
 
 // SpatialCandidateInput is what the indexing worker stores after ranking.
 type SpatialCandidateInput struct {
-	Ordinal         int            `json:"ordinal"`
-	StartMs         int            `json:"start_ms"`
-	EndMs           int            `json:"end_ms"`
-	Confidence      float64        `json:"confidence"`
-	Reason          string         `json:"reason"`
-	KeyframeID      string         `json:"keyframe_id,omitempty"`
-	KeyframeOrdinal *int           `json:"keyframe_ordinal,omitempty"`
-	OCRSnippet      string         `json:"ocr_snippet"`
-	VisionSnippet   string         `json:"vision_snippet"`
-	ConceptIDs      []string       `json:"concept_ids"`
-	Signals         SpatialSignals `json:"signals"`
+	Ordinal         int             `json:"ordinal"`
+	StartMs         int             `json:"start_ms"`
+	EndMs           int             `json:"end_ms"`
+	Confidence      float64         `json:"confidence"`
+	Reason          string          `json:"reason"`
+	KeyframeID      string          `json:"keyframe_id,omitempty"`
+	KeyframeOrdinal *int            `json:"keyframe_ordinal,omitempty"`
+	OCRSnippet      string          `json:"ocr_snippet"`
+	VisionSnippet   string          `json:"vision_snippet"`
+	ConceptIDs      []string        `json:"concept_ids"`
+	Signals         SpatialSignals  `json:"signals"`
+	Artifact        json.RawMessage `json:"artifact,omitempty"`
 }
 
 // SpatialCandidate is a stored moment a later stage can turn into a spatial view.

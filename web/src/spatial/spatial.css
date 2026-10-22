@@ -1,6 +1,12 @@
 .spatial-explore {
   position: relative;
-  z-index: 8;
+  z-index: 20;
+}
+
+.player-wrap > .spatial-explore {
+  position: absolute;
+  top: 12px;
+  left: 12px;
 }
 
 .spatial-marker {
@@ -45,6 +51,11 @@
   background: #111827;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  z-index: 21;
+}
+
+.spatial-explore-menu[hidden] {
+  display: none;
 }
 
 .spatial-marker .spatial-explore-menu {
@@ -122,10 +133,32 @@
 }
 
 .spatial-stage {
+  display: grid;
+  gap: 0.6rem;
   min-height: 4.5rem;
   border-radius: 10px;
   padding: 0.8rem;
   background: rgba(255, 255, 255, 0.04);
+}
+
+.spatial-stage model-viewer {
+  width: 100%;
+  height: 280px;
+  background: #0c1422;
+  border-radius: 8px;
+}
+
+.spatial-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.spatial-label {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.78rem;
 }
 
 .spatial-evidence {

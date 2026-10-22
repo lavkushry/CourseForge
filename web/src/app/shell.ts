@@ -9,8 +9,11 @@ import { NativeVideoAdapter } from '../player/video';
 import { mountPlayerChrome } from '../player/chrome';
 import { mountPlayerGestures } from '../player/gestures';
 import { PlayerTelemetry } from '../player/telemetry';
-import { mountSpatialPlayerEntry } from '../spatial/entry';
-import { seekLectureClock } from '../spatial/overlay';
+import { loadLectureSpatial } from '../spatial/catalog';
+import { consumePendingSpatial } from '../spatial/player';
+import { SPATIAL_OPEN_EVENT, takeSpatialOpen, type PendingSpatialOpen } from '../spatial/pending';
+import { mountSpatialDialog, renderExploreControl } from '../spatial/ui';
+import type { SpatialAsset } from '../spatial/model';
 import * as playbackApi from '../api/playback';
 import { readFocusLink } from './focus-link';
 
@@ -724,16 +727,62 @@ export function installShell(ctx: AppContext): void {
       },
       ctx.pageScope.signal,
     );
-    mountSpatialPlayerEntry({
-      wrap: playerWrap,
-      video,
-      getLessonId: () => ctx.selectedLesson?.id ?? '',
-      onPause: () => ctx.controller?.pause(),
-      onReturn: seconds => {
-        seekLectureClock(seconds, position => ctx.controller?.seek(position));
+    const spatialDialog = mountSpatialDialog(
+      playerWrap,
+      ctx.api,
+      {
+        seek: seconds => ctx.controller?.seek(seconds),
+        onClosed: () => undefined,
       },
-      signal: ctx.pageScope.signal,
+      ctx.pageScope.signal,
+    );
+    let spatialLesson = '';
+    let spatialAssets: SpatialAsset[] = [];
+    let spatialControl: HTMLElement | null = null;
+    const openSpatial = (asset: SpatialAsset) => {
+      if (asset.decision === 'hold') return;
+      ctx.controller?.pause();
+      ctx.controller?.seek(asset.start_seconds);
+      spatialDialog.open(asset);
+    };
+    const onSpatialRequest = (event: Event) => {
+      const detail = (event as CustomEvent<PendingSpatialOpen>).detail;
+      const lessonId = ctx.selectedLesson?.id ?? '';
+      if (!detail || detail.lectureId !== lessonId) return;
+      const asset = spatialAssets.find(item => item.kind === detail.kind && item.decision !== 'hold');
+      if (!asset) return;
+      takeSpatialOpen(lessonId);
+      openSpatial(asset);
+    };
+    window.addEventListener(SPATIAL_OPEN_EVENT, onSpatialRequest);
+    ctx.pageScope.signal.addEventListener('abort', () => {
+      window.removeEventListener(SPATIAL_OPEN_EVENT, onSpatialRequest);
     });
+    const refreshSpatial = () => {
+      const lessonId = ctx.selectedLesson?.id ?? '';
+      if (lessonId === spatialLesson) return;
+      spatialLesson = lessonId;
+      spatialAssets = [];
+      spatialControl?.remove();
+      spatialControl = null;
+      if (!lessonId) return;
+      void loadLectureSpatial(ctx.api, lessonId, ctx.pageScope.signal)
+        .then(assets => {
+          if (spatialLesson !== lessonId) return;
+          spatialAssets = assets;
+          const control = renderExploreControl(assets, openSpatial);
+          if (control) {
+            spatialControl = control;
+            playerWrap.append(control);
+          }
+          consumePendingSpatial(lessonId, assets, openSpatial);
+        })
+        .catch(() => undefined);
+    };
+    video.addEventListener('loadedmetadata', () => {
+      spatialLesson = '';
+      refreshSpatial();
+    }, { signal: ctx.pageScope.signal });
     video.addEventListener('playing', () => telemetry.markPlaying(), {
       signal: ctx.pageScope.signal,
     });

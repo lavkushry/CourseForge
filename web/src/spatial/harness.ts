@@ -21,14 +21,12 @@ const showPlayhead = () => {
 };
 video.addEventListener('timeupdate', showPlayhead);
 video.addEventListener('seeked', showPlayhead);
-video.addEventListener(
-  'loadedmetadata',
-  () => {
-    if (video.currentTime < 1) video.currentTime = artifact.timestampSeconds;
-    showPlayhead();
-  },
-  { once: true },
-);
+const alignToArtifact = () => {
+  if (video.currentTime < 1) video.currentTime = artifact.timestampSeconds;
+  showPlayhead();
+};
+if (video.readyState >= 1) alignToArtifact();
+else video.addEventListener('loadedmetadata', alignToArtifact, { once: true });
 showPlayhead();
 
 mountSpatialPlayerEntry({

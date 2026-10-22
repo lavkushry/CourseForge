@@ -3,8 +3,7 @@ import type { ApiClient } from '../api';
 import { errorMessage } from '../api';
 import type { Course } from '../contracts';
 import type { TutorSource } from '../learning/contracts';
-import { FIXTURE_ARTIFACT } from '../spatial/fixture';
-import { spatialCitationButton } from '../spatial/entry';
+import { appendExploreCitation } from '../spatial/ui';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -256,10 +255,9 @@ export class TutorView {
               this.options.onNavigateLesson(s.lesson_id, s.start_seconds);
             });
             sourcesGrid.append(cite);
-            const ar = spatialCitationButton(s, seconds => {
-              this.options.onNavigateLesson(FIXTURE_ARTIFACT.lectureId, seconds);
+            appendExploreCitation(sourcesGrid, this.options.api, s, seconds => {
+              this.options.onNavigateLesson(s.lesson_id, seconds);
             });
-            if (ar) sourcesGrid.append(ar);
           }
           sourcesBox.append(sourcesGrid);
           assistCard.append(sourcesBox);

@@ -16,6 +16,13 @@ function storage(): Storage | null {
   }
 }
 
+export const SPATIAL_OPEN_EVENT = 'courseforge-spatial-open';
+
+export function requestSpatialOpen(pending: PendingSpatialOpen): void {
+  rememberSpatialOpen(pending);
+  window.dispatchEvent(new CustomEvent<PendingSpatialOpen>(SPATIAL_OPEN_EVENT, { detail: pending }));
+}
+
 export function rememberSpatialOpen(pending: PendingSpatialOpen): void {
   const store = storage();
   if (!store) return;

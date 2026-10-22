@@ -96,13 +96,20 @@ func (s *Service) StoreSpatial(ctx context.Context, id, workerID string, fence i
 		if err != nil {
 			return 0, err
 		}
+		var artifact any
+		if len(candidate.Artifact) > 0 && string(candidate.Artifact) != "null" {
+			if !json.Valid(candidate.Artifact) || len(candidate.Artifact) > 65536 {
+				return 0, ErrInvalid
+			}
+			artifact = json.RawMessage(candidate.Artifact)
+		}
 		if _, err = tx.Exec(ctx, `
 			INSERT INTO knowledge_spatial_candidates(
 				id, lesson_id, job_id, ordinal, start_ms, end_ms, confidence, reason,
-				keyframe_id, ocr_snippet, vision_snippet, concept_ids, signals
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+				keyframe_id, ocr_snippet, vision_snippet, concept_ids, signals, artifact
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb)`,
 			rowID, lessonID, id, candidate.Ordinal, candidate.StartMs, candidate.EndMs, candidate.Confidence, reason,
-			keyframeID, ocrSnippet, visionSnippet, conceptIDs, signals); err != nil {
+			keyframeID, ocrSnippet, visionSnippet, conceptIDs, signals, artifact); err != nil {
 			return 0, err
 		}
 	}
@@ -178,7 +185,7 @@ func (s *Service) ListSpatial(ctx context.Context, p identity.Principal, lessonI
 	}
 	rows, err := tx.Query(ctx, `
 		SELECT c.id, c.ordinal, c.start_ms, c.end_ms, c.confidence, c.reason,
-		       c.keyframe_id, k.time_ms, COALESCE(k.path, ''),
+		       c.keyframe_id, k.time_ms,
 		       c.ocr_snippet, c.vision_snippet, c.concept_ids, c.signals
 		FROM knowledge_spatial_candidates c
 		LEFT JOIN knowledge_keyframes k ON k.id = c.keyframe_id
@@ -192,18 +199,16 @@ func (s *Service) ListSpatial(ctx context.Context, p identity.Principal, lessonI
 	for rows.Next() {
 		var item SpatialCandidate
 		var keyframeTime *int
-		var path string
 		var conceptIDs []string
 		var signals []byte
 		if err = rows.Scan(
 			&item.ID, &item.Ordinal, &item.StartMs, &item.EndMs, &item.Confidence, &item.Reason,
-			&item.KeyframeID, &keyframeTime, &path,
+			&item.KeyframeID, &keyframeTime,
 			&item.OCRSnippet, &item.VisionSnippet, &conceptIDs, &signals,
 		); err != nil {
 			return nil, err
 		}
 		item.KeyframeTimeMs = keyframeTime
-		item.KeyframePath = path
 		if conceptIDs == nil {
 			conceptIDs = []string{}
 		}

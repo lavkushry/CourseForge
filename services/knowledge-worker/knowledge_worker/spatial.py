@@ -304,8 +304,8 @@ def _agreement(concept_tokens: set[str], ocr_text: str, vision: str) -> float:
             return 0.0
         return len(left & right) / min(len(left), len(right))
 
-    if ocr_tokens and vision_tokens:
-        pairs.append(coeff(ocr_tokens, vision_tokens))
+    # Concept agreement is the concept graph against on-screen text.
+    # OCR and a caption can match each other without matching the concept.
     if concept_tokens and ocr_tokens:
         pairs.append(coeff(concept_tokens, ocr_tokens))
     if concept_tokens and vision_tokens:

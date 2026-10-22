@@ -1,15 +1,17 @@
 """Build one explorable 3D scene from a single spatial candidate.
 
 The scene is a glTF of labeled boxes plus a scene graph. Every node label has
-to be supported by that candidate's OCR, transcript, or concept text. This
-module is not imported by the indexing pipeline.
+to be supported by that candidate's OCR, transcript, or concept text. The
+ingest worker calls ``generated_scene``. The indexing pipeline does not.
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
+import tempfile
 import re
 import shutil
 import struct
@@ -549,6 +551,106 @@ def _html(text: str) -> str:
         .replace(">", "&gt;")
         .replace('"', "&quot;")
     )
+
+
+def labels_from_text(text: str, evidence: str) -> list[str]:
+    """Labels are source lines, not words invented from a sentence.
+
+    A line is kept only when every word appears in order in the evidence.
+    """
+    labels: list[str] = []
+    for raw_line in text.replace("\r", "\n").split("\n"):
+        for part in re.split(r"\s{2,}|\s+[·|]\s+", raw_line):
+            label = " ".join(part.split())
+            if not label or len(label) > 48 or label in labels:
+                continue
+            if not label_supported(label, evidence):
+                continue
+            labels.append(label)
+            if len(labels) == 8:
+                return labels
+    return labels
+
+
+def _frame_ocr(candidate: dict[str, Any], keyframes: Sequence[dict[str, Any]] | None) -> str:
+    ordinal = candidate.get("keyframe_ordinal")
+    wanted = candidate.get("keyframe_id")
+    for frame in keyframes or []:
+        if not isinstance(frame, dict):
+            continue
+        if ordinal is not None and frame.get("ordinal") == ordinal:
+            text = _frame_ocr_text(frame)
+            if text:
+                return text
+        if isinstance(wanted, str) and wanted and frame.get("id") == wanted:
+            text = _frame_ocr_text(frame)
+            if text:
+                return text
+    return str(candidate.get("ocr_snippet") or "")
+
+
+def _frame_ocr_text(frame: dict[str, Any]) -> str:
+    ocr = frame.get("ocr")
+    if isinstance(ocr, dict):
+        return str(ocr.get("text") or "")
+    return str(frame.get("ocr_text") or frame.get("text") or "")
+
+
+def candidate_for_generation(
+    lecture_id: str,
+    candidate: dict[str, Any],
+    keyframes: Sequence[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    """Build a generator candidate whose nodes are OCR lines from this moment."""
+    if not isinstance(candidate, dict):
+        return None
+    prepared = dict(candidate)
+    prepared["lecture_id"] = lecture_id
+    ocr_text = _frame_ocr(prepared, keyframes)
+    if ocr_text:
+        prepared["ocr_snippet"] = ocr_text
+    evidence = evidence_text(prepared)
+    labels = labels_from_text(ocr_text or str(prepared.get("ocr_snippet") or ""), evidence)
+    if len(labels) < 2:
+        return None
+    nodes = []
+    concept_ids = []
+    for label in labels:
+        concept_id = concept_id_for(lecture_id, label)
+        nodes.append({"label": label, "parent": None, "concept_id": concept_id})
+        concept_ids.append(concept_id)
+    prepared["nodes"] = nodes
+    prepared["concept_ids"] = concept_ids
+    return prepared
+
+
+def generated_scene(
+    lecture_id: str,
+    candidate: dict[str, Any],
+    keyframes: Sequence[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    """Return one scene graph for a ranked candidate, or None when it has no diagram labels."""
+    prepared = candidate_for_generation(lecture_id, candidate, keyframes)
+    if prepared is None:
+        return None
+    with tempfile.TemporaryDirectory(prefix="spatial-scene-") as tmp:
+        folder = Path(tmp)
+        provenance = generate_artifact(prepared, folder)
+        glb = (folder / "scene.glb").read_bytes()
+    if len(glb) > 48_000:
+        glb = b""
+    start_ms = int(candidate.get("start_ms") or 0)
+    end_ms = int(candidate.get("end_ms") or start_ms)
+    if end_ms <= start_ms:
+        end_ms = start_ms + 1000
+    return {
+        "labels": provenance["labels"],
+        "concept_ids": provenance["concept_ids"],
+        "evidence": "\n".join(provenance["source_evidence"]),
+        "start_seconds": start_ms / 1000,
+        "end_seconds": end_ms / 1000,
+        "glb_base64": base64.b64encode(glb).decode("ascii") if glb else "",
+    }
 
 
 def generate_artifact(
