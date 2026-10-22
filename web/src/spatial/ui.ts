@@ -1,7 +1,7 @@
 import type { ApiClient } from '../api';
 import {
-  GROUND_TRUTH as SPATIAL_GROUND_TRUTH,
-  PLAN_NOTE as SPATIAL_PLAN_NOTE,
+  SPATIAL_GROUND_TRUTH,
+  SPATIAL_PLAN_NOTE,
   assetsForRange,
   exploreLabel,
   formatLectureTimestamp,

@@ -1,3 +1,4 @@
+import type { SpatialAsset } from './model';
 import { parseArtifact } from './provenance';
 import type { SpatialArtifact } from './types';
 
@@ -31,3 +32,17 @@ const stored: SpatialArtifact = {
 };
 
 export const FIXTURE_ARTIFACT: SpatialArtifact = parseArtifact(stored);
+
+/** Vendored read model for the same request-path moment. Held assets are absent. */
+export const spatialFixture: SpatialAsset[] = [
+  {
+    lecture_id: stored.lectureId,
+    concept_ids: ['kco_request'],
+    start_seconds: stored.timestampSeconds,
+    end_seconds: 36,
+    asset_url: '/api/v1/lessons/fixture-request-path/spatial/scene?kind=3d',
+    kind: '3d',
+    decision: 'release',
+    evidence: ocrQuote,
+  },
+];
