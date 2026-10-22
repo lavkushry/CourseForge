@@ -12,7 +12,7 @@ from knowledge_worker.api_client import KnowledgeAPI
 from knowledge_worker.asr import ASREngine, build_asr
 from knowledge_worker.config import Settings, load_settings
 from knowledge_worker.embedder import Embedder, build_embedder
-from knowledge_worker.index_pipeline import build_index_artifacts
+from knowledge_worker.index_pipeline import build_index_artifacts, gate_spatial_for_index
 from knowledge_worker.ocr import OCREngine, build_ocr
 from knowledge_worker.pipeline import resolve_media_path, run_ingest
 from knowledge_worker.qdrant_store import ensure_knowledge_collection, upsert_chunks
@@ -87,25 +87,35 @@ class IngestWorker:
                 embed_dim=embed_dim,
             )
             spatial_count = self._store_spatial(job_id, worker_id, fence, bundle.segments, bundle.keyframes, chapters)
-        self.api.complete(
-            job_id,
-            worker_id,
-            fence,
-            {
-                "lesson_id": lesson_id,
-                "word_count": len(bundle.words),
-                "segment_count": len(bundle.segments),
-                "keyframe_count": len(bundle.keyframes),
-                "chapter_count": len(chapters),
-                "chunk_count": len(chunks),
-                "asr_engine": bundle.asr_engine,
-                "scene_engine": bundle.scene_engine,
-                "ocr_engine": bundle.ocr_engine,
-                "embedder": embedder_name,
-                "embed_dim": embed_dim,
-                "spatial_candidate_count": spatial_count,
-            },
-        )
+            try:
+                spatial_gates = gate_spatial_for_index(
+                    lesson_id,
+                    bundle.segments,
+                    bundle.keyframes,
+                    chapters,
+                    payload,
+                )
+            except Exception:
+                log.exception("spatial confidence gate failed; indexing continues")
+                spatial_gates = []
+        result = {
+            "lesson_id": lesson_id,
+            "word_count": len(bundle.words),
+            "segment_count": len(bundle.segments),
+            "keyframe_count": len(bundle.keyframes),
+            "chapter_count": len(chapters),
+            "chunk_count": len(chunks),
+            "asr_engine": bundle.asr_engine,
+            "scene_engine": bundle.scene_engine,
+            "ocr_engine": bundle.ocr_engine,
+            "embedder": embedder_name,
+            "embed_dim": embed_dim,
+            "spatial_candidate_count": spatial_count,
+        }
+        if spatial_gates:
+            # Held assets stay out of the lecture. Labeled assets keep the warning.
+            result["spatial_gates"] = spatial_gates
+        self.api.complete(job_id, worker_id, fence, result)
 
     def _store_spatial(
         self,

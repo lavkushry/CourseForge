@@ -13,6 +13,8 @@ export {
   submitReview,
 } from './api';
 export { renderKnowledgePanel } from './panel';
+export { gateSpatialAsset, scoreSpatialConfidence } from './spatialGate';
+export type { SpatialDecision, SpatialGateResult, SpatialGateSignals } from './spatialGate';
 export type { KnowledgePanelOptions } from './panel';
 export { QDRANT_COLLECTION } from './types';
 export type {
