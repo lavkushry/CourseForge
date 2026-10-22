@@ -22,6 +22,7 @@ import (
 	"courseforge/backend/internal/planning"
 	"courseforge/backend/internal/playback"
 	"courseforge/backend/internal/practice"
+	"courseforge/backend/internal/spatial"
 )
 
 // baselinePatterns5758f87 is the route set registered by cmd/api (+ api.New + optional media)
@@ -235,6 +236,7 @@ func TestRegisterAPIRoutesNoPanicAndBaselineSuperset(t *testing.T) {
 		AI:           ai.New(nil),
 		Knowledge:    knowledge.New(nil),
 		Career:       career.New(nil, nil),
+		Spatial:      spatial.New(nil),
 		Media:        &media.Gateway{},
 	}
 	defer func() {

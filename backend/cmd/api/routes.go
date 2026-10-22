@@ -19,6 +19,7 @@ import (
 	"courseforge/backend/internal/planning"
 	"courseforge/backend/internal/playback"
 	"courseforge/backend/internal/practice"
+	"courseforge/backend/internal/spatial"
 )
 
 // apiRouteDeps holds services whose Register methods only call mux.Handle during wiring.
@@ -38,6 +39,7 @@ type apiRouteDeps struct {
 	AI           *ai.Service
 	Knowledge    *knowledge.Service
 	Career       *career.Service
+	Spatial      *spatial.Service
 	Media        *media.Gateway // optional; only registered when non-nil
 }
 
@@ -59,6 +61,7 @@ func registerAPIRoutes(mux *http.ServeMux, d apiRouteDeps) {
 	d.AI.Register(mux, d.Auth)
 	d.Knowledge.Register(mux, d.Auth)
 	d.Career.Register(mux, d.Auth)
+	d.Spatial.Register(mux, d.Auth)
 	if d.Media != nil {
 		d.Media.Register(mux, d.Auth)
 	}

@@ -1,0 +1,21 @@
+{
+  "courseId": "fixture-course",
+  "lessonId": "fixture-request-path",
+  "timestampSeconds": 24,
+  "keyframeId": "kf_request",
+  "keyframeTimeMs": 24000,
+  "conceptId": "kco_request",
+  "concept": "Request path",
+  "glbUrl": "/vr/request-path.glb",
+  "ocrText": "API Gateway\nAuth\nOrders\nQueue",
+  "transcriptQuote": "The request path consists of an API gateway that flows into auth, then orders, then the queue.",
+  "visionQuote": "Architecture diagram of four boxes connected by arrows: API gateway, auth, orders, and a queue.",
+  "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json",
+  "meshNote": "The spatial-3d branch had not published a mesh. This GLB contains only the OCR lines of keyframe kf_request, in transcript order, joined by arrows described in the vision caption.",
+  "labels": [
+    { "text": "API Gateway", "source": "ocr", "quote": "API Gateway", "node": "API Gateway" },
+    { "text": "Auth", "source": "ocr", "quote": "Auth", "node": "Auth" },
+    { "text": "Orders", "source": "ocr", "quote": "Orders", "node": "Orders" },
+    { "text": "Queue", "source": "ocr", "quote": "Queue", "node": "Queue" }
+  ]
+}

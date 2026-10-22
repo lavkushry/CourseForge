@@ -1,0 +1,47 @@
+{
+  "lectureId": "fixture-request-path",
+  "timestampSeconds": 24,
+  "keyframeTimeMs": 24000,
+  "title": "Request path",
+  "modelUrl": "/spatial/scene.gltf",
+  "placement": "floor",
+  "nodes": [
+    {
+      "id": "ocr-api-gateway",
+      "label": "API Gateway",
+      "source": "ocr",
+      "quote": "API Gateway\nAuth\nOrders\nQueue",
+      "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json"
+    },
+    {
+      "id": "ocr-auth",
+      "label": "Auth",
+      "source": "ocr",
+      "quote": "API Gateway\nAuth\nOrders\nQueue",
+      "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json"
+    },
+    {
+      "id": "ocr-orders",
+      "label": "Orders",
+      "source": "ocr",
+      "quote": "API Gateway\nAuth\nOrders\nQueue",
+      "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json"
+    },
+    {
+      "id": "ocr-queue",
+      "label": "Queue",
+      "source": "ocr",
+      "quote": "API Gateway\nAuth\nOrders\nQueue",
+      "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json"
+    }
+  ],
+  "context": [
+    {
+      "source": "transcript",
+      "quote": "The request path consists of an API gateway that flows into auth, then orders, then the queue.",
+      "startMs": 20000,
+      "endMs": 36000,
+      "evidence": "services/knowledge-worker/tests/fixtures/spatial_lecture.json"
+    }
+  ]
+}

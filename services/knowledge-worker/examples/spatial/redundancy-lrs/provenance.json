@@ -1,0 +1,40 @@
+{
+  "lecture_id": "54e8ac4d86229d113a38dccada0d7007b7251ad7",
+  "lecture_title": "[016] Redundancy Levels in Storage Account",
+  "course": "Deepak Data Engg",
+  "library_key": "Deepak Data Engg/[016] Redundancy Levels in Storage Account.mp4",
+  "claim_name": "mission-ade-2026-016-redundancy-levels-in-storage-account",
+  "concept_ids": [
+    "kco_1762dd4585e7562a",
+    "kco_ff9f72c9530defce",
+    "kco_d0921512d96c6cfb",
+    "kco_e6f077b028706c91",
+    "kco_36a990173c5f3d3d",
+    "kco_93854feadfb1056b",
+    "kco_21ab233f32feb398"
+  ],
+  "start_ms": null,
+  "end_ms": null,
+  "keyframe_time_ms": null,
+  "keyframe_id": "b0eb81beffb9af6112136e43f073c2f0",
+  "keyframe_path": "keyframe.webp",
+  "keyframe_source": "https://thumbs.odycdn.com/b0eb81beffb9af6112136e43f073c2f0.webp",
+  "labels": [
+    "Primary region",
+    "Datacenter",
+    "LRS",
+    "Storage Account",
+    "Copy 1",
+    "Copy2",
+    "Copy3"
+  ],
+  "source_evidence": [
+    "Primary region\nfast Datacenter\nLRS\n— storage\nname = Account\n« Copy 1 Copy2 Copy3"
+  ],
+  "time_status": "unmeasured",
+  "time_note": "In-video start and end were not measured. The library copy is unlisted and the public media URL returns 401 without a channel signature, so scene detection could not seek the file. The keyframe is the lecture's published thumbnail.",
+  "reason": "Published thumbnail OCR shows a nested diagram. Parents follow the boxes visible in that keyframe.",
+  "artifact_path": "scene.glb",
+  "scene_path": "scene.json",
+  "viewer_path": "viewer.html"
+}

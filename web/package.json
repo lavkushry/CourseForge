@@ -19,6 +19,7 @@
     "dev:staging": "node scripts/dev_staging.mjs"
   },
   "dependencies": {
+    "@google/model-viewer": "^4.4.0",
     "hls.js": "^1.6.13",
     "media-chrome": "4.19.3"
   },

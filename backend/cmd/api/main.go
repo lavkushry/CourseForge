@@ -31,6 +31,7 @@ import (
 	"courseforge/backend/internal/playback"
 	"courseforge/backend/internal/practice"
 	"courseforge/backend/internal/ratelimit"
+	"courseforge/backend/internal/spatial"
 	"courseforge/backend/internal/store"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
@@ -115,6 +116,7 @@ func run() error {
 		AI:           aiService,
 		Career:       career.New(pool, aiService),
 		Knowledge:    knowledge.New(pool),
+		Spatial:      spatial.New(pool),
 	}
 	deps.Knowledge.Generator = deps.AI
 	if knowledge.EmbedderModeFromEnv() != "hash" {
