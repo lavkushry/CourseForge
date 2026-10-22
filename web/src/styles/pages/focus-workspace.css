@@ -122,8 +122,10 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 .focus-icon-btn {
   flex: 0 0 auto;
-  height: 32px;
-  padding: 0 10px;
+  min-height: var(--touch-min, 44px);
+  min-width: var(--touch-min, 44px);
+  height: auto;
+  padding: 0 12px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: transparent;
@@ -131,6 +133,9 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .focus-icon-btn[aria-pressed='false'] {

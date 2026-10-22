@@ -806,3 +806,19 @@
 .action-pill.pill-next:hover:not(:disabled) {
   filter: brightness(1.08);
 }
+
+/* Responsive grids (moved from labs.css) */
+@media (max-width: 640px) {
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Header omni/quick search covers mobile; hide duplicate in-page search */
+  .catalog-search {
+    display: none;
+  }
+}

@@ -21,9 +21,9 @@
 }
 
 .paths-sidebar {
-  background: #13141e;
-  border: 1px solid #232533;
-  border-radius: 14px;
+  background: var(--surface-elevated, #1a1b22);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 1.2rem;
 }
 
@@ -57,9 +57,9 @@ button.path-nav-item {
 }
 
 .path-nav-item {
-  background: #181926;
-  border: 1px solid #232533;
-  border-radius: 10px;
+  background: var(--panel, #16171d);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -86,7 +86,7 @@ button.path-nav-item {
 }
 
 .path-progress::-webkit-progress-bar {
-  background: #0c0d12;
+  background: var(--bg);
 }
 
 .path-progress::-webkit-progress-value {
@@ -94,7 +94,7 @@ button.path-nav-item {
 }
 
 .paths-main {
-  background: var(--surface-elevated, #13141e);
+  background: var(--surface-elevated, #1a1b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--poster-radius, 6px);
   padding: 1.8rem;
@@ -106,7 +106,7 @@ button.path-nav-item {
 .path-header {
   display: grid;
   gap: 0.5rem;
-  border-bottom: 1px solid #232533;
+  border-bottom: 1px solid var(--line);
   padding-bottom: 1.2rem;
 }
 
@@ -123,9 +123,9 @@ button.path-nav-item {
 }
 
 .stat-chip {
-  background: #1e202f;
-  border: 1px solid #2f3248;
-  border-radius: 6px;
+  background: var(--panel, #16171d);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: var(--space-1) 10px;
   font-size: 0.82rem;
   font-weight: 600;
@@ -137,9 +137,9 @@ button.path-nav-item {
 }
 
 .path-step-card {
-  background: #181a28;
-  border: 1px solid #26283b;
-  border-radius: 12px;
+  background: var(--panel, #16171d);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 1.2rem;
   display: grid;
   gap: 0.8rem;
@@ -147,8 +147,8 @@ button.path-nav-item {
 }
 
 .path-step-card.step-done {
-  border-color: #2e593d;
-  background: #121915;
+  border-color: rgba(46, 89, 61, 0.85);
+  background: color-mix(in srgb, var(--panel) 80%, #0f2a18);
 }
 
 .step-card-head {
@@ -158,8 +158,8 @@ button.path-nav-item {
 }
 
 .step-index-badge {
-  background: #2e2640;
-  color: #ffb395;
+  background: var(--accent-soft);
+  color: var(--coral, #ffb395);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 3px var(--space-2);
@@ -184,7 +184,7 @@ button.path-nav-item {
   margin: 0;
   padding-left: 1.2rem;
   font-size: 0.88rem;
-  color: #a5a8bc;
+  color: var(--muted);
   display: grid;
   gap: 0.3rem;
 }
@@ -196,20 +196,20 @@ button.path-nav-item {
   flex-wrap: wrap;
   font-size: 0.82rem;
   padding-top: 0.4rem;
-  border-top: 1px solid #232535;
+  border-top: 1px solid var(--line);
 }
 
 .source-chip {
   font-size: 0.78rem;
   padding: var(--space-1) var(--space-2);
-  background: #222438;
-  border: 1px solid #333650;
+  background: var(--surface-hover, #262730);
+  border: 1px solid var(--line);
 }
 
 .path-skill-tree {
-  background: #181926;
-  border: 1px solid #282a3d;
-  border-radius: 12px;
+  background: var(--panel, #16171d);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 1.2rem;
   display: grid;
   gap: 0.8rem;
@@ -244,7 +244,7 @@ button.path-nav-item {
 }
 
 .ai-gen-path-btn {
-  color: #ffb395;
+  color: var(--coral, #ffb395);
   border-color: rgba(255, 121, 82, 0.25);
   background: var(--accent-soft);
   font-size: 0.8rem;
@@ -256,11 +256,11 @@ button.path-nav-item {
 }
 
 .new-path-dialog {
-  background: #161724;
-  border: 1px solid #363952;
-  border-radius: 14px;
+  background: var(--surface-elevated, #1a1b22);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 1.8rem;
-  color: #fff;
+  color: var(--text);
   width: 440px;
   max-width: 90vw;
 }
@@ -282,9 +282,9 @@ button.path-nav-item {
 .text-input {
   width: 100%;
   padding: 0.8rem;
-  background: #0c0d12;
-  border: 1px solid #2e3146;
-  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   color: inherit;
   font: inherit;
 }
@@ -305,9 +305,9 @@ button.path-nav-item {
   justify-content: space-between;
   gap: 14px;
   padding: var(--space-4) var(--space-5);
-  background: #0f121d;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
+  background: var(--surface-elevated, #1a1b22);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   margin-bottom: var(--space-5);
 }
 
@@ -333,7 +333,7 @@ button.path-nav-item {
   gap: var(--space-2);
   font-size: 0.82rem;
   font-weight: 600;
-  color: #a3aac2;
+  color: var(--muted);
 }
 
 .paths-sidebar-head {

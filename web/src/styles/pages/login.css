@@ -13,9 +13,9 @@
 
 .login-panel {
   position: relative;
-  background: rgba(18, 18, 20, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: var(--surface-elevated, #1a1b22);
+  border: 1px solid var(--line);
+  border-radius: var(--poster-radius, 6px);
   padding: 42px;
   width: min(100%, 440px);
   margin: auto 0;
@@ -26,7 +26,7 @@
   font-size: 2.5rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .login-page {
     padding: 24px 16px;
   }
@@ -49,17 +49,17 @@
 #login-form label {
   font-size: 0.73rem;
   font-weight: 650;
-  color: #d4d4da;
+  color: var(--muted);
 }
 
 #login-form input {
   width: 100%;
-  border: 1px solid #ffffff24;
-  background: #101116;
+  border: 1px solid var(--line);
+  background: var(--bg);
   padding: 10px 14px;
   min-height: 44px;
   margin-bottom: var(--space-3);
-  color: #fff;
+  color: var(--text);
 }
 
 #login-form > button[type='submit'] {
@@ -112,21 +112,21 @@
 
 .auth-tabs {
   display: flex;
-  background: #0c0d12;
-  border-radius: 12px;
+  background: var(--bg);
+  border-radius: var(--poster-radius, 6px);
   padding: var(--space-1);
   margin-bottom: var(--space-6);
-  border: 1px solid #ffffff14;
+  border: 1px solid var(--line);
   gap: var(--space-1);
 }
 
 .auth-tab {
   flex: 1;
   padding: 10px var(--space-4);
-  border-radius: 9px;
+  border-radius: var(--poster-radius, 6px);
   font-size: 0.82rem;
   font-weight: 600;
-  color: #a1a3b5;
+  color: var(--muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -135,15 +135,15 @@
 }
 
 .auth-tab:hover {
-  color: #fff;
+  color: var(--text);
   background: #ffffff08;
 }
 
 .auth-tab.active {
-  color: #fff;
-  background: #232533;
-  box-shadow: 0 4px 12px #00000040;
-  border: 1px solid #ffffff18;
+  color: var(--text);
+  background: var(--surface-hover, #262730);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line);
 }
 
 .input-wrap {
@@ -172,7 +172,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: #d4d4da;
+  color: var(--muted);
   font-size: 0.78rem;
   font-weight: 650;
   cursor: pointer;
@@ -184,7 +184,7 @@
 }
 
 .password-toggle-btn:hover {
-  color: #fff;
+  color: var(--text);
   background: #ffffff10;
 }
 
@@ -192,7 +192,7 @@
   margin-top: 18px;
   text-align: center;
   font-size: 0.78rem;
-  color: #9a9cb0;
+  color: var(--muted);
 }
 
 .auth-link-btn {
@@ -223,18 +223,18 @@
 #register-form label {
   font-size: 0.73rem;
   font-weight: 650;
-  color: #d4d4da;
+  color: var(--muted);
 }
 
 #register-form input {
   width: 100%;
-  border: 1px solid #ffffff24;
-  background: #101116;
+  border: 1px solid var(--line);
+  background: var(--bg);
   padding: 10px 14px;
   min-height: 44px;
   margin-bottom: var(--space-3);
-  color: #fff;
-  border-radius: 8px;
+  color: var(--text);
+  border-radius: var(--poster-radius, 6px);
 }
 
 #register-form > button[type='submit'] {
@@ -266,7 +266,7 @@
 
 .preview-header h2 {
   font-size: 1.85rem;
-  color: #fff;
+  color: var(--text);
   margin: 6px 0 var(--space-2);
 }
 
@@ -278,7 +278,7 @@
 
 .guest-card {
   background: var(--surface-elevated, #12131e);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
   border-radius: var(--poster-radius, 6px);
   overflow: hidden;
   display: flex;
@@ -307,12 +307,12 @@
 .guest-card-body h3 {
   font-size: 1rem;
   margin: 0;
-  color: #fff;
+  color: var(--text);
   line-height: 1.35;
 }
 
 .guest-card-meta {
   font-size: 0.8rem;
-  color: #8e92a8;
+  color: var(--muted);
   margin-top: auto;
 }
