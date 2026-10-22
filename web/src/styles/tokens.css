@@ -129,6 +129,8 @@
 html[data-accent='teal'] {
   --coral: #14b8a6;
   --coral-hover: #2dd4bf;
+  --accent-soft: rgba(20, 184, 166, 0.16);
+  --accent-border: rgba(20, 184, 166, 0.42);
   --accent-primary: #14b8a6;
   --accent-hover: #2dd4bf;
   --accent-glow: rgba(13, 148, 136, 0.38);
@@ -139,6 +141,8 @@ html[data-accent='teal'] {
 html[data-accent='rose'] {
   --coral: #f43f5e;
   --coral-hover: #fb7185;
+  --accent-soft: rgba(244, 63, 94, 0.16);
+  --accent-border: rgba(244, 63, 94, 0.42);
   --accent-primary: #f43f5e;
   --accent-hover: #fb7185;
   --accent-glow: rgba(225, 29, 72, 0.38);
@@ -174,6 +178,8 @@ html[data-theme='light'] {
 html[data-theme='light'][data-accent='teal'] {
   --coral: #0d9488;
   --coral-hover: #14b8a6;
+  --accent-soft: rgba(13, 148, 136, 0.12);
+  --accent-border: rgba(13, 148, 136, 0.35);
   --accent-primary: #0d9488;
   --accent-hover: #14b8a6;
   --accent-glow: rgba(13, 148, 136, 0.28);
@@ -184,6 +190,8 @@ html[data-theme='light'][data-accent='teal'] {
 html[data-theme='light'][data-accent='rose'] {
   --coral: #e11d48;
   --coral-hover: #f43f5e;
+  --accent-soft: rgba(225, 29, 72, 0.12);
+  --accent-border: rgba(225, 29, 72, 0.35);
   --accent-primary: #e11d48;
   --accent-hover: #f43f5e;
   --accent-glow: rgba(225, 29, 72, 0.28);

@@ -822,3 +822,20 @@
     display: none;
   }
 }
+
+/* Home = hero + rows only (no marketing heading / in-page search stack) */
+#catalog.is-home > .section-heading {
+  display: none;
+}
+
+#catalog.is-home {
+  margin-top: 0;
+}
+
+/* Desktop: hide in-page catalog search when header quick-search is visible */
+@media (min-width: 1025px) {
+  #catalog .catalog-search {
+    display: none;
+  }
+}
+

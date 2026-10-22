@@ -415,6 +415,10 @@ body.academy-studio-mode .workspace {
 
   /* Default Mobile Bottom Navigation Bar */
 
+  #primary-nav.lms-left-rail .lms-nav-scroll {
+    display: contents;
+  }
+
   #primary-nav.lms-left-rail {
     position: fixed;
     top: auto;
@@ -1650,8 +1654,21 @@ body.academy-studio-mode .workspace {
     padding: 14px 0 var(--space-4);
     gap: var(--space-2);
     z-index: 110;
-    overflow: visible;
+    overflow: hidden;
     transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
   }
 
   .lms-rail-studio-head {
@@ -1660,10 +1677,10 @@ body.academy-studio-mode .workspace {
 
   #primary-nav.lms-left-rail .lms-nav-item {
     position: relative;
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
+    width: var(--touch-min, 44px);
+    height: var(--touch-min, 44px);
+    min-width: var(--touch-min, 44px);
+    min-height: var(--touch-min, 44px);
     border-radius: 50%;
     background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1786,8 +1803,12 @@ body.academy-studio-mode .workspace {
     align-items: stretch;
     padding: 14px 14px 18px;
     gap: 5px;
-    background: #111116;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--canvas);
+    border-right: 1px solid var(--line);
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-scroll {
+    align-items: stretch;
   }
 
   body.academy-studio-mode .lms-rail-studio-head {
@@ -1846,6 +1867,11 @@ body.academy-studio-mode .workspace {
   }
 }
 
+
+/* Streaming browse: drop LMS breadcrumb outside classroom */
+body:has(#catalog:not([hidden])) .lms-breadcrumb {
+  display: none;
+}
 
 /* Cull dense LMS chrome outside classroom (streaming surfaces) */
 #workspace-mode-toggle {

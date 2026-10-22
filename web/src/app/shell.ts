@@ -319,6 +319,7 @@ export function installShell(ctx: AppContext): void {
           <span class="academy-badge-pill">ACADEMY STUDIO</span>
           <button id="sidebar-normal-mode" type="button" class="sidebar-mode-exit" title="Switch to Normal Mode">Normal ↗</button>
         </div>
+        <div class="lms-nav-scroll">
         <button id="nav-search-btn" type="button" class="lms-nav-item drawer-search-btn lms-secondary-mobile" aria-label="Search all pages" title="Search all pages">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg></span>
           <span class="lms-nav-label">Search</span>
@@ -376,6 +377,7 @@ export function installShell(ctx: AppContext): void {
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg></span>
           <span class="lms-nav-label">Menu</span>
         </button>
+        </div>
         <div class="lms-rail-bottom">
           <button id="rail-mode-expand" type="button" class="lms-rail-exit-btn" aria-label="Toggle Studio sidebar labels" title="Expand / Collapse Studio Menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

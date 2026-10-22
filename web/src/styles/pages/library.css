@@ -29,7 +29,7 @@
 
 .filter-pill {
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #181922;
+  background: var(--surface-elevated, #1a1b22);
   color: #cfd2dc;
   font-size: 0.8rem;
   font-weight: 600;

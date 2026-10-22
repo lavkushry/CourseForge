@@ -215,3 +215,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Streaming: single-column career browse (stack dense admin grids) */
+.career-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+@media (min-width: 1100px) {
+  .career-layout {
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+  }
+}
+
