@@ -160,7 +160,7 @@
 .cert-course {
   font-size: 1.4rem;
   margin: 0.2rem 0;
-  color: #c7a7ff;
+  color: var(--coral);
 }
 
 .cert-date {

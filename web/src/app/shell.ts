@@ -304,7 +304,7 @@ export function installShell(ctx: AppContext): void {
         <button id="header-bell-btn" type="button" class="lms-circle-icon-btn" aria-label="Open daily plan notifications" title="Daily Plan &amp; Schedule">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </button>
-        <button id="header-gear-btn" type="button" class="lms-circle-icon-btn" aria-label="Open studio settings" title="Studio Settings">
+        <button id="header-gear-btn" type="button" class="lms-circle-icon-btn header-chrome-secondary" aria-label="Open settings" title="Settings">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
         <span class="account-avatar" aria-hidden="true"></span>
@@ -323,51 +323,51 @@ export function installShell(ctx: AppContext): void {
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg></span>
           <span class="lms-nav-label">Search</span>
         </button>
-        <button id="nav-home" data-catalog-view="home" class="lms-nav-item">
+        <button id="nav-home" data-catalog-view="home" class="lms-nav-item" aria-label="Home">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z"/><path d="M9 16h6"/></svg></span>
           <span class="lms-nav-label">Home</span>
         </button>
-        <button id="nav-courses" data-catalog-view="courses" class="lms-nav-item">
+        <button id="nav-courses" data-catalog-view="courses" class="lms-nav-item" aria-label="Courses">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg></span>
           <span class="lms-nav-label">Courses</span>
         </button>
-        <button id="nav-saved" data-catalog-view="saved" class="lms-nav-item">
+        <button id="nav-saved" data-catalog-view="saved" class="lms-nav-item" aria-label="My List">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
           <span class="lms-nav-label">My List</span>
         </button>
-        <button id="nav-library" data-catalog-view="library" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-library" data-catalog-view="library" class="lms-nav-item lms-secondary-mobile" aria-label="Library">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
           <span class="lms-nav-label">Library</span>
         </button>
-        <button id="nav-planner" data-catalog-view="planner" class="lms-nav-item">
+        <button id="nav-planner" data-catalog-view="planner" class="lms-nav-item" aria-label="Daily Plan">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></span>
           <span class="lms-nav-label">Daily Plan</span>
         </button>
-        <button id="nav-history" data-catalog-view="history" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-history" data-catalog-view="history" class="lms-nav-item lms-secondary-mobile" aria-label="History">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span>
           <span class="lms-nav-label">History</span>
         </button>
-        <button id="nav-reviews" data-catalog-view="reviews" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-reviews" data-catalog-view="reviews" class="lms-nav-item lms-secondary-mobile" aria-label="Review Deck">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
           <span class="lms-nav-label">Review Deck</span>
         </button>
-        <button id="nav-tutor" data-catalog-view="tutor" class="lms-nav-item">
+        <button id="nav-tutor" data-catalog-view="tutor" class="lms-nav-item" aria-label="AI Tutor">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3"/><polygon points="22 8 16 12 22 16 22 8"/></svg></span>
           <span class="lms-nav-label">AI Tutor</span>
         </button>
-        <button id="nav-labs" data-catalog-view="labs" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-labs" data-catalog-view="labs" class="lms-nav-item lms-secondary-mobile" aria-label="Labs">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>
           <span class="lms-nav-label">Labs</span>
         </button>
-        <button id="nav-paths" data-catalog-view="paths" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-paths" data-catalog-view="paths" class="lms-nav-item lms-secondary-mobile" aria-label="Roadmaps">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></span>
           <span class="lms-nav-label">Roadmaps</span>
         </button>
-        <button id="nav-career" data-catalog-view="career" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-career" data-catalog-view="career" class="lms-nav-item lms-secondary-mobile" aria-label="Career">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
           <span class="lms-nav-label">Career</span>
         </button>
-        <button id="nav-settings" data-catalog-view="settings" class="lms-nav-item lms-secondary-mobile">
+        <button id="nav-settings" data-catalog-view="settings" class="lms-nav-item lms-secondary-mobile" aria-label="Settings">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span class="lms-nav-label">Settings</span>
         </button>
@@ -479,7 +479,7 @@ export function installShell(ctx: AppContext): void {
               <div class="lesson-meta-top">
                 <div class="lesson-meta-badges">
                   <span id="lesson-module-badge" class="lesson-badge-pill pill-terracotta">Module 1</span>
-                  <span id="lesson-category-badge" class="lesson-badge-pill pill-purple">Engineering</span>
+                  <span id="lesson-category-badge" class="lesson-badge-pill pill-amber">Engineering</span>
                   <span id="lesson-duration-badge" class="lesson-badge-pill pill-emerald">Studio Lecture</span>
                   <span id="coverage" class="lesson-badge-pill pill-ocean coverage">In Progress</span>
                 </div>
@@ -814,7 +814,12 @@ export function installShell(ctx: AppContext): void {
       const savedTheme = localStorage.getItem('courseforge_theme');
       if (savedTheme) document.documentElement.dataset.theme = savedTheme;
       const savedAccent = localStorage.getItem('courseforge_accent');
-      if (savedAccent) document.documentElement.dataset.accent = savedAccent;
+      if (savedAccent === 'indigo' || savedAccent === 'coral') {
+        localStorage.setItem('courseforge_accent', 'coral');
+        delete document.documentElement.dataset.accent;
+      } else if (savedAccent) {
+        document.documentElement.dataset.accent = savedAccent;
+      }
     } catch {}
     ctx.restoreBrowserPreferences(video);
     void ctx.api

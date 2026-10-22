@@ -2,13 +2,14 @@ import { el } from './dom';
 
 export interface PillOptions {
   className?: string;
-  tone?: 'default' | 'terracotta' | 'purple' | 'emerald' | 'ocean';
+  tone?: 'default' | 'terracotta' | 'amber' | 'purple' | 'emerald' | 'ocean';
 }
 
 const toneClass: Record<NonNullable<PillOptions['tone']>, string> = {
   default: '',
   terracotta: 'pill-terracotta',
-  purple: 'pill-purple',
+  amber: 'pill-amber',
+  purple: 'pill-amber',
   emerald: 'pill-emerald',
   ocean: 'pill-ocean',
 };

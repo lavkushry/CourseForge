@@ -129,11 +129,17 @@ export class SettingsView {
     const accentWrap = el('div', 'setting-group');
     accentWrap.append(el('label', 'input-label', 'Accent Glow'));
     const accentRow = el('div', 'accent-toggle-row');
-    const currentAccent =
-      document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'indigo';
+    const rawAccent =
+      document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'coral';
+    // Migrate the historical indigo key to the coral default.
+    const currentAccent = rawAccent === 'indigo' ? 'coral' : rawAccent;
+    if (rawAccent === 'indigo') {
+      document.documentElement.dataset.accent = 'coral';
+      localStorage.setItem('courseforge_accent', 'coral');
+    }
 
     for (const [aKey, aLabel] of [
-      ['indigo', 'Indigo (Default)'],
+      ['coral', 'Coral (Default)'],
       ['teal', 'Teal Glow'],
       ['rose', 'Crimson Rose'],
     ] as const) {
@@ -144,7 +150,11 @@ export class SettingsView {
       );
       btn.type = 'button';
       btn.addEventListener('click', () => {
-        document.documentElement.dataset.accent = aKey;
+        if (aKey === 'coral') {
+          delete document.documentElement.dataset.accent;
+        } else {
+          document.documentElement.dataset.accent = aKey;
+        }
         localStorage.setItem('courseforge_accent', aKey);
         this.render();
       });

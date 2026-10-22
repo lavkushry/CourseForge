@@ -21,7 +21,7 @@
 
 .learning-nav button[aria-pressed='true'] {
   border-color: var(--accent);
-  background: #30233e;
+  background: var(--accent-soft);
   color: #fff;
 }
 
@@ -101,7 +101,7 @@
 }
 
 .quiz-choice:has(input:checked) {
-  background: #30233e;
+  background: var(--accent-soft);
 }
 
 .quiz-choice input {
