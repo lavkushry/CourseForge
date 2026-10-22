@@ -56,9 +56,9 @@
   position: relative;
   min-height: 520px;
   isolation: isolate;
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   overflow: hidden;
-  background: #121214;
+  background: var(--surface-elevated, #1a1b22);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
   margin: 0 0 var(--row-gap, 2.25rem);
 }
@@ -110,9 +110,7 @@
 }
 
 .hero-metadata span + span::before {
-  content: '·';
-  color: #797a83;
-  margin-right: 18px;
+  content: none;
 }
 
 .hero-actions {

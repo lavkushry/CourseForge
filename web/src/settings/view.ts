@@ -77,30 +77,6 @@ export class SettingsView {
     );
     appearanceCard.append(appHead);
 
-    const modeWrap = el('div', 'setting-group');
-    modeWrap.append(el('label', 'input-label', 'Workspace Layout Mode'));
-    const modeRow = el('div', 'theme-toggle-row');
-    const currentMode = document.body.classList.contains('academy-studio-mode') ? 'studio' : 'normal';
-    for (const [mKey, mLabel] of [
-      ['normal', 'Normal Mode (Streaming)'],
-      ['studio', 'Academy Studio (Sidebar)'],
-    ] as const) {
-      const btn = el(
-        'button',
-        currentMode === mKey ? 'button theme-choice-btn active' : 'button quiet theme-choice-btn',
-        mLabel,
-      );
-      btn.type = 'button';
-      btn.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('courseforge:workspace-mode', { detail: mKey }));
-        this.options.feedback(`Switched to ${mLabel}.`);
-        this.render();
-      });
-      modeRow.append(btn);
-    }
-    modeWrap.append(modeRow);
-    appearanceCard.append(modeWrap);
-
     const themeWrap = el('div', 'setting-group');
     themeWrap.append(el('label', 'input-label', 'Color Scheme'));
     const themeRow = el('div', 'theme-toggle-row');

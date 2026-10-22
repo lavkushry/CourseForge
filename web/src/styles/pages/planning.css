@@ -201,9 +201,9 @@
   align-items: center;
   gap: 14px;
   padding: var(--space-4) 18px;
-  background: #0f121d;
+  background: var(--surface-elevated, #1a1b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   transition:
     border-color 0.2s ease,
@@ -218,7 +218,7 @@
 .momentum-card-icon {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   background: var(--accent-soft);
   border: 1px solid var(--accent-glow);
   color: var(--coral);
@@ -267,9 +267,9 @@
 
 .calendar-strip-card {
   padding: 18px var(--space-5);
-  background: #0f121d;
+  background: var(--surface-elevated, #1a1b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
 }
 
 .calendar-strip-head {
@@ -345,7 +345,7 @@
   padding: 5px;
   background: rgba(15, 18, 29, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
 }
@@ -417,9 +417,9 @@
   justify-content: space-between;
   gap: 10px;
   padding: 14px var(--space-3);
-  background: #0b0d15;
+  background: var(--bg);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   transition:
     border-color 0.2s ease,
     transform 0.2s ease;
@@ -471,7 +471,7 @@
   padding: 18px;
   background: #10131e;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
 }
 
 .week-day-display-card strong {
@@ -589,7 +589,7 @@
 .habits-card > p {
   margin: 0;
   padding: 10px 14px;
-  background: #0b0d15;
+  background: var(--bg);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   font-weight: 600;
@@ -612,9 +612,9 @@
   gap: var(--space-3);
   margin: 14px 0 var(--space-6);
   padding: var(--space-4);
-  background: #0f121d;
+  background: var(--surface-elevated, #1a1b22);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 14px;
+  border-radius: var(--poster-radius, 6px);
 }
 
 .roadmap-form .form-input {

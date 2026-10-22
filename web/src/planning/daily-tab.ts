@@ -14,34 +14,21 @@ export function renderDaily(host: PlanningHost): HTMLElement {
   const items = host.currentDay?.items || [];
   const completedCount = host.currentDay?.completed_count ?? items.filter(it => it.status === 'done').length;
 
+  const remaining = Math.max(0, items.length - completedCount);
   const cardsData = [
     {
       icon: 'target',
       title: 'Daily Goal',
       value: `${currentMinutes}m`,
-      sub: `${Math.min(currentMinutes, completedCount * 25)}m completed today`,
-      tag: 'FOCUS TARGET',
-    },
-    {
-      icon: 'flame',
-      title: 'Weekly Streak',
-      value: '5 Days',
-      sub: '86% consistency score',
-      tag: 'ACTIVE STREAK',
+      sub: 'Study budget for today',
+      tag: 'TODAY',
     },
     {
       icon: 'graduation',
-      title: 'Masterclasses',
-      value: '3 Enrolled',
-      sub: '62% average progress',
-      tag: 'LEARNING PATH',
-    },
-    {
-      icon: 'award',
-      title: 'Retention Mastery',
-      value: '94%',
-      sub: '24 cards & quizzes',
-      tag: 'SPACED RECALL',
+      title: 'Plan items',
+      value: `${completedCount}/${items.length}`,
+      sub: remaining === 0 ? 'All set for today' : `${remaining} left on your list`,
+      tag: 'PROGRESS',
     },
   ] as const;
 

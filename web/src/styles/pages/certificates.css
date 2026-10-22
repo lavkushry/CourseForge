@@ -13,7 +13,7 @@
   flex-wrap: wrap;
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(30, 25, 40, 0.8));
   border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   padding: 1rem 1.4rem;
 }
 
@@ -39,7 +39,7 @@
 .cert-readiness {
   background: #13141c;
   border: 1px solid #282a36;
-  border-radius: 12px;
+  border-radius: var(--poster-radius, 6px);
   padding: 1.2rem;
   display: grid;
   gap: 1rem;
@@ -107,7 +107,7 @@
 .cert-card {
   background: linear-gradient(145deg, #181926, #0e0f17);
   border: 2px solid #d4af37;
-  border-radius: 16px;
+  border-radius: var(--poster-radius, 6px);
   padding: 2.5rem;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.9),
