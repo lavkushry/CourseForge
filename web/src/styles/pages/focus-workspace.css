@@ -355,10 +355,85 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hid
   padding: 6px 12px;
 }
 
+@media (max-width: 1024px) {
+  /* Header is 60px and the bottom dock is 64px. The shell starts below the header,
+     so subtracting only 64px parks the transcript dock under the navigation. */
+  body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+    height: calc(100dvh - 60px - 64px - var(--safe-bottom));
+    padding-bottom: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .focus-workspace .focus-body,
   .focus-workspace .classroom-grid {
     position: relative;
+  }
+
+  /* The phone meta bar was a 2×2 stack of 44px actions plus badges, which
+     collapsed the video row to 0 and pushed the dock under the bottom nav. */
+  #classroom.focus-workspace #course-certificate-section {
+    display: none;
+  }
+
+  #classroom.focus-workspace .lesson-column {
+    grid-template-rows: minmax(0, 1fr) auto minmax(112px, 26vh);
+  }
+
+  #classroom.focus-workspace .lesson-meta-bar {
+    max-height: 132px;
+    overflow: auto;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  #classroom.focus-workspace .lesson-meta-top {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #classroom.focus-workspace .lesson-meta-badges {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #classroom.focus-workspace .lesson-title-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  #classroom.focus-workspace .lesson-heading-group {
+    min-width: 0;
+    flex: 1;
+  }
+
+  #classroom.focus-workspace .lesson-main-title,
+  #classroom.focus-workspace .lesson-instructor-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #classroom.focus-workspace .lesson-action-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    width: auto;
+    max-width: 52%;
+    overflow-x: auto;
+    gap: 6px;
+  }
+
+  #classroom.focus-workspace .lesson-action-pills .action-pill {
+    flex: 0 0 auto;
+    width: auto;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 10px;
   }
 
   .focus-workspace .lesson-sidebar.study-rail,
