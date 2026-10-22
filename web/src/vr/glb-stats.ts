@@ -36,7 +36,7 @@ function jsonChunk(bytes: Uint8Array): GlbJson {
   const chunkType = view.getUint32(16, true);
   if (chunkType !== 0x4e4f534a) throw new Error('GLB JSON chunk is missing');
   const jsonBytes = bytes.subarray(20, 20 + chunkLength);
-  const text = new TextDecoder().decode(jsonBytes).replace(/\u0000|\s+$/g, '');
+  const text = new TextDecoder().decode(jsonBytes).replaceAll('\0', '').replace(/\s+$/g, '');
   return JSON.parse(text) as GlbJson;
 }
 
