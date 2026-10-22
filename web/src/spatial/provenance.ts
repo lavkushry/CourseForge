@@ -69,10 +69,9 @@ export function placementAttribute(placement: ArPlacement): 'floor' | 'wall' {
 }
 
 function staticModelUrl(value: string): string {
-  if (!/^\/spatial\/[a-z0-9._-]+\.(gltf|glb)$/.test(value)) {
-    throw new SpatialProvenanceError('model URL must be a static /spatial glTF or GLB');
-  }
-  return value;
+  if (/^\/spatial\/[a-z0-9._-]+\.(gltf|glb)$/.test(value)) return value;
+  if (/^\/api\/v1\/lessons\/[A-Za-z0-9_-]{1,200}\/spatial\/model\?kind=(3d|ar|vr)$/.test(value)) return value;
+  throw new SpatialProvenanceError('model URL must be a static /spatial glTF or GLB');
 }
 
 function parseNode(value: unknown, index: number): SpatialNode {

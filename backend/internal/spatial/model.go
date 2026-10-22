@@ -1,6 +1,7 @@
 package spatial
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,6 +39,7 @@ type Asset struct {
 	Kind         Kind     `json:"kind"`
 	Decision     Decision `json:"decision"`
 	Evidence     string   `json:"-"`
+	Labels       []string `json:"labels,omitempty"`
 }
 
 type storedAsset struct {
@@ -73,6 +75,7 @@ type Scene struct {
 	EndSeconds   float64  `json:"end_seconds"`
 	Kind         Kind     `json:"kind"`
 	Evidence     string   `json:"evidence"`
+	Labels       []string `json:"labels,omitempty"`
 }
 
 // LectureWatch is the progress subject while a spatial view is open.
@@ -166,6 +169,64 @@ func Visible(assets []Asset) []Asset {
 		out = append(out, asset)
 	}
 	return out
+}
+
+type storedScene struct {
+	Decision     string   `json:"decision"`
+	Labels       []string `json:"labels"`
+	ConceptIDs   []string `json:"concept_ids"`
+	Evidence     string   `json:"evidence"`
+	StartSeconds float64  `json:"start_seconds"`
+	EndSeconds   float64  `json:"end_seconds"`
+	GLB          string   `json:"glb_base64"`
+}
+
+// AssetsFromArtifact expands one generated scene into the 3D, AR, and VR read models.
+// A hold decision is returned so callers can drop it. An empty document is not an error.
+func AssetsFromArtifact(lectureID string, raw []byte) ([]Asset, []byte, error) {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil, nil, nil
+	}
+	var scene storedScene
+	if err := json.Unmarshal(raw, &scene); err != nil {
+		return nil, nil, err
+	}
+	decision := Decision(scene.Decision)
+	switch decision {
+	case DecisionRelease, DecisionLabel, DecisionHold:
+	default:
+		return nil, nil, errors.New("spatial artifact decision")
+	}
+	if len(scene.ConceptIDs) == 0 || strings.TrimSpace(scene.Evidence) == "" {
+		return nil, nil, nil
+	}
+	var glb []byte
+	if scene.GLB != "" {
+		decoded, err := base64.StdEncoding.DecodeString(scene.GLB)
+		if err != nil {
+			return nil, nil, err
+		}
+		glb = decoded
+	}
+	assets := make([]Asset, 0, 3)
+	for _, kind := range []Kind{Kind3D, KindAR, KindVR} {
+		asset := Asset{
+			LectureID:    lectureID,
+			ConceptIDs:   append([]string(nil), scene.ConceptIDs...),
+			StartSeconds: scene.StartSeconds,
+			EndSeconds:   scene.EndSeconds,
+			AssetURL:     "/api/v1/lessons/" + lectureID + "/spatial/scene?kind=" + string(kind),
+			Kind:         kind,
+			Decision:     decision,
+			Evidence:     scene.Evidence,
+			Labels:       append([]string(nil), scene.Labels...),
+		}
+		if err := validateAsset(asset); err != nil {
+			return nil, nil, err
+		}
+		assets = append(assets, asset)
+	}
+	return assets, glb, nil
 }
 
 func forLecture(assets []Asset, lectureID string) []Asset {

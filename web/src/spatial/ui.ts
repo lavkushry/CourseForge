@@ -1,4 +1,8 @@
+import '@google/model-viewer/dist/model-viewer.min.js';
 import type { ApiClient } from '../api';
+import { loadLectureSpatial } from './catalog';
+import { requestSpatialOpen } from './pending';
+import { enterSpatialVr, type VrHandle } from './vr-session';
 import {
   SPATIAL_GROUND_TRUTH,
   SPATIAL_PLAN_NOTE,
@@ -86,6 +90,31 @@ export function renderExploreControl(
   return root;
 }
 
+export function appendExploreCitation(
+  parent: HTMLElement,
+  api: ApiClient,
+  citation: { lesson_id: string; start_seconds: number },
+  onOpen: (seconds: number) => void,
+): void {
+  void loadLectureSpatial(api, citation.lesson_id)
+    .then(assets => {
+      if (!parent.isConnected) return;
+      const match = assets.filter(
+        asset => citation.start_seconds >= asset.start_seconds - 1 && citation.start_seconds <= asset.end_seconds + 1,
+      );
+      const control = renderExploreControl(match, asset => {
+        requestSpatialOpen({
+          lectureId: asset.lecture_id,
+          kind: asset.kind,
+          startSeconds: asset.start_seconds,
+        });
+        onOpen(asset.start_seconds);
+      });
+      if (control) parent.append(control);
+    })
+    .catch(() => undefined);
+}
+
 export function renderPlanExplore(
   assets: readonly SpatialAsset[],
   onPick: (asset: SpatialAsset) => void,
@@ -105,7 +134,10 @@ async function readScene(api: ApiClient, asset: SpatialAsset, signal: AbortSigna
     const record = body as Record<string, unknown>;
     if (record.kind !== asset.kind || record.lecture_id !== asset.lecture_id) return null;
     if (typeof record.evidence !== 'string') return null;
-    return {
+    const labels = Array.isArray(record.labels)
+      ? record.labels.filter((label): label is string => typeof label === 'string' && label.trim() !== '')
+      : (asset.labels ?? []);
+    const scene: SpatialScene = {
       lecture_id: asset.lecture_id,
       concept_ids: asset.concept_ids,
       start_seconds: asset.start_seconds,
@@ -113,6 +145,8 @@ async function readScene(api: ApiClient, asset: SpatialAsset, signal: AbortSigna
       kind: asset.kind,
       evidence: record.evidence,
     };
+    if (labels.length > 0) scene.labels = labels;
+    return scene;
   } catch {
     return null;
   }
@@ -137,12 +171,16 @@ export function mountSpatialDialog(
   dialog.addEventListener('close', () => actions.onClosed());
   host.append(dialog);
   let sceneScope = new AbortController();
+  let vr: VrHandle | null = null;
   signal.addEventListener('abort', () => {
     sceneScope.abort();
     dialog.remove();
   });
 
   function close(): void {
+    const active = vr;
+    vr = null;
+    void active?.end();
     if (dialog.open) dialog.close();
   }
 
@@ -160,19 +198,68 @@ export function mountSpatialDialog(
     if (asset.decision === 'label') {
       const warning = el('p', 'spatial-label-warning', labelWarning(asset.start_seconds));
       warning.setAttribute('role', 'status');
-      const back = el(
-        'button',
-        'button spatial-return',
-        `Return to lecture at ${formatLectureTimestamp(asset.start_seconds)}`,
-      );
-      back.type = 'button';
-      back.addEventListener('click', () => {
-        actions.seek(asset.start_seconds);
-        close();
-      });
-      card.append(warning, back);
+      card.append(warning);
     }
+    const back = el(
+      'button',
+      'button spatial-return',
+      `Return to lecture at ${formatLectureTimestamp(asset.start_seconds)}`,
+    );
+    back.type = 'button';
+    back.addEventListener('click', () => {
+      actions.seek(asset.start_seconds);
+      close();
+    });
+    card.append(back);
     const stage = el('div', 'spatial-stage');
+    if (asset.labels && asset.labels.length > 0) {
+      const row = el('div', 'spatial-label-row');
+      for (const label of asset.labels) row.append(el('span', 'spatial-label', label));
+      stage.append(row);
+    }
+    const model = document.createElement('model-viewer');
+    model.setAttribute('src', asset.asset_url.replace('/spatial/scene?', '/spatial/model?'));
+    model.setAttribute('alt', asset.labels?.join(', ') || 'Spatial view');
+    model.setAttribute('camera-controls', '');
+    model.setAttribute('shadow-intensity', '1');
+    if (asset.kind === 'ar') {
+      model.setAttribute('ar', '');
+      model.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+      model.setAttribute('ar-placement', 'floor');
+    }
+    stage.append(model);
+    if (asset.kind === 'vr') {
+      const enter = el('button', 'button spatial-vr-enter', 'Enter VR');
+      enter.type = 'button';
+      enter.addEventListener('click', () => {
+        if (vr) {
+          const active = vr;
+          vr = null;
+          void active.end().then(() => {
+            enter.textContent = 'Enter VR';
+          });
+          return;
+        }
+        const src = model.getAttribute('src') ?? '';
+        void enterSpatialVr(src)
+          .then(handle => {
+            if (!handle) {
+              enter.textContent = 'No VR headset. Drag to inspect the model.';
+              return;
+            }
+            vr = handle;
+            enter.textContent = 'Exit VR';
+            void handle.ended.then(() => {
+              if (vr === handle) vr = null;
+              enter.textContent = 'Enter VR';
+            });
+          })
+          .catch(() => {
+            enter.textContent = 'This device cannot enter VR. Drag to inspect the model.';
+          });
+      });
+      stage.append(enter);
+    }
     const evidence = el('p', 'spatial-evidence', asset.evidence ?? '');
     if (!asset.evidence) evidence.hidden = true;
     stage.append(evidence);

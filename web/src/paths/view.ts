@@ -1,6 +1,9 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
 import { button, el, emptyState, sidebar } from '../components';
+import { loadLectureSpatial } from '../spatial/catalog';
+import { requestSpatialOpen } from '../spatial/pending';
+import { renderPlanExplore } from '../spatial/ui';
 import type { LearningPath, PathStep } from './contracts';
 
 export class PathsView {
@@ -181,6 +184,23 @@ export class PathsView {
         sourcesWrap.append(chip);
       }
       card.append(sourcesWrap);
+      const first = step.sources[0];
+      if (first) {
+        void loadLectureSpatial(this.api, first.lesson_id)
+          .then(assets => {
+            if (!card.isConnected) return;
+            const offer = renderPlanExplore(assets, asset => {
+              requestSpatialOpen({
+                lectureId: asset.lecture_id,
+                kind: asset.kind,
+                startSeconds: asset.start_seconds,
+              });
+              this.openLesson(first.course_id, first.lesson_id, asset.start_seconds);
+            });
+            if (offer) card.append(offer);
+          })
+          .catch(() => undefined);
+      }
     }
 
     return card;

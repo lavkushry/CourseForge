@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import tempfile
 import time
@@ -17,6 +18,8 @@ from knowledge_worker.ocr import OCREngine, build_ocr
 from knowledge_worker.pipeline import resolve_media_path, run_ingest
 from knowledge_worker.qdrant_store import ensure_knowledge_collection, upsert_chunks
 from knowledge_worker.spatial import rank_spatial_candidates
+from knowledge_worker.spatial_artifact import generated_scene
+from knowledge_worker.spatial_confidence import gate_spatial_asset
 from knowledge_worker.scenes import SceneDetector, build_scene_detector
 
 log = logging.getLogger(__name__)
@@ -86,7 +89,15 @@ class IngestWorker:
                 embedder=embedder_name,
                 embed_dim=embed_dim,
             )
-            spatial_count = self._store_spatial(job_id, worker_id, fence, bundle.segments, bundle.keyframes, chapters)
+            spatial_count = self._store_spatial(
+                job_id,
+                worker_id,
+                fence,
+                lesson_id,
+                bundle.segments,
+                bundle.keyframes,
+                chapters,
+            )
             try:
                 spatial_gates = gate_spatial_for_index(
                     lesson_id,
@@ -122,6 +133,7 @@ class IngestWorker:
         job_id: str,
         worker_id: str,
         fence: int,
+        lesson_id: str,
         segments: list[dict[str, Any]],
         keyframes: list[dict[str, Any]],
         chapters: list[dict[str, Any]],
@@ -140,11 +152,54 @@ class IngestWorker:
                 for index, chapter in enumerate(chapters)
             ]
             candidates = rank_spatial_candidates(segments, keyframes, concepts)
+            self._attach_scene(lesson_id, candidates, segments, keyframes, chapters)
             self.api.store_spatial(job_id, worker_id, fence, candidates)
             return len(candidates)
         except Exception:
             log.exception("spatial candidate detection failed; indexing continues")
             return None
+
+    def _attach_scene(
+        self,
+        lesson_id: str,
+        candidates: list[dict[str, Any]],
+        segments: list[dict[str, Any]],
+        keyframes: list[dict[str, Any]],
+        chapters: list[dict[str, Any]],
+    ) -> None:
+        """Generate one scene from the first candidate that has diagram labels.
+
+        A higher-ranked caption with no OCR lines is skipped. The scene stays
+        off the candidate when it cannot fit in the stored artifact.
+        """
+        if not candidates:
+            return
+        try:
+            for candidate in candidates:
+                scene = generated_scene(lesson_id, candidate, keyframes)
+                if scene is None:
+                    continue
+                gated = gate_spatial_asset(
+                    candidate,
+                    lecture_id=lesson_id,
+                    segments=segments,
+                    keyframes=keyframes,
+                    concepts=chapters,
+                )
+                decision = gated.get("decision")
+                if decision not in ("release", "label", "hold"):
+                    decision = "hold"
+                scene["decision"] = decision
+                encoded = json.dumps(scene, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+                if len(encoded) > 60_000:
+                    scene["glb_base64"] = ""
+                    encoded = json.dumps(scene, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+                if len(encoded) > 60_000:
+                    return
+                candidate["artifact"] = scene
+                return
+        except Exception:
+            log.exception("spatial scene generation failed; indexing continues")
 
     def _upsert_qdrant(
         self,
