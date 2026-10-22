@@ -95,6 +95,19 @@ func (s *Service) askHTTP(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, 200, out)
 }
 
+func (s *Service) getSpatialHTTP(w http.ResponseWriter, r *http.Request) {
+	p, _ := identity.FromContext(r.Context())
+	items, err := s.ListSpatial(r.Context(), p, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{
+		"lesson_id":  r.PathValue("id"),
+		"candidates": items,
+	})
+}
+
 func (s *Service) getConceptsHTTP(w http.ResponseWriter, r *http.Request) {
 	p, _ := identity.FromContext(r.Context())
 	concepts, prereqs, err := s.ListConcepts(r.Context(), p, r.PathValue("id"))
@@ -307,6 +320,23 @@ func (s *Service) ingestHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, 200, doc)
+}
+
+func (s *Service) spatialHTTP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		WorkerID   string                  `json:"worker_id"`
+		Fence      int64                   `json:"fence"`
+		Candidates []SpatialCandidateInput `json:"candidates"`
+	}
+	if !decodeJSON(w, r, 256<<10, &req) {
+		return
+	}
+	count, err := s.StoreSpatial(r.Context(), r.PathValue("id"), req.WorkerID, req.Fence, req.Candidates)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	httpx.JSON(w, 200, map[string]any{"candidate_count": count})
 }
 
 func (s *Service) indexHTTP(w http.ResponseWriter, r *http.Request) {

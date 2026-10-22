@@ -73,6 +73,24 @@ class KnowledgeAPI:
         response.raise_for_status()
         return response.json()
 
+    def store_spatial(
+        self,
+        job_id: str,
+        worker_id: str,
+        fence: int,
+        candidates: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        response = self._client.put(
+            f"/api/v1/knowledge/worker/jobs/{job_id}/spatial",
+            json={
+                "worker_id": worker_id,
+                "fence": fence,
+                "candidates": candidates,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
     def complete(self, job_id: str, worker_id: str, fence: int, result: dict[str, Any] | None = None) -> None:
         response = self._client.post(
             f"/api/v1/knowledge/worker/jobs/{job_id}/complete",

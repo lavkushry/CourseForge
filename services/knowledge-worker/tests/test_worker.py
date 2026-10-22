@@ -18,6 +18,8 @@ class FakeAPI:
         self.completed: list[str] = []
         self.failed: list[str] = []
         self.heartbeats = 0
+        self.spatial: list[list[dict[str, Any]]] = []
+        self.spatial_error: Exception | None = None
 
     def claim(self, worker_id: str, lease_seconds: int) -> dict[str, Any] | None:
         if not self.jobs:
@@ -46,6 +48,18 @@ class FakeAPI:
             {"chapters": chapters, "chunks": chunks, "embedder": embedder, "embed_dim": embed_dim}
         )
         return {"chapter_count": len(chapters), "chunk_count": len(chunks)}
+
+    def store_spatial(
+        self,
+        job_id: str,
+        worker_id: str,
+        fence: int,
+        candidates: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if self.spatial_error:
+            raise self.spatial_error
+        self.spatial.append(candidates)
+        return {"candidate_count": len(candidates)}
 
     def complete(self, job_id: str, worker_id: str, fence: int, result: dict[str, Any] | None = None) -> None:
         self.completed.append(job_id)
@@ -102,4 +116,31 @@ def test_worker_poll_processes_job(tmp_path: Path, tiny_media: Path, tiny_frame:
     assert api.indexed[0]["chunks"]
     assert api.completed == ["kjob_1"]
     assert api.failed == []
+    assert api.spatial == [[]]
     assert worker.poll_once() is False
+
+
+def test_spatial_store_failure_does_not_fail_indexing(tmp_path: Path, tiny_media: Path, tiny_frame: Path, fixtures_dir: Path):
+    api = FakeAPI()
+    api.spatial_error = RuntimeError("spatial store unavailable")
+    api.jobs.append(
+        {
+            "id": "kjob_spatial",
+            "lesson_id": "lesson",
+            "fence": 3,
+            "payload": {"source_path": str(tiny_media)},
+        }
+    )
+    worker = IngestWorker(
+        _settings(tmp_path),
+        api,  # type: ignore[arg-type]
+        asr=MockASR(fixtures_dir),
+        scenes=MockScenes(tiny_frame),
+        ocr=MockOCR(),
+        embedder=HashEmbedder(dim=32),
+        sleep=lambda _s: None,
+    )
+    assert worker.poll_once() is True
+    assert api.completed == ["kjob_spatial"]
+    assert api.failed == []
+    assert api.spatial == []

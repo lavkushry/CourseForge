@@ -16,6 +16,7 @@ from knowledge_worker.index_pipeline import build_index_artifacts
 from knowledge_worker.ocr import OCREngine, build_ocr
 from knowledge_worker.pipeline import resolve_media_path, run_ingest
 from knowledge_worker.qdrant_store import ensure_knowledge_collection, upsert_chunks
+from knowledge_worker.spatial import rank_spatial_candidates
 from knowledge_worker.scenes import SceneDetector, build_scene_detector
 
 log = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ class IngestWorker:
                 embedder=embedder_name,
                 embed_dim=embed_dim,
             )
+            spatial_count = self._store_spatial(job_id, worker_id, fence, bundle.segments, bundle.keyframes, chapters)
         self.api.complete(
             job_id,
             worker_id,
@@ -101,8 +103,38 @@ class IngestWorker:
                 "ocr_engine": bundle.ocr_engine,
                 "embedder": embedder_name,
                 "embed_dim": embed_dim,
+                "spatial_candidate_count": spatial_count,
             },
         )
+
+    def _store_spatial(
+        self,
+        job_id: str,
+        worker_id: str,
+        fence: int,
+        segments: list[dict[str, Any]],
+        keyframes: list[dict[str, Any]],
+        chapters: list[dict[str, Any]],
+    ) -> int | None:
+        """Score spatial candidates after indexing. Failures stay off the job result."""
+        try:
+            concepts = [
+                {
+                    "id": f"ordinal:{int(chapter.get('ordinal', index))}",
+                    "ordinal": int(chapter.get("ordinal", index)),
+                    "title": chapter.get("title") or "",
+                    "summary": chapter.get("summary") or "",
+                    "start_ms": int(chapter.get("start_ms") or 0),
+                    "end_ms": int(chapter.get("end_ms") or 0),
+                }
+                for index, chapter in enumerate(chapters)
+            ]
+            candidates = rank_spatial_candidates(segments, keyframes, concepts)
+            self.api.store_spatial(job_id, worker_id, fence, candidates)
+            return len(candidates)
+        except Exception:
+            log.exception("spatial candidate detection failed; indexing continues")
+            return None
 
     def _upsert_qdrant(
         self,

@@ -496,6 +496,99 @@ func TestQueryEmbedRespectsHashFallback(t *testing.T) {
 	}
 }
 
+func TestSpatialCandidatesRoundTrip(t *testing.T) {
+	f := setup(t)
+	created := f.call("admin", "POST", "/api/v1/knowledge/jobs", "spatial-1", EnqueueRequest{
+		LessonID: "lesson",
+		Payload:  json.RawMessage(`{}`),
+	})
+	expect(t, created, 202)
+	claim := f.worker("POST", "/api/v1/knowledge/worker/claim", ClaimRequest{WorkerID: "w1", LeaseSec: 60})
+	expect(t, claim, 200)
+	leased := read[Job](t, claim)
+	ordinal := 0
+	ingest := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/ingest", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"ingest": IngestPayload{
+			ASREngine: "mock", SceneEngine: "mock", OCREngine: "mock",
+			Segments: []Segment{
+				{Ordinal: 0, StartMs: 0, EndMs: 8000, Text: "The request path consists of an API gateway that flows into auth."},
+			},
+			Keyframes: []Keyframe{
+				{Ordinal: 0, TimeMs: 2000, Path: "keyframes/request-path.jpg", Width: 320, Height: 180,
+					OCR: &OCRHit{Text: "API Gateway\nAuth\nOrders\nQueue", Tags: []string{"slide"}}},
+			},
+		},
+	})
+	expect(t, ingest, 200)
+	index := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/index", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"embedder":  "hash",
+		"chapters": []Chapter{
+			{Ordinal: 0, StartMs: 0, EndMs: 8000, Title: "Request path", Summary: "API gateway flows into auth, orders, and the queue"},
+		},
+		"chunks": []Chunk{
+			{ID: "kc_spatial", Ordinal: 0, StartMs: 0, EndMs: 8000, Text: "request path gateway", Source: "multimodal"},
+		},
+	})
+	expect(t, index, 200)
+
+	stored := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/spatial", map[string]any{
+		"worker_id": "w1",
+		"fence":     leased.Fence,
+		"candidates": []SpatialCandidateInput{{
+			Ordinal:         0,
+			StartMs:         0,
+			EndMs:           8000,
+			Confidence:      0.75,
+			Reason:          "On-screen diagram agrees with concept Request path. A spatial view would show how these parts connect.",
+			KeyframeOrdinal: &ordinal,
+			OCRSnippet:      "API Gateway Auth Orders Queue",
+			VisionSnippet:   "",
+			ConceptIDs:      []string{"ordinal:0"},
+			Signals: SpatialSignals{
+				OnScreenDiagram: 1, SpokenArchitecture: 1, ScreenText: 1, ConceptAgreement: 0.5,
+			},
+		}},
+	})
+	expect(t, stored, 200)
+
+	body := f.call("alice", "GET", "/api/v1/knowledge/lessons/lesson/spatial-candidates", "", nil)
+	expect(t, body, 200)
+	var listed struct {
+		LessonID   string             `json:"lesson_id"`
+		Candidates []SpatialCandidate `json:"candidates"`
+	}
+	if err := json.Unmarshal(body.Body.Bytes(), &listed); err != nil {
+		t.Fatal(err)
+	}
+	if listed.LessonID != "lesson" || len(listed.Candidates) != 1 {
+		t.Fatalf("unexpected list %+v", listed)
+	}
+	got := listed.Candidates[0]
+	if got.Ordinal != 0 || got.Confidence != 0.75 || got.StartMs != 0 || got.EndMs != 8000 {
+		t.Fatalf("unexpected candidate %+v", got)
+	}
+	if got.KeyframeID == nil || got.KeyframeTimeMs == nil || *got.KeyframeTimeMs != 2000 {
+		t.Fatalf("keyframe evidence %+v", got)
+	}
+	if len(got.ConceptIDs) != 1 || len(got.ConceptIDs[0]) < 4 || got.ConceptIDs[0][:4] != "kco_" {
+		t.Fatalf("concept ids %+v", got.ConceptIDs)
+	}
+	if got.OCRSnippet == "" || got.Signals.OnScreenDiagram != 1 {
+		t.Fatalf("evidence %+v", got)
+	}
+
+	missing := f.call("alice", "GET", "/api/v1/knowledge/lessons/missing/spatial-candidates", "", nil)
+	expect(t, missing, 404)
+	stale := f.worker("PUT", "/api/v1/knowledge/worker/jobs/"+leased.ID+"/spatial", map[string]any{
+		"worker_id": "w1", "fence": leased.Fence + 9, "candidates": []SpatialCandidateInput{},
+	})
+	expect(t, stale, 409)
+}
+
 func TestReciprocalRankFusionPrefersOverlap(t *testing.T) {
 	bm25 := []Chunk{{ID: "a", Text: "a"}, {ID: "b", Text: "b"}}
 	dense := []Chunk{{ID: "b", Text: "b"}, {ID: "c", Text: "c"}}

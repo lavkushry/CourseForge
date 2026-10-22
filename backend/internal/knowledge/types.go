@@ -222,6 +222,46 @@ type IndexPayload struct {
 	EmbedDim int       `json:"embed_dim,omitempty"`
 }
 
+// SpatialSignals are the v1 scores. Missing inputs stay zero.
+type SpatialSignals struct {
+	OnScreenDiagram    float64 `json:"on_screen_diagram"`
+	SpokenArchitecture float64 `json:"spoken_architecture"`
+	ScreenText         float64 `json:"screen_text"`
+	ConceptAgreement   float64 `json:"concept_agreement"`
+}
+
+// SpatialCandidateInput is what the indexing worker stores after ranking.
+type SpatialCandidateInput struct {
+	Ordinal         int            `json:"ordinal"`
+	StartMs         int            `json:"start_ms"`
+	EndMs           int            `json:"end_ms"`
+	Confidence      float64        `json:"confidence"`
+	Reason          string         `json:"reason"`
+	KeyframeID      string         `json:"keyframe_id,omitempty"`
+	KeyframeOrdinal *int           `json:"keyframe_ordinal,omitempty"`
+	OCRSnippet      string         `json:"ocr_snippet"`
+	VisionSnippet   string         `json:"vision_snippet"`
+	ConceptIDs      []string       `json:"concept_ids"`
+	Signals         SpatialSignals `json:"signals"`
+}
+
+// SpatialCandidate is a stored moment a later stage can turn into a spatial view.
+type SpatialCandidate struct {
+	ID             string         `json:"id"`
+	Ordinal        int            `json:"ordinal"`
+	StartMs        int            `json:"start_ms"`
+	EndMs          int            `json:"end_ms"`
+	Confidence     float64        `json:"confidence"`
+	Reason         string         `json:"reason"`
+	KeyframeID     *string        `json:"keyframe_id,omitempty"`
+	KeyframeTimeMs *int           `json:"keyframe_time_ms,omitempty"`
+	KeyframePath   string         `json:"keyframe_path,omitempty"`
+	OCRSnippet     string         `json:"ocr_snippet"`
+	VisionSnippet  string         `json:"vision_snippet"`
+	ConceptIDs     []string       `json:"concept_ids"`
+	Signals        SpatialSignals `json:"signals"`
+}
+
 type ClaimRequest struct {
 	WorkerID string `json:"worker_id"`
 	LeaseSec int    `json:"lease_seconds"`
