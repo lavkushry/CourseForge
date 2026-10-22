@@ -380,6 +380,17 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hid
     grid-template-rows: minmax(0, 1fr) auto minmax(112px, 26vh);
   }
 
+  /* One command row. Wrapped 44px controls were pushing the transcript under the bottom nav. */
+  #classroom.focus-workspace .classroom-heading {
+    flex-wrap: nowrap;
+    height: 52px;
+    min-height: 52px;
+    max-height: 52px;
+    flex: 0 0 52px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
   #classroom.focus-workspace .lesson-meta-bar {
     max-height: 132px;
     overflow: auto;

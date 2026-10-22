@@ -1,4 +1,5 @@
 import { el } from '../components';
+import { labeledField } from './view-helpers';
 import { errorMessage, isAbort } from '../api';
 import type { CareerStudioHost } from './view-host';
 
@@ -21,7 +22,7 @@ export function renderMatch(host: CareerStudioHost): HTMLElement {
   jd.rows = 4;
   const pasteBtn = el('button', 'button', 'Score pasted JD') as HTMLButtonElement;
   pasteBtn.type = 'submit';
-  pasteForm.append(jd, pasteBtn);
+  pasteForm.append(labeledField('Job description', jd), pasteBtn);
   pasteForm.addEventListener('submit', ev => {
     ev.preventDefault();
     void runMatch(host, jd.value);

@@ -46,7 +46,8 @@ export function installShell(ctx: AppContext): void {
     ctx.learnedCursor = '';
     ctx.learnedLoaded = false;
     ctx.app.innerHTML = `
-    <main class="login-page">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <main id="main-content" class="login-page" tabindex="-1">
       <div class="login-atmosphere" aria-hidden="true"><span></span><span></span><span></span></div>
       <a class="brand" href="/" aria-label="CourseForge home"><span class="brand-mark" aria-hidden="true">F</span>CourseForge</a>
       <div class="login-panel">
@@ -63,7 +64,7 @@ export function installShell(ctx: AppContext): void {
           <label for="password">Password</label>
           <div class="input-wrap">
             <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter password" />
-            <button type="button" class="password-toggle-btn" id="toggle-login-password" aria-label="Toggle password visibility">Show</button>
+            <button type="button" class="password-toggle-btn" id="toggle-login-password" aria-label="Show password">Show</button>
           </div>
           <button type="submit" class="button primary">Sign in</button>
           <p class="auth-switch-text">New to CourseForge? <button type="button" class="auth-link-btn" id="switch-to-signup">Create account</button></p>
@@ -76,7 +77,7 @@ export function installShell(ctx: AppContext): void {
           <label for="register-password">Password (4+ characters)</label>
           <div class="input-wrap">
             <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="Choose a password" />
-            <button type="button" class="password-toggle-btn" id="toggle-register-password" aria-label="Toggle password visibility">Show</button>
+            <button type="button" class="password-toggle-btn" id="toggle-register-password" aria-label="Show password">Show</button>
           </div>
           <button type="submit" class="button primary">Create account</button>
           <p class="auth-switch-text">Already registered? <button type="button" class="auth-link-btn" id="switch-to-signin">Sign in</button></p>
@@ -152,6 +153,7 @@ export function installShell(ctx: AppContext): void {
           const isPass = input.type === 'password';
           input.type = isPass ? 'text' : 'password';
           btn.textContent = isPass ? 'Hide' : 'Show';
+          btn.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
         },
         { signal: ctx.pageScope.signal },
       );
@@ -266,6 +268,7 @@ export function installShell(ctx: AppContext): void {
     ctx.selectedLesson = null;
     ctx.lessons = [];
     ctx.app.innerHTML = `
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header lms-top-header">
       <div class="lms-header-left">
         <button id="mobile-menu-toggle" type="button" class="lms-circle-icon-btn mobile-only-btn" aria-label="Toggle navigation menu" aria-expanded="false">
@@ -278,9 +281,9 @@ export function installShell(ctx: AppContext): void {
           <span class="brand-wordmark">CourseForge</span>
         </button>
         <div id="header-breadcrumb" class="lms-breadcrumb" aria-label="Current location">
-          <span class="crumb-link" id="crumb-home">Home</span>
+          <button type="button" class="crumb-link" id="crumb-home">Home</button>
           <span class="crumb-sep" aria-hidden="true">/</span>
-          <span class="crumb-link" id="crumb-section">Courses</span>
+          <button type="button" class="crumb-link" id="crumb-section">Courses</button>
           <span class="crumb-sep" aria-hidden="true">/</span>
           <span id="crumb-current" class="crumb-current">2026 Masterclass Catalog</span>
         </div>
@@ -289,12 +292,12 @@ export function installShell(ctx: AppContext): void {
         <button id="mobile-search-btn" type="button" class="lms-circle-icon-btn mobile-only-search-btn" aria-label="Search all pages" title="Search all pages (⌘K)">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
         </button>
-        <div class="lms-header-search" id="header-quick-search-wrap" role="search" title="Click or press ⌘K to search all pages, courses, lectures, and tools">
+        <div class="lms-header-search" id="header-quick-search-wrap" role="search" aria-label="Search">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
           <input id="header-quick-search" type="search" placeholder="Search all pages..." aria-label="Quick catalog filter" autocomplete="off" />
           <kbd class="omni-shortcut-kbd" aria-hidden="true">⌘K</kbd>
         </div>
-        <button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" title="Switch between Normal Mode (Icon Rail) and Academy Studio Mode (Expanded Sidebar)">
+        <button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" aria-label="Switch to Academy Studio" title="Switch between Normal Mode (Icon Rail) and Academy Studio Mode (Expanded Sidebar)">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
           <span id="workspace-mode-label">Academy Studio</span>
         </button>
@@ -379,7 +382,7 @@ export function installShell(ctx: AppContext): void {
           </button>
         </div>
       </nav>
-      <main class="workspace">
+      <main id="main-content" class="workspace" tabindex="-1">
       <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
       <section id="catalog" aria-labelledby="catalog-heading">
         <section id="featured-course" class="featured-course" aria-label="Featured course" hidden></section>

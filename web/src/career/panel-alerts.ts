@@ -1,4 +1,5 @@
 import { el } from '../components';
+import { labeledField } from './view-helpers';
 import { errorMessage, isAbort } from '../api';
 import type { CareerStudioHost } from './view-host';
 
@@ -45,7 +46,14 @@ export function renderAlerts(host: CareerStudioHost): HTMLElement {
   }
   const submit = el('button', 'button primary', 'Watch board') as HTMLButtonElement;
   submit.type = 'submit';
-  form.append(provider, token, label, track, keywords, submit);
+  form.append(
+    labeledField('Board', provider),
+    labeledField('Board token', token),
+    labeledField('Label', label),
+    labeledField('Match track', track),
+    labeledField('Keywords', keywords),
+    submit,
+  );
   form.addEventListener('submit', ev => {
     ev.preventDefault();
     void createSource(host, {

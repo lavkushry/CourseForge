@@ -1,7 +1,7 @@
 import { el } from '../components';
 import { errorMessage, isAbort } from '../api';
 import type { CareerStudioHost } from './view-host';
-import { splitCommaList } from './view-helpers';
+import { labeledField, splitCommaList } from './view-helpers';
 
 export function renderFacts(host: CareerStudioHost): HTMLElement {
   const panel = el('section', 'career-panel');
@@ -27,7 +27,13 @@ export function renderFacts(host: CareerStudioHost): HTMLElement {
   skills.placeholder = 'Skills, comma-separated (go, kubernetes, …)';
   const submit = el('button', 'button primary', 'Confirm fact') as HTMLButtonElement;
   submit.type = 'submit';
-  form.append(action, impact, metric, skills, submit);
+  form.append(
+    labeledField('Action', action),
+    labeledField('Impact', impact),
+    labeledField('Metric', metric),
+    labeledField('Skills', skills),
+    submit,
+  );
   form.addEventListener('submit', ev => {
     ev.preventDefault();
     void createFact(host, action.value, impact.value, metric.value, skills.value);

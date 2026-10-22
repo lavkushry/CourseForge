@@ -165,7 +165,9 @@ export class SettingsView {
     goalCard.append(goalHead);
 
     const goalGroup = el('div', 'setting-group');
-    goalGroup.append(el('label', 'input-label', 'Daily Goal Duration'));
+    const goalLabel = el('label', 'input-label', 'Daily Goal Duration');
+    goalLabel.htmlFor = 'daily-goal-duration';
+    goalGroup.append(goalLabel);
 
     // Quick pills
     const goalPills = el('div', 'budget-pills-row settings-goal-pills');
@@ -201,6 +203,7 @@ export class SettingsView {
     }
 
     const select = el('select', 'form-input');
+    select.id = 'daily-goal-duration';
     for (const m of [15, 30, 45, 60, 90]) {
       const opt = el('option', '', `${m} minutes per day`);
       opt.value = String(m);
