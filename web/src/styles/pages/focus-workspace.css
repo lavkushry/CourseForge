@@ -39,6 +39,27 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   padding: 0;
 }
 
+/* Watch mode: reclaim the fixed LMS icon rail so the player goes edge-to-edge. */
+@media (min-width: 1025px) {
+  body:has(#classroom.focus-workspace:not([hidden])) #primary-nav.lms-left-rail {
+    display: none !important;
+  }
+
+  body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+    padding-left: 0 !important;
+  }
+
+  body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
+    height: 52px;
+    min-height: 52px;
+  }
+
+  body:has(#classroom.focus-workspace:not([hidden])) .lms-breadcrumb,
+  body:has(#classroom.focus-workspace:not([hidden])) .lms-header-search {
+    display: none;
+  }
+}
+
 #classroom.focus-workspace {
   flex: 1 1 auto;
   height: auto;
@@ -55,13 +76,13 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 .focus-workspace .classroom-heading {
-  flex: 0 0 48px;
-  height: 48px;
+  flex: 0 0 40px;
+  height: 40px;
   margin: 0;
-  padding: 0 12px;
-  gap: 12px;
-  border-bottom: 1px solid var(--line);
-  background: #101116;
+  padding: 0 10px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0a0a0c;
 }
 
 .focus-workspace .classroom-heading-left {
@@ -119,8 +140,12 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 .focus-progress {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
+  gap: 4px;
+  height: 28px;
+}
+
+.focus-progress #focus-progress-label {
+  display: none;
 }
 
 .focus-progress svg {
@@ -168,8 +193,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 .focus-workspace .lesson-sidebar.study-rail {
   order: -1;
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 280px;
+  width: 280px;
   height: auto;
   max-height: none;
   min-height: 0;
@@ -289,13 +314,21 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
    stage, title, and dock inside the viewport. */
 #classroom.focus-workspace .lesson-column {
   display: grid;
-  /* Immersive watch: stage dominates; meta is a slim strip; dock is a short band. */
+  /* Efficient watch: stage owns the column; meta is a thin strip; dock optional. */
   grid-template-rows: minmax(0, 1fr) auto minmax(112px, 14vh);
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
   padding: 0;
-  background: #050507;
+  background: #000;
+}
+
+#classroom.focus-workspace.dock-collapsed .lesson-column {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+#classroom.focus-workspace.dock-collapsed #focus-dock {
+  display: none;
 }
 
 #classroom.focus-workspace .lesson-stage {
@@ -347,14 +380,15 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 6px 18px 8px;
-  gap: 4px;
+  padding: 4px 14px;
+  gap: 0;
   border-radius: 0;
   border-left: 0;
   border-right: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 8, 10, 0.96);
-  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: #0a0a0c;
+  backdrop-filter: none;
+  min-height: 40px;
 }
 
 /* Quieter YouTube-style meta: keep title + primary actions, drop badge clutter. */
@@ -363,7 +397,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 #classroom.focus-workspace .lesson-title-action-row {
-  gap: 12px;
+  gap: 10px;
+  min-height: 32px;
 }
 
 #classroom.focus-workspace .lesson-instructor-meta {
@@ -376,13 +411,13 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 #classroom.focus-workspace .lesson-action-pills {
-  gap: 8px;
+  gap: 6px;
 }
 
 #classroom.focus-workspace .action-pill {
-  min-height: 36px;
-  padding: 6px 12px;
-  font-size: 0.78rem;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
 }
 
 #classroom.focus-workspace .lesson-meta-top,
@@ -412,7 +447,9 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 #classroom.focus-workspace .lesson-main-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.25;
 }
 
 #classroom.focus-workspace #focus-dock {
@@ -456,8 +493,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 280px;
+  width: 280px;
   height: 100%;
   max-height: none;
   min-height: 0;

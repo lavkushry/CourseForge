@@ -300,8 +300,11 @@ export function installBindings(ctx: AppContext): void {
       void ctx.markComplete();
     });
     on('#save-note-pill', () => {
+      const classroom = required('#classroom');
+      classroom.classList.remove('dock-collapsed');
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'true');
       const dock = document.querySelector<HTMLElement>('#focus-dock');
-      if (ctx.studyRail && dock && !dock.hidden) {
+      if (ctx.studyRail && dock) {
         ctx.studyRail.setTab('notes');
         dock.querySelector<HTMLTextAreaElement>('textarea')?.focus();
         return;
@@ -324,13 +327,21 @@ export function installBindings(ctx: AppContext): void {
       const collapsed = classroom.classList.toggle('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', String(!collapsed));
     };
+    const toggleDock = () => {
+      const classroom = required('#classroom');
+      const collapsed = classroom.classList.toggle('dock-collapsed');
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(!collapsed));
+    };
     on('#focus-curriculum', toggleDrawer);
+    on('#focus-dock-toggle', toggleDock);
     on('#focus-search', () => ctx.omniSearch?.open());
-    // Immersive watch default: curriculum stays closed until the learner opens it
-    // (Ctrl/Cmd+B or the Curriculum control). Narrow screens stay collapsed too.
+    // Efficient watch default: curriculum + transcript dock stay closed until opened.
     const ensureImmersiveWatch = () => {
-      required('#classroom').classList.add('drawer-collapsed');
+      const classroom = required('#classroom');
+      classroom.classList.add('drawer-collapsed');
+      classroom.classList.add('dock-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'false');
     };
     ensureImmersiveWatch();
     const narrowCurriculum = window.matchMedia('(max-width: 900px)');
@@ -351,6 +362,14 @@ export function installBindings(ctx: AppContext): void {
             return;
           event.preventDefault();
           toggleDrawer();
+          return;
+        }
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'j' && !event.altKey) {
+          const target = event.target;
+          if (target instanceof HTMLElement && (target.matches('input,textarea,select') || target.isContentEditable))
+            return;
+          event.preventDefault();
+          toggleDock();
           return;
         }
         if (event.key === 'Escape') {
