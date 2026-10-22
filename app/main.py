@@ -22,6 +22,7 @@ from .tutor import ask, retrieve
 from . import syllabus, study, labs, reviews, studio, course_metadata, learning_paths, assessments, practice, planner, weekly, focus, retention, companion
 from . import auth
 from .db import learner_id, learner_courses, connect, course_allowed
+from .learning_object import checkpoints_for
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -329,7 +330,8 @@ def get_video(video_id: str):
         else course_metadata.infer_section_title(c_name, video.get('title', ''), base_order)
     )
     video.pop('path', None)
-    return {'video': video, 'chunks': transcript_for_video(video_id)}
+    return {'video': video, 'chunks': transcript_for_video(video_id),
+            'checkpoints': checkpoints_for(video_id)}
 
 
 def _load_odysee_docs_manifest() -> dict:

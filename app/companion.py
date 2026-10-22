@@ -10,6 +10,7 @@ from typing import Any
 
 from .config import settings
 from .db import connect, owner, utcnow, fetch_video, transcript_for_video, keyword_search
+from .study import materialize_lesson_flashcards
 
 
 def _clean_title(title: str) -> str:
@@ -186,6 +187,7 @@ def get_smart_resume(user_id: str, path: Path | None = None) -> dict[str, Any]:
 def get_adaptive_review_cards(user_id: str, course: str | None = None, limit: int = 20,
                               path: Path | None = None) -> list[dict[str, Any]]:
     """Prioritize what the student got wrong or skipped: failed quiz questions, low ease, older lessons."""
+    materialize_lesson_flashcards(path, user_id)
     with connect(path) as db:
         # Collect failed quiz lesson IDs
         failed_rows = db.execute('''SELECT DISTINCT video_id FROM lesson_quiz_attempts

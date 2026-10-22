@@ -1,8 +1,8 @@
 """Learner state, review scheduling (SM-2), and progress; no external accounts required."""
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from uuid import uuid4
-from .db import connect, utcnow
+import uuid
+from .db import connect, owner, utcnow
 
 
 def ensure_schema(path: Path | None = None) -> None:
@@ -80,7 +80,7 @@ def add_cards(course: str, cards: list[dict], path: Path | None = None) -> list[
             question, answer = str(card['question']).strip()[:500], str(card['answer']).strip()[:1000]
             if len(question) < 8 or len(answer) < 1:
                 raise ValueError('Invalid review question or answer')
-            row = {'id': str(uuid4()), 'course': course, 'video_id': video_id,
+            row = {'id': str(uuid.uuid4()), 'course': course, 'video_id': video_id,
                    'question': question, 'answer': answer,
                    'source_start': max(0, float(card.get('source_start', 0))),
                    'due_at': now, 'created_at': now}
@@ -90,8 +90,32 @@ def add_cards(course: str, cards: list[dict], path: Path | None = None) -> list[
     return output
 
 
+def materialize_lesson_flashcards(path: Path | None = None, user_id: str | None = None) -> int:
+    """Copy lecture flashcards into the current learner's review queue. Safe to call repeatedly."""
+    uid = user_id or owner()
+    if not uid:
+        return 0
+    now = utcnow()
+    created = 0
+    with connect(path) as db:
+        rows = db.execute('''SELECT f.id, f.video_id, f.course, f.question, f.answer, f.source_start
+                             FROM lesson_flashcards f JOIN videos v ON v.id=f.video_id
+                             WHERE cf_course_allowed(v.course)''').fetchall()
+        for row in rows:
+            card_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f'courseforge:card:{uid}:{row["id"]}'))
+            before = db.execute('SELECT 1 FROM review_cards WHERE id=?', (card_id,)).fetchone()
+            db.execute('''INSERT OR IGNORE INTO review_cards(user_id,id,course,video_id,question,answer,source_start,due_at,created_at)
+                          VALUES (?,?,?,?,?,?,?,?,?)''',
+                       (uid, card_id, row['course'], row['video_id'], row['question'], row['answer'],
+                        row['source_start'], now, now))
+            if not before:
+                created += 1
+    return created
+
+
 def due_cards(course: str | None = None, limit: int = 40, now: str | None = None,
               path: Path | None = None) -> list[dict]:
+    materialize_lesson_flashcards(path)
     sql = 'SELECT * FROM review_cards WHERE review_cards.user_id=cf_user_id() AND due_at<=?'
     params: list = [now or utcnow()]
     if course:
@@ -140,7 +164,7 @@ def list_notes(video_id: str, path: Path | None = None) -> list[dict]:
 def add_note(video_id: str, position: float, content: str, path: Path | None = None) -> dict:
     if not content.strip() or not 0 <= position < 1e9:
         raise ValueError('Invalid note')
-    row = {'id': str(uuid4()), 'video_id': video_id, 'position': position,
+    row = {'id': str(uuid.uuid4()), 'video_id': video_id, 'position': position,
            'content': content.strip()[:3000], 'created_at': utcnow()}
     with connect(path) as db:
         if not db.execute('SELECT 1 FROM videos WHERE id=?', (video_id,)).fetchone():

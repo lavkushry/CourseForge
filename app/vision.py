@@ -49,8 +49,9 @@ def enrich_frames(frames: list[dict], *, enabled: bool | None = None) -> list[di
             logger.warning('Vision model unavailable for %s: %s', path.name, exc)
             if settings.vision_required:
                 raise
-            # Missing/unavailable model usually affects all frames; avoid repeated expensive calls.
+            # A down or slow model usually affects every frame. OCR text already on the frame stays searchable.
             if isinstance(exc, (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError)):
+                logger.warning('vision stage stopped early; remaining captions skipped so indexing can continue')
                 break
             continue
         if caption:
