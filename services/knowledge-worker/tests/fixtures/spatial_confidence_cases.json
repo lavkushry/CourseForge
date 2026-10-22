@@ -1,0 +1,69 @@
+{
+  "clean": {
+    "title": "Clean source",
+    "asset": {
+      "id": "spatial-btree-clean",
+      "kind": "3d",
+      "lecture_id": "lec-btree-01",
+      "source_second": 84,
+      "ocr_confidence": 0.93,
+      "vision_caption": "B-tree nodes split when the page is full",
+      "transcript": "B-tree nodes split when the page is full and the index stays balanced",
+      "concepts": [
+        {
+          "id": "kco_split",
+          "title": "B-Tree page split",
+          "summary": "nodes split when the page is full"
+        }
+      ],
+      "keyframe_path": "keyframes/btree-split.jpg",
+      "keyframe_time_ms": 84000,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "noisy": {
+    "title": "Noisy source",
+    "asset": {
+      "id": "spatial-btree-noisy",
+      "kind": "ar",
+      "lecture_id": "lec-btree-01",
+      "source_second": 210,
+      "ocr_confidence": 0.18,
+      "vision_caption": "A purple dragon orbits the castle",
+      "transcript": "B-tree nodes split when the page is full",
+      "concepts": [
+        {
+          "id": "kco_split",
+          "title": "B-Tree page split",
+          "summary": "nodes split when the page is full"
+        }
+      ],
+      "keyframe_path": "",
+      "keyframe_time_ms": null
+    }
+  },
+  "labeled": {
+    "title": "Partial source",
+    "asset": {
+      "id": "spatial-btree-labeled",
+      "kind": "vr",
+      "lecture_id": "lec-btree-01",
+      "source_second": 126,
+      "ocr_confidence": 0.8,
+      "vision_caption": "btree nodes split beside a floating diagram legend",
+      "transcript": "btree nodes split when the page is full",
+      "concepts": [
+        {
+          "id": "kco_split",
+          "title": "B-Tree page split",
+          "summary": "nodes split when the page is full"
+        }
+      ],
+      "keyframe_path": "keyframes/btree-partial.jpg",
+      "keyframe_time_ms": 126000,
+      "width": 640,
+      "height": 360
+    }
+  }
+}
