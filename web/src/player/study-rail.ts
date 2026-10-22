@@ -18,6 +18,8 @@ export type StudyRailTab = 'lessons' | 'brief' | 'materials' | 'quiz' | 'notes' 
 
 export interface StudyRailOptions {
   root: HTMLElement;
+  /** Transcript, notes, and resources. Curriculum stays in `root`. */
+  dock?: HTMLElement;
   api: ApiClient;
   learningApi: LearningApi;
   getCurrentPosition: () => number;
@@ -28,6 +30,7 @@ export interface StudyRailOptions {
 
 export class StudyRail {
   private activeTab: StudyRailTab = 'lessons';
+  private dockTab: StudyRailTab = 'transcript';
   private course: Course | null = null;
   private lessons: Lesson[] = [];
   private activeLesson: Lesson | null = null;
@@ -103,11 +106,36 @@ export class StudyRail {
   }
 
   setTab(tab: StudyRailTab): void {
+    if (this.options.dock && tab !== 'lessons') this.dockTab = tab;
     this.activeTab = tab;
     this.render();
   }
 
+  /** Marks the transcript cue that contains `seconds` without rebuilding the rail. */
+  highlight(seconds: number): void {
+    const host = this.options.dock ?? this.options.root;
+    const rows = [...host.querySelectorAll<HTMLElement>('.transcript-row')];
+    let current: HTMLElement | null = null;
+    for (const row of rows) {
+      const start = Number(row.dataset.start);
+      const end = Number(row.dataset.end);
+      const on = Number.isFinite(start) && Number.isFinite(end) && seconds >= start && seconds < end;
+      row.classList.toggle('is-current', on);
+      if (on) current = row;
+    }
+    if (current && this.dockTab === 'transcript') {
+      const box = current.parentElement;
+      if (box && (current.offsetTop < box.scrollTop || current.offsetTop > box.scrollTop + box.clientHeight - 32)) {
+        current.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
   render(): void {
+    if (this.options.dock) {
+      this.renderSplit();
+      return;
+    }
     const root = this.options.root;
     root.replaceChildren();
 
@@ -192,9 +220,79 @@ export class StudyRail {
       case 'tutor':
         panelWrap.append(this.renderTutorPanel());
         break;
+      default: {
+        const unreachable: never = this.activeTab;
+        void unreachable;
+      }
     }
 
     root.append(panelWrap);
+  }
+
+  private renderSplit(): void {
+    const root = this.options.root;
+    root.replaceChildren();
+    const head = el('div', 'focus-drawer-head');
+    head.append(el('h2', 'focus-drawer-title', 'Curriculum'));
+    root.append(head, this.renderLessonsPanel());
+    this.renderDock();
+  }
+
+  private renderDock(): void {
+    const dock = this.options.dock;
+    if (!dock) return;
+    dock.replaceChildren();
+    const tab = this.dockTab === 'lessons' ? 'transcript' : this.dockTab;
+    const tabs: Array<{ id: StudyRailTab; label: string }> = [
+      { id: 'transcript', label: 'Transcript' },
+      { id: 'notes', label: 'Notes' },
+      { id: 'materials', label: 'Resources' },
+      { id: 'quiz', label: 'Quiz' },
+      { id: 'tutor', label: 'Tutor' },
+      { id: 'brief', label: 'Brief' },
+    ];
+    const bar = el('div', 'focus-dock-tabs');
+    bar.setAttribute('role', 'tablist');
+    bar.setAttribute('aria-label', 'Lesson context');
+    for (const item of tabs) {
+      const btn = el('button', item.id === tab ? 'focus-dock-tab active' : 'focus-dock-tab', item.label);
+      btn.type = 'button';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(item.id === tab));
+      btn.addEventListener('click', () => {
+        this.dockTab = item.id;
+        this.activeTab = item.id;
+        this.render();
+      });
+      bar.append(btn);
+    }
+    const panel = el('div', 'focus-dock-panel');
+    panel.setAttribute('role', 'tabpanel');
+    panel.append(this.panelFor(tab));
+    dock.append(bar, panel);
+  }
+
+  private panelFor(tab: StudyRailTab): HTMLElement {
+    switch (tab) {
+      case 'lessons':
+        return this.renderLessonsPanel();
+      case 'brief':
+        return this.renderBriefPanel();
+      case 'materials':
+        return this.renderMaterialsPanel();
+      case 'quiz':
+        return this.renderQuizPanel();
+      case 'notes':
+        return this.renderNotesPanel();
+      case 'transcript':
+        return this.renderTranscriptPanel();
+      case 'tutor':
+        return this.renderTutorPanel();
+      default: {
+        const unreachable: never = tab;
+        return unreachable;
+      }
+    }
   }
 
   // ==========================================
@@ -292,6 +390,8 @@ export class StudyRail {
     }
 
     panel.append(listContainer);
+    const active = listContainer.querySelector<HTMLElement>('.is-active');
+    if (active) queueMicrotask(() => active.scrollIntoView({ block: 'nearest' }));
     return panel;
   }
 
@@ -736,6 +836,8 @@ export class StudyRail {
 
     for (const c of filtered) {
       const row = el('div', 'transcript-row');
+      row.dataset.start = String(c.start);
+      row.dataset.end = String(c.end);
       const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
       timeBtn.type = 'button';
       timeBtn.title = `Jump to ${formatTime(c.start)}`;

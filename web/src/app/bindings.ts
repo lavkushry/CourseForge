@@ -2,6 +2,7 @@ import type { AppContext } from './context';
 import { errorMessage, isAbort } from '../api';
 import { required } from '../components';
 import { formatTime } from '../player/controller';
+import { writeFocusLink } from './focus-link';
 
 export function installBindings(ctx: AppContext): void {
   ctx.bindInterface = function bindInterface(video: HTMLVideoElement, signal: AbortSignal): void {
@@ -312,6 +313,90 @@ export function installBindings(ctx: AppContext): void {
     on('#capture-pill', () => {
       document.querySelector<HTMLButtonElement>('#capture')?.click();
     });
+    const toggleDrawer = () => {
+      const classroom = required('#classroom');
+      const collapsed = classroom.classList.toggle('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', String(!collapsed));
+    };
+    on('#focus-curriculum', toggleDrawer);
+    on('#focus-search', () => ctx.omniSearch?.open());
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      required('#classroom').classList.add('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+    }
+    document.addEventListener(
+      'keydown',
+      event => {
+        if (required<HTMLElement>('#classroom').hidden) return;
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'b' && !event.altKey) {
+          const target = event.target;
+          if (target instanceof HTMLElement && (target.matches('input,textarea,select') || target.isContentEditable))
+            return;
+          event.preventDefault();
+          toggleDrawer();
+          return;
+        }
+        if (event.key === 'Escape') {
+          const countdown = document.querySelector<HTMLElement>('#next-countdown');
+          if (countdown && !countdown.hidden) {
+            event.preventDefault();
+            ctx.controller?.cancelNext();
+          }
+        }
+      },
+      { signal },
+    );
+    required('#player-wrap').addEventListener(
+      'pointermove',
+      () => {
+        const countdown = document.querySelector<HTMLElement>('#next-countdown');
+        if (countdown && !countdown.hidden) ctx.controller?.cancelNext();
+      },
+      { signal },
+    );
+    let lastFocusWrite = 0;
+    video.addEventListener(
+      'timeupdate',
+      () => {
+        ctx.studyRail?.highlight(video.currentTime);
+        const now = performance.now();
+        if (now - lastFocusWrite < 10000) return;
+        lastFocusWrite = now;
+        if (ctx.selectedCourse && ctx.selectedLesson)
+          writeFocusLink(ctx.selectedCourse.id, ctx.selectedLesson.id, video.currentTime);
+      },
+      { signal },
+    );
+    if ('IntersectionObserver' in window) {
+      let autoPip = false;
+      const observer = new IntersectionObserver(
+        entries => {
+          const entry = entries[0];
+          if (!entry || signal.aborted) return;
+          const playing = !video.paused && video.readyState >= 2;
+          if (
+            entry.intersectionRatio < 0.35 &&
+            playing &&
+            !document.pictureInPictureElement &&
+            document.pictureInPictureEnabled &&
+            typeof video.requestPictureInPicture === 'function'
+          ) {
+            void video
+              .requestPictureInPicture()
+              .then(() => {
+                autoPip = true;
+              })
+              .catch(() => {});
+          } else if (entry.intersectionRatio > 0.75 && autoPip && document.pictureInPictureElement === video) {
+            autoPip = false;
+            void document.exitPictureInPicture().catch(() => {});
+          }
+        },
+        { threshold: [0, 0.35, 0.75, 1] },
+      );
+      observer.observe(required('#player-wrap'));
+      signal.addEventListener('abort', () => observer.disconnect());
+    }
     on('#more-lessons', () => {
       void ctx.loadMoreLessons();
     });
@@ -531,6 +616,22 @@ export function installBindings(ctx: AppContext): void {
             const cur = video.playbackRate;
             const next = speeds.find(s => s > cur + 0.05) ?? 3;
             ctx.preferences?.update({ speed: next });
+          },
+          '[': () => {
+            const speeds = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5];
+            const cur = video.playbackRate;
+            const prev = [...speeds].reverse().find(s => s < cur - 0.05) ?? 0.75;
+            ctx.preferences?.update({ speed: prev });
+          },
+          ']': () => {
+            const speeds = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5];
+            const cur = video.playbackRate;
+            const next = speeds.find(s => s > cur + 0.05) ?? 2.5;
+            ctx.preferences?.update({ speed: next });
+          },
+          b: () => {
+            document.querySelector<HTMLButtonElement>('#capture')?.click();
+            ctx.studyRail?.setTab('notes');
           },
         };
         const keyLookup = key.shiftKey ? key.key : key.key.length === 1 ? key.key.toLowerCase() : key.key;

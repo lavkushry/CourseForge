@@ -41,6 +41,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.syllabusDialog = new SyllabusDialog();
     ctx.studyRail = new StudyRail({
       root: required<HTMLElement>('#study-rail'),
+      dock: required<HTMLElement>('#focus-dock'),
       api: ctx.api,
       learningApi: ctx.learningApi,
       getCurrentPosition: () => ctx.controller?.position ?? 0,

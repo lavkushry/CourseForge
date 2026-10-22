@@ -12,7 +12,7 @@ import { browserClock } from './clock';
 import type { Clock, Timer } from './clock';
 import { ProgressDelivery } from './delivery';
 import type { DeliveryStatus } from './delivery';
-import { EndNavigation } from './navigation';
+import { crossedPlaybackThreshold, EndNavigation } from './navigation';
 import { SessionOwnership } from './ownership';
 import { PlayerRecovery } from './recovery';
 import type { LoadMediaOptions, VideoPort, VideoSnapshot } from './video';
@@ -375,6 +375,14 @@ export class PlayerController {
     on('timeupdate', () => {
       const snapshot = video.snapshot();
       const advance = snapshot.position - current.position;
+      if (
+        !snapshot.paused &&
+        advance > 0 &&
+        advance < 2 * snapshot.rate &&
+        crossedPlaybackThreshold(current.position, snapshot.position, snapshot.duration)
+      ) {
+        this.navigation.ended(this.options.hasNext());
+      }
       current.position = snapshot.position;
       if (!snapshot.paused && advance > 0 && advance < 2 * snapshot.rate) {
         current.lastAdvance = this.clock.now();

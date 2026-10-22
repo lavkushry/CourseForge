@@ -10,6 +10,7 @@ import { mountPlayerChrome } from '../player/chrome';
 import { mountPlayerGestures } from '../player/gestures';
 import { PlayerTelemetry } from '../player/telemetry';
 import * as playbackApi from '../api/playback';
+import { readFocusLink } from './focus-link';
 
 export function installShell(ctx: AppContext): void {
   ctx.renderLogin = function renderLogin(message = ''): void {
@@ -394,17 +395,24 @@ export function installShell(ctx: AppContext): void {
       <section id="career-panel" class="career-panel-host" hidden></section>
       <section id="settings-panel" class="settings-panel" hidden></section>
       <section id="admin-panel" class="admin-panel" hidden></section>
-      <section id="classroom" class="classroom" hidden>
+      <section id="classroom" class="classroom focus-workspace" hidden>
         <div class="classroom-heading">
+          <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="true" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Curriculum</button>
           <div class="classroom-heading-left">
             <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
               <span>All courses</span>
             </button>
             <p id="course-name" class="eyebrow"></p>
-            <span id="classroom-header-title" class="classroom-header-title" hidden>Choose a lesson</span>
+            <span class="focus-crumb-sep" aria-hidden="true">/</span>
+            <span id="classroom-header-title" class="classroom-header-title">Choose a lesson</span>
           </div>
           <div class="classroom-heading-actions">
+            <button id="focus-search" type="button" class="focus-icon-btn" aria-label="Search lectures" title="Search lectures (Ctrl+K)">Search</button>
+            <div id="focus-progress" class="focus-progress" role="img" aria-label="0% of lessons completed">
+              <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="focus-progress-track" cx="18" cy="18" r="15"></circle><circle id="focus-progress-ring" class="focus-progress-value" cx="18" cy="18" r="15"></circle></svg>
+              <span id="focus-progress-label">0%</span>
+            </div>
             <div class="classroom-mode-switch" role="group" aria-label="Classroom workspace mode">
               <button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal Mode</button>
               <button id="mode-studio-btn" type="button" class="mode-seg-btn">Academy Studio</button>
@@ -418,7 +426,7 @@ export function installShell(ctx: AppContext): void {
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
         <div class="classroom-grid">
           <div class="lesson-column">
-            <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. Arrows seek. M mutes. F opens fullscreen. C toggles theater mode. P toggles picture-in-picture. Shift+N next lesson.">
+            <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. J and L seek 10 seconds. Bracket keys change speed. M mutes. B bookmarks the frame. F opens fullscreen. C toggles theater mode. P toggles picture-in-picture. Shift+N and Shift+P change lessons. Command B toggles the curriculum.">
               <media-controller id="media-controller" autohide="3" nohotkeys gesturesdisabled>
                 <video id="lesson-video" slot="media" controls playsinline preload="metadata" disableremoteplayback></video>
                 <media-loading-indicator slot="centered-chrome"></media-loading-indicator>
@@ -454,6 +462,7 @@ export function installShell(ctx: AppContext): void {
                 </div>
               </div>
             </div>
+            <section id="focus-dock" class="focus-dock" aria-label="Transcript, notes, and resources"></section>
             <!-- Clean Modern Lesson Meta Section Below Player -->
             <div class="lesson-meta-bar">
               <div class="lesson-meta-top">
@@ -513,7 +522,7 @@ export function installShell(ctx: AppContext): void {
             <section id="materials" class="materials" hidden aria-label="Lesson materials"></section>
             <section id="learning-tools" class="learning-tools" hidden aria-label="Learning tools"></section>
             <section id="notes" class="notes" hidden aria-labelledby="notes-heading"><h2 id="notes-heading">Your lesson notes</h2><form id="note-form"><label for="note-content">Add a note at the current timestamp</label><textarea id="note-content" maxlength="3000" rows="3" required></textarea><button class="button" type="submit">Save note</button></form><div id="note-list"></div><button id="more-notes" class="button quiet" hidden>More notes</button></section>
-            <details class="shortcuts"><summary>Keyboard shortcuts</summary><p><kbd>Space</kbd> / <kbd>K</kbd> Play or pause · <kbd>J</kbd> / <kbd>L</kbd> Seek 10s · <kbd>←</kbd> / <kbd>→</kbd> Seek · <kbd>↑</kbd> / <kbd>↓</kbd> Volume · <kbd>M</kbd> Mute · <kbd>F</kbd> Fullscreen · <kbd>C</kbd> Theater · <kbd>P</kbd> PiP · <kbd>Shift+N</kbd> Next · <kbd>0-9</kbd> Seek %</p></details>
+            <details class="shortcuts"><summary>Keyboard shortcuts</summary><p><kbd>Space</kbd> / <kbd>K</kbd> Play or pause · <kbd>J</kbd> / <kbd>L</kbd> Seek 10s · <kbd>[</kbd> / <kbd>]</kbd> Speed · <kbd>M</kbd> Mute · <kbd>B</kbd> Bookmark · <kbd>F</kbd> Fullscreen · <kbd>C</kbd> Theater · <kbd>Shift+N</kbd> / <kbd>Shift+P</kbd> Next or previous · <kbd>⌘B</kbd> Curriculum · <kbd>⌘K</kbd> Search · <kbd>Esc</kbd> Cancel auto-advance</p></details>
           </div>
           <aside class="lesson-sidebar study-rail" id="study-rail" aria-label="Course lessons and study rail">
             <h2>Your lessons</h2>
@@ -732,6 +741,8 @@ export function installShell(ctx: AppContext): void {
       },
       { once: true },
     );
+    const focusLink = readFocusLink();
+    if (focusLink) void ctx.loadCourse(focusLink.courseId, false, focusLink.lessonId, true);
     try {
       const savedTheme = localStorage.getItem('courseforge_theme');
       if (savedTheme) document.documentElement.dataset.theme = savedTheme;
