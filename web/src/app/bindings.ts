@@ -300,6 +300,12 @@ export function installBindings(ctx: AppContext): void {
       void ctx.markComplete();
     });
     on('#save-note-pill', () => {
+      const dock = document.querySelector<HTMLElement>('#focus-dock');
+      if (ctx.studyRail && dock && !dock.hidden) {
+        ctx.studyRail.setTab('notes');
+        dock.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+        return;
+      }
       const notesEl = document.querySelector<HTMLElement>('#notes');
       if (notesEl) {
         notesEl.hidden = false;

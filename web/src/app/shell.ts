@@ -431,6 +431,7 @@ export function installShell(ctx: AppContext): void {
         <div id="course-enrollment" class="course-enrollment" hidden><p>Enroll to watch these lessons and save your progress.</p><button id="enroll" class="button primary">Enroll in this course</button></div>
         <div class="classroom-grid">
           <div class="lesson-column">
+            <div class="lesson-stage">
             <div id="player-wrap" class="player-wrap" tabindex="0" aria-label="Lesson player. Space or K plays and pauses. J and L seek 10 seconds. Bracket keys change speed. M mutes. B bookmarks the frame. F opens fullscreen. C toggles theater mode. P toggles picture-in-picture. Shift+N and Shift+P change lessons. Command B toggles the curriculum.">
               <media-controller id="media-controller" autohide="3" nohotkeys gesturesdisabled>
                 <video id="lesson-video" slot="media" controls playsinline preload="metadata" disableremoteplayback></video>
@@ -466,6 +467,7 @@ export function installShell(ctx: AppContext): void {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
             <section id="focus-dock" class="focus-dock" aria-label="Transcript, notes, and resources"></section>
             <!-- Clean Modern Lesson Meta Section Below Player -->
