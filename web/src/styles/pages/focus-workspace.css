@@ -391,6 +391,30 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hid
     overflow-y: hidden;
   }
 
+  /* The title cluster was shrinking to 0 and the back button painted underneath
+     the action row, so a tap on Back hit Search or Curriculum. */
+  #classroom.focus-workspace .classroom-heading-left {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 44px;
+  }
+
+  #classroom.focus-workspace .back-to-courses-btn {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  #classroom.focus-workspace .classroom-heading-actions {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 46%;
+    overflow-x: auto;
+  }
+
   #classroom.focus-workspace .lesson-meta-bar {
     max-height: 132px;
     overflow: auto;

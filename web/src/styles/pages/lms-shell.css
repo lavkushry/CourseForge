@@ -382,9 +382,13 @@ body.academy-studio-mode .workspace {
     flex: 0 0 auto;
   }
 
+  /* The bottom dock is fixed. Keep the page scroller above it so a button
+     cannot sit in the dock's hit area. */
   .app-layout-shell {
     padding-left: 0;
-    padding-bottom: 76px;
+    padding-bottom: 0;
+    height: calc(100dvh - 60px - 64px - var(--safe-bottom));
+    overflow: auto;
   }
 
   /* Default Mobile Bottom Navigation Bar */
