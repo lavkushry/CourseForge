@@ -156,9 +156,6 @@ def build_checkpoints(concepts: list[dict]) -> list[dict]:
     for concept in concepts:
         if len(checkpoints) >= _MAX_CHECKPOINTS:
             break
-        words = _terms(concept['summary'])
-        if len(words) < 4 and len(concept['summary']) < 40:
-            continue
         at = concept['end'] if concept['end'] > concept['start'] else concept['start']
         if short:
             at = concept['start'] if concept['end'] - concept['start'] < 1 else round((concept['start'] + concept['end']) / 2, 3)
