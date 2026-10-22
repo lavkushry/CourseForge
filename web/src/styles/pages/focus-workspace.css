@@ -289,13 +289,13 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
    stage, title, and dock inside the viewport. */
 #classroom.focus-workspace .lesson-column {
   display: grid;
-  /* The lecture owns the column. The dock is a bottom band, not a second stage. */
-  grid-template-rows: minmax(0, 1fr) auto minmax(128px, 18vh);
+  /* Immersive watch: stage dominates; meta is a slim strip; dock is a short band. */
+  grid-template-rows: minmax(0, 1fr) auto minmax(112px, 14vh);
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
   padding: 0;
-  background: #0c0d12;
+  background: #050507;
 }
 
 #classroom.focus-workspace .lesson-stage {
@@ -338,7 +338,7 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   height: 100%;
   max-height: none;
   aspect-ratio: auto;
-  object-fit: cover;
+  object-fit: contain;
   background: #000;
 }
 
@@ -347,11 +347,42 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 8px 16px;
-  gap: 6px;
+  padding: 6px 18px 8px;
+  gap: 4px;
   border-radius: 0;
   border-left: 0;
   border-right: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 10, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+/* Quieter YouTube-style meta: keep title + primary actions, drop badge clutter. */
+#classroom.focus-workspace .lesson-meta-top {
+  display: none;
+}
+
+#classroom.focus-workspace .lesson-title-action-row {
+  gap: 12px;
+}
+
+#classroom.focus-workspace .lesson-instructor-meta {
+  display: none;
+}
+
+#classroom.focus-workspace .lesson-action-pills .pill-note,
+#classroom.focus-workspace .lesson-action-pills .pill-capture {
+  display: none;
+}
+
+#classroom.focus-workspace .lesson-action-pills {
+  gap: 8px;
+}
+
+#classroom.focus-workspace .action-pill {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
 }
 
 #classroom.focus-workspace .lesson-meta-top,
