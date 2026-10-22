@@ -350,10 +350,10 @@
 }
 
 .mode-pill.active {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: #8b5cf6;
+  background: var(--accent-soft);
+  border-color: var(--accent);
   color: #fff;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .tutor-suggestions-wrap {
@@ -388,8 +388,8 @@
 }
 
 .prompt-pill:hover {
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.06);
+  border-color: var(--accent);
+  background: var(--accent-soft);
   color: #fff;
 }
 
@@ -413,9 +413,9 @@
 }
 
 .tutor-textarea:focus {
-  border-color: #8b5cf6;
+  border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .tutor-ask-footer {
@@ -477,8 +477,8 @@
   align-items: flex-start;
   gap: 10px;
   padding: var(--space-3) var(--space-4);
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-glow);
   border-radius: 12px;
   align-self: flex-start;
   max-width: 90%;
@@ -488,7 +488,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.3);
+  background: var(--accent-glow);
   color: #fff;
   display: flex;
   align-items: center;
@@ -597,7 +597,7 @@
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #a78bfa;
+  color: var(--coral);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -605,8 +605,8 @@
 }
 
 .citation-link-card:hover {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: #8b5cf6;
+  background: var(--accent-soft);
+  border-color: var(--accent);
   color: #fff;
 }
 

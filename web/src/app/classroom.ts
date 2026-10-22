@@ -168,6 +168,7 @@ export function installClassroom(ctx: AppContext): void {
       ctx.learning?.open(response.lesson, navigation.signal);
       if (!ctx.learnedLoaded) void ctx.loadLearnedStatus();
       ctx.studyRail?.updateContext(ctx.selectedCourse, ctx.lessons, ctx.selectedLesson, ctx.learnedLessons);
+      ctx.feedback('');
       const link = readFocusLink();
       const start = link && link.lessonId === response.lesson.id && link.t > 0 ? link.t : undefined;
       await ctx.controller?.open(response.lesson, takeOver, start);

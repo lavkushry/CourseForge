@@ -9,24 +9,24 @@
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #e2e6f8;
-  background: rgba(139, 92, 246, 0.14);
-  border: 1px solid rgba(139, 92, 246, 0.38);
+  color: #f0e6e0;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .mode-switch-pill:hover {
-  background: rgba(139, 92, 246, 0.28);
-  border-color: #8b5cf6;
+  background: rgba(255, 121, 82, 0.28);
+  border-color: var(--accent);
   color: #fff;
 }
 
 .mode-switch-pill[aria-pressed='true'] {
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  border-color: #a78bfa;
+  background: linear-gradient(135deg, var(--coral), var(--lms-accent));
+  border-color: var(--coral-hover);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .classroom-heading-actions {
@@ -63,9 +63,9 @@
 }
 
 .mode-seg-btn.active {
-  background: rgba(139, 92, 246, 0.25);
+  background: var(--accent-soft);
   color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
 }
 
 .app-layout-shell {
@@ -111,8 +111,8 @@ body.academy-studio-mode .app-layout-shell {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #c4b5fd;
-  background: rgba(139, 92, 246, 0.18);
+  color: #ffb395;
+  background: var(--accent-soft);
   padding: var(--space-1) var(--space-2);
   border-radius: 6px;
 }
@@ -130,7 +130,7 @@ body.academy-studio-mode .app-layout-shell {
 
 .sidebar-mode-exit:hover {
   color: #fff;
-  border-color: #8b5cf6;
+  border-color: var(--accent);
 }
 
 .academy-side-group {
@@ -169,8 +169,8 @@ body.academy-studio-mode .app-layout-shell {
 }
 
 .academy-side-btn.active {
-  background: rgba(139, 92, 246, 0.18);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
   color: #fff;
 }
 
@@ -251,6 +251,7 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: 18px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -276,23 +277,33 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 13px;
   color: #8e8e93;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   padding-left: var(--space-2);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .lms-breadcrumb .crumb-link {
-  color: #8e8e93;
+  color: #c7c7cc;
   cursor: pointer;
   transition: color 0.15s ease;
+  background: none;
+  border: none;
+  padding: 0 var(--space-2);
+  font: inherit;
+  min-height: var(--touch-min, 44px);
+  min-width: var(--touch-min, 44px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lms-breadcrumb .crumb-link:hover {
-  color: #fff;
+  color: var(--coral-hover);
 }
 
 .lms-breadcrumb .crumb-sep {
@@ -302,6 +313,8 @@ body.academy-studio-mode .workspace {
 .lms-breadcrumb .crumb-current {
   color: #fff;
   font-weight: 600;
+  flex: 0 1 280px;
+  min-width: 0;
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -311,7 +324,23 @@ body.academy-studio-mode .workspace {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* The search pill also holds an icon and the shortcut key. A 100% input
+   paints under that key and clips the placeholder. */
+.site-header.lms-top-header .lms-header-search {
+  flex: 0 0 260px;
+  width: 260px;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.site-header.lms-top-header .lms-header-search input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
 }
 
 /* ==========================================================================
@@ -348,22 +377,40 @@ body.academy-studio-mode .workspace {
 
   #workspace-mode-toggle {
     padding: 0;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     justify-content: center;
   }
 
   .lms-circle-icon-btn {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    min-height: 38px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
+  .account-avatar,
+  #header-gear-btn,
+  #workspace-mode-toggle {
+    display: none;
+  }
+
+  #logout {
+    min-height: 44px;
+    padding: 0 12px;
+    flex: 0 0 auto;
+  }
+
+  /* The bottom dock is fixed. Keep the page scroller above it so a button
+     cannot sit in the dock's hit area. */
   .app-layout-shell {
     padding-left: 0;
-    padding-bottom: 76px;
+    padding-bottom: 0;
+    height: calc(100dvh - 60px - 64px - var(--safe-bottom));
+    overflow: auto;
   }
 
   /* Default Mobile Bottom Navigation Bar */
@@ -565,12 +612,12 @@ body.academy-studio-mode .workspace {
   border: 1px solid rgba(255, 152, 123, 0.15);
 }
 
-/* Deep purple / indigo */
+/* Warm amber / slate (streaming accent family) */
 
 .lesson-badge-pill.pill-purple {
-  background: #281e3a;
-  color: #b39ddb;
-  border: 1px solid rgba(179, 157, 219, 0.15);
+  background: #2a2218;
+  color: #ffb395;
+  border: 1px solid rgba(255, 179, 149, 0.18);
 }
 
 /* Deep forest green / emerald */
@@ -657,6 +704,11 @@ body.academy-studio-mode .workspace {
 /* Fix Academy Studio full-width workspace & hide mobile-more-btn on desktop */
 
 @media (min-width: 1025px) {
+  /* Beat the later icon-button `display: inline-flex` so the phone menu stays off the desktop header. */
+  button#mobile-menu-toggle.mobile-only-btn {
+    display: none;
+  }
+
   #primary-nav.lms-left-rail #mobile-more-btn,
   #primary-nav.lms-left-rail .mobile-more-trigger {
     display: none;
@@ -712,9 +764,9 @@ body.academy-studio-mode .workspace {
   }
 
   .site-header.lms-top-header #logout {
-    padding: var(--space-1) var(--space-2);
-    font-size: 11.5px;
-    min-height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    min-height: 44px;
   }
 }
 
@@ -1196,10 +1248,10 @@ body.academy-studio-mode .workspace {
   /* Omni Search on Mobile */
 
   .omni-search-dialog {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
     border-radius: 0;
     border: none;
     top: 0;
@@ -1209,13 +1261,13 @@ body.academy-studio-mode .workspace {
   }
 
   .omni-search-shell {
-    height: 100vh;
-    max-height: 100vh;
+    height: 100%;
+    max-height: 100%;
     background: #090a0f;
   }
 
   .omni-search-body {
-    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
   }
 
   .omni-item-title-row {
@@ -1283,9 +1335,9 @@ body.academy-studio-mode .workspace {
 }
 
 .classroom-mode-switch .mode-seg-btn.active {
-  background: rgba(139, 92, 246, 0.25);
+  background: var(--accent-soft);
   color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
 }
 
 .lms-playlist-pill {
@@ -1396,6 +1448,67 @@ body.academy-studio-mode .workspace {
     min-height: var(--touch-min);
     padding: 7px 14px;
     font-size: 0.78rem;
+  }
+
+  /* `button.x:not([hidden])` in polish.css is more specific than `.x` and caps these at 34–38px. */
+  button.action-pill:not([hidden]),
+  button.filter-pill:not([hidden]),
+  button.mode-pill:not([hidden]),
+  button.tutor-mode-btn:not([hidden]),
+  button.theme-choice-btn:not([hidden]),
+  button.accent-choice-btn:not([hidden]),
+  button.budget-choice-pill:not([hidden]),
+  button.lms-playlist-pill:not([hidden]),
+  button.study-rail-tab:not([hidden]),
+  button.planning-tab:not([hidden]),
+  button.admin-tab-btn:not([hidden]),
+  button.mode-switch-pill:not([hidden]),
+  button.mode-seg-btn:not([hidden]),
+  button.suggestion-pill:not([hidden]),
+  button.prompt-pill:not([hidden]),
+  .prompt-pill:not([hidden]),
+  button.citation-link-card:not([hidden]),
+  button.source-chip:not([hidden]),
+  button.omni-chip:not([hidden]),
+  button.popover-chip:not([hidden]),
+  button.note-seek-pill:not([hidden]),
+  button.chapter-time-btn:not([hidden]),
+  button.transcript-seek-btn:not([hidden]),
+  .password-toggle-btn:not([hidden]),
+  .auth-link-btn:not([hidden]),
+  .focus-icon-btn:not([hidden]) {
+    min-height: var(--touch-min);
+    max-height: none;
+    height: auto;
+  }
+
+  .password-toggle-btn:not([hidden]) {
+    min-width: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-link-btn:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+  }
+
+  .focus-workspace .classroom-heading {
+    height: auto;
+    min-height: 52px;
+    flex-basis: auto;
+    flex-wrap: wrap;
+  }
+
+  button.focus-dock-tab:not([hidden]) {
+    flex: 0 0 auto;
+    height: var(--touch-min);
+    min-height: var(--touch-min);
+    max-height: var(--touch-min);
+    padding: 0 12px;
+    white-space: nowrap;
   }
 
   /* Review flashcard rating buttons: 2 columns on mobile to prevent text clipping */

@@ -57,7 +57,10 @@ export function installRouter(ctx: AppContext): void {
     if (side) side.hidden = !isStudio;
     const toggleBtn = document.querySelector<HTMLButtonElement>('#workspace-mode-toggle');
     const toggleLbl = document.querySelector<HTMLElement>('#workspace-mode-label');
-    if (toggleBtn) toggleBtn.setAttribute('aria-pressed', String(isStudio));
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-pressed', String(isStudio));
+      toggleBtn.setAttribute('aria-label', isStudio ? 'Switch to Normal Mode' : 'Switch to Academy Studio');
+    }
     if (toggleLbl) toggleLbl.textContent = isStudio ? 'Normal Mode' : 'Academy Studio';
     document.querySelector('#mode-normal-btn')?.classList.toggle('active', !isStudio);
     document.querySelector('#mode-studio-btn')?.classList.toggle('active', isStudio);

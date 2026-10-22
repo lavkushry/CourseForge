@@ -174,6 +174,11 @@ export class PlanningView implements PlanningHost {
     const wrap = document.createElement('div');
     wrap.className = 'planning-container';
 
+    const pageTitle = document.createElement('h1');
+    pageTitle.className = 'planning-page-title';
+    pageTitle.textContent = 'Study plan';
+    wrap.append(pageTitle);
+
     // 1. Navigation Header
     const nav = document.createElement('nav');
     nav.className = 'planning-tabs';
@@ -192,6 +197,7 @@ export class PlanningView implements PlanningHost {
       btn.type = 'button';
       btn.className = this.activeTab === t.id ? 'planning-tab active' : 'planning-tab';
       btn.textContent = t.label;
+      btn.setAttribute('aria-pressed', String(this.activeTab === t.id));
       btn.onclick = () => {
         void this.open(t.id);
       };

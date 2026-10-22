@@ -1,7 +1,7 @@
 import { el } from '../components';
 import { errorMessage, isAbort } from '../api';
 import type { CareerStudioHost } from './view-host';
-import { renderImportReport } from './view-helpers';
+import { labeledField, renderImportReport } from './view-helpers';
 
 export function renderReferrals(host: CareerStudioHost): HTMLElement {
   const panel = el('section', 'career-panel');
@@ -25,7 +25,13 @@ export function renderReferrals(host: CareerStudioHost): HTMLElement {
   link.placeholder = 'Profile link (optional)';
   const add = el('button', 'button primary', 'Add contact') as HTMLButtonElement;
   add.type = 'submit';
-  form.append(name, company, relation, link, add);
+  form.append(
+    labeledField('Name', name),
+    labeledField('Company', company),
+    labeledField('Relation', relation),
+    labeledField('Profile link', link),
+    add,
+  );
   form.addEventListener('submit', ev => {
     ev.preventDefault();
     void addContact(host, name.value, company.value, relation.value as 'alumni' | 'cohort' | 'colleague', link.value);
@@ -58,7 +64,7 @@ export function renderReferrals(host: CareerStudioHost): HTMLElement {
   const matchBtn = el('button', 'button', 'Find matches') as HTMLButtonElement;
   matchBtn.type = 'button';
   matchBtn.addEventListener('click', () => void findReferralMatches(host, matchCompany.value));
-  matchForm.append(matchCompany, role, matchBtn);
+  matchForm.append(labeledField('Target company', matchCompany), labeledField('Role', role), matchBtn);
   panel.append(matchForm);
 
   if (host.referralMatches.length) {
@@ -89,6 +95,7 @@ export function renderReferrals(host: CareerStudioHost): HTMLElement {
     const copy = el('button', 'button primary', 'Copy to clipboard') as HTMLButtonElement;
     copy.type = 'button';
     copy.addEventListener('click', () => void copyReferralDraft(host, pre.value));
+    pre.setAttribute('aria-label', 'Referral message');
     box.append(pre, copy);
     panel.append(box);
   }
@@ -103,7 +110,7 @@ export function renderReferrals(host: CareerStudioHost): HTMLElement {
   const commitBtn = el('button', 'button primary', 'Import contacts') as HTMLButtonElement;
   commitBtn.type = 'button';
   commitBtn.addEventListener('click', () => void runContactImport(host, csvArea.value, false));
-  panel.append(csvArea, dryBtn, commitBtn);
+  panel.append(labeledField('Contacts CSV', csvArea), dryBtn, commitBtn);
   if (host.contactImportReport) panel.append(renderImportReport(host.contactImportReport));
   return panel;
 }

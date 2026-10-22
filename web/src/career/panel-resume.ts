@@ -22,7 +22,7 @@ export function renderResumeStudio(host: CareerStudioHost): HTMLElement {
   const createBtn = el('button', 'button primary', 'New application') as HTMLButtonElement;
   createBtn.type = 'button';
   createBtn.addEventListener('click', () => void createApplication(host, title.value));
-  appRow.append(title, createBtn);
+  appRow.append(labeledField('Application title', title), createBtn);
   panel.append(appRow);
 
   if (host.applications.length) {

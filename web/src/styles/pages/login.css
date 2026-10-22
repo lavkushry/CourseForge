@@ -7,22 +7,37 @@
   flex-direction: column;
   align-items: center;
   padding: 44px var(--space-6);
-  background: radial-gradient(ellipse at 20% 20%, #432b3720, transparent 50%), var(--bg);
+  background: radial-gradient(ellipse at 18% 12%, rgba(255, 121, 82, 0.14), transparent 52%),
+    radial-gradient(ellipse at 85% 80%, rgba(229, 69, 3, 0.08), transparent 45%), var(--bg);
 }
 
 .login-panel {
   position: relative;
-  background: #15161dec;
-  border: 1px solid #ffffff1d;
-  border-radius: 16px;
+  background: rgba(18, 18, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   padding: 42px;
   width: min(100%, 440px);
   margin: auto 0;
-  box-shadow: 0 30px 90px #0006;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 40px var(--accent-glow);
 }
 
 .login-panel h1 {
   font-size: 2.5rem;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 24px 16px;
+  }
+
+  .login-panel {
+    padding: 24px 16px;
+  }
+
+  .login-panel h1 {
+    font-size: 2rem;
+  }
 }
 
 #login-form {
@@ -71,7 +86,7 @@
   aspect-ratio: 1;
   border: 1px solid #ffa48919;
   border-radius: 40% 60% 55% 45%;
-  background: linear-gradient(135deg, #ff795209, #bf71f309);
+  background: linear-gradient(135deg, rgba(255, 121, 82, 0.06), rgba(229, 69, 3, 0.04));
   transform: rotate(-25deg);
   right: -8%;
   top: 6%;
@@ -146,17 +161,22 @@
 
 .password-toggle-btn {
   position: absolute;
-  right: 10px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   margin: 0;
-  min-height: 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
-  color: #9a9cb0;
-  font-size: 0.73rem;
+  color: #d4d4da;
+  font-size: 0.78rem;
+  font-weight: 650;
   cursor: pointer;
-  padding: 6px var(--space-2);
+  padding: 0 8px;
   border-radius: 6px;
   user-select: none;
   transition: color 0.15s;
@@ -178,17 +198,20 @@
 .auth-link-btn {
   background: none;
   border: none;
-  color: var(--accent, #a78bfa);
+  color: var(--accent);
   cursor: pointer;
   font-weight: 600;
   font-size: inherit;
-  padding: 0 var(--space-1);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .auth-link-btn:hover {
-  color: #c4b5fd;
+  color: var(--coral-hover);
 }
 
 #register-form {
@@ -234,7 +257,7 @@
 }
 
 .preview-header .eyebrow {
-  color: #a78bfa;
+  color: var(--coral);
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   font-weight: 700;
@@ -254,22 +277,23 @@
 }
 
 .guest-card {
-  background: #12131e;
-  border: 1px solid #232535;
-  border-radius: 12px;
+  background: var(--surface-elevated, #12131e);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--poster-radius, 6px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
+    box-shadow 0.25s ease;
   cursor: pointer;
 }
 
 .guest-card:hover {
-  transform: translateY(-5px);
-  border-color: #7c3aed;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+  transform: var(--lift-hover, translateY(-4px) scale(1.04));
+  border-color: var(--accent-border);
+  box-shadow: var(--lift-shadow);
 }
 
 .guest-card-body {

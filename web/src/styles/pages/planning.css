@@ -9,11 +9,12 @@
 }
 
 .planning-card {
-  background: #15161f;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  background: var(--surface-elevated, #15161f);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--poster-radius, 6px);
   padding: var(--space-6);
   margin-bottom: var(--space-5);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .planning-card h2 {
@@ -210,7 +211,7 @@
 }
 
 .momentum-stat-card:hover {
-  border-color: rgba(139, 92, 246, 0.35);
+  border-color: var(--accent-border);
   transform: translateY(-2px);
 }
 
@@ -218,9 +219,9 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  color: #a78bfa;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-glow);
+  color: var(--coral);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -318,8 +319,8 @@
 }
 
 .calendar-day-pill.today-active {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: #8b5cf6;
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 
 .calendar-day-pill.today-active .day-pill-name {
@@ -327,8 +328,8 @@
 }
 
 .calendar-day-pill.today-active .day-pill-dot {
-  background: #8b5cf6;
-  box-shadow: 0 0 8px #8b5cf6;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 .calendar-day-pill.day-complete .day-pill-dot {
@@ -368,10 +369,10 @@
 }
 
 .planning-tab.active {
-  background: rgba(139, 92, 246, 0.22);
-  border-color: rgba(167, 139, 250, 0.45);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
   color: #fff;
-  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 2px 10px var(--accent-soft);
 }
 
 .momentum-card-icon .svg-icon {
@@ -425,7 +426,7 @@
 }
 
 .weekday-box:hover {
-  border-color: rgba(139, 92, 246, 0.4);
+  border-color: var(--accent-border);
   transform: translateY(-2px);
 }
 
@@ -511,19 +512,19 @@
   line-height: 1;
   padding: 18px var(--space-9);
   border-radius: 20px;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.22), rgba(11, 13, 21, 0.95));
-  border: 1px solid rgba(139, 92, 246, 0.32);
+  background: radial-gradient(circle at 50% 0%, var(--accent-soft), rgba(11, 13, 21, 0.95));
+  border: 1px solid var(--accent-border);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 .focus-status-display {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #ffb395;
   padding: 6px var(--space-4);
   border-radius: 999px;
-  background: rgba(139, 92, 246, 0.16);
-  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
 }
 
 .focus-actions-row,
@@ -576,7 +577,7 @@
 .habits-card > input[type='checkbox'] {
   width: 20px;
   height: 20px;
-  accent-color: #8b5cf6;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -663,7 +664,7 @@ textarea {
 .planning-panel select:focus,
 .login-panel input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 /* Weekly Budgets Grid Responsiveness */

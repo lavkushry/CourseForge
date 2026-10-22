@@ -300,6 +300,12 @@ export function installBindings(ctx: AppContext): void {
       void ctx.markComplete();
     });
     on('#save-note-pill', () => {
+      const dock = document.querySelector<HTMLElement>('#focus-dock');
+      if (ctx.studyRail && dock && !dock.hidden) {
+        ctx.studyRail.setTab('notes');
+        dock.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+        return;
+      }
       const notesEl = document.querySelector<HTMLElement>('#notes');
       if (notesEl) {
         notesEl.hidden = false;
@@ -320,10 +326,14 @@ export function installBindings(ctx: AppContext): void {
     };
     on('#focus-curriculum', toggleDrawer);
     on('#focus-search', () => ctx.omniSearch?.open());
-    if (window.matchMedia('(max-width: 900px)').matches) {
+    const narrowCurriculum = window.matchMedia('(max-width: 900px)');
+    const collapseCurriculum = () => {
+      if (!narrowCurriculum.matches) return;
       required('#classroom').classList.add('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
-    }
+    };
+    collapseCurriculum();
+    narrowCurriculum.addEventListener('change', collapseCurriculum, { signal });
     document.addEventListener(
       'keydown',
       event => {

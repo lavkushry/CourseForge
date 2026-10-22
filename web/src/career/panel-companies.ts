@@ -1,4 +1,5 @@
 import { el } from '../components';
+import { labeledField } from './view-helpers';
 import { errorMessage, isAbort } from '../api';
 import type { CareerStudioHost } from './view-host';
 
@@ -19,7 +20,7 @@ export function renderCompanies(host: CareerStudioHost): HTMLElement {
   notes.maxLength = 2000;
   const submit = el('button', 'button primary', 'Add company') as HTMLButtonElement;
   submit.type = 'submit';
-  form.append(name, notes, submit);
+  form.append(labeledField('Company name', name), labeledField('Notes', notes), submit);
   form.addEventListener('submit', ev => {
     ev.preventDefault();
     void createCompany(host, name.value, notes.value);
@@ -55,7 +56,7 @@ export function renderCompanies(host: CareerStudioHost): HTMLElement {
     raw.required = true;
     const add = el('button', 'button primary', 'Extract & add JD') as HTMLButtonElement;
     add.type = 'submit';
-    jdForm.append(title, raw, add);
+    jdForm.append(labeledField('JD title', title), labeledField('Job description', raw), add);
     jdForm.addEventListener('submit', ev => {
       ev.preventDefault();
       void addJD(host, title.value, raw.value);
