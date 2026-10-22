@@ -326,10 +326,14 @@ export function installBindings(ctx: AppContext): void {
     };
     on('#focus-curriculum', toggleDrawer);
     on('#focus-search', () => ctx.omniSearch?.open());
-    if (window.matchMedia('(max-width: 900px)').matches) {
+    const narrowCurriculum = window.matchMedia('(max-width: 900px)');
+    const collapseCurriculum = () => {
+      if (!narrowCurriculum.matches) return;
       required('#classroom').classList.add('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
-    }
+    };
+    collapseCurriculum();
+    narrowCurriculum.addEventListener('change', collapseCurriculum, { signal });
     document.addEventListener(
       'keydown',
       event => {

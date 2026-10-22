@@ -68,7 +68,7 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
   expect(boxes.player!.bottom).toBeLessThanOrEqual(boxes.title!.top + 1);
   expect(boxes.title!.bottom).toBeLessThanOrEqual(boxes.dock!.top + 1);
   expect(boxes.dock!.bottom).toBeLessThanOrEqual(boxes.viewport + 1);
-  expect(boxes.dock!.height).toBeGreaterThanOrEqual(160);
+  expect(boxes.dock!.height).toBeGreaterThanOrEqual(120);
   expect(boxes.rail!.width).toBeGreaterThanOrEqual(300);
   expect(boxes.rail!.width).toBeLessThanOrEqual(340);
   expect(Math.abs(boxes.player!.left - boxes.stage!.left)).toBeLessThanOrEqual(2);
@@ -80,7 +80,8 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
   expect(Math.abs(boxes.player!.left - boxes.dock!.left)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.player!.right - boxes.dock!.right)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.player!.width - boxes.column!.width)).toBeLessThanOrEqual(2);
-  expect(boxes.player!.height).toBeGreaterThanOrEqual(180);
+  expect(boxes.player!.height).toBeGreaterThanOrEqual((boxes.column!.width * 9) / 16 * 0.75);
+  expect(boxes.dock!.bottom).toBeGreaterThanOrEqual(boxes.viewport - 8);
   expect(Math.abs(boxes.rail!.top - boxes.column!.top)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.rail!.bottom - boxes.column!.bottom)).toBeLessThanOrEqual(2);
   expect(boxes.classroom!.left).toBeGreaterThanOrEqual(80);

@@ -5,14 +5,30 @@ body:has(#classroom.focus-workspace:not([hidden])) {
   height: 100dvh;
 }
 
-body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
-  height: calc(100dvh - 68px - var(--safe-top));
+body:has(#classroom.focus-workspace:not([hidden])) #app {
+  height: 100dvh;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
+  flex: 0 0 auto;
+}
+
+body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 body:has(#classroom.focus-workspace:not([hidden])) .workspace {
-  height: 100%;
+  flex: 1 1 auto;
+  height: auto;
   max-width: none;
   width: 100%;
   margin: 0;
@@ -21,6 +37,12 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   display: flex;
   flex-direction: column;
   padding: 0;
+}
+
+#classroom.focus-workspace {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
 }
 
 .focus-workspace {
@@ -267,7 +289,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
    stage, title, and dock inside the viewport. */
 #classroom.focus-workspace .lesson-column {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto minmax(168px, 32vh);
+  /* The lecture owns the column. The dock is a bottom band, not a second stage. */
+  grid-template-rows: minmax(0, 1fr) auto minmax(128px, 18vh);
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
@@ -283,8 +306,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   background: #050609;
 }
 
-/* The stage is the player's place. The picture stays 16:9 inside the frame
-   (object-fit: contain) so the title bar and dock can share the column edges. */
+/* The stage is the player's place. The picture covers that frame so the
+   title bar and dock share its left and right edges. */
 #classroom.focus-workspace #player-wrap {
   position: relative;
   flex: 1 1 auto;
@@ -315,7 +338,7 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   height: 100%;
   max-height: none;
   aspect-ratio: auto;
-  object-fit: contain;
+  object-fit: cover;
   background: #000;
 }
 
@@ -324,11 +347,36 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 10px 16px;
-  gap: 8px;
+  padding: 8px 16px;
+  gap: 6px;
   border-radius: 0;
   border-left: 0;
   border-right: 0;
+}
+
+#classroom.focus-workspace .lesson-meta-top,
+#classroom.focus-workspace .lesson-title-action-row {
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+}
+
+#classroom.focus-workspace .lesson-meta-badges {
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#classroom.focus-workspace .lesson-heading-group {
+  min-width: 0;
+  flex: 1;
+}
+
+#classroom.focus-workspace .lesson-main-title,
+#classroom.focus-workspace .lesson-instructor-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #classroom.focus-workspace .lesson-main-title {
@@ -405,6 +453,11 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   display: none;
 }
 
+/* The certificate banner sits under the dock and steals the stage's height. */
+#classroom.focus-workspace #course-certificate-section {
+  display: none;
+}
+
 body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hidden]) {
   flex: 0 0 auto;
   margin: 0;
@@ -415,7 +468,9 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hid
 @media (max-width: 1024px) {
   /* Header is 60px and the bottom dock is 64px. The shell starts below the header,
      so subtracting only 64px parks the transcript dock under the navigation. */
+  /* flex-grow would pull the shell under the fixed bottom nav. */
   body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+    flex: 0 0 auto;
     height: calc(100dvh - 60px - 64px - var(--safe-bottom));
     padding-bottom: 0;
   }
@@ -429,12 +484,17 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace > #notice:not([hid
 
   /* The phone meta bar was a 2×2 stack of 44px actions plus badges, which
      collapsed the video row to 0 and pushed the dock under the bottom nav. */
-  #classroom.focus-workspace #course-certificate-section {
-    display: none;
+  #classroom.focus-workspace .lesson-column {
+    grid-template-rows: auto auto minmax(112px, 1fr);
   }
 
-  #classroom.focus-workspace .lesson-column {
-    grid-template-rows: minmax(0, 1fr) auto minmax(112px, 26vh);
+  #classroom.focus-workspace #player-wrap {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  #classroom.focus-workspace #lesson-video {
+    object-fit: contain;
   }
 
   /* One command row. Wrapped 44px controls were pushing the transcript under the bottom nav. */
