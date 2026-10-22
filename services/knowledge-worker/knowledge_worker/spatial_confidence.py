@@ -361,7 +361,7 @@ def _student_text(decision: str, timestamp: str) -> str:
     if decision == "label":
         return _LABEL_TEXT.format(timestamp=timestamp)
     if timestamp:
-        return f"{_HOLD_TEXT} {_SOURCE_LINK_TEXT.format(timestamp=timestamp)}"
+        return f"{_HOLD_TEXT} {_SOURCE_LINK_TEXT.format(timestamp=timestamp)}."
     return _HOLD_TEXT
 
 

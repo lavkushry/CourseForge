@@ -39,7 +39,7 @@ def test_weights_are_obvious_and_sum_to_one():
     assert CAPTION_WEIGHT == 0.30
     assert CONCEPT_WEIGHT == 0.20
     assert KEYFRAME_WEIGHT == 0.15
-    assert OCR_WEIGHT + CAPTION_WEIGHT + CONCEPT_WEIGHT + KEYFRAME_WEIGHT == 1
+    assert round(OCR_WEIGHT + CAPTION_WEIGHT + CONCEPT_WEIGHT + KEYFRAME_WEIGHT, 10) == 1
     assert RELEASE_THRESHOLD == 0.75
     assert LABEL_THRESHOLD == 0.45
 

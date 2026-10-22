@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spatial confidence gate</title>
+<style>
+  body { margin: 0; font: 16px/1.45 system-ui, sans-serif; background: #090e19; color: #f4f6fb; }
+  main { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 8px; }
+  .lede { color: #b7c0d4; margin: 0 0 24px; }
+  .spatial-card { background: #121a2b; border: 1px solid #2a3650; border-radius: 12px; padding: 16px 18px; margin: 0 0 16px; }
+  h2 { margin: 0 0 8px; font-size: 1.1rem; }
+  .spatial-meta { color: #b7c0d4; margin: 0 0 12px; }
+  .spatial-warning { background: #3a2a12; color: #ffd9a0; border: 1px solid #e0a050; border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; }
+  .spatial-asset { border: 1px dashed #6d7c99; border-radius: 8px; padding: 16px; margin: 0 0 12px; }
+  .spatial-held { margin: 0 0 12px; color: #ffb4b4; }
+  a.spatial-source { color: #ffb088; }
+  #jump { min-height: 1.4em; color: #d5f5d8; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Spatial confidence gate</h1>
+  <p class="lede">High confidence is released. A lower score stays labeled, and a weak score is withheld. The source link returns to the lecture second.</p>
+  <article class="spatial-card" data-decision="release"><h2>Clean source</h2><p class="spatial-meta">Decision release · score 0.9755 · lecture lec-btree-01 · 1:24</p><div class="spatial-asset" data-kind="3d"><p>Spatial asset slot (3d)</p><p>Shown only after the confidence gate.</p></div><a class="spatial-source" href="#learning/lec-btree-01?t=84">Original lecture at 1:24</a></article>
+<article class="spatial-card" data-decision="hold"><h2>Noisy source</h2><p class="spatial-meta">Decision hold · score 0.063 · lecture lec-btree-01 · 3:30</p><p class="spatial-held" role="status">Withheld — this spatial asset is not part of the lecture. Original lecture at 3:30.</p><a class="spatial-source" href="#learning/lec-btree-01?t=210">Original lecture at 3:30</a></article>
+<article class="spatial-card" data-decision="label"><h2>Partial source</h2><p class="spatial-meta">Decision label · score 0.6443 · lecture lec-btree-01 · 2:06</p><p class="spatial-warning" role="alert">AI-generated — verify against original lecture at 2:06</p><div class="spatial-asset" data-kind="vr"><p>Spatial asset slot (vr)</p><p>Shown only after the confidence gate.</p></div><a class="spatial-source" href="#learning/lec-btree-01?t=126">Original lecture at 2:06</a></article>
+  <p id="jump" aria-live="polite"></p>
+</main>
+<script>
+  document.querySelectorAll('a.spatial-source').forEach((anchor) => {
+    anchor.addEventListener('click', (event) => {
+      event.preventDefault();
+      const live = document.getElementById('jump');
+      if (live) live.textContent = 'Returning to ' + anchor.getAttribute('href');
+    });
+  });
+</script>
+</body>
+</html>
