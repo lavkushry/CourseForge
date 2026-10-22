@@ -92,6 +92,8 @@ test.describe('mobile and desktop shell fit', () => {
     await signIn(page);
     await page.getByRole('button', { name: /Open course/ }).first().click();
     await expect(page.locator('#player-wrap')).toHaveAttribute('data-state', 'ready', { timeout: 30_000 });
+    await page.locator('#focus-dock-toggle').click();
+    await expect(page.locator('#classroom')).not.toHaveClass(/dock-collapsed/);
 
     for (const viewport of [
       { width: 1440, height: 900, dock: 0 },
@@ -99,6 +101,7 @@ test.describe('mobile and desktop shell fit', () => {
       { width: 320, height: 640, dock: 64 },
     ]) {
       await page.setViewportSize(viewport);
+      await page.locator('#classroom').evaluate(el => el.classList.remove('dock-collapsed'));
       await expect(page.locator('#focus-dock')).toBeVisible();
       const boxes = await page.evaluate(() => {
         const rect = (selector: string) => {

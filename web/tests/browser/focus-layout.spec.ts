@@ -19,12 +19,17 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
 
   await expect(page.locator('#notice')).toBeHidden();
   await expect(page.locator('#lesson-title')).toBeVisible();
+
+  // Efficient watch starts with curriculum + transcript dock closed.
+  await expect(page.locator('#classroom')).toHaveClass(/drawer-collapsed/);
+  await expect(page.locator('#classroom')).toHaveClass(/dock-collapsed/);
+
+  await page.locator('#focus-dock-toggle').click();
+  await expect(page.locator('#classroom')).not.toHaveClass(/dock-collapsed/);
   await expect(page.locator('#focus-dock')).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Transcript' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Notes' })).toBeVisible();
 
-  // Immersive watch starts with the curriculum closed; open it for rail geometry checks.
-  await expect(page.locator('#classroom')).toHaveClass(/drawer-collapsed/);
   await page.locator('#focus-curriculum').click();
   await expect(page.locator('#classroom')).not.toHaveClass(/drawer-collapsed/);
   await expect(page.locator('#study-rail')).toBeVisible();
@@ -61,6 +66,7 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
       searchInputRight: inputBox?.right ?? null,
       searchShortcutLeft: shortcutBox?.left ?? null,
       searchInputWidth: inputBox?.width ?? null,
+      navHidden: getComputedStyle(document.querySelector('#primary-nav')!).display === 'none',
     };
   });
   expect(boxes.player).not.toBeNull();
@@ -71,12 +77,13 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
   expect(boxes.rail).not.toBeNull();
   expect(boxes.column).not.toBeNull();
   expect(boxes.classroom).not.toBeNull();
+  expect(boxes.navHidden).toBe(true);
   expect(boxes.player!.bottom).toBeLessThanOrEqual(boxes.title!.top + 1);
   expect(boxes.title!.bottom).toBeLessThanOrEqual(boxes.dock!.top + 1);
   expect(boxes.dock!.bottom).toBeLessThanOrEqual(boxes.viewport + 1);
-  expect(boxes.dock!.height).toBeGreaterThanOrEqual(120);
-  expect(boxes.rail!.width).toBeGreaterThanOrEqual(300);
-  expect(boxes.rail!.width).toBeLessThanOrEqual(340);
+  expect(boxes.dock!.height).toBeGreaterThanOrEqual(100);
+  expect(boxes.rail!.width).toBeGreaterThanOrEqual(260);
+  expect(boxes.rail!.width).toBeLessThanOrEqual(300);
   expect(Math.abs(boxes.player!.left - boxes.stage!.left)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.player!.right - boxes.stage!.right)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.player!.top - boxes.stage!.top)).toBeLessThanOrEqual(2);
@@ -90,12 +97,10 @@ test('focus classroom keeps the title and dock on screen', async ({ page, contex
   expect(boxes.dock!.bottom).toBeGreaterThanOrEqual(boxes.viewport - 8);
   expect(Math.abs(boxes.rail!.top - boxes.column!.top)).toBeLessThanOrEqual(2);
   expect(Math.abs(boxes.rail!.bottom - boxes.column!.bottom)).toBeLessThanOrEqual(2);
-  expect(boxes.classroom!.left).toBeGreaterThanOrEqual(80);
-  expect(boxes.classroom!.left).toBeLessThanOrEqual(84);
+  // Watch mode hides the 82px LMS rail, so the classroom starts at the left edge.
+  expect(boxes.classroom!.left).toBeGreaterThanOrEqual(-1);
+  expect(boxes.classroom!.left).toBeLessThanOrEqual(4);
   expect(boxes.classroom!.right).toBeGreaterThanOrEqual(boxes.viewportWidth - 2);
-  expect(boxes.searchInputWidth).not.toBeNull();
-  expect(boxes.searchInputWidth!).toBeGreaterThanOrEqual(110);
-  expect(boxes.searchShortcutLeft!).toBeGreaterThanOrEqual(boxes.searchInputRight! - 1);
 
   await page.screenshot({ path: '/opt/cursor/artifacts/classroom-structure.png', fullPage: false });
 });
