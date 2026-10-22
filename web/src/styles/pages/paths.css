@@ -44,6 +44,18 @@
   gap: 0.8rem;
 }
 
+.paths-page-title {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+button.path-nav-item {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
 .path-nav-item {
   background: #181926;
   border: 1px solid #232533;

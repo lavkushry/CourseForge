@@ -51,7 +51,7 @@ export class PathsView {
     const aiBtn = button('AI Generate', () => void this.showAiGenerateModal(), 'button quiet ai-gen-path-btn');
     aiBtn.prepend(svgIcon('sparkle'));
     sideHead.append(
-      el('h2', '', 'Learning Roadmaps'),
+      el('h1', 'paths-page-title', 'Learning roadmaps'),
       aiBtn,
       button('+ New Roadmap', () => void this.showCreateModal(), 'button primary new-path-btn'),
     );
@@ -71,7 +71,8 @@ export class PathsView {
       );
     } else {
       for (const p of this.paths) {
-        const item = el('div', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`);
+        const item = el('button', `path-nav-item${this.activePath?.id === p.id ? ' active' : ''}`) as HTMLButtonElement;
+        item.type = 'button';
         item.append(
           el('strong', '', p.goal),
           el(
@@ -102,7 +103,7 @@ export class PathsView {
       const head = el('div', 'path-header');
       head.append(
         el('span', 'eyebrow', `LEARNING ROADMAP · ${p.provenance.toUpperCase()}`),
-        el('h1', '', p.goal),
+        el('h2', '', p.goal),
         el('p', 'muted', `Covering: ${p.course_ids.join(', ')}`),
         el('div', 'path-stats-row'),
       );

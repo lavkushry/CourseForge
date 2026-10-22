@@ -13,7 +13,14 @@ test.describe('mobile menu sheet', () => {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.locator('#catalog')).toBeVisible({ timeout: 20_000 });
 
-    await page.locator('#mobile-menu-toggle').click();
+    const toggle = page.locator('#mobile-menu-toggle');
+    if (page.viewportSize()!.width > 1024) {
+      await expect(toggle).toBeHidden();
+      await expect(page.locator('#mobile-nav-backdrop')).toBeHidden();
+      return;
+    }
+
+    await toggle.click();
     await expect(page.locator('body')).toHaveClass(/mobile-menu-open/);
     await expect(page.locator('#mobile-nav-backdrop')).toBeVisible();
     await expect(page.locator('#mobile-more-btn .lms-nav-label')).toHaveText('Close');

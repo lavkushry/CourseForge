@@ -25,6 +25,20 @@
   font-size: 2.5rem;
 }
 
+@media (max-width: 480px) {
+  .login-page {
+    padding: 24px 16px;
+  }
+
+  .login-panel {
+    padding: 24px 16px;
+  }
+
+  .login-panel h1 {
+    font-size: 2rem;
+  }
+}
+
 #login-form {
   display: flex;
   flex-direction: column;
@@ -146,17 +160,22 @@
 
 .password-toggle-btn {
   position: absolute;
-  right: 10px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   margin: 0;
-  min-height: 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
-  color: #9a9cb0;
-  font-size: 0.73rem;
+  color: #d4d4da;
+  font-size: 0.78rem;
+  font-weight: 650;
   cursor: pointer;
-  padding: 6px var(--space-2);
+  padding: 0 8px;
   border-radius: 6px;
   user-select: none;
   transition: color 0.15s;
@@ -182,7 +201,10 @@
   cursor: pointer;
   font-weight: 600;
   font-size: inherit;
-  padding: 0 var(--space-1);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }

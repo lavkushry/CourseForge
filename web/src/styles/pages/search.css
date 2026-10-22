@@ -113,7 +113,7 @@
   border-radius: 999px;
   padding: 0 var(--space-4);
   height: 40px;
-  min-width: 290px;
+  min-width: min(290px, 100%);
   flex: 1;
   max-width: 440px;
 }

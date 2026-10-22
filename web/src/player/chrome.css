@@ -303,23 +303,28 @@
 
 @media (max-width: 600px) {
   .player-enhanced .cinema-control-row {
-    height: 46px !important;
-    min-height: 46px !important;
+    height: 56px !important;
+    min-height: 56px !important;
     padding: 0 8px 6px !important;
     gap: 2px !important;
+    overflow-x: auto;
+  }
+  .player-enhanced media-play-button,
+  .player-enhanced media-mute-button,
+  .player-enhanced media-seek-backward-button,
+  .player-enhanced media-seek-forward-button,
+  .player-enhanced media-captions-button,
+  .player-enhanced .cinema-button {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
   }
   .player-enhanced media-play-button {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
     margin-right: 4px !important;
   }
-  .player-enhanced media-mute-button {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
+  .player-enhanced media-volume-range {
+    display: none !important;
   }
   .player-enhanced media-time-display {
     font-size: 11px !important;
@@ -329,12 +334,6 @@
   .player-enhanced .cinema-timeline {
     margin: 0 6px !important;
     min-width: 50px !important;
-  }
-  .player-enhanced .cinema-button {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
   }
   .player-enhanced .cinema-button svg {
     width: 16px !important;
