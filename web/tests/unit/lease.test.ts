@@ -6,7 +6,7 @@ import { probeMedia } from '../../src/player/media-probe';
 import { clock, FakeVideo, transport } from './fixtures';
 
 const lesson: Lesson = { id: 'lesson-1', course_id: 'course-1', title: 'First lesson', duration_seconds: 120 };
-const conflict = () => new ApiError('Playback moved to another window.', 409, 'playback_conflict');
+const conflict = () => new ApiError('Playback is open in another window.', 409, 'playback_conflict');
 
 function setup() {
   const video = new FakeVideo();

@@ -300,8 +300,10 @@ export class PlayerController {
       onSaved: ack => {
         if (!this.isCurrent(current)) return;
         this.options.saved(ack);
-        if (!ack.owner)
-          this.ownershipLost(current, 'Playback moved to another window. Select Resume here to continue.');
+        // Non-owner acks also arrive after intentional hide/close (server clears the
+        // lease). Only interrupt when we still believed we owned playback.
+        if (!ack.owner && current.ownership.owns)
+          this.ownershipLost(current, 'Select Resume here to continue.');
       },
       onError: error => {
         if (!this.isCurrent(current)) return;
@@ -539,7 +541,7 @@ export class PlayerController {
       this.setState('unauthenticated', 'Your sign-in expired. Sign in again to continue this lesson.');
     } else if (error instanceof ApiError && error.status === 409) {
       if (current.loaded) {
-        this.ownershipLost(current, 'Playback moved to another window. Select Resume here to continue.');
+        this.ownershipLost(current, 'Select Resume here to continue.');
       } else {
         current.ownership.lost();
         this.setState('conflict', 'Playback is open in another window. Move playback here to continue.');
