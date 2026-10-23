@@ -208,3 +208,59 @@ func TestReleaseClosedSessionSucceeds(t *testing.T) {
 		t.Fatal("lease still exists after release")
 	}
 }
+
+func TestPulseWritesWatchHistoryAndCompletion(t *testing.T) {
+	f := setup(t)
+	id, _ := f.open(t, "alice", false)
+	f.baseline(t, id, f.now.Add(-10*time.Second), 0, true)
+	f.svc.Now = func() time.Time { return f.now }
+	ack := f.pulse(t, "alice", id, Pulse{Sequence: 1, Kind: "heartbeat", Position: 10, ElapsedSeconds: 10, PlaybackRate: 1, Playing: true, Visible: true})
+	if ack.Coverage != 10 || ack.Completed {
+		t.Fatalf("first pulse %#v", ack)
+	}
+	var historyCount int
+	var position float64
+	var completed bool
+	if err := f.pool.QueryRow(context.Background(), `SELECT count(*), COALESCE(max(position),0), bool_or(completed) FROM watch_history WHERE user_id='alice' AND lesson_id='lesson'`).Scan(&historyCount, &position, &completed); err != nil {
+		t.Fatal(err)
+	}
+	if historyCount != 1 || position != 10 || completed {
+		t.Fatalf("watch_history after credit count=%d position=%v completed=%v", historyCount, position, completed)
+	}
+	var progressPercent int
+	var progressCompleted bool
+	if err := f.pool.QueryRow(context.Background(), `SELECT percent, completed FROM progress WHERE user_id='alice' AND lesson_id='lesson'`).Scan(&progressPercent, &progressCompleted); err != nil {
+		t.Fatal(err)
+	}
+	if progressPercent != 10 || progressCompleted {
+		t.Fatalf("progress after credit percent=%d completed=%v", progressPercent, progressCompleted)
+	}
+
+	// Cover 90% of the 100s lesson so an ended pulse can mark completion.
+	at := f.now
+	for seq, pos := int64(2), 30.0; pos <= 90; seq, pos = seq+1, pos+20 {
+		at = at.Add(20 * time.Second)
+		f.svc.Now = func() time.Time { return at }
+		f.baseline(t, id, at.Add(-20*time.Second), pos-20, true)
+		ack = f.pulse(t, "alice", id, Pulse{Sequence: seq, Kind: "heartbeat", Position: pos, ElapsedSeconds: 20, PlaybackRate: 1, Playing: true, Visible: true})
+	}
+	if ack.Coverage < 90 {
+		t.Fatalf("coverage before ended %v", ack.Coverage)
+	}
+	at = at.Add(10 * time.Second)
+	f.svc.Now = func() time.Time { return at }
+	f.baseline(t, id, at.Add(-10*time.Second), 90, true)
+	ack = f.pulse(t, "alice", id, Pulse{Sequence: 6, Kind: "ended", Position: 100, ElapsedSeconds: 10, PlaybackRate: 1, Playing: false, Visible: true})
+	if !ack.Completed || ack.Coverage < 90 {
+		t.Fatalf("ended completion %#v", ack)
+	}
+	if err := f.pool.QueryRow(context.Background(), `SELECT count(*), bool_or(completed) FROM watch_history WHERE user_id='alice' AND lesson_id='lesson'`).Scan(&historyCount, &completed); err != nil {
+		t.Fatal(err)
+	}
+	if historyCount < 2 || !completed {
+		t.Fatalf("watch_history after completion count=%d completed=%v", historyCount, completed)
+	}
+	if err := f.pool.QueryRow(context.Background(), `SELECT completed FROM progress WHERE user_id='alice' AND lesson_id='lesson'`).Scan(&progressCompleted); err != nil || !progressCompleted {
+		t.Fatalf("progress completed=%v err=%v", progressCompleted, err)
+	}
+}

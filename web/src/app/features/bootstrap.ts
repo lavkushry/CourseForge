@@ -93,7 +93,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       api: ctx.api,
       onResumeLesson: (courseId, lessonId, position) => {
         void ctx.resumeLesson(courseId, lessonId).then(() => {
-          if (position && ctx.controller) ctx.controller.seek(position);
+          if (Number.isFinite(position) && position > 0 && ctx.controller) ctx.controller.seek(position);
         });
       },
     });

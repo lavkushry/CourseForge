@@ -70,4 +70,25 @@ describe('authenticated API and media boundary', () => {
       message: 'Progress changed; read before retrying.',
     });
   });
+
+  it('clears watch history with DELETE /streaming/history', async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ user: { id: 'learner-1', email: 'learner@example.test' }, csrf_token: 'csrf-test-token' }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, cleared: true }), { status: 200 }));
+    const client = new ApiClient(fetcher);
+    await client.me();
+    await client.clearHistory();
+    expect(fetcher.mock.calls[1]?.[0]).toBe('/api/v1/streaming/history');
+    expect(fetcher.mock.calls[1]?.[1]).toMatchObject({
+      credentials: 'same-origin',
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': 'csrf-test-token' },
+    });
+  });
 });

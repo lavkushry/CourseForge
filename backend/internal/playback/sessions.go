@@ -228,9 +228,9 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil && (seconds > 0 || ack.Completed) {
 		var courseID string
-		_ = tx.QueryRow(ctx, `SELECT course_id FROM lessons WHERE id=$1`, v.LessonID).Scan(&courseID)
-		if courseID != "" {
-			_, _ = tx.Exec(ctx, `INSERT INTO watch_history(user_id,lesson_id,course_id,position,duration_seconds,completed,watched_at)VALUES($1,$2,$3,$4,$5,$6,$7)`, p.UserID, v.LessonID, courseID, b.Position, v.Duration, ack.Completed, now)
+		err = tx.QueryRow(ctx, `SELECT course_id FROM lessons WHERE id=$1`, v.LessonID).Scan(&courseID)
+		if err == nil {
+			_, err = tx.Exec(ctx, `INSERT INTO watch_history(user_id,lesson_id,course_id,position,duration_seconds,completed,watched_at)VALUES($1,$2,$3,$4,$5,$6,$7)`, p.UserID, v.LessonID, courseID, b.Position, v.Duration, ack.Completed, now)
 		}
 	}
 	if !b.Visible || b.Kind == "hidden" || b.Kind == "close" {

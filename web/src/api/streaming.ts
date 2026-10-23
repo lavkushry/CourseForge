@@ -13,7 +13,7 @@ export function history(
 }
 
 export function clearHistory(client: HttpClient, signal?: AbortSignal): Promise<void> {
-  return client.request('/streaming/history/clear', { method: 'POST', body: {}, ...(signal ? { signal } : {}) });
+  return client.request('/streaming/history', { method: 'DELETE', ...(signal ? { signal } : {}) });
 }
 
 export function savedItems(client: HttpClient, cursor = '', signal?: AbortSignal) {
