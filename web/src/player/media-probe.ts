@@ -27,7 +27,7 @@ export async function probeMedia(
       401: 'Your sign-in expired. Sign in again to continue this lesson.',
       403: 'Your access to this lesson changed. Return to the course to check your enrollment.',
       404: 'This playback session is no longer available. Retry the lesson to open a new session.',
-      409: 'Playback moved to another window. Move playback here to continue.',
+      409: 'Playback is open in another window. Move playback here to continue.',
       410: 'This playback session expired. Retry the lesson to open a new session.',
       429: 'The video provider is busy. We will retry briefly; your saved progress is safe.',
       502: 'The video provider could not serve this lesson. Your saved progress is safe.',

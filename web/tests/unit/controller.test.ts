@@ -114,7 +114,7 @@ describe('player lifecycle and watch accounting', () => {
     await test.controller.close();
   });
 
-  it('stops media and periodic requests when another window owns the session', async () => {
+  it('stops media and periodic requests when the lease is no longer owned', async () => {
     const test = setup();
     vi.mocked(test.server.pulse).mockImplementation(async (_id: string, pulse: Pulse) => acknowledgement(pulse, false));
     await test.controller.open(lesson);
@@ -126,6 +126,18 @@ describe('player lifecycle and watch accounting', () => {
     const count = vi.mocked(test.server.pulse).mock.calls.length;
     await vi.advanceTimersByTimeAsync(60_000);
     expect(test.server.pulse).toHaveBeenCalledTimes(count);
+    await test.controller.close();
+  });
+
+  it('does not claim another window after an intentional hide pulse returns non-owner', async () => {
+    const test = setup();
+    await test.controller.open(lesson);
+    await test.controller.requestPlay();
+    await test.controller.suspend('hidden');
+    expect(test.controller.state).toBe('suspended');
+    expect(test.controller.owns).toBe(false);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(test.controller.state).toBe('suspended');
     await test.controller.close();
   });
 
