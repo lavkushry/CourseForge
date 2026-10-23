@@ -5,6 +5,7 @@ import type { ApiClient } from '../api';
 import { el, emptyState } from '../components';
 import { formatTime } from '../player/controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
+import { historyLoadFailureCopy, historyStatusLabels } from './status';
 
 export interface HistoryViewOptions {
   root: HTMLElement;
@@ -109,12 +110,13 @@ export class HistoryView {
       retry.addEventListener('click', () => {
         this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
       });
+      const failure = historyLoadFailureCopy(this.loadError);
       root.append(
         emptyState({
           className: 'catalog-empty history-empty-state',
           icon: 'history',
-          title: 'Could not load watch history',
-          description: this.loadError,
+          title: failure.title,
+          description: failure.description,
           action: retry,
         }),
       );
@@ -169,7 +171,7 @@ export class HistoryView {
       const section = el('p', 'history-section-name', item.section_title || 'Core Lecture');
 
       const metaRow = el('div', 'history-meta-row');
-      const { percentLabel, remainLabel } = statusLabels(item, pct, done);
+      const { percentLabel, remainLabel } = historyStatusLabels(item, pct, done);
       metaRow.append(
         el('span', 'history-percent-label', percentLabel),
         el('span', 'history-dot-sep', '·'),
@@ -203,30 +205,3 @@ export class HistoryView {
   }
 }
 
-function statusLabels(
-  item: HistoryItem,
-  pct: number,
-  done: boolean,
-): { percentLabel: string; remainLabel: string } {
-  if (done) {
-    return { percentLabel: 'Completed', remainLabel: 'Finished' };
-  }
-  if (pct === 0 && item.position > 10) {
-    return {
-      percentLabel: `Resume at ${formatTime(item.position)}`,
-      remainLabel: remainingLabel(item),
-    };
-  }
-  return {
-    percentLabel: `${pct}% watched`,
-    remainLabel: remainingLabel(item),
-  };
-}
-
-function remainingLabel(item: HistoryItem): string {
-  if (item.duration_seconds <= 0) {
-    return `At ${formatTime(item.position)}`;
-  }
-  const remainingSec = Math.max(0, item.duration_seconds - item.position);
-  return remainingSec > 60 ? `${Math.ceil(remainingSec / 60)} min left` : 'Almost finished';
-}
