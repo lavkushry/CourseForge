@@ -77,3 +77,128 @@ html[data-theme='light'] .momentum-stat-card {
 html[data-theme='light'] :is(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
   outline-color: #9a3412 !important;
 }
+
+/* ==========================================================================
+   shadcn/ui Tokens & Cross-Platform Adaptive Ergonomics (iOS, Android, macOS, Windows)
+   ========================================================================== */
+
+:root {
+  --background: 230 33% 5%;
+  --foreground: 226 70% 97%;
+  --card: 229 30% 8%;
+  --card-foreground: 226 70% 97%;
+  --popover: 229 32% 7%;
+  --popover-foreground: 226 70% 97%;
+  --primary: 258 90% 66%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 17 97% 45%;
+  --secondary-foreground: 0 0% 100%;
+  --muted-hsl: 228 24% 14%;
+  --muted-foreground: 225 18% 65%;
+  --shadcn-accent: 258 45% 18%;
+  --accent-foreground: 226 70% 97%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 228 22% 16%;
+  --input: 229 32% 10%;
+  --ring: 258 90% 66%;
+  --radius: 0.75rem;
+  --ime-inset-bottom: 0px;
+}
+
+html[data-theme='light'] {
+  --background: 220 33% 98%;
+  --foreground: 228 45% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 228 45% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 228 45% 9%;
+  --primary: 258 85% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 17 92% 44%;
+  --secondary-foreground: 0 0% 100%;
+  --muted-hsl: 220 20% 93%;
+  --muted-foreground: 225 16% 42%;
+  --shadcn-accent: 258 60% 95%;
+  --accent-foreground: 258 85% 42%;
+  --destructive: 0 78% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 18% 86%;
+  --input: 220 22% 96%;
+  --ring: 258 85% 58%;
+}
+
+/* iOS & Android Safe Area Insets, 44px Hit Targets & 16px Input Anti-Zoom */
+html[data-platform='ios'] .site-header.lms-top-header,
+html[data-platform='android'] .site-header.lms-top-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media (max-width: 768px) {
+  html[data-platform='ios'] #primary-nav.primary-navigation.lms-left-rail,
+  html[data-platform='android'] #primary-nav.primary-navigation.lms-left-rail {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+html[data-touch='true'] input[type='text'],
+html[data-touch='true'] input[type='email'],
+html[data-touch='true'] input[type='password'],
+html[data-touch='true'] input[type='search'],
+html[data-touch='true'] select,
+html[data-touch='true'] textarea {
+  font-size: max(16px, 0.95rem);
+}
+
+html[data-touch='true'] .button,
+html[data-touch='true'] .lms-nav-item {
+  min-height: 44px;
+}
+
+/* Android & iOS Virtual Keyboard (IME) Avoidance */
+html[data-platform='android'] .study-rail,
+html[data-platform='ios'] .study-rail {
+  padding-bottom: var(--ime-inset-bottom, 0px);
+}
+
+/* Mobile & Foldable Landscape Video Stage Optimization */
+@media (max-height: 520px) and (orientation: landscape) {
+  #player-wrap.player-wrap {
+    max-height: 82dvh;
+  }
+}
+
+/* macOS Vibrancy & Backdrop Translucency */
+html[data-platform='macos'] .site-header.lms-top-header,
+html[data-platform='macos'] .omni-search-shell,
+html[data-platform='macos'] .syllabus-dialog {
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+}
+
+/* Windows Desktop Thin Scrollbars & High-Contrast Support */
+html[data-platform='windows'] * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+html[data-platform='windows'] *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html[data-platform='windows'] *::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+}
+
+@media (forced-colors: active) {
+  .course-card,
+  .continue-card,
+  .button,
+  .study-rail-tab.active,
+  .mode-seg-btn.active {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}

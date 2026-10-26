@@ -533,7 +533,7 @@ export class StudyRail {
           this.quizQuestions = [
             {
               id: 'q1',
-              question: `What is the primary architecture or mechanism explained in "${this.activeLesson!.title}"?`,
+              question: `What is the primary architecture or mechanism explained in "${cleanLessonTitle(this.activeLesson!.title)}"?`,
               options: [
                 'Distributed stateless partitioning with high-throughput batching',
                 'Single-threaded synchronous in-memory buffering without retries',
@@ -862,7 +862,7 @@ export class StudyRail {
       chunks.push({
         start: s,
         end: Math.min(s + interval, totalSec),
-        text: `[${formatTime(s)} - ${formatTime(Math.min(s + interval, totalSec))}] Discussion covering core architectures, implementation trade-offs, and verified design patterns in ${this.activeLesson.title}.`,
+        text: `[${formatTime(s)} - ${formatTime(Math.min(s + interval, totalSec))}] Discussion covering core architectures, implementation trade-offs, and verified design patterns in ${cleanLessonTitle(this.activeLesson.title)}.`,
       });
     }
     this.transcriptChunks = chunks;
@@ -980,7 +980,11 @@ export class StudyRail {
           const sourcesBox = el('div', 'tutor-sources-box');
           sourcesBox.append(el('span', 'eyebrow', 'LECTURE SOURCES:'));
           for (const s of h.sources) {
-            const cite = el('button', 'citation-link', `${s.lesson_title} (${formatTime(s.start_seconds)})`);
+            const cite = el(
+              'button',
+              'citation-link',
+              `${cleanLessonTitle(s.lesson_title)} (${formatTime(s.start_seconds)})`,
+            );
             cite.type = 'button';
             cite.addEventListener('click', () => {
               this.options.seekTo(s.start_seconds);

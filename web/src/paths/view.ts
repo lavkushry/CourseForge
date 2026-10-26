@@ -1,6 +1,7 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
 import { button, el, emptyState, sidebar } from '../components';
+import { cleanLessonTitle } from '../discovery/view';
 import { loadLectureSpatial } from '../spatial/catalog';
 import { requestSpatialOpen } from '../spatial/pending';
 import { renderPlanExplore } from '../spatial/ui';
@@ -177,7 +178,7 @@ export class PathsView {
       sourcesWrap.append(el('span', 'muted', 'Jump to Lecture: '));
       for (const src of step.sources) {
         const chip = button(
-          ` ${src.title || src.lesson_id} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
+          ` ${cleanLessonTitle(src.title || src.lesson_id)} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
           () => this.openLesson(src.course_id, src.lesson_id, src.start),
           'button quiet source-chip',
         );

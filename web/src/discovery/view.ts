@@ -39,51 +39,181 @@ function duration(seconds: number | undefined): string {
   return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes} min`;
 }
 
+const PROPER_NOUNS: Record<string, string> = {
+  COURSEFORGE: 'CourseForge',
+  GENAI: 'GenAI',
+  DEVOPS: 'DevOps',
+  MLOPS: 'MLOps',
+  LLMOPS: 'LLMOps',
+  POSTGRESQL: 'PostgreSQL',
+  MYSQL: 'MySQL',
+  NOSQL: 'NoSQL',
+  TYPESCRIPT: 'TypeScript',
+  JAVASCRIPT: 'JavaScript',
+  GRAPHQL: 'GraphQL',
+  FASTAPI: 'FastAPI',
+  PYTORCH: 'PyTorch',
+  TENSORFLOW: 'TensorFlow',
+  OPENAI: 'OpenAI',
+  DEEPSEEK: 'DeepSeek',
+  LANGCHAIN: 'LangChain',
+  LANGGRAPH: 'LangGraph',
+  DATAFRAME: 'DataFrame',
+  DATAFRAMES: 'DataFrames',
+  PYSPARK: 'PySpark',
+  MONGODB: 'MongoDB',
+  DUCKDB: 'DuckDB',
+  CLICKHOUSE: 'ClickHouse',
+  KUBERNETES: 'Kubernetes',
+  IOS: 'iOS',
+  IPADOS: 'iPadOS',
+  MACOS: 'macOS',
+  GRPC: 'gRPC',
+  K8S: 'K8s',
+  OAUTH: 'OAuth',
+  OAUTH2: 'OAuth2',
+  WEBRTC: 'WebRTC',
+  WEBSOCKET: 'WebSocket',
+  WEBSOCKETS: 'WebSockets',
+  LLMS: 'LLMs',
+  SLMS: 'SLMs',
+  APIS: 'APIs',
+  GPUS: 'GPUs',
+  CPUS: 'CPUs',
+  NPUS: 'NPUs',
+  RDDS: 'RDDs',
+  SDKS: 'SDKs',
+  JWTS: 'JWTs',
+  VMS: 'VMs',
+  CRDT: 'CRDT',
+  CRDTS: 'CRDTs',
+};
+
+const ACRONYMS = new Set([
+  'AI',
+  'LLM',
+  'SLM',
+  'SQL',
+  'DSA',
+  'ML',
+  'DL',
+  'NLP',
+  'RAG',
+  'RLHF',
+  'RL',
+  'API',
+  'REST',
+  'RPC',
+  'HLD',
+  'LLD',
+  'OOP',
+  'SOLID',
+  'ACID',
+  'BASE',
+  'CAP',
+  'AWS',
+  'GCP',
+  'S3',
+  'EC2',
+  'ECS',
+  'EKS',
+  'VPC',
+  'IAM',
+  'CDN',
+  'DNS',
+  '2D',
+  '3D',
+  '4D',
+  'HD',
+  'UHD',
+  'UI',
+  'UX',
+  'CSS',
+  'HTML',
+  'JS',
+  'TS',
+  'CC',
+  'GPU',
+  'CPU',
+  'NPU',
+  'TPU',
+  'RAM',
+  'SSD',
+  'NVME',
+  'IO',
+  'CLI',
+  'SDK',
+  'IDE',
+  'DOM',
+  'SSR',
+  'CSR',
+  'SPA',
+  'PWA',
+  'JWT',
+  'CSRF',
+  'XSS',
+  'CORS',
+  'TLS',
+  'SSL',
+  'SSH',
+  'HTTPS',
+  'HTTP',
+  'TCP',
+  'UDP',
+  'IP',
+  'CI',
+  'CD',
+  'SRE',
+  'SLA',
+  'SLO',
+  'SLI',
+  'RDD',
+  'DAG',
+  'ETL',
+  'ELT',
+  'OLTP',
+  'OLAP',
+  'HTAP',
+  'MVCC',
+  'WAL',
+  'RAFT',
+  'BFT',
+  'LSM',
+]);
+
+const MINOR_WORDS = new Set(['and', 'or', 'of', 'in', 'to', 'for', 'with', 'on', 'at', 'by', 'the', 'a', 'an', 'vs']);
+
+function formatWordToken(token: string, isFirstWord: boolean): string {
+  const upper = token.toUpperCase();
+  if (PROPER_NOUNS[upper]) return PROPER_NOUNS[upper];
+  if (ACRONYMS.has(upper) || /^\d+[A-Z]+$/.test(upper)) return upper;
+  const lower = token.toLowerCase();
+  if (!isFirstWord && MINOR_WORDS.has(lower)) return lower;
+  return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+}
+
 export function toTitleCase(str: string): string {
-  if (!str) return '';
-  return str.replace(/\w\S*/g, (txt, idx) => {
-    const upper = txt.toUpperCase();
-    if (upper === 'GENAI') return 'GenAI';
-    if (upper === 'UI/UX') return 'UI/UX';
-    if (
-      [
-        'AI',
-        'LLM',
-        'SQL',
-        'DSA',
-        'ML',
-        'API',
-        'HLD',
-        'LLD',
-        'AWS',
-        'GCP',
-        '3D',
-        '4D',
-        'HD',
-        'UI',
-        'UX',
-        'CSS',
-        'HTML',
-        'JS',
-        'TS',
-        'CC',
-      ].includes(upper) ||
-      /^\d+[A-Z]+$/.test(upper)
-    ) {
-      return upper;
+  if (!str || !str.trim()) return '';
+  return str.trim().replace(/[A-Za-z0-9]+(?:['’/][A-Za-z0-9]+)*/g, (word, idx) => {
+    const isFirst = idx === 0;
+    if (word.includes('/')) {
+      return word
+        .split('/')
+        .map((part, partIdx) => formatWordToken(part, isFirst && partIdx === 0))
+        .join('/');
     }
-    const lower = txt.toLowerCase();
-    if (idx > 0 && ['and', 'or', 'of', 'in', 'to', 'for', 'with', 'on', 'at', 'by', 'the', 'a', 'an'].includes(lower)) {
-      return lower;
+    const aposMatch = word.match(/^([A-Za-z0-9]+)(['’][A-Za-z0-9]+)$/);
+    if (aposMatch && aposMatch[1] && aposMatch[2]) {
+      return formatWordToken(aposMatch[1], isFirst) + aposMatch[2].toLowerCase();
     }
-    return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+    return formatWordToken(word, isFirst);
   });
 }
 
 export function cleanLessonTitle(raw: string): string {
-  if (!raw) return "";
+  if (!raw || !raw.trim()) return 'Untitled Lesson';
   let t = raw.trim();
-  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s-]+)\]\s*)+/i, "");
+  t = t.replace(/^(?:\[(?:[0-9]+|[A-Za-z0-9_\s-]+)\]\s*)+/i, '');
   const modMatch =
     t.match(
       /^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^\n]+\))?\s*[-—:]\s*(.+)$/i,
@@ -91,18 +221,19 @@ export function cleanLessonTitle(raw: string): string {
     t.match(
       /^(?:module|week|milestone|section|part|chapter|lecture|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s*[-—:]\s*(.+)$/i,
     ) ||
-    t.match(
-      /^(?:module|week|milestone|section|part|chapter|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s+([A-Za-z].+)$/i,
-    );
+    t.match(/^(?:module|week|milestone|section|part|chapter|unit)\s*[0-9]+(?:\s*\([^)]*\))?\s+([A-Za-z].+)$/i);
   if (modMatch && modMatch[1] && modMatch[1].trim().length >= 2) {
     t = modMatch[1].trim();
   }
-  const numMatch = t.match(/^[0-9]{1,3}\s*[.\-—]\s*(.+)$/);
+  const numMatch =
+    t.match(/^[0-9]{1,3}[.)]\s+(.+)$/) ||
+    t.match(/^[0-9]{1,3}\s+[-—:]\s+(.+)$/) ||
+    t.match(/^0[0-9]{1,2}\s*[.\-—_:]\s*([A-Za-z].*)$/);
   if (numMatch && numMatch[1] && numMatch[1].trim().length >= 2) {
     t = numMatch[1].trim();
   }
-  t = t.replace(/\s+\d{8}$/, "");
-  return t || raw.trim();
+  t = t.replace(/\s+\d{8}$/, '');
+  return t || raw.trim() || 'Untitled Lesson';
 }
 
 export function formatModuleBadge(sectionTitle?: string): string {

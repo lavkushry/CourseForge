@@ -1,3 +1,4 @@
+import { mountAdaptiveShadcnRoot } from '../ui/shadcn';
 import { ApiError, errorMessage } from '../api';
 import { required } from '../components';
 import { installBindings } from './bindings';
@@ -29,6 +30,7 @@ function clearStaleServiceWorkers(): void {
 
 export function createApp() {
   clearStaleServiceWorkers();
+  mountAdaptiveShadcnRoot();
   const app = required<HTMLElement>('#app');
   const ctx = createBaseContext(app);
   installRouter(ctx);

@@ -3,6 +3,7 @@ import type { ApiClient } from '../api';
 import { errorMessage } from '../api';
 import type { Course } from '../contracts';
 import type { TutorSource } from '../learning/contracts';
+import { cleanLessonTitle } from '../discovery/view';
 import { appendExploreCitation } from '../spatial/ui';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -249,7 +250,11 @@ export class TutorView {
             cite.type = 'button';
             const citeIcon = el('span', 'cite-icon');
             citeIcon.append(svgIcon('play'));
-            const citeText = el('span', 'cite-title', `${s.lesson_title} · ${formatTime(s.start_seconds)}`);
+            const citeText = el(
+              'span',
+              'cite-title',
+              `${cleanLessonTitle(s.lesson_title)} · ${formatTime(s.start_seconds)}`,
+            );
             cite.append(citeIcon, citeText);
             cite.addEventListener('click', () => {
               this.options.onNavigateLesson(s.lesson_id, s.start_seconds);
