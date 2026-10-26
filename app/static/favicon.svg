@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="iconBg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#05070D" />
+    </radialGradient>
+
+    <linearGradient id="neonPeriwinkle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C7D2FE" />
+      <stop offset="50%" stop-color="#A5B4FC" />
+      <stop offset="100%" stop-color="#818CF8" />
+    </linearGradient>
+
+    <linearGradient id="neonForge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#FB923C" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+
+    <filter id="iconGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes pulseSpark {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 16px #FF8800); }
+    }
+    .spark-node {
+      transform-origin: 256px 256px;
+      animation: pulseSpark 2.2s ease-in-out infinite;
+    }
+  </style>
+
+  <!-- iOS / macOS Squircle Background -->
+  <rect width="512" height="512" rx="115" fill="url(#iconBg)" stroke="#334155" stroke-width="3" />
+
+  <!-- Monogram Mark: Dynamic 'c' and 'f' interlocking with glowing spark -->
+  <g id="monogram" filter="url(#iconGlow)">
+    <!-- Letter 'c' Arc -->
+    <path d="M 270 160 
+             A 100 100 0 1 0 270 352" 
+          fill="none" 
+          stroke="url(#neonPeriwinkle)" 
+          stroke-width="26" 
+          stroke-linecap="round" />
+
+    <!-- Letter 'f' Dynamic Cross & Stem -->
+    <path d="M 256 140 
+             C 275 140, 310 148, 310 185 
+             L 310 360" 
+          fill="none" 
+          stroke="url(#neonForge)" 
+          stroke-width="26" 
+          stroke-linecap="round" />
+
+    <line x1="230" y1="225" x2="330" y2="225" 
+          stroke="url(#neonForge)" 
+          stroke-width="24" 
+          stroke-linecap="round" />
+  </g>
+
+  <!-- Central Dynamic Forge Spark Fusion -->
+  <g class="spark-node">
+    <circle cx="256" cy="225" r="14" fill="#FFFFFF" />
+    <circle cx="256" cy="225" r="28" fill="#FF8800" opacity="0.3" filter="url(#iconGlow)" />
+    <!-- 4-point Spark Star -->
+    <polygon points="256,205 261,225 281,225 265,233 271,250 256,238 241,250 247,233 231,225 251,225" fill="#FFEAA7" />
+  </g>
+</svg>

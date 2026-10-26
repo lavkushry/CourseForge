@@ -10,7 +10,7 @@
   /* ------------------------------------------------------------------------
      1. Typography System (Single Font Family, Unified Scale & Weights)
      ------------------------------------------------------------------------ */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   --font: var(--font-family);
 

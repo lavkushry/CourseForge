@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="100%" stop-color="#06080E"/>
+    </linearGradient>
+
+    <!-- Facebook / Meta Electric Blue Gradient -->
+    <linearGradient id="fbBlueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0064E0"/>
+      <stop offset="50%" stop-color="#0084FF"/>
+      <stop offset="100%" stop-color="#00B2FE"/>
+    </linearGradient>
+
+    <!-- Subtle Text Glow Filter -->
+    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark Background Canvas -->
+  <rect width="960" height="260" rx="20" fill="url(#bgGrad)"/>
+  <rect width="956" height="256" x="2" y="2" rx="18" fill="none" stroke="#1E293B" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- PURE FULL-TEXT WORDMARK (Centered) -->
+  <g transform="translate(480, 155)" text-anchor="middle">
+    <!-- Main Full Text "courseforge." -->
+    <text font-family="system-ui, -apple-system, 'Plus Jakarta Sans', 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif" 
+          font-size="108" 
+          font-weight="800" 
+          letter-spacing="-3.5">
+      <tspan fill="#FFFFFF">course</tspan><tspan fill="#FFFFFF">forge</tspan><tspan fill="#0084FF" filter="url(#subtleGlow)">.</tspan>
+    </text>
+  </g>
+
+  <!-- Micro Subtitle for Corporate Presence -->
+  <text x="480" y="202" 
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'SF Pro Text', 'Inter', sans-serif" 
+        font-size="12" 
+        font-weight="700" 
+        letter-spacing="6" 
+        fill="#64748B">
+    THE ENGINEERING LEARNING PLATFORM
+  </text>
+</svg>

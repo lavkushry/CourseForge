@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="100%" height="100%">
+  <!-- Pure Crisp White Canvas (Stripe / Facebook Light Mode) -->
+  <rect width="960" height="260" rx="20" fill="#FFFFFF"/>
+  <rect width="956" height="256" x="2" y="2" rx="18" fill="none" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <!-- PURE FULL-TEXT LIGHT THEME -->
+  <g transform="translate(480, 155)" text-anchor="middle">
+    <text font-family="system-ui, -apple-system, 'Plus Jakarta Sans', 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif" 
+          font-size="108" 
+          font-weight="800" 
+          letter-spacing="-3.5">
+      <tspan fill="#0F172A">course</tspan><tspan fill="#0F172A">forge</tspan><tspan fill="#0866FF">.</tspan>
+    </text>
+  </g>
+
+  <text x="480" y="202" 
+        text-anchor="middle"
+        font-family="system-ui, -apple-system, 'SF Pro Text', 'Inter', sans-serif" 
+        font-size="12" 
+        font-weight="700" 
+        letter-spacing="6" 
+        fill="#94A3B8">
+    LIGHT THEME WORDMARK • STRIPE &amp; META SPEC
+  </text>
+</svg>
