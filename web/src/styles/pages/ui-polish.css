@@ -1,0 +1,303 @@
+/* CourseForge UI polish: thumbnails, hero billboard, cards, header de-collision, classroom metadata, study rail tabs. Cross-platform rules live in themes.css. */
+/* 1. Thumbnail Overlays & Course Card Architecture */
+.cover-button,
+.continue-open,
+.continue-cover {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: #0d0f18 !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  border-radius: 14px 14px 0 0 !important;
+}
+
+.course-art {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  overflow: hidden !important;
+  background: linear-gradient(135deg, #16192b 0%, #0d0f18 100%) !important;
+}
+
+.course-art .course-cover,
+.course-art .art-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  z-index: 1 !important;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.course-card:hover .course-art .course-cover,
+.continue-card:hover .course-art .course-cover,
+.course-card:hover .course-art .art-image,
+.continue-card:hover .course-art .art-image {
+  transform: scale(1.04) !important;
+}
+
+.thumb-category-pill {
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 4 !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(10, 12, 20, 0.78) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f4f6ff !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.2 !important;
+  pointer-events: none !important;
+  text-transform: none !important;
+  max-width: calc(100% - 110px) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.thumb-duration-badge {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 12px !important;
+  z-index: 4 !important;
+  padding: 4px 9px !important;
+  border-radius: 8px !important;
+  background: rgba(10, 12, 20, 0.84) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.2 !important;
+  pointer-events: none !important;
+}
+
+/* 2. Hero Billboard Full-Bleed Layering (Fixes Empty Box Above Hero Content) */
+#featured-course,
+.hero-billboard {
+  position: relative !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  min-height: 330px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+  background: #0d101d !important;
+}
+
+#featured-course .hero-art,
+.hero-billboard .hero-art {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  z-index: 1 !important;
+}
+
+#featured-course .hero-art .course-cover,
+.hero-billboard .hero-art .course-cover,
+#featured-course .hero-art .art-image,
+.hero-billboard .hero-art .art-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 0.42 !important;
+  filter: saturate(1.15) contrast(1.05) !important;
+}
+
+#featured-course .hero-vignette,
+.hero-billboard .hero-vignette {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 18, 0.96) 0%, rgba(8, 10, 18, 0.82) 52%, rgba(8, 10, 18, 0.38) 100%),
+    linear-gradient(180deg, rgba(8, 10, 18, 0.15) 0%, rgba(8, 10, 18, 0.92) 100%) !important;
+}
+
+#featured-course .hero-content,
+.hero-billboard .hero-content {
+  position: relative !important;
+  z-index: 3 !important;
+  padding: clamp(24px, 4vw, 44px) !important;
+  max-width: 720px !important;
+  width: 100% !important;
+}
+
+/* 3. Course Cards & Continue Cards Elevation */
+.course-card,
+.continue-card {
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(19, 22, 35, 0.78) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.24s ease,
+    box-shadow 0.24s ease !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26) !important;
+}
+
+.course-card:hover,
+.continue-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(139, 92, 246, 0.38) !important;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(139, 92, 246, 0.2) !important;
+}
+
+.course-badge,
+.eyebrow {
+  text-transform: none !important;
+  letter-spacing: 0.015em !important;
+  font-weight: 600 !important;
+}
+
+/* 4. Topbar Tablet & Desktop De-collision */
+.lms-header-search input,
+.header-search-pill input,
+#header-quick-search {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+.lms-header-search input:focus,
+.header-search-pill input:focus,
+#header-quick-search:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+@media (min-width: 641px) {
+  #mobile-search-btn.mobile-only-search-btn,
+  #omni-search-trigger.mobile-search-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .site-header.lms-top-header,
+  .topbar {
+    gap: 10px !important;
+    padding: 0 14px !important;
+  }
+  .lms-header-search,
+  #header-quick-search-wrap,
+  .header-search-pill {
+    max-width: 190px !important;
+    min-width: 130px !important;
+  }
+}
+
+/* 5. Classroom Metadata, Badges, Save Status & Hidden Up Next Guard */
+.lesson-badge-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.lesson-progress-container {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.lesson-progress-track,
+.lesson-progress-bar {
+  width: 72px !important;
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.lesson-progress-fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%) !important;
+  transition: width 0.3s ease !important;
+}
+
+#save-status,
+.lesson-save-status,
+.save-indicator {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.player-up-next-card[hidden],
+#playerUpNextCard[hidden] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* 6. Study Rail Compact Tabs (All 7 Tabs Fit Cleanly Without Clipping Quiz) */
+.study-rail-tabs {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 2px !important;
+  padding: 4px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+.study-rail-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+.study-rail-tab {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  padding: 6px 6px !important;
+  font-size: 0.69rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  border-radius: 7px !important;
+  white-space: nowrap !important;
+}

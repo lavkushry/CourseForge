@@ -67,6 +67,13 @@ ACCOUNTS = [
         "channel_id": "b724ab1577929a9c337e809848d04870f097a550",
         "wallet_address": "bPoSFKHAHpFLJKqzFZxYaAoAmu67RRr4VJ",
     },
+    {
+        "id": 7,
+        "name": "Worker #7 (@courseforge-vault-2)",
+        "token": "5hgCwtn2GCcunCpPg7z8fuUgYV5frxBF",
+        "channel_id": "027d08f9b8aa21f9530fd44cc6d7f7de4aa57dce",
+        "wallet_address": "bGqQPPmFsZqmhAXGUziSSjAVxoLKiATR3X",
+    },
 ]
 
 
