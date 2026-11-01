@@ -6,8 +6,7 @@
    - Unified styling for both the 4 Autonomous Engine tabs and all 9 Studio panels
    ============================================================================ */
 
-.career-studio-container,
-.career-studio-view {
+.career-studio-container {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -176,12 +175,6 @@
   padding: 0.34rem 0.68rem;
   font-size: 0.76rem;
   border-radius: 5px;
-}
-
-.career-icon {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
 }
 
 /* ----------------------------------------------------------------------------
@@ -1196,4 +1189,22 @@
 .career-shortcuts-chip:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ----------------------------------------------------------------------------
+   10. Accessibility Hardening (focus visibility & reduced motion)
+   ---------------------------------------------------------------------------- */
+.career-studio-container button:focus-visible,
+.career-studio-container a:focus-visible,
+.career-studio-container [tabindex]:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.55);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .career-studio-container *,
+  .career-studio-container *::before,
+  .career-studio-container *::after {
+    transition-duration: 0.01ms !important;
+  }
 }
