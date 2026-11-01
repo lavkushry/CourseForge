@@ -5,17 +5,33 @@ Evaluates top-to-bottom candidate conversion funnel.
 
 from typing import Dict, Any, List
 
+def _count(value: Any) -> int:
+    """Coerces a metric to a non-negative int count (None/bad -> 0).
+
+    Funnel metrics for a user with no history yet arrive missing or null;
+    raw comparisons against them raised TypeError and killed the whole
+    diagnostic instead of reporting the (all-low) funnel.
+    """
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return 0
+    if v != v or v in (float("inf"), float("-inf")):
+        return 0
+    return int(max(0.0, v))
+
+
 class DiagnosticEngine:
     @staticmethod
     def evaluate(metrics: Dict[str, Any]) -> List[Dict[str, str]]:
         alerts = []
 
-        appearances = metrics.get("search_appearances", 0)
-        contact_views = metrics.get("contact_views", 0)
-        apps = metrics.get("applications_today", 0)
-        outreach = metrics.get("outreaches_today", 0)
-        replies = metrics.get("replies_today", 0)
-        calls = metrics.get("calls_scheduled_today", 0)
+        appearances = _count(metrics.get("search_appearances", 0))
+        contact_views = _count(metrics.get("contact_views", 0))
+        apps = _count(metrics.get("applications_today", 0))
+        outreach = _count(metrics.get("outreaches_today", 0))
+        replies = _count(metrics.get("replies_today", 0))
+        calls = _count(metrics.get("calls_scheduled_today", 0))
 
         # 1. LOW_SEARCH_APPEARANCES (<150)
         if appearances < 150:

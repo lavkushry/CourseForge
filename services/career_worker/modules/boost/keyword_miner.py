@@ -3,7 +3,17 @@ Keyword Utility Miner & Diff-in-Diff Attribution Engine
 Calculates token utility: U = Demand / max(1, Saturation)
 """
 
-from typing import Dict, Any, List
+import math
+from typing import Dict, Any, List, Optional
+
+
+def _num(value: Any) -> Optional[float]:
+    """Best-effort float for demand/saturation fields (None if unusable)."""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) else None
 
 class KeywordUtilityMiner:
     DEFAULT_TOKENS = [
@@ -22,9 +32,16 @@ class KeywordUtilityMiner:
         raw = custom_data or cls.DEFAULT_TOKENS
         results = []
         for item in raw:
-            demand = item.get("demand", 0)
-            saturation = max(1, item.get("saturation", 1))
-            score = round(demand / float(saturation), 2)
+            raw_demand = item.get("demand", 0)
+            raw_saturation = item.get("saturation", 1)
+            # Non-numeric/None demand or saturation (e.g. from scraped JD
+            # data) previously raised TypeError in max()/division and lost
+            # the whole utility table; degrade per-item instead.
+            demand_f = _num(raw_demand)
+            saturation_f = _num(raw_saturation)
+            demand = raw_demand if demand_f is not None and isinstance(raw_demand, (int, float)) else (demand_f or 0.0)
+            saturation = max(1, raw_saturation) if saturation_f is not None and isinstance(raw_saturation, (int, float)) else max(1.0, saturation_f or 1.0)
+            score = round(float(demand) / float(saturation), 2)
             results.append({
                 "token": item.get("token", ""),
                 "demand_frequency": demand,
