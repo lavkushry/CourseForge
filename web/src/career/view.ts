@@ -7,7 +7,10 @@ import type {
   PlanTodayResponse,
   RecruiterLead,
   AppliedJob,
-  BottleneckAlert
+  BottleneckAlert,
+  CandidateProfile,
+  PlatformAuthRequirement,
+  EngineReadiness,
 } from './contracts';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
@@ -39,6 +42,9 @@ export class CareerView {
   private leads: RecruiterLead[] = [];
   private jobs: AppliedJob[] = [];
   private jobsTotal = 0;
+  private readiness: EngineReadiness | null = null;
+  private setupPanelOpen = false;
+  private resumePasteDraft = '';
 
   constructor(private readonly options: CareerViewOptions) {}
 
@@ -72,12 +78,13 @@ export class CareerView {
     this.render();
 
     try {
-      const [boostRes, pacingRes, planRes, leadsRes, jobsRes] = await Promise.allSettled([
+      const [boostRes, pacingRes, planRes, leadsRes, jobsRes, readinessRes] = await Promise.allSettled([
         this.options.api.request<BoostStatus>('/career/boost/status'),
         this.options.api.request<DailyPacing>('/career/goal/pacing'),
         this.options.api.request<PlanTodayResponse>('/career/plan/today'),
         this.options.api.request<{ leads: RecruiterLead[] }>('/career/goal/leads'),
         this.options.api.request<{ jobs: AppliedJob[]; total: number }>('/career/jobs?limit=50'),
+        this.options.api.request<EngineReadiness>('/career/engine/readiness'),
       ]);
 
       if (boostRes.status === 'fulfilled') this.boostStatus = boostRes.value;
@@ -88,6 +95,7 @@ export class CareerView {
         this.jobs = jobsRes.value.jobs || [];
         this.jobsTotal = jobsRes.value.total || 0;
       }
+      if (readinessRes.status === 'fulfilled') this.readiness = readinessRes.value;
     } catch (e) {
       console.error('Error fetching career data', e);
     } finally {
@@ -173,13 +181,51 @@ export class CareerView {
     const container = el('div', 'career-studio-view');
 
     // 1. Header Area
+    const prof = this.readiness?.profile;
+    const eng = this.readiness?.engine;
+    const roleLabel = prof?.target_role || 'AZURE DATA ENGINEER';
+    const ctcLabel = prof?.target_ctc_range || '₹25 LPA';
+    const yoeLabel = prof ? `${prof.total_yoe} YOE` : '2.5 YOE';
+    const engineRunning = eng?.engine_status === 'RUNNING';
+
     const header = el('div', 'career-header');
     const titleArea = el('div', 'career-title-area');
     const h2 = el('h2', '', 'CourseForge Career Studio');
-    const badge = el('span', 'career-engine-badge', 'AUTONOMOUS AI CAREER ENGINE · TARGET: ₹25 LPA AZURE DATA ENGINEER · 5-CALLS/DAY PACING');
+    const badge = el(
+      'span',
+      'career-engine-badge',
+      `UNIVERSAL AI CAREER ENGINE · ROLE: ${roleLabel.toUpperCase()} (${yoeLabel}) · TARGET: ${ctcLabel} · 5-CALLS/DAY PACING`
+    );
     titleArea.append(h2, badge);
 
     const topActions = el('div', 'career-top-actions');
+
+    const setupToggleBtn = el(
+      'button',
+      `button ${this.setupPanelOpen ? 'primary' : 'quiet'}`,
+      this.setupPanelOpen ? '✓ Close Setup & Auth' : '⚙️ Upload Resume & Auth Setup'
+    );
+    setupToggleBtn.type = 'button';
+    setupToggleBtn.addEventListener('click', () => {
+      this.setupPanelOpen = !this.setupPanelOpen;
+      this.render();
+    });
+
+    const startEngineBtn = el(
+      'button',
+      `button ${engineRunning ? 'quiet' : 'primary'}`,
+      engineRunning ? '⏸ Pause Process' : '🚀 Start Career Process'
+    );
+    startEngineBtn.type = 'button';
+    startEngineBtn.disabled = this.actionInProgress;
+    startEngineBtn.addEventListener('click', () => {
+      if (engineRunning) {
+        void this.pauseEngine();
+      } else {
+        void this.startEngine(eng?.execution_mode || 'DRY_RUN');
+      }
+    });
+
     const bumpBtn = el('button', 'button primary', this.actionInProgress ? 'Executing…' : 'Run Resdex Bump Now');
     bumpBtn.type = 'button';
     bumpBtn.disabled = this.actionInProgress;
@@ -189,9 +235,17 @@ export class CareerView {
     exportBtn.setAttribute('href', '/api/v1/career/export.csv');
     exportBtn.setAttribute('download', 'courseforge_career_applied_jobs.csv');
 
-    topActions.append(bumpBtn, exportBtn);
+    topActions.append(setupToggleBtn, startEngineBtn, bumpBtn, exportBtn);
     header.append(titleArea, topActions);
     container.append(header);
+
+    // 1b. Universal Profile & Pre-Flight Readiness Summary Strip
+    container.append(this.renderReadinessStrip());
+
+    // 1c. Collapsible Universal Setup Studio (Resume Upload -> Platform Auth -> Launch)
+    if (this.setupPanelOpen) {
+      container.append(this.renderSetupStudio());
+    }
 
     // 2. Banner Toast (if active)
     if (this.bannerMessage) {
@@ -653,5 +707,406 @@ export class CareerView {
     }
 
     return wrapper;
+  }
+
+  private async uploadResumePayload(filename: string, contentBase64: string, rawText: string): Promise<void> {
+    if (this.actionInProgress) return;
+    this.actionInProgress = true;
+    this.bannerMessage = `Parsing resume (${filename || 'pasted text'}) and extracting profile ground truth…`;
+    this.render();
+
+    try {
+      const profile = await this.options.api.request<CandidateProfile>('/career/profile/upload-resume', {
+        method: 'POST',
+        body: {
+          filename,
+          content_base64: contentBase64,
+          raw_text: rawText,
+        },
+      });
+      this.bannerMessage = `Resume extracted! Active Profile: ${profile.full_name} — ${profile.target_role} (${profile.total_yoe} YOE, ${profile.primary_skills.length} skills seeded into Whitelist Guard).`;
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Resume parse error: ${errorMessage(err)}`;
+      this.render();
+    } finally {
+      this.actionInProgress = false;
+    }
+  }
+
+  private async saveProfileOverrides(patch: Partial<CandidateProfile>): Promise<void> {
+    if (this.actionInProgress) return;
+    this.actionInProgress = true;
+    this.bannerMessage = 'Saving candidate profile and regenerating dynamic skill whitelist…';
+    this.render();
+
+    try {
+      const base = this.readiness?.profile || ({} as CandidateProfile);
+      const updated = await this.options.api.request<CandidateProfile>('/career/profile', {
+        method: 'PUT',
+        body: { ...base, ...patch },
+      });
+      this.bannerMessage = `Profile saved for ${updated.full_name} (${updated.target_role} • ${updated.total_yoe} YOE).`;
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Failed to save profile: ${errorMessage(err)}`;
+      this.render();
+    } finally {
+      this.actionInProgress = false;
+    }
+  }
+
+  private async connectPlatform(platform: string, authMethod: string, identifier: string, secret: string): Promise<void> {
+    if (this.actionInProgress) return;
+    this.actionInProgress = true;
+    this.bannerMessage = `Connecting ${platform.toUpperCase()} (${authMethod})…`;
+    this.render();
+
+    try {
+      const res = await this.options.api.request<PlatformAuthRequirement>('/career/auth/connect', {
+        method: 'POST',
+        body: {
+          platform,
+          auth_method: authMethod,
+          account_identifier: identifier,
+          secret_payload: secret,
+        },
+      });
+      this.bannerMessage = `${res.display_name} status updated to ${res.status} (${res.account_identifier}).`;
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Platform auth error: ${errorMessage(err)}`;
+      this.render();
+    } finally {
+      this.actionInProgress = false;
+    }
+  }
+
+  private async disconnectPlatform(platform: string): Promise<void> {
+    try {
+      await this.options.api.request(`/career/auth/${platform}`, { method: 'DELETE' });
+      this.bannerMessage = `Disconnected ${platform.toUpperCase()} credentials.`;
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Disconnect failed: ${errorMessage(err)}`;
+      this.render();
+    }
+  }
+
+  private async startEngine(mode: 'DRY_RUN' | 'LIVE'): Promise<void> {
+    if (this.actionInProgress) return;
+    this.actionInProgress = true;
+    this.bannerMessage = `Starting Autonomous Career Engine (${mode})…`;
+    this.render();
+
+    try {
+      const res = await this.options.api.request<EngineReadiness>('/career/engine/start', {
+        method: 'POST',
+        body: { execution_mode: mode, daily_call_target: 5 },
+      });
+      this.readiness = res;
+      this.bannerMessage = res.engine.last_cycle_summary || `Autonomous Career Engine is now RUNNING (${mode}).`;
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Cannot start engine: ${errorMessage(err)}`;
+      this.render();
+    } finally {
+      this.actionInProgress = false;
+    }
+  }
+
+  private async pauseEngine(): Promise<void> {
+    if (this.actionInProgress) return;
+    this.actionInProgress = true;
+    try {
+      const res = await this.options.api.request<EngineReadiness>('/career/engine/pause', {
+        method: 'POST',
+      });
+      this.readiness = res;
+      this.bannerMessage = 'Autonomous Career Engine paused.';
+      await this.refreshAll();
+    } catch (err) {
+      this.bannerMessage = `Failed to pause engine: ${errorMessage(err)}`;
+      this.render();
+    } finally {
+      this.actionInProgress = false;
+    }
+  }
+
+  private renderReadinessStrip(): HTMLElement {
+    const strip = el('div', 'career-readiness-strip');
+    const prof = this.readiness?.profile;
+    const eng = this.readiness?.engine;
+    const platforms = this.readiness?.platforms || [];
+    const connectedPlatforms = platforms.filter(p => p.status === 'CONNECTED' || p.status === 'SIMULATION');
+
+    const left = el('div', 'career-readiness-summary');
+    left.innerHTML = `
+      <span class="badge-stat">${eng?.engine_status || 'READY'} (${eng?.execution_mode || 'DRY_RUN'})</span>
+      <span><strong>Candidate:</strong> ${prof?.full_name || 'Lavkush Kumar'}</span>
+      <span>•</span>
+      <span><strong>Role Track:</strong> ${prof?.target_role || 'Azure Data Engineer'} (${(prof?.primary_track_id || 'data').toUpperCase()})</span>
+      <span>•</span>
+      <span><strong>Skills Whitelist:</strong> ${(prof?.primary_skills || []).slice(0, 5).join(', ') || 'Databricks, PySpark, SQL'}</span>
+    `;
+
+    const checks = el('div', 'career-readiness-checks');
+    checks.innerHTML = `
+      <span class="readiness-pill ${this.readiness?.profile_ready !== false ? 'ok' : 'warn'}">1. Resume Profile ✓</span>
+      <span class="readiness-pill ${this.readiness?.whitelist_ready !== false ? 'ok' : 'warn'}">2. Skill Whitelist ✓</span>
+      <span class="readiness-pill ${this.readiness?.auth_ready !== false ? 'ok' : 'warn'}">3. Auth / Sandbox (${connectedPlatforms.length || 2} Ready) ✓</span>
+    `;
+
+    strip.append(left, checks);
+    return strip;
+  }
+
+  private renderSetupStudio(): HTMLElement {
+    const studio = el('div', 'career-setup-studio');
+    const prof = this.readiness?.profile;
+    const platforms = this.readiness?.platforms || [];
+    const eng = this.readiness?.engine;
+
+    // STEP 1: Upload Resume & Edit Candidate Profile
+    const step1 = el('div', 'career-card');
+    step1.append(
+      el('h3', '', 'Step 1: Upload Resume (Any Profile) & Ground-Truth Configuration'),
+      el(
+        'p',
+        'muted',
+        'Upload your PDF/Text/LaTeX resume or paste your resume below. CourseForge automatically detects your Role Track (Backend, Frontend, Full-Stack, DevOps, Data, ML/AI, SRE, Mobile), extracts your YOE & skills, and builds your anti-hallucination Whitelist Guard.'
+      )
+    );
+
+    const uploadRow = el('div', 'career-upload-row');
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.txt,.tex,.md';
+    fileInput.className = 'career-file-input';
+
+    const uploadFileBtn = el('button', 'button primary', '📄 Upload & Auto-Extract Resume');
+    uploadFileBtn.type = 'button';
+    uploadFileBtn.addEventListener('click', () => {
+      const f = fileInput.files?.[0];
+      if (!f) {
+        this.bannerMessage = 'Select a .pdf, .txt, or .tex resume file first, or paste resume text below.';
+        this.render();
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        void this.uploadResumePayload(f.name, result, '');
+      };
+      reader.readAsDataURL(f);
+    });
+    uploadRow.append(fileInput, uploadFileBtn);
+    step1.append(uploadRow);
+
+    const pasteBox = document.createElement('textarea');
+    pasteBox.className = 'career-paste-textarea';
+    pasteBox.rows = 3;
+    pasteBox.placeholder =
+      'Or paste raw resume text here (e.g., "Aarav Sharma | Senior Backend Engineer | 4.5 YOE | Go, Kubernetes, PostgreSQL, Kafka, Redis | 30 days notice | 35 LPA")…';
+    pasteBox.value = this.resumePasteDraft;
+    pasteBox.addEventListener('input', () => {
+      this.resumePasteDraft = pasteBox.value;
+    });
+
+    const parseTextBtn = el('button', 'button quiet', '✨ Parse Pasted Resume Text');
+    parseTextBtn.type = 'button';
+    parseTextBtn.addEventListener('click', () => {
+      if (!this.resumePasteDraft.trim()) {
+        this.bannerMessage = 'Paste at least 20 characters of resume text to extract your profile.';
+        this.render();
+        return;
+      }
+      void this.uploadResumePayload('pasted_resume.txt', '', this.resumePasteDraft);
+    });
+    step1.append(pasteBox, parseTextBtn);
+
+    // Editable Profile Form
+    const profileGrid = el('div', 'career-profile-form-grid');
+    const nameInput = document.createElement('input');
+    nameInput.placeholder = 'Full Name';
+    nameInput.value = prof?.full_name || 'Lavkush Kumar';
+
+    const roleInput = document.createElement('input');
+    roleInput.placeholder = 'Target Role (e.g. Senior Backend Engineer)';
+    roleInput.value = prof?.target_role || 'Azure Data Engineer';
+
+    const trackSelect = document.createElement('select');
+    const tracks: Array<[string, string]> = [
+      ['data', 'Data Engineer (Spark / Databricks / Warehouse)'],
+      ['backend', 'Backend Engineer (Go / Java / Distributed Systems)'],
+      ['frontend', 'Frontend Engineer (React / TypeScript / UI)'],
+      ['fullstack', 'Full-Stack Engineer (End-to-End Web & API)'],
+      ['devops', 'DevOps & Cloud Platform Engineer (K8s / IaC)'],
+      ['sre', 'Site Reliability Engineer (SRE / Observability)'],
+      ['ml', 'Machine Learning / AI Engineer (PyTorch / LLM / MLOps)'],
+      ['mobile', 'Mobile Engineer (Android / iOS / Cross-Platform)'],
+    ];
+    for (const [id, label] of tracks) {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = label;
+      if ((prof?.primary_track_id || 'data') === id) opt.selected = true;
+      trackSelect.append(opt);
+    }
+
+    const yoeInput = document.createElement('input');
+    yoeInput.type = 'number';
+    yoeInput.step = '0.5';
+    yoeInput.placeholder = 'Total YOE';
+    yoeInput.value = String(prof?.total_yoe ?? 2.5);
+
+    const noticeInput = document.createElement('input');
+    noticeInput.type = 'number';
+    noticeInput.placeholder = 'Notice Period (Days)';
+    noticeInput.value = String(prof?.notice_period_days ?? 15);
+
+    const ctcInput = document.createElement('input');
+    ctcInput.placeholder = 'Target CTC Range (e.g. ₹25–35 LPA)';
+    ctcInput.value = prof?.target_ctc_range || '₹20–25 LPA';
+
+    const skillsInput = document.createElement('input');
+    skillsInput.placeholder = 'Primary Skills (comma-separated)';
+    skillsInput.value = (prof?.primary_skills || []).join(', ');
+
+    profileGrid.append(nameInput, roleInput, trackSelect, yoeInput, noticeInput, ctcInput, skillsInput);
+
+    const saveProfileBtn = el('button', 'button primary', '💾 Save Profile & Seed Whitelist');
+    saveProfileBtn.type = 'button';
+    saveProfileBtn.addEventListener('click', () => {
+      const skills = skillsInput.value
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      void this.saveProfileOverrides({
+        full_name: nameInput.value.trim(),
+        target_role: roleInput.value.trim(),
+        primary_track_id: trackSelect.value,
+        total_yoe: parseFloat(yoeInput.value) || 2.5,
+        notice_period_days: parseInt(noticeInput.value, 10) || 15,
+        target_ctc_range: ctcInput.value.trim(),
+        primary_skills: skills,
+      });
+    });
+    step1.append(profileGrid, saveProfileBtn);
+
+    // STEP 2: What Auth Is Needed — Platform Authentication Vault
+    const step2 = el('div', 'career-card');
+    step2.append(
+      el('h3', '', 'Step 2: What Auth Is Needed — Platform Session & Credential Vault'),
+      el(
+        'p',
+        'muted',
+        'Connect the job portals you want the worker to automate. All cookies and credentials are encrypted with AES-256-GCM at rest, or you can enable Simulation Sandbox mode with zero credentials.'
+      )
+    );
+
+    const authGrid = el('div', 'career-auth-grid');
+    for (const plat of platforms) {
+      const pCard = el('div', 'career-auth-card');
+      const head = el('div', 'career-auth-card-head');
+      head.append(
+        el('strong', '', plat.display_name),
+        el('span', `lead-status-pill status-${plat.status}`, plat.status)
+      );
+
+      const reqList = el('div', 'career-auth-reqs');
+      reqList.innerHTML = `
+        <div><strong>What Auth Is Needed:</strong> ${plat.required_fields.join(' • ')}</div>
+        <div class="muted">${plat.instructions}</div>
+        <div><strong>Unlocks:</strong> ${plat.unlocks_features.join(' | ')}</div>
+      `;
+
+      const methodSelect = document.createElement('select');
+      const methods: Array<[string, string]> = [
+        ['cookie_json', 'Recommended: Session Cookie JSON / storage_state.json'],
+        ['credentials', 'Direct Login: Registered Email + Password / Token'],
+        ['simulation', 'Zero-Auth: Dry-Run Simulation Sandbox'],
+      ];
+      for (const [mVal, mLabel] of methods) {
+        const opt = document.createElement('option');
+        opt.value = mVal;
+        opt.textContent = mLabel;
+        if (plat.auth_method === mVal) opt.selected = true;
+        methodSelect.append(opt);
+      }
+
+      const identInput = document.createElement('input');
+      identInput.placeholder = 'Account Email / Identifier (e.g. you@gmail.com)';
+      identInput.value = plat.account_identifier || '';
+
+      const secretInput = document.createElement('input');
+      secretInput.type = 'password';
+      secretInput.placeholder = 'Paste Cookie JSON ([{"name":"nauk_at",...}]) or Password';
+
+      const btnRow = el('div', 'career-auth-btn-row');
+      const connectBtn = el('button', 'button primary', '🔒 Connect Auth');
+      connectBtn.type = 'button';
+      connectBtn.addEventListener('click', () => {
+        void this.connectPlatform(
+          plat.platform,
+          methodSelect.value,
+          identInput.value.trim(),
+          secretInput.value.trim()
+        );
+      });
+
+      const simQuickBtn = el('button', 'button quiet', '🧪 Use Sandbox');
+      simQuickBtn.type = 'button';
+      simQuickBtn.addEventListener('click', () => {
+        void this.connectPlatform(plat.platform, 'simulation', 'Dry-Run Sandbox', '');
+      });
+
+      btnRow.append(connectBtn, simQuickBtn);
+      if (plat.status === 'CONNECTED' || plat.status === 'SIMULATION') {
+        const discBtn = el('button', 'button quiet', 'Disconnect');
+        discBtn.type = 'button';
+        discBtn.addEventListener('click', () => {
+          void this.disconnectPlatform(plat.platform);
+        });
+        btnRow.append(discBtn);
+      }
+
+      pCard.append(head, reqList, methodSelect, identInput, secretInput, btnRow);
+      authGrid.append(pCard);
+    }
+    step2.append(authGrid);
+
+    // STEP 3: Pre-Flight Readiness & Start Autonomous Process
+    const step3 = el('div', 'career-card');
+    step3.append(
+      el('h3', '', 'Step 3: Start Autonomous Career Process'),
+      el(
+        'p',
+        'muted',
+        `Current Engine Status: ${eng?.engine_status || 'READY'} (${eng?.execution_mode || 'DRY_RUN'}). Starting the engine immediately runs Block 1 (Resdex Bump + Role-Matched Batch Apply + CourseForge Study Sprint) for ${prof?.target_role || 'your profile'}.`
+      )
+    );
+
+    const launchRow = el('div', 'career-launch-row');
+    const startDryBtn = el('button', 'button primary', '🚀 Start Process (Dry-Run Simulation)');
+    startDryBtn.type = 'button';
+    startDryBtn.addEventListener('click', () => {
+      void this.startEngine('DRY_RUN');
+    });
+
+    const startLiveBtn = el('button', 'button primary', '🔥 Start Process (Live Connected Portals)');
+    startLiveBtn.type = 'button';
+    startLiveBtn.addEventListener('click', () => {
+      void this.startEngine('LIVE');
+    });
+
+    launchRow.append(startDryBtn, startLiveBtn);
+    if (eng?.last_cycle_summary) {
+      step3.append(el('div', 'career-healthy-banner', `Last Cycle: ${eng.last_cycle_summary}`));
+    }
+    step3.append(launchRow);
+
+    studio.append(step1, step2, step3);
+    return studio;
   }
 }

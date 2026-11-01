@@ -305,3 +305,130 @@ class TestTier4_RealWorldScenarios:
         assert ledger_entry["platform"] == "naukri"
         assert ledger_entry["match_score"] >= 70.0
         assert ledger_entry["is_dry_run"] is True
+
+    def test_scenario_11_universal_backend_engineer_profile_onboarding(self):
+        """
+        Scenario 11: Any user (e.g., Backend Engineer in Go & Kubernetes) uploads resume;
+        CandidateProfile drives screening answers, headline mutation whitelist, and CRM outreach.
+        """
+        from services.career_worker.core.candidate_profile import CandidateProfile, resolve_screening_question
+
+        backend_profile = CandidateProfile.from_dict({
+            "user_id": "rohan",
+            "full_name": "Rohan Verma",
+            "target_role": "Senior Backend Engineer",
+            "primary_track_id": "backend",
+            "total_yoe": 4.0,
+            "notice_period_days": 30,
+            "target_ctc_range": "₹35–45 LPA",
+            "primary_skills": ["Go", "Kubernetes", "PostgreSQL", "gRPC", "Kafka"],
+            "whitelist_headline_tokens": ["Senior", "Backend", "Engineer", "Go", "Kubernetes", "PostgreSQL", "gRPC", "Kafka", "30", "Days"]
+        })
+
+        # Screening question resolution uses dynamic profile
+        assert resolve_screening_question("What is your notice period in days?", backend_profile) == "30 days"
+        assert resolve_screening_question("Total years of experience?", backend_profile) == "4.0"
+        assert resolve_screening_question("Expected CTC?", backend_profile) == "22 LPA"
+
+        # Dynamic headline generation & whitelist check
+        headline = ProfileMutator.generate_optimized_headline(["Go", "Kubernetes", "gRPC"], profile=backend_profile)
+        assert "Senior Backend Engineer" in headline
+        ok, _ = ProfileMutator.validate_headline_mutation("Old", headline, profile=backend_profile)
+        assert ok is True
+
+        # Reject YOE inflation relative to backend_profile (4.0 YOE + 1.0 buffer = 5.0 max)
+        bad_ok, _ = ProfileMutator.validate_headline_mutation("Old", "Senior Backend Engineer | 9 YOE | Go", profile=backend_profile)
+        assert bad_ok is False
+
+        # Dynamic recruiter pitch & connection note
+        note = RecruiterCRM.generate_connection_note_300("Ananya", "Stripe", profile=backend_profile)
+        assert len(note) <= 300
+        assert "Senior Backend Engineer" in note
+        assert "Rohan" in note
+
+    def test_scenario_12_universal_frontend_ml_devops_multi_profile_execution(self, worker_client):
+        """
+        Scenario 12: Multi-track profiles (Frontend, ML, DevOps) execute daily blocks
+        and worker endpoints dynamically without Data-Engineer-only hardcoding.
+        """
+        from services.career_worker.core.candidate_profile import CandidateProfile
+
+        for track_id, role, skills in [
+            ("frontend", "Senior Frontend Engineer", ["React", "TypeScript", "Next.js"]),
+            ("ml", "Machine Learning Engineer", ["PyTorch", "Transformers", "MLOps"]),
+            ("devops", "Staff DevOps Engineer", ["Kubernetes", "Terraform", "AWS"]),
+        ]:
+            prof_dict = {
+                "user_id": f"user_{track_id}",
+                "full_name": f"Candidate {track_id.upper()}",
+                "target_role": role,
+                "primary_track_id": track_id,
+                "total_yoe": 3.5,
+                "notice_period_days": 15,
+                "target_ctc_range": "₹30–40 LPA",
+                "primary_skills": skills,
+            }
+            prof = CandidateProfile.from_dict(prof_dict)
+            orch = DailyBlockOrchestrator(SimulationAdapter(platform="naukri"), profile=prof)
+            b1 = orch.execute_block(1, dry_run=True)
+            assert b1["block"] == 1
+            assert any(role in t for t in b1["tasks_completed"])
+
+            r_apply = worker_client.post("/execute/apply", json={"user_id": prof.user_id, "block": 1, "dry_run": True, "profile": prof_dict})
+            assert r_apply.status_code == 200
+            assert role in r_apply.json()["message"]
+
+    def test_scenario_13_per_user_session_vault_and_playwright_storage_state(self, tmp_path):
+        """
+        Scenario 13: SessionVault supports per-user cookie paths and unwraps both
+        Playwright storage_state.json ({'cookies': [...]}) and raw cookie arrays.
+        """
+        from services.career_worker.core.session_vault import SessionVault
+
+        p = SessionVault.user_cookie_path(tmp_path, "rohan@example.com", "naukri")
+        assert "rohan_example_com" in str(p)
+        assert "naukri" in p.name
+
+        storage_state_payload = {
+            "cookies": [
+                {"name": "nauk_at", "value": "tok_123", "domain": ".naukri.com", "path": "/"}
+            ],
+            "origins": []
+        }
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(storage_state_payload))
+        cookies = SessionVault.load_cookies(p)
+        assert len(cookies) == 1
+        assert cookies[0]["name"] == "nauk_at"
+        assert SessionVault.has_valid_session(p) is True
+
+    def test_scenario_14_migration_035_universal_career_profiles_schema(self):
+        """
+        Scenario 14: Verify migration 035_universal_career_profiles.sql defines
+        career_candidate_profiles, career_platform_credentials, and career_engine_state.
+        """
+        mig_path = Path(__file__).resolve().parents[2] / "backend" / "internal" / "store" / "migrations" / "035_universal_career_profiles.sql"
+        assert mig_path.exists()
+        sql = mig_path.read_text()
+        assert "CREATE TABLE IF NOT EXISTS career_candidate_profiles" in sql
+        assert "CREATE TABLE IF NOT EXISTS career_platform_credentials" in sql
+        assert "CREATE TABLE IF NOT EXISTS career_engine_state" in sql
+        assert "whitelist_headline_tokens" in sql
+        assert "encrypted_secret" in sql
+
+    def test_scenario_15_frontend_setup_and_auth_vault_studio_contract(self):
+        """
+        Scenario 15: Verify CourseForge Web CareerView and contracts include
+        Resume Upload, Auth Vault ('What Auth Is Needed'), Readiness Strip, and Start Engine CTA.
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+        contracts_ts = (repo_root / "web" / "src" / "career" / "contracts.ts").read_text()
+        view_ts = (repo_root / "web" / "src" / "career" / "view.ts").read_text()
+
+        assert "export interface CandidateProfile" in contracts_ts
+        assert "export interface PlatformAuthRequirement" in contracts_ts
+        assert "export interface EngineReadiness" in contracts_ts
+        assert "uploadResumePayload" in view_ts
+        assert "connectPlatform" in view_ts
+        assert "startEngine" in view_ts
+        assert "What Auth Is Needed" in view_ts

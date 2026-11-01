@@ -58,6 +58,15 @@ func (s *Service) Register(mux *http.ServeMux, auth *identity.Service) {
 		"PUT /api/v1/career/goal/leads/{id}/status":   s.handleUpdateLeadStatus,
 		"GET /api/v1/career/jobs":                     s.handleGetJobs,
 		"GET /api/v1/career/export.csv":               s.handleExportCSV,
+		"GET /api/v1/career/profile":                  s.handleGetProfile,
+		"PUT /api/v1/career/profile":                  s.handleUpdateProfile,
+		"POST /api/v1/career/profile/upload-resume":   s.handleUploadResume,
+		"GET /api/v1/career/auth/requirements":        s.handleGetAuthRequirements,
+		"POST /api/v1/career/auth/connect":            s.handleConnectAuth,
+		"DELETE /api/v1/career/auth/{platform}":       s.handleDisconnectAuth,
+		"GET /api/v1/career/engine/readiness":         s.handleEngineReadiness,
+		"POST /api/v1/career/engine/start":            s.handleEngineStart,
+		"POST /api/v1/career/engine/pause":            s.handleEnginePause,
 	}
 
 	for route, h := range routes {

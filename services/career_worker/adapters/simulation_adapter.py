@@ -34,15 +34,16 @@ class SimulationAdapter(BasePlatformAdapter):
     def search_and_apply(self, query: str, limit: int = 15, dry_run: bool = True) -> List[Dict[str, Any]]:
         logger.info(f"[{self.platform}] Simulating application search and submission for '{query}' (limit={limit}).")
         results = []
+        role_title = query.strip() if query and len(query.strip()) <= 50 and "DROP TABLE" not in query else "Azure Data Engineer"
         companies = [
-            ("Microsoft", "Senior Azure Data Engineer", "Bengaluru", 94.5),
-            ("Deloitte", "Azure Databricks Lakehouse Specialist", "Hyderabad", 91.0),
-            ("EY GDS", "Azure Data Engineer (PySpark & Delta)", "Bengaluru", 88.5),
-            ("PwC India", "Lead Data Engineer - Medallion Architecture", "Pune", 89.0),
-            ("Wipro GCC", "Azure ADF & Synapse Developer", "Bengaluru", 84.0),
-            ("Cognizant", "Azure Lakehouse Engineer", "Remote", 86.5),
-            ("TCS Digital", "Senior Data Engineer (Lakehouse)", "Hyderabad", 83.0),
-            ("Accenture Solutions", "Azure Data Specialist", "Bengaluru", 87.0)
+            ("Microsoft", f"Senior {role_title}", "Bengaluru", 94.5),
+            ("Deloitte", f"{role_title} Specialist", "Hyderabad", 91.0),
+            ("EY GDS", f"{role_title}", "Bengaluru", 88.5),
+            ("PwC India", f"Lead {role_title}", "Pune", 89.0),
+            ("Wipro GCC", f"{role_title} II", "Bengaluru", 84.0),
+            ("Cognizant", f"Staff {role_title}", "Remote", 86.5),
+            ("TCS Digital", f"Senior {role_title}", "Hyderabad", 83.0),
+            ("Accenture Solutions", f"{role_title}", "Bengaluru", 87.0)
         ]
 
         count = min(limit, len(companies))

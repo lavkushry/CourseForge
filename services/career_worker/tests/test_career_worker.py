@@ -152,3 +152,25 @@ def test_fastapi_endpoints():
     data = r_pacing.json()
     assert "pacing" in data
     assert "bottlenecks" in data
+
+    # Universal multi-profile override test (e.g., Backend Engineer in Go & Kubernetes)
+    backend_profile = {
+        "user_id": "rohan",
+        "full_name": "Rohan Verma",
+        "target_role": "Senior Backend Engineer",
+        "primary_track_id": "backend",
+        "total_yoe": 4.0,
+        "notice_period_days": 30,
+        "target_ctc_range": "₹35–45 LPA",
+        "primary_skills": ["Go", "Kubernetes", "PostgreSQL", "gRPC", "Kafka"],
+        "whitelist_headline_tokens": ["Senior", "Backend", "Engineer", "Go", "Kubernetes", "PostgreSQL", "gRPC", "Kafka", "30", "Days"]
+    }
+    r_bump_custom = client.post("/execute/bump", json={"user_id": "rohan", "dry_run": True, "profile": backend_profile})
+    assert r_bump_custom.status_code == 200
+    assert r_bump_custom.json()["success"] is True
+    assert "Senior Backend Engineer" in r_bump_custom.json()["message"]
+
+    r_outreach_custom = client.post("/execute/outreach", json={"user_id": "rohan", "count": 5, "dry_run": True, "profile": backend_profile})
+    assert r_outreach_custom.status_code == 200
+    assert r_outreach_custom.json()["outreach_count"] == 5
+    assert "Senior Backend Engineer" in r_outreach_custom.json()["message"]

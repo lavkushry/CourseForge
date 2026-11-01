@@ -390,3 +390,173 @@
   color: var(--text-muted, #94a3b8);
   opacity: 0.6;
 }
+
+
+/* =========================================================================
+   Universal Multi-Profile Onboarding, Platform Auth Vault & Readiness Strip
+   ========================================================================= */
+
+.career-readiness-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--bg-panel, #131b2e);
+  border: 1px solid var(--border-subtle, #23304c);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.career-readiness-strip.ready {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), rgba(19, 27, 46, 0.95));
+}
+
+.career-readiness-strip.onboarding {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08), rgba(19, 27, 46, 0.95));
+}
+
+.readiness-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.readiness-pill {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.readiness-pill.ok {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.readiness-pill.pending {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.readiness-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.career-setup-studio {
+  background: var(--bg-panel, #111827);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.career-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+
+.career-paste-textarea {
+  width: 100%;
+  background: #0b1120;
+  color: #e2e8f0;
+  border: 1px solid #23304c;
+  border-radius: 8px;
+  padding: 0.65rem;
+  font-family: monospace;
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+}
+
+.career-profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.career-profile-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.career-profile-form-grid label.full-width {
+  grid-column: 1 / -1;
+}
+
+.career-profile-form-grid input,
+.career-profile-form-grid select {
+  background: #0b1120;
+  color: #f8fafc;
+  border: 1px solid #23304c;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.career-auth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.career-auth-card {
+  background: #0b1120;
+  border: 1px solid #23304c;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.career-auth-card.connected {
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.career-auth-card.pending {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.career-auth-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.career-auth-fields,
+.career-auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.career-auth-fields select,
+.career-auth-fields input {
+  flex: 1 1 180px;
+  background: #131b2e;
+  color: #f8fafc;
+  border: 1px solid #2d3d5e;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+}

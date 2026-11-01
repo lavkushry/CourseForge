@@ -790,13 +790,15 @@ func (s *Service) TriggerBump(ctx context.Context, userID string, dryRun bool) (
 		}
 	}
 
-	// Dispatch to worker
+	// Dispatch to worker with user's dynamic profile
+	profile, _ := s.GetCandidateProfile(ctx, userID)
 	var workerResp *WorkerBumpResponse
 	if s.Worker != nil {
 		var err error
 		workerResp, err = s.Worker.TriggerBump(ctx, WorkerBumpRequest{
-			UserID: userID,
-			DryRun: dryRun,
+			UserID:  userID,
+			DryRun:  dryRun,
+			Profile: &profile,
 		})
 		if err != nil {
 			workerResp = &WorkerBumpResponse{
@@ -853,8 +855,14 @@ func (s *Service) TriggerBump(ctx context.Context, userID string, dryRun bool) (
 func (s *Service) GetPlanToday(ctx context.Context, userID string) (*PlanTodayResponse, error) {
 	now := s.now()
 	todayStr := now.Format("2006-01-02")
+	profile, _ := s.GetCandidateProfile(ctx, userID)
+	targetRole := profile.TargetRole
+	if strings.TrimSpace(targetRole) == "" {
+		targetRole = "Azure Data Engineer"
+	}
+	studyTasks := StudyTasksForTrack(profile.PrimaryTrackID, targetRole)
 
-	// 3 canonical daily blocks matching the SOLID specification
+	// 3 canonical daily blocks dynamically adapted to the user's target role & track
 	blocks := []DailyRoutineBlock{
 		{
 			BlockID:    1,
@@ -862,8 +870,8 @@ func (s *Service) GetPlanToday(ctx context.Context, userID string) (*PlanTodayRe
 			TimeWindow: "09:00 - 11:30 IST",
 			Tasks: []string{
 				"[Career] Resdex Profile Bump to 'Active Today'",
-				"[Career] High-Velocity Apply: 20-25 Azure Data Engineer Vacancies",
-				"[Study]  45-Min CourseForge Masterclass (Azure Databricks Lakehouse)",
+				fmt.Sprintf("[Career] High-Velocity Apply: 20-25 %s Vacancies", targetRole),
+				"[Study]  " + studyTasks[0],
 			},
 			Status:   "pending",
 			IsActive: now.Hour() >= 9 && now.Hour() < 12,
@@ -873,9 +881,9 @@ func (s *Service) GetPlanToday(ctx context.Context, userID string) (*PlanTodayRe
 			Title:      "BLOCK 2: Afternoon Outbound (14:00 - 16:30 IST)",
 			TimeWindow: "14:00 - 16:30 IST",
 			Tasks: []string{
-				"[Career] Top GCC Recruiter Outbound: 10 Custom Pitches",
+				fmt.Sprintf("[Career] Top GCC Recruiter Outbound: 10 Custom %s Pitches", targetRole),
 				"[Career] Post-Lunch Resdex Bump",
-				"[Study]  Hands-on Code Lab (PySpark Delta Lake CDC / Optimization)",
+				"[Study]  " + studyTasks[1],
 			},
 			Status:   "pending",
 			IsActive: now.Hour() >= 14 && now.Hour() < 17,
@@ -887,7 +895,7 @@ func (s *Service) GetPlanToday(ctx context.Context, userID string) (*PlanTodayRe
 			Tasks: []string{
 				"[Career] Evening Resdex Bump (Sweep US recruiter & after-hours shift)",
 				"[Career] 48-Hour Follow-Up Batch (5 high-urgency candidate follow-ups)",
-				"[Study]  AI Mock Interview: 3 Azure Data Engineer Technical Scenarios",
+				"[Study]  " + studyTasks[2],
 			},
 			Status:   "pending",
 			IsActive: now.Hour() >= 18 && now.Hour() < 21,
@@ -904,6 +912,11 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 	now := s.now()
 	var completed []string
 	todayStr := now.Format("2006-01-02")
+	profile, _ := s.GetCandidateProfile(ctx, userID)
+	targetRole := profile.TargetRole
+	if strings.TrimSpace(targetRole) == "" {
+		targetRole = "Azure Data Engineer"
+	}
 
 	switch block {
 	case 1:
@@ -913,15 +926,15 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 
 		appliedCount := 20
 		if s.Worker != nil {
-			applyResp, err := s.Worker.TriggerApply(ctx, WorkerApplyRequest{UserID: userID, Block: 1, DryRun: dryRun})
+			applyResp, err := s.Worker.TriggerApply(ctx, WorkerApplyRequest{UserID: userID, Block: 1, DryRun: dryRun, Profile: &profile})
 			if err == nil && applyResp != nil && applyResp.AppliedCount > 0 {
 				appliedCount = applyResp.AppliedCount
-				completed = append(completed, fmt.Sprintf("Applied to %d Azure Data Engineer jobs", appliedCount))
+				completed = append(completed, fmt.Sprintf("Applied to %d %s jobs", appliedCount, targetRole))
 			} else {
-				completed = append(completed, fmt.Sprintf("Batch Apply: %d positions queued (Dry-run verified)", appliedCount))
+				completed = append(completed, fmt.Sprintf("Batch Apply: %d %s positions queued (Dry-run verified)", appliedCount, targetRole))
 			}
 		} else {
-			completed = append(completed, fmt.Sprintf("Batch Apply: %d positions queued (Dry-run verified)", appliedCount))
+			completed = append(completed, fmt.Sprintf("Batch Apply: %d %s positions queued (Dry-run verified)", appliedCount, targetRole))
 		}
 
 		if s.Pool != nil {
@@ -937,7 +950,7 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 		// Afternoon routine: recruiter outreach + post-lunch bump
 		outreachCount := 10
 		if s.Worker != nil {
-			outreachResp, err := s.Worker.TriggerOutreach(ctx, WorkerOutreachRequest{UserID: userID, Count: outreachCount, DryRun: dryRun})
+			outreachResp, err := s.Worker.TriggerOutreach(ctx, WorkerOutreachRequest{UserID: userID, Count: outreachCount, DryRun: dryRun, Profile: &profile})
 			if err == nil && outreachResp != nil && outreachResp.OutreachCount > 0 {
 				outreachCount = outreachResp.OutreachCount
 				completed = append(completed, fmt.Sprintf("Dispatched %d Recruiter Pitches", outreachCount))

@@ -211,3 +211,77 @@ export interface BlockExecutionResult {
   dry_run: boolean;
   message: string;
 }
+
+export interface CandidateProfile {
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  linkedin_url: string;
+  github_url: string;
+  primary_track_id: string;
+  target_role: string;
+  secondary_roles: string[];
+  total_yoe: number;
+  relevant_yoe: number;
+  current_company: string;
+  previous_company: string;
+  current_ctc_lpa: number;
+  expected_ctc_lpa: number;
+  target_ctc_range: string;
+  notice_period_days: number;
+  notice_period_str: string;
+  primary_skills: string[];
+  tools: string[];
+  preferred_locations: string[];
+  whitelist_headline_tokens: string[];
+  screening_answers: Record<string, string>;
+  resume_filename: string;
+  resume_sha256: string;
+  updated_at: string;
+}
+
+export interface PlatformAuthRequirement {
+  platform: string;
+  display_name: string;
+  recommended_method: string;
+  required_fields: string[];
+  instructions: string;
+  unlocks_features: string[];
+  status: 'CONNECTED' | 'SIMULATION' | 'NEEDS_OTP' | 'EXPIRED' | 'DISCONNECTED';
+  auth_method: string;
+  account_identifier: string;
+  last_verified_at?: string;
+}
+
+export interface ConnectPlatformRequest {
+  platform: string;
+  auth_method: string;
+  account_identifier: string;
+  secret_payload: string;
+}
+
+export interface EngineState {
+  user_id: string;
+  engine_status: 'ONBOARDING' | 'READY' | 'RUNNING' | 'PAUSED';
+  execution_mode: 'DRY_RUN' | 'LIVE';
+  daily_call_target: number;
+  daily_apply_target: number;
+  daily_outreach_target: number;
+  enabled_platforms: string[];
+  started_at?: string;
+  last_cycle_at?: string;
+  last_cycle_summary: string;
+  updated_at: string;
+}
+
+export interface EngineReadiness {
+  profile_ready: boolean;
+  whitelist_ready: boolean;
+  auth_ready: boolean;
+  overall_ready: boolean;
+  missing_steps: string[];
+  profile: CandidateProfile;
+  platforms: PlatformAuthRequirement[];
+  engine: EngineState;
+}

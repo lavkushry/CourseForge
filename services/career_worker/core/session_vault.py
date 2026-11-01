@@ -1,11 +1,19 @@
 import json
 import logging
+import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("CareerWorker.SessionVault")
 
 class SessionVault:
+    @staticmethod
+    def user_cookie_path(base_dir: Path, user_id: str, platform: str) -> Path:
+        """Returns an isolated per-user, per-platform session cookie file path."""
+        safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", user_id or "default")
+        safe_platform = re.sub(r"[^a-zA-Z0-9_\-]", "_", platform or "naukri")
+        return base_dir / safe_user / f"{safe_platform}_cookies.json"
+
     @staticmethod
     def load_cookies(cookie_path: Path) -> List[Dict[str, Any]]:
         """Loads session cookies from disk."""
@@ -15,6 +23,8 @@ class SessionVault:
         try:
             with open(cookie_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                if isinstance(data, dict) and "cookies" in data and isinstance(data["cookies"], list):
+                    return data["cookies"]
                 return data if isinstance(data, list) else []
         except Exception as e:
             logger.error(f"Error loading cookies from {cookie_path}: {e}")

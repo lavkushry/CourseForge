@@ -152,8 +152,9 @@ type JobFilter struct {
 }
 
 type WorkerBumpRequest struct {
-	UserID string `json:"user_id"`
-	DryRun bool   `json:"dry_run"`
+	UserID  string            `json:"user_id"`
+	DryRun  bool              `json:"dry_run"`
+	Profile *CandidateProfile `json:"profile,omitempty"`
 }
 
 type WorkerBumpResponse struct {
@@ -162,9 +163,10 @@ type WorkerBumpResponse struct {
 }
 
 type WorkerApplyRequest struct {
-	UserID string `json:"user_id"`
-	Block  int    `json:"block"`
-	DryRun bool   `json:"dry_run"`
+	UserID  string            `json:"user_id"`
+	Block   int               `json:"block"`
+	DryRun  bool              `json:"dry_run"`
+	Profile *CandidateProfile `json:"profile,omitempty"`
 }
 
 type WorkerApplyResponse struct {
@@ -175,9 +177,10 @@ type WorkerApplyResponse struct {
 }
 
 type WorkerOutreachRequest struct {
-	UserID string `json:"user_id"`
-	Count  int    `json:"count"`
-	DryRun bool   `json:"dry_run"`
+	UserID  string            `json:"user_id"`
+	Count   int               `json:"count"`
+	DryRun  bool              `json:"dry_run"`
+	Profile *CandidateProfile `json:"profile,omitempty"`
 }
 
 type WorkerOutreachResponse struct {
@@ -198,4 +201,83 @@ type CareerWorkerClient interface {
 	TriggerApply(ctx context.Context, req WorkerApplyRequest) (*WorkerApplyResponse, error)
 	TriggerOutreach(ctx context.Context, req WorkerOutreachRequest) (*WorkerOutreachResponse, error)
 	GetWorkerHealth(ctx context.Context) (*WorkerHealthResponse, error)
+}
+
+// CandidateProfile represents a user's ground-truth career profile extracted from their resume.
+type CandidateProfile struct {
+	UserID                  string            `json:"user_id"`
+	FullName                string            `json:"full_name"`
+	Email                   string            `json:"email"`
+	Phone                   string            `json:"phone"`
+	LinkedInURL             string            `json:"linkedin_url"`
+	GitHubURL               string            `json:"github_url"`
+	PrimaryTrackID          string            `json:"primary_track_id"`
+	TargetRole              string            `json:"target_role"`
+	SecondaryRoles          []string          `json:"secondary_roles"`
+	TotalYOE                float64           `json:"total_yoe"`
+	RelevantYOE             float64           `json:"relevant_yoe"`
+	CurrentCompany          string            `json:"current_company"`
+	PreviousCompany         string            `json:"previous_company"`
+	CurrentCTCLPA           float64           `json:"current_ctc_lpa"`
+	ExpectedCTCLPA          float64           `json:"expected_ctc_lpa"`
+	TargetCTCRange          string            `json:"target_ctc_range"`
+	NoticePeriodDays        int               `json:"notice_period_days"`
+	NoticePeriodStr         string            `json:"notice_period_str"`
+	PrimarySkills           []string          `json:"primary_skills"`
+	Tools                   []string          `json:"tools"`
+	PreferredLocations      []string          `json:"preferred_locations"`
+	WhitelistHeadlineTokens []string          `json:"whitelist_headline_tokens"`
+	ScreeningAnswers        map[string]string `json:"screening_answers"`
+	ResumeFilename          string            `json:"resume_filename"`
+	ResumeSHA256            string            `json:"resume_sha256"`
+	UpdatedAt               time.Time         `json:"updated_at"`
+}
+
+// PlatformAuthRequirement describes what auth is needed for each job portal and its current connection state.
+type PlatformAuthRequirement struct {
+	Platform          string     `json:"platform"`
+	DisplayName       string     `json:"display_name"`
+	RecommendedMethod string     `json:"recommended_method"`
+	RequiredFields    []string   `json:"required_fields"`
+	Instructions      string     `json:"instructions"`
+	UnlocksFeatures   []string   `json:"unlocks_features"`
+	Status            string     `json:"status"`
+	AuthMethod        string     `json:"auth_method"`
+	AccountIdentifier string     `json:"account_identifier"`
+	LastVerifiedAt    *time.Time `json:"last_verified_at,omitempty"`
+}
+
+// ConnectPlatformRequest is the payload to connect/authenticate a job platform.
+type ConnectPlatformRequest struct {
+	Platform          string `json:"platform"`
+	AuthMethod        string `json:"auth_method"`
+	AccountIdentifier string `json:"account_identifier"`
+	SecretPayload     string `json:"secret_payload"`
+}
+
+// EngineState represents the per-user autonomous execution state.
+type EngineState struct {
+	UserID              string     `json:"user_id"`
+	EngineStatus        string     `json:"engine_status"`
+	ExecutionMode       string     `json:"execution_mode"`
+	DailyCallTarget     int        `json:"daily_call_target"`
+	DailyApplyTarget    int        `json:"daily_apply_target"`
+	DailyOutreachTarget int        `json:"daily_outreach_target"`
+	EnabledPlatforms    []string   `json:"enabled_platforms"`
+	StartedAt           *time.Time `json:"started_at,omitempty"`
+	LastCycleAt         *time.Time `json:"last_cycle_at,omitempty"`
+	LastCycleSummary    string     `json:"last_cycle_summary"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+}
+
+// EngineReadiness aggregates the 3-step readiness status for starting the career engine.
+type EngineReadiness struct {
+	ProfileReady   bool                      `json:"profile_ready"`
+	WhitelistReady bool                      `json:"whitelist_ready"`
+	AuthReady      bool                      `json:"auth_ready"`
+	OverallReady   bool                      `json:"overall_ready"`
+	MissingSteps   []string                  `json:"missing_steps"`
+	Profile        CandidateProfile          `json:"profile"`
+	Platforms      []PlatformAuthRequirement `json:"platforms"`
+	Engine         EngineState               `json:"engine"`
 }
