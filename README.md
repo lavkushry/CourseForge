@@ -1,4 +1,45 @@
-# CourseForge Academy
+# CourseForge
+
+**Turn your own course videos into a searchable, AI-powered learning studio — self-hosted, with local AI.**
+
+CourseForge indexes lectures you already own, transcribes them locally, and lets you search inside them, ask an AI tutor that cites the exact timestamp, take quizzes, run graded hands-on labs, and plan your career — without sending your library to anyone's cloud.
+
+[![CI](https://github.com/lavkushry/CourseForge/actions/workflows/ci.yml/badge.svg)](https://github.com/lavkushry/CourseForge/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/lavkushry/CourseForge?style=flat)](https://github.com/lavkushry/CourseForge/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[Quickstart](#quickstart) · [Install guide](#install--first-run) · [Repository structure](#repository-structure) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
+
+![The CourseForge Learning Studio playing a demonstration course, with curriculum, transcript search and lesson tools](docs/images/learning-studio.png)
+
+## Why CourseForge?
+
+- 🔎 **Search inside your lectures** — transcripts (Faster-Whisper) and semantic search (Qdrant) link every answer back to the exact video timestamp
+- 🤖 **Local AI tutor** — Ollama models on your machine; no API keys, no subscriptions, no uploads
+- 🧪 **Graded hands-on labs** — sandboxed Docker grading for Python, SQL, shell, Kubernetes and more, not just videos
+- 🎯 **Career Studio** — resume tailoring, job-description matching, and application tracking, isolated per user
+- 🏫 **Academy hosting** — authenticated accounts, invitations, enrollments, admin reports and audit logs for teaching others
+- 📱 **Built to finish courses** — mobile-first player, streaks, focus timer, spaced repetition and adaptive practice
+
+## Quickstart
+
+You need Python 3.12, FFmpeg, Tesseract, Docker and Ollama — see [Requirements](#requirements) for details.
+
+```bash
+git clone https://github.com/lavkushry/CourseForge.git
+cd CourseForge
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # point COURSES_DIR at your course folder
+docker compose up -d        # Qdrant
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, start the processing worker with `python -m app.worker`, then open **http://127.0.0.1:8000** and click **Scan Library**. The full walkthrough, including model downloads, is in the [Install guide](#install--first-run).
+
+⭐ **If CourseForge is useful to you, a star helps other self-hosters and learners find it.**
+
+## Academy hosting
 
 **Organize your course library, learn with source-linked AI tools, and manage student access and progress.** Authenticated accounts protect private notes, study plans, assessments and labs. Published courses support free enrollment. Administrators can inspect learning and access reports, suspend accounts and manage course publication.
 
@@ -325,10 +366,10 @@ The automated test suite mocks ML model inference and vector DB calls to remain 
 
 ## Privacy and limitations
 
-- Keep FastAPI, Qdrant and Ollama bound to loopback. No user authentication is implemented; do not open the UI to the internet. Qdrant is loopback-bound in `compose.yaml`.
+- Keep Qdrant and Ollama bound to loopback; Qdrant is loopback-bound in `compose.yaml`. The local lecture-processing pipeline is designed for a trusted local machine. The Academy app (`app/`) does provide authenticated accounts, invitations and admin roles — before exposing any deployment beyond your own machine, follow [Academy deployment](docs/ACADEMY_DEPLOYMENT.md) and put appropriate access controls in front of it.
 - Source videos may include secrets, names, personal information or copyrighted course material. Only use recordings you are entitled to process. Protect `DATA_DIR`, Qdrant's Docker volume and local model data.
 - Screenshots are sampled, **not** analyzed frame-by-frame. Slides that appear between samples may be missed. Model explanations and OCR are fallible; check exact code and diagrams in the original lecture.
-- The UI is single-user. It is not equipped with permissions, concurrent processing workers, autoscaling or distributed locks.
+- The local processing pipeline runs as a single instance. It is not equipped with distributed locks, autoscaling or concurrent processing workers; learner and career data isolation is per authenticated user, as described in the Academy and Career Studio sections.
 - Video formats like MKV might index correctly but may not play natively in a browser without a separate H.264 MP4 copy.
 - Flashcard quality uses self-assessment. No AI grading of free-text answers is implemented.
 - Curated Python/shell/Kubernetes labs are verified; arbitrary tutor-generated terminal commands are **never executed**.
@@ -370,7 +411,7 @@ There are eight pre-reviewed exercises. SQL runs fixture-based SELECT queries in
 
 Build the standard image and separate PySpark image as shown above. Configure `LAB_IMAGE` and `LAB_SPARK_IMAGE` if necessary. PySpark grading has 2 GiB/2 CPU limits and 120-second timeout, and all labs prohibit networking, extra capabilities, privilege escalation and writable workspace bind mounts. The UI shows type/level and filters by subject.
 
-**Safety limit:** The grader containers share the local host kernel. They are not hardened isolation for untrusted remote users. Do not expose this single-user FastAPI instance to the public internet. No generated command runs outside the reviewed lab templates. See [`docs/P1_LAB_TRACKS.md`](docs/P1_LAB_TRACKS.md) for grading contracts, fixtures, and real-device smoke tests.
+**Safety limit:** The grader containers share the local host kernel. They are not hardened isolation for untrusted remote users. Do not expose a locally run FastAPI instance to the public internet without access controls in front of it. No generated command runs outside the reviewed lab templates. See [`docs/P1_LAB_TRACKS.md`](docs/P1_LAB_TRACKS.md) for grading contracts, fixtures, and real-device smoke tests.
 
 ## Adaptive practice — P1 Step 6
 
