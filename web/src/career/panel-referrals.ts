@@ -39,6 +39,7 @@ export function renderReferrals(host: CareerStudioHost): HTMLElement {
   panel.append(form);
 
   const list = el('div', 'career-fact-list');
+  if (!host.contacts.length) list.append(el('p', 'career-empty-state', 'No contacts yet. Add one above or import contacts below.'));
   for (const c of host.contacts) {
     const row = el('div', 'career-fact-card');
     row.append(
