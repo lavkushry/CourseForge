@@ -71,7 +71,7 @@ export function renderAlerts(host: CareerStudioHost): HTMLElement {
 
   const list = el('div', 'career-alert-list');
   if (!host.alertSources.length) {
-    list.append(el('p', 'muted', 'No boards registered yet.'));
+    list.append(el('p', 'career-empty-state', 'No boards registered yet. Watch a board above to get apply-early alerts.'));
   }
   for (const src of host.alertSources) {
     const card = el('div', 'career-fact-card');
@@ -104,7 +104,7 @@ export function renderAlerts(host: CareerStudioHost): HTMLElement {
 
   const notifs = el('div', 'career-alert-list');
   if (!host.notifications.length) {
-    notifs.append(el('p', 'muted', 'No openings matched yet.'));
+    notifs.append(el('p', 'career-empty-state', 'No openings matched yet. New matches will appear here.'));
   }
   for (const n of host.notifications) {
     const card = el('div', `career-fact-card${n.read_at ? '' : ' career-notif-unread'}`);

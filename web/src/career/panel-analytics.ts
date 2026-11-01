@@ -14,7 +14,7 @@ export function renderAnalytics(host: CareerStudioHost): HTMLElement {
     ),
   );
   if (!host.analytics) {
-    panel.append(el('p', 'muted', 'No analytics yet.'));
+    panel.append(el('p', 'career-empty-state', 'No analytics yet. Track applications to see callback and interview rates.'));
     return panel;
   }
   const a = host.analytics;
@@ -32,7 +32,7 @@ export function renderAnalytics(host: CareerStudioHost): HTMLElement {
   for (const [title, groups] of sections) {
     panel.append(el('h3', '', title));
     if (!groups.length) {
-      panel.append(el('p', 'muted', 'No data'));
+      panel.append(el('p', 'career-empty-state', 'No data yet for this breakdown.'));
       continue;
     }
     for (const g of groups) {

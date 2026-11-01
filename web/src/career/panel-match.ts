@@ -29,9 +29,12 @@ export function renderMatch(host: CareerStudioHost): HTMLElement {
   });
   panel.append(pasteForm);
 
+  if (!host.match) {
+    panel.append(el('p', 'career-empty-state', 'No match scored yet. Select a track and company, or paste a JD above.'));
+  }
   if (host.match) {
     const result = el('div', 'career-match-result');
-    result.append(el('h3', '', `Match score: ${host.match.score}%`));
+    result.append(el('h3', '', `Match score: ${Math.round(host.match.score)}%`));
     result.append(el('p', 'muted', `Source: ${host.match.extraction_source}`));
 
     const matched = el('div', 'career-chip-row');
