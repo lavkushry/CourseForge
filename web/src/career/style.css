@@ -1167,3 +1167,22 @@
 .career-bridge-link:hover {
   background: rgba(56, 189, 248, 0.18);
 }
+
+
+/* Universal Tabular Numerals and Polish for All Studio Panels */
+.career-studio-container table td,
+.career-studio-container .stat-value,
+.career-studio-container .rate-stats,
+.career-studio-container .match-score,
+.career-studio-container .score-badge,
+.career-studio-container .ci-bounds,
+.career-studio-container .career-metric-val,
+.career-studio-container .career-pacing-stat,
+.career-studio-container .lead-metric,
+.career-studio-container .token-score,
+.career-studio-container .wilson-score,
+.career-studio-container .analytics-value,
+.career-studio-container .tracker-counter,
+.career-studio-container .badge-count {
+  font-variant-numeric: tabular-nums;
+}
