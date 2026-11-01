@@ -293,14 +293,14 @@ func (s *Service) ParseResumeIntoProfile(ctx context.Context, userID, filename s
 
 	bestTrack := "backend"
 	bestTitle := "Software Engineer"
-	bestScore := -1
+	bestScore := 0
 	var matchedSignalTokens []string
 
 	for _, clf := range roleTrackClassifiers {
 		score := 0
 		var hits []string
 		for _, sig := range clf.Signals {
-			if strings.Contains(lowerText, sig) {
+			if containsPhrase(lowerText, sig) {
 				score += 2
 				hits = append(hits, formatTokenLabel(sig))
 			}
