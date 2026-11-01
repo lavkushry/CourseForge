@@ -1,4 +1,4 @@
-import time
+import hashlib
 import logging
 from typing import Dict, Any, List
 from datetime import datetime, timezone
@@ -46,10 +46,13 @@ class SimulationAdapter(BasePlatformAdapter):
             ("Accenture Solutions", f"{role_title}", "Bengaluru", 87.0)
         ]
 
+        platform_key = hashlib.sha256(
+            f"{self.platform}|{query.strip().lower() if query else ''}".encode("utf-8")
+        ).hexdigest()[:10]
         count = min(limit, len(companies))
         for i in range(count):
             comp, title, loc, score = companies[i]
-            job_id = f"sim_{int(time.time())}_{i+1}"
+            job_id = f"sim_{platform_key}_{i+1}"
             results.append({
                 "job_id": job_id,
                 "platform": self.platform,
