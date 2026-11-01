@@ -1,17 +1,58 @@
 import { svgIcon } from '../icons';
-import { ApiClient, errorMessage } from '../api';
+import { ApiClient, errorMessage, isAbort } from '../api';
+import { CareerApi } from './api';
+import { emptyResumeDraft } from './contracts';
 import './style.css';
 import type {
-  BoostStatus,
-  DailyPacing,
-  PlanTodayResponse,
-  RecruiterLead,
+  AlertSource,
+  AnalyticsReport,
+  Application,
   AppliedJob,
+  BoostStatus,
   BottleneckAlert,
   CandidateProfile,
-  PlatformAuthRequirement,
+  CareerNotification,
+  Company,
+  ConfirmedFact,
+  CSVImportReport,
+  DailyPacing,
   EngineReadiness,
+  HiringProfile,
+  MatchResult,
+  PlanTodayResponse,
+  PlatformAuthRequirement,
+  RecruiterLead,
+  ReferralContact,
+  ReferralDraft,
+  ResumeDocument,
+  ResumeVersion,
+  RoleTrack,
+  TemplateInfo,
 } from './contracts';
+import { renderAlerts } from './panel-alerts';
+import { renderAnalytics } from './panel-analytics';
+import { renderCompanies } from './panel-companies';
+import { renderFacts } from './panel-facts';
+import { renderMatch } from './panel-match';
+import { renderReferrals } from './panel-referrals';
+import { renderResumeStudio } from './panel-resume';
+import { renderTracker } from './panel-tracker';
+import { renderTracks } from './panel-tracks';
+import type { CareerStudioHost, CareerViewOptions } from './view-host';
+
+export type { CareerViewOptions } from './view-host';
+
+type StudioTab =
+  | 'story'
+  | 'resume'
+  | 'match'
+  | 'companies'
+  | 'tracks'
+  | 'tracker'
+  | 'referrals'
+  | 'analytics'
+  | 'alerts'
+  | 'all';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -20,22 +61,17 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text 
   return node;
 }
 
-export interface CareerViewOptions {
-  root: HTMLElement;
-  api: ApiClient;
-  feedback?: (message: string, error?: boolean) => void;
-  onNavigatePlan?: () => void;
-}
-
-export class CareerView {
+export class CareerView implements CareerStudioHost {
+  readonly career: CareerApi;
   private activeTab: 'goal' | 'plan' | 'boost' | 'ledger' = 'goal';
+  private activeStudioView: StudioTab | null = null;
   private loading = false;
   private actionInProgress = false;
   private bannerMessage: string | null = null;
   private checkedTasks = new Set<string>();
   private abortController: AbortController | null = null;
 
-  // Cached Domain State
+  // Cached Autonomous Engine Domain State
   private boostStatus: BoostStatus | null = null;
   private pacing: DailyPacing | null = null;
   private planToday: PlanTodayResponse | null = null;
@@ -45,59 +81,244 @@ export class CareerView {
   private readiness: EngineReadiness | null = null;
   private setupPanelOpen = false;
   private resumePasteDraft = '';
+  private ledgerSearch = '';
+  private ledgerPlatformFilter = '';
 
-  constructor(private readonly options: CareerViewOptions) {}
+  // CareerStudioHost State (9 Studio Panels)
+  tracks: RoleTrack[] = [];
+  companies: Company[] = [];
+  facts: ConfirmedFact[] = [];
+  applications: Application[] = [];
+  templates: TemplateInfo[] = [];
+  versions: ResumeVersion[] = [];
+  contacts: ReferralContact[] = [];
+  analytics: AnalyticsReport | null = null;
+  appImportReport: CSVImportReport | null = null;
+  contactImportReport: CSVImportReport | null = null;
+  referralMatches: ReferralContact[] = [];
+  referralDraft: ReferralDraft | null = null;
+  alertSources: AlertSource[] = [];
+  notifications: CareerNotification[] = [];
+  selectedTrackId = '';
+  selectedCompanyId = '';
+  selectedAppId = '';
+  selectedTemplateId = 'ats_classic';
+  draft: ResumeDocument = emptyResumeDraft();
+  targetSkillsRaw = '';
+  profile: HiringProfile | null = null;
+  match: MatchResult | null = null;
+  latestVersion: ResumeVersion | null = null;
+  signal: AbortSignal | null = null;
+  busy = false;
 
-  activate(_signal?: AbortSignal): void {
+  constructor(readonly options: CareerViewOptions) {
+    this.career = new CareerApi(options.api);
+    this.loadCheckedTasks();
+  }
+
+  private get userStoragePrefix(): string {
+    const uid = this.options.account?.id || this.readiness?.profile?.user_id || 'user';
+    const day = new Date().toISOString().slice(0, 10);
+    return `courseforge_career_tasks_${uid}_${day}`;
+  }
+
+  private loadCheckedTasks(): void {
+    try {
+      const raw = localStorage.getItem(this.userStoragePrefix);
+      if (raw) {
+        const arr = JSON.parse(raw) as string[];
+        if (Array.isArray(arr)) {
+          this.checkedTasks = new Set(arr);
+        }
+      }
+    } catch {
+      this.checkedTasks = new Set();
+    }
+  }
+
+  private saveCheckedTasks(): void {
+    try {
+      localStorage.setItem(this.userStoragePrefix, JSON.stringify([...this.checkedTasks]));
+    } catch {}
+  }
+
+  activate(signal?: AbortSignal): void {
     this.options.root.hidden = false;
+    this.signal = signal ?? null;
     void this.init();
   }
 
   async init(): Promise<void> {
     this.abortController?.abort();
     this.abortController = new AbortController();
+    this.signal = this.abortController.signal;
     await this.refreshAll();
   }
 
   deactivate(): void {
     this.abortController?.abort();
     this.abortController = null;
-    this.actionInProgress = false;
-    this.bannerMessage = null;
+    this.signal = null;
     this.options.root.hidden = true;
-    this.options.root.innerHTML = '';
+    this.options.root.replaceChildren();
   }
 
-  setTab(tab: 'goal' | 'plan' | 'boost' | 'ledger'): void {
+  private notify(msg: string, isError = false): void {
+    this.bannerMessage = msg;
+    if (this.options.feedback) {
+      this.options.feedback(msg, isError);
+    }
+    this.render();
+  }
+
+  private setTab(tab: 'goal' | 'plan' | 'boost' | 'ledger'): void {
+    this.activeStudioView = null;
     this.activeTab = tab;
     this.render();
   }
 
-  async refreshAll(): Promise<void> {
+  private setStudioView(view: StudioTab): void {
+    this.activeStudioView = view;
+    this.render();
+  }
+
+  async reload(): Promise<void> {
+    await this.refreshAll();
+  }
+
+  async loadSelectedApplication(): Promise<void> {
+    const app = this.applications.find(a => a.id === this.selectedAppId);
+    if (!app) {
+      const candidateName = this.readiness?.profile?.full_name || this.options.account?.name || '';
+      const candidateEmail = this.readiness?.profile?.email || this.options.account?.email || '';
+      const roleTitle =
+        this.tracks.find(t => t.id === this.selectedTrackId)?.title ||
+        this.readiness?.profile?.target_role ||
+        '';
+      this.draft = {
+        ...emptyResumeDraft(roleTitle),
+        full_name: candidateName,
+        email: candidateEmail,
+        phone: this.readiness?.profile?.phone || '',
+        location: this.readiness?.profile?.preferred_locations?.[0] || 'Bengaluru',
+        skills: [...(this.readiness?.profile?.primary_skills || [])],
+      };
+      this.targetSkillsRaw = (this.readiness?.profile?.primary_skills || []).join(', ');
+      this.versions = [];
+      this.latestVersion = null;
+      return;
+    }
+    this.draft = {
+      ...emptyResumeDraft(),
+      ...app.resume_draft,
+      skills: [...app.resume_draft.skills],
+      experience: [...app.resume_draft.experience],
+      education: [...app.resume_draft.education],
+    };
+    this.targetSkillsRaw = app.target_skills.join(', ');
+    if (!this.draft.title) this.draft.title = app.title;
+    try {
+      const versions = await this.career.versions(app.id, this.signal ?? undefined);
+      this.versions = versions.versions;
+      this.latestVersion = this.versions[0] ?? null;
+    } catch {
+      this.versions = [];
+      this.latestVersion = null;
+    }
+  }
+
+  private async refreshAll(): Promise<void> {
     this.loading = true;
     this.render();
 
+    const sig = this.abortController?.signal;
     try {
-      const [boostRes, pacingRes, planRes, leadsRes, jobsRes, readinessRes] = await Promise.allSettled([
-        this.options.api.request<BoostStatus>('/career/boost/status'),
-        this.options.api.request<DailyPacing>('/career/goal/pacing'),
-        this.options.api.request<PlanTodayResponse>('/career/plan/today'),
-        this.options.api.request<{ leads: RecruiterLead[] }>('/career/goal/leads'),
-        this.options.api.request<{ jobs: AppliedJob[]; total: number }>('/career/jobs?limit=50'),
-        this.options.api.request<EngineReadiness>('/career/engine/readiness'),
+      const [
+        pacingRes,
+        boostRes,
+        planRes,
+        leadsRes,
+        jobsRes,
+        readinessRes,
+        tracksRes,
+        companiesRes,
+        factsRes,
+        appsRes,
+        templatesRes,
+        contactsRes,
+        analyticsRes,
+        sourcesRes,
+        notifsRes,
+      ] = await Promise.allSettled([
+        this.options.api.request<DailyPacing>('/career/goal/pacing', sig ? { signal: sig } : {}),
+        this.options.api.request<BoostStatus>('/career/boost/status', sig ? { signal: sig } : {}),
+        this.options.api.request<PlanTodayResponse>('/career/plan/today', sig ? { signal: sig } : {}),
+        this.options.api.request<{ leads: RecruiterLead[] }>('/career/goal/leads', sig ? { signal: sig } : {}),
+        this.options.api.request<{ jobs: AppliedJob[]; total: number }>(
+          '/career/jobs?limit=50',
+          sig ? { signal: sig } : {},
+        ),
+        this.options.api.request<EngineReadiness>('/career/engine/readiness', sig ? { signal: sig } : {}),
+        this.career.roleTracks(sig),
+        this.career.companies(sig),
+        this.career.facts(sig),
+        this.career.applications(sig),
+        this.career.templates(sig),
+        this.career.contacts(sig),
+        this.career.analytics(sig),
+        this.career.alertSources(sig),
+        this.career.notifications(false, sig),
       ]);
 
-      if (boostRes.status === 'fulfilled') this.boostStatus = boostRes.value;
       if (pacingRes.status === 'fulfilled') this.pacing = pacingRes.value;
+      if (boostRes.status === 'fulfilled') this.boostStatus = boostRes.value;
       if (planRes.status === 'fulfilled') this.planToday = planRes.value;
       if (leadsRes.status === 'fulfilled') this.leads = leadsRes.value.leads || [];
       if (jobsRes.status === 'fulfilled') {
         this.jobs = jobsRes.value.jobs || [];
-        this.jobsTotal = jobsRes.value.total || 0;
+        this.jobsTotal = jobsRes.value.total || this.jobs.length;
       }
-      if (readinessRes.status === 'fulfilled') this.readiness = readinessRes.value;
-    } catch (e) {
-      console.error('Error fetching career data', e);
+      if (readinessRes.status === 'fulfilled') {
+        this.readiness = readinessRes.value;
+      }
+
+      if (tracksRes.status === 'fulfilled') this.tracks = tracksRes.value.tracks || [];
+      if (companiesRes.status === 'fulfilled') this.companies = companiesRes.value.companies || [];
+      if (factsRes.status === 'fulfilled') this.facts = factsRes.value.facts || [];
+      if (appsRes.status === 'fulfilled') this.applications = appsRes.value.applications || [];
+      if (templatesRes.status === 'fulfilled') this.templates = templatesRes.value.templates || [];
+      if (contactsRes.status === 'fulfilled') this.contacts = contactsRes.value.contacts || [];
+      if (analyticsRes.status === 'fulfilled') this.analytics = analyticsRes.value;
+      if (sourcesRes.status === 'fulfilled') this.alertSources = sourcesRes.value.sources || [];
+      if (notifsRes.status === 'fulfilled') this.notifications = notifsRes.value.notifications || [];
+
+      if (!this.selectedTrackId) {
+        this.selectedTrackId = this.readiness?.profile?.primary_track_id || this.tracks[0]?.id || 'backend';
+      }
+      if (!this.selectedCompanyId && this.companies[0]) {
+        this.selectedCompanyId = this.companies[0].id;
+      }
+      if (!this.selectedAppId && this.applications[0]) {
+        this.selectedAppId = this.applications[0].id;
+      }
+      if (!this.selectedTemplateId && this.templates[0]) {
+        this.selectedTemplateId = this.templates[0].id;
+      }
+      if (this.selectedCompanyId) {
+        try {
+          this.profile = await this.career.hiringProfile(this.selectedCompanyId, sig);
+        } catch {
+          this.profile = null;
+        }
+      } else {
+        this.profile = null;
+      }
+      await this.loadSelectedApplication();
+      this.loadCheckedTasks();
+    } catch (err) {
+      if (!isAbort(err)) {
+        this.notify(errorMessage(err), true);
+      }
     } finally {
       this.loading = false;
       this.render();
@@ -107,616 +328,91 @@ export class CareerView {
   private async triggerBump(): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = 'Executing Resdex Profile Bump…';
-    this.render();
+    this.notify('Executing Resdex profile freshness bump...');
 
     try {
       const res = await this.options.api.request<{ success: boolean; message: string }>('/career/boost/bump', {
         method: 'POST',
-        body: { dry_run: false },
+        body: { dry_run: true },
       });
-      this.bannerMessage = res.message || 'Resdex profile bump successfully completed.';
+      this.notify(res.message || 'Resdex profile bumped to Active Today!');
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Bump execution notice: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Bump failed: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
-  private async executeBlock(blockId: number): Promise<void> {
+  private async executeBlock(blockId: 1 | 2 | 3): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = `Executing Block ${blockId} routine…`;
-    this.render();
+    this.notify(`Running Daily Routine Block ${blockId}...`);
 
     try {
-      const res = await this.options.api.request<{ message: string; tasks_completed: string[] }>('/career/plan/execute-block', {
-        method: 'POST',
-        body: { block: blockId, dry_run: false },
-      });
-      this.bannerMessage = res.message || `Block ${blockId} executed successfully!`;
+      const res = await this.options.api.request<{ message: string; tasks_completed: string[] }>(
+        '/career/plan/execute-block',
+        {
+          method: 'POST',
+          body: { block: blockId, dry_run: true },
+        },
+      );
+      this.notify(`${res.message} (${(res.tasks_completed || []).join(', ')})`);
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Block execution error: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Block ${blockId} execution failed: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
-    }
-  }
-
-  private async updateLeadStatus(leadId: string, status: string): Promise<void> {
-    try {
-      await this.options.api.request(`/career/goal/leads/${leadId}/status`, {
-        method: 'PUT',
-        body: { status },
-      });
-      this.bannerMessage = `Updated recruiter lead status to: ${status}`;
-      await this.refreshAll();
-    } catch (err) {
-      this.bannerMessage = `Failed to update lead: ${errorMessage(err)}`;
       this.render();
     }
   }
 
-  private async createLead(lead: Partial<RecruiterLead>): Promise<void> {
+  private async updateLeadStatus(leadId: string, newStatus: string): Promise<void> {
+    try {
+      await this.options.api.request(`/career/goal/leads/${encodeURIComponent(leadId)}/status`, {
+        method: 'PUT',
+        body: { status: newStatus },
+      });
+      this.notify(`Updated lead status to ${newStatus}`);
+      await this.refreshAll();
+    } catch (err) {
+      this.notify(`Failed to update lead: ${errorMessage(err)}`, true);
+    }
+  }
+
+  private async createLead(recruiterName: string, company: string, targetRole: string, platform: string): Promise<void> {
+    if (!recruiterName.trim() || !company.trim()) {
+      this.notify('Recruiter name and company are required.', true);
+      return;
+    }
+    this.actionInProgress = true;
     try {
       await this.options.api.request('/career/goal/leads', {
         method: 'POST',
-        body: lead,
+        body: {
+          recruiter_name: recruiterName.trim(),
+          company: company.trim(),
+          target_role: targetRole.trim() || this.readiness?.profile?.target_role || 'Software Engineer',
+          platform: platform || 'LinkedIn',
+        },
       });
-      this.bannerMessage = `Added recruiter lead for ${lead.recruiter_name} at ${lead.company}`;
+      this.notify(`Added ${recruiterName.trim()} (${company.trim()}) to your personal Recruiter CRM.`);
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Failed to save lead: ${errorMessage(err)}`;
+      this.notify(`Failed to add lead: ${errorMessage(err)}`, true);
+    } finally {
+      this.actionInProgress = false;
       this.render();
     }
-  }
-
-  render(): void {
-    const root = this.options.root;
-    root.innerHTML = '';
-
-    const container = el('div', 'career-studio-view');
-
-    // 1. Header Area
-    const prof = this.readiness?.profile;
-    const eng = this.readiness?.engine;
-    const roleLabel = prof?.target_role || 'AZURE DATA ENGINEER';
-    const ctcLabel = prof?.target_ctc_range || '₹25 LPA';
-    const yoeLabel = prof ? `${prof.total_yoe} YOE` : '2.5 YOE';
-    const engineRunning = eng?.engine_status === 'RUNNING';
-
-    const header = el('div', 'career-header');
-    const titleArea = el('div', 'career-title-area');
-    const h2 = el('h2', '', 'CourseForge Career Studio');
-    const badge = el(
-      'span',
-      'career-engine-badge',
-      `UNIVERSAL AI CAREER ENGINE · ROLE: ${roleLabel.toUpperCase()} (${yoeLabel}) · TARGET: ${ctcLabel} · 5-CALLS/DAY PACING`
-    );
-    titleArea.append(h2, badge);
-
-    const topActions = el('div', 'career-top-actions');
-
-    const setupToggleBtn = el(
-      'button',
-      `button ${this.setupPanelOpen ? 'primary' : 'quiet'}`,
-      this.setupPanelOpen ? '✓ Close Setup & Auth' : '⚙️ Upload Resume & Auth Setup'
-    );
-    setupToggleBtn.type = 'button';
-    setupToggleBtn.addEventListener('click', () => {
-      this.setupPanelOpen = !this.setupPanelOpen;
-      this.render();
-    });
-
-    const startEngineBtn = el(
-      'button',
-      `button ${engineRunning ? 'quiet' : 'primary'}`,
-      engineRunning ? '⏸ Pause Process' : '🚀 Start Career Process'
-    );
-    startEngineBtn.type = 'button';
-    startEngineBtn.disabled = this.actionInProgress;
-    startEngineBtn.addEventListener('click', () => {
-      if (engineRunning) {
-        void this.pauseEngine();
-      } else {
-        void this.startEngine(eng?.execution_mode || 'DRY_RUN');
-      }
-    });
-
-    const bumpBtn = el('button', 'button primary', this.actionInProgress ? 'Executing…' : 'Run Resdex Bump Now');
-    bumpBtn.type = 'button';
-    bumpBtn.disabled = this.actionInProgress;
-    bumpBtn.addEventListener('click', () => { void this.triggerBump(); });
-
-    const exportBtn = el('a', 'button quiet', 'Export Tracker CSV');
-    exportBtn.setAttribute('href', '/api/v1/career/export.csv');
-    exportBtn.setAttribute('download', 'courseforge_career_applied_jobs.csv');
-
-    topActions.append(setupToggleBtn, startEngineBtn, bumpBtn, exportBtn);
-    header.append(titleArea, topActions);
-    container.append(header);
-
-    // 1b. Universal Profile & Pre-Flight Readiness Summary Strip
-    container.append(this.renderReadinessStrip());
-
-    // 1c. Collapsible Universal Setup Studio (Resume Upload -> Platform Auth -> Launch)
-    if (this.setupPanelOpen) {
-      container.append(this.renderSetupStudio());
-    }
-
-    // 2. Banner Toast (if active)
-    if (this.bannerMessage) {
-      const toast = el('div', 'career-banner-toast');
-      toast.append(el('span', '', this.bannerMessage));
-      const dismiss = el('button', 'button quiet', '✕');
-      dismiss.addEventListener('click', () => {
-        this.bannerMessage = null;
-        this.render();
-      });
-      toast.append(dismiss);
-      container.append(toast);
-    }
-
-    // 3. Navigation Tabs Bar
-    const tabsBar = el('div', 'career-tabs-bar');
-    const tabs: Array<{ id: 'goal' | 'plan' | 'boost' | 'ledger'; label: string; icon: string }> = [
-      { id: 'goal', label: 'Goal & Pacing (5 Calls)', icon: 'target' },
-      { id: 'plan', label: 'Daily Sprints (3 Blocks)', icon: 'calendar' },
-      { id: 'boost', label: 'Profile SEO & Boost', icon: 'zap' },
-      { id: 'ledger', label: `Application Ledger (${this.jobsTotal})`, icon: 'file' },
-    ];
-
-    for (const t of tabs) {
-      const tabBtn = el('button', `career-tab-btn ${this.activeTab === t.id ? 'active' : ''}`);
-      tabBtn.type = 'button';
-      tabBtn.append(svgIcon(t.icon as any), el('span', '', t.label));
-      tabBtn.addEventListener('click', () => {
-        this.activeTab = t.id;
-        this.render();
-      });
-      tabsBar.append(tabBtn);
-    }
-    container.append(tabsBar);
-
-    // 4. Tab Content Area
-    if (this.loading && !this.pacing && !this.boostStatus) {
-      const loader = el('div', 'muted', 'Synchronizing live career metrics and bandit state…');
-      container.append(loader);
-    } else {
-      switch (this.activeTab) {
-        case 'goal':
-          container.append(this.renderGoalView());
-          break;
-        case 'plan':
-          container.append(this.renderPlanView());
-          break;
-        case 'boost':
-          container.append(this.renderBoostView());
-          break;
-        case 'ledger':
-          container.append(this.renderLedgerView());
-          break;
-      }
-    }
-
-    root.append(container);
-  }
-
-  // ----------------- Sub-View 1: Goal & Pacing -----------------
-  private renderGoalView(): HTMLElement {
-    const wrapper = el('div', 'career-goal-wrapper');
-
-    // Quotas row
-    const quotasGrid = el('div', 'quota-stats-grid');
-    const calls = this.pacing?.calls_scheduled_count || 0;
-    const apps = this.pacing?.applications_count || 0;
-    const outreach = this.pacing?.outreaches_count || 0;
-    const appearances = this.pacing?.search_appearances || 0;
-
-    const stats = [
-      { label: 'Scheduled Calls Today', current: calls, target: '/ 5.0 target', color: '#38bdf8' },
-      { label: 'Applications Sent', current: apps, target: '/ 35 target', color: '#34d399' },
-      { label: 'Recruiter Outbounds', current: outreach, target: '/ 15 target', color: '#a78bfa' },
-      { label: 'Resdex Appearances', current: appearances, target: '/ 150 weekly', color: '#f59e0b' },
-    ];
-
-    for (const s of stats) {
-      const c = el('div', 'quota-stat-card');
-      c.append(el('h4', '', s.label));
-      const valRow = el('div', 'quota-val-row');
-      valRow.append(
-        el('span', 'quota-current', String(s.current)),
-        el('span', 'quota-target', s.target),
-      );
-      c.append(valRow);
-      quotasGrid.append(c);
-    }
-    wrapper.append(quotasGrid);
-
-    // Goal Grid (Radial Gauge + Bottlenecks)
-    const goalGrid = el('div', 'career-goal-grid');
-
-    // Radial Pacing Gauge
-    const radialCard = el('div', 'career-radial-card');
-    radialCard.append(el('h3', '', 'North Star Call Pacing'));
-    radialCard.append(el('p', 'muted', 'Daily velocity toward 5 screening calls'));
-
-    const gaugeBox = el('div', 'radial-gauge-container');
-    const radius = 65;
-    const circumference = 2 * Math.PI * radius; // ~408.4
-    const ratio = Math.min(1.0, calls / 5.0);
-    const offset = circumference * (1 - ratio);
-
-    gaugeBox.innerHTML = `
-      <svg class="radial-gauge-svg" viewBox="0 0 160 160">
-        <circle class="gauge-track" cx="80" cy="80" r="${radius}"></circle>
-        <circle class="gauge-fill" cx="80" cy="80" r="${radius}"
-          stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
-      </svg>
-      <div class="radial-gauge-content">
-        <span class="gauge-number">${calls}</span>
-        <span class="gauge-label">of 5 calls</span>
-      </div>
-    `;
-
-    const ratioPct = Math.round(ratio * 100);
-    const ratioText = el('p', 'muted', `Pacing at ${ratioPct}% of daily North Star target.`);
-    radialCard.append(gaugeBox, ratioText);
-    goalGrid.append(radialCard);
-
-    // Bottlenecks list
-    const bottlenecksCol = el('div', 'bottlenecks-col');
-    bottlenecksCol.append(el('h3', '', 'Active Bottleneck Diagnostics (6-Stage Engine)'));
-
-    const alerts = this.pacing?.active_bottlenecks || [];
-    if (alerts.length === 0) {
-      bottlenecksCol.append(el('p', 'muted', 'All funnel stages operating at target run-rate! Zero bottlenecks detected.'));
-    } else {
-      const list = el('div', 'bottlenecks-list');
-      for (const alert of alerts) {
-        const bCard = el('div', `bottleneck-card severity-${alert.severity}`);
-        const left = el('div', 'bottleneck-left');
-        left.append(
-          el('span', 'bottleneck-stage', `${alert.stage} · ${alert.severity}`),
-          el('span', 'bottleneck-desc', alert.description),
-          el('span', 'bottleneck-action', `Action: ${alert.action_required}`),
-        );
-        const actionBtn = el('button', 'button outline', 'Remediate');
-        actionBtn.type = 'button';
-        actionBtn.addEventListener('click', () => {
-          if (alert.code.includes('APPEARANCES') || alert.code.includes('CONTACT')) {
-            void this.triggerBump();
-          } else {
-            void this.executeBlock(1);
-          }
-        });
-        bCard.append(left, actionBtn);
-        list.append(bCard);
-      }
-      bottlenecksCol.append(list);
-    }
-    goalGrid.append(bottlenecksCol);
-    wrapper.append(goalGrid);
-
-    // Recruiter CRM Leads Table
-    const crmSection = el('div', 'career-crm-section');
-    crmSection.style.marginTop = '2rem';
-    
-    const crmHeaderRow = el('div', 'career-section-header-row');
-    crmHeaderRow.append(el('h3', '', 'Recruiter CRM Pipeline & Follow-Ups'));
-
-    const addLeadBtn = el('button', 'button quiet', '+ Quick Add Lead');
-    addLeadBtn.type = 'button';
-    addLeadBtn.addEventListener('click', () => {
-      const name = prompt('Recruiter Name:');
-      if (!name) return;
-      const comp = prompt('Company Name:') || 'Target Company';
-      void this.createLead({
-        recruiter_name: name,
-        company: comp,
-        target_role: 'Azure Data Engineer',
-        status: 'DRAFT_PENDING_MANUAL_SEND',
-        message_type: 'Direct InMail',
-        pitch_text: `Reaching out regarding Azure Data Engineer opportunities at ${comp}.`,
-        connection_note_300chars: `Hi ${name}, saw your Azure Data Engineering opening at ${comp}. 2.5 YOE with Databricks & PySpark Medallion Lakehouses, 15-day notice, ₹20-25 LPA target. Best, Lavkush`
-      });
-    });
-    crmHeaderRow.append(addLeadBtn);
-    crmSection.append(crmHeaderRow);
-
-    if (this.leads.length === 0) {
-      crmSection.append(el('p', 'muted', 'No recruiter contacts in CRM. Dispatched InMails and pitches will appear here.'));
-    } else {
-      const tableWrapper = el('div', 'career-table-wrapper');
-      const table = el('table', 'career-table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Recruiter</th>
-            <th>Company</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Follow-Up Due</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector('tbody')!;
-      for (const lead of this.leads) {
-        const tr = document.createElement('tr');
-        const isScheduled = lead.status === 'CALL_SCHEDULED';
-
-        tr.innerHTML = `
-          <td><strong>${lead.recruiter_name}</strong></td>
-          <td>${lead.company}</td>
-          <td>${lead.target_role}</td>
-          <td><span class="lead-status-pill status-${lead.status}">${lead.status}</span></td>
-          <td>${lead.day_3_followup_date || 'N/A'}</td>
-          <td></td>
-        `;
-
-        const actionsTd = tr.querySelector('td:last-child')!;
-        if (!isScheduled) {
-          const callBtn = el('button', 'button quiet', 'Schedule Call');
-          callBtn.type = 'button';
-          callBtn.addEventListener('click', () => { void this.updateLeadStatus(lead.lead_id, 'CALL_SCHEDULED'); });
-          actionsTd.append(callBtn);
-        }
-
-        if (lead.connection_note_300chars) {
-          const copyBtn = el('button', 'button quiet', 'Copy Note');
-          copyBtn.type = 'button';
-          copyBtn.addEventListener('click', () => {
-            void navigator.clipboard.writeText(lead.connection_note_300chars);
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => { copyBtn.textContent = 'Copy Note'; }, 1500);
-          });
-          actionsTd.append(copyBtn);
-        }
-
-        tbody.append(tr);
-      }
-      tableWrapper.append(table);
-      crmSection.append(tableWrapper);
-    }
-
-    wrapper.append(crmSection);
-    return wrapper;
-  }
-
-  // ----------------- Sub-View 2: Daily Plan & Sprints -----------------
-  private renderPlanView(): HTMLElement {
-    const wrapper = el('div', 'career-plan-wrapper');
-    wrapper.append(el('h3', '', 'Unified Daily Schedule: 3 Career & Study Blocks (IST)'));
-
-    const blocksGrid = el('div', 'plan-blocks-grid');
-    const blocks = this.planToday?.blocks || [];
-
-    for (const b of blocks) {
-      const card = el('div', `plan-block-card ${b.is_active ? 'active-block' : ''}`);
-      const header = el('div', 'plan-block-header');
-      header.append(
-        el('h4', 'plan-block-title', b.title),
-        el('span', 'plan-block-time', b.time_window),
-      );
-      card.append(header);
-
-      const taskList = el('ul', 'plan-tasks-list');
-      for (let i = 0; i < b.tasks.length; i++) {
-        const t = b.tasks[i];
-        const taskKey = `block_${b.block_id}_task_${i}`;
-        const isDone = this.checkedTasks.has(taskKey);
-
-        const item = el('li', `plan-task-item ${isDone ? 'task-done' : ''}`);
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = isDone;
-        checkbox.className = 'career-task-checkbox';
-        checkbox.addEventListener('change', () => {
-          if (checkbox.checked) {
-            this.checkedTasks.add(taskKey);
-          } else {
-            this.checkedTasks.delete(taskKey);
-          }
-          item.classList.toggle('task-done', checkbox.checked);
-        });
-
-        const span = el('span', '', t);
-        item.append(checkbox, span);
-        taskList.append(item);
-      }
-      card.append(taskList);
-
-      const btnGroup = el('div', 'plan-block-actions');
-      const execBtn = el('button', 'button primary', `Execute Block ${b.block_id}`);
-      execBtn.type = 'button';
-      execBtn.disabled = this.actionInProgress;
-      execBtn.addEventListener('click', () => { void this.executeBlock(b.block_id); });
-
-      const pomodoroBtn = el('button', 'button outline', 'Start Focus Sprint (45m)');
-      pomodoroBtn.type = 'button';
-      pomodoroBtn.addEventListener('click', () => {
-        if (this.options.onNavigatePlan) {
-          this.options.onNavigatePlan();
-        } else {
-          this.bannerMessage = `Focused Pomodoro block ${b.block_id} routine initiated.`;
-          this.render();
-        }
-      });
-
-      btnGroup.append(execBtn, pomodoroBtn);
-      card.append(btnGroup);
-      blocksGrid.append(card);
-    }
-
-    wrapper.append(blocksGrid);
-    return wrapper;
-  }
-
-  // ----------------- Sub-View 3: Profile SEO & Boost -----------------
-  private renderBoostView(): HTMLElement {
-    const wrapper = el('div', 'career-boost-wrapper');
-
-    const topGrid = el('div', 'quota-stats-grid');
-    const activeToday = this.boostStatus?.active_today;
-    const cooldown = this.boostStatus?.cooldown_remaining_seconds || 0;
-    const cooldownMin = Math.ceil(cooldown / 60);
-
-    const boostCard = el('div', 'quota-stat-card');
-    boostCard.append(el('h4', '', 'Naukri Resdex Freshness'));
-    const bumpRow = el('div', 'quota-val-row');
-    bumpRow.append(
-      el('span', 'quota-current', activeToday ? 'Active Today' : 'Touch Pending'),
-      el('span', 'quota-target', cooldown > 0 ? `(${cooldownMin}m cooldown)` : '(Ready)'),
-    );
-    boostCard.append(bumpRow);
-
-    const banditCard = el('div', 'quota-stat-card');
-    banditCard.append(el('h4', '', 'LinUCB Selection Policy'));
-    const banditRow = el('div', 'quota-val-row');
-    banditRow.append(
-      el('span', 'quota-current', this.boostStatus?.policy_mode || 'ACTIVE'),
-      el('span', 'quota-target', `${this.boostStatus?.policy_decisions_count || 0} decisions`),
-    );
-    banditCard.append(banditRow);
-
-    topGrid.append(boostCard, banditCard);
-    wrapper.append(topGrid);
-
-    // Keyword Utility Table
-    wrapper.append(el('h3', '', 'Keyword Utility Mining (High-Demand Tokens)'));
-    const kwTableWrapper = el('div', 'career-table-wrapper');
-    const kwTable = el('table', 'career-table');
-    kwTable.innerHTML = `
-      <thead>
-        <tr>
-          <th>Token / Competency</th>
-          <th>Demand Frequency</th>
-          <th>Saturation Count</th>
-          <th>Utility Score (U)</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const kwTbody = kwTable.querySelector('tbody')!;
-    const keywords = this.boostStatus?.keyword_utilities || [];
-
-    for (const kw of keywords) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${kw.token}</strong></td>
-        <td>${kw.demand_frequency}</td>
-        <td>${kw.saturation_count}</td>
-        <td><span class="badge-stat">${kw.utility_score.toFixed(1)}</span></td>
-        <td><button class="button quiet inject-kw-btn">Inject to Headline</button></td>
-      `;
-      const btn = tr.querySelector('.inject-kw-btn')!;
-      btn.addEventListener('click', () => {
-        btn.textContent = 'Injected!';
-        this.bannerMessage = `Token '${kw.token}' injected into candidate mutation whitelist.`;
-        setTimeout(() => { btn.textContent = 'Inject to Headline'; }, 1500);
-      });
-      kwTbody.append(tr);
-    }
-    kwTableWrapper.append(kwTable);
-    wrapper.append(kwTableWrapper);
-
-    // Profile Mutation Audit Log Table
-    const mutations = this.boostStatus?.recent_mutations || [];
-    if (mutations.length > 0) {
-      wrapper.append(el('h3', '', 'Profile Mutation Audit Trail (SHA-256 Provenance)'));
-      const mutTableWrapper = el('div', 'career-table-wrapper');
-      const mutTable = el('table', 'career-table');
-      mutTable.innerHTML = `
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Type</th>
-            <th>Hash</th>
-            <th>Status</th>
-            <th>Timestamp</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const mutTbody = mutTable.querySelector('tbody')!;
-      for (const m of mutations) {
-        const tr = document.createElement('tr');
-        const hashShort = m.new_hash ? m.new_hash.substring(0, 10) + '…' : 'N/A';
-        const dateStr = m.applied_at ? new Date(m.applied_at).toLocaleString() : '';
-        tr.innerHTML = `
-          <td><strong>${m.field}</strong></td>
-          <td>${m.mutation_type}</td>
-          <td><code>${hashShort}</code></td>
-          <td><span class="lead-status-pill">${m.status}</span></td>
-          <td>${dateStr}</td>
-        `;
-        mutTbody.append(tr);
-      }
-      mutTableWrapper.append(mutTable);
-      wrapper.append(mutTableWrapper);
-    }
-
-    return wrapper;
-  }
-
-  // ----------------- Sub-View 4: Application Ledger -----------------
-  private renderLedgerView(): HTMLElement {
-    const wrapper = el('div', 'career-ledger-wrapper');
-    wrapper.append(el('h3', '', `Application Ledger (${this.jobsTotal} Total Positions)`));
-
-    if (this.jobs.length === 0) {
-      wrapper.append(el('p', 'muted', 'No applied jobs recorded in database yet.'));
-    } else {
-      const tableWrapper = el('div', 'career-table-wrapper');
-      const table = el('table', 'career-table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Company</th>
-            <th>Title</th>
-            <th>Platform</th>
-            <th>Match</th>
-            <th>Status</th>
-            <th>Applied At</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector('tbody')!;
-      for (const j of this.jobs) {
-        const tr = document.createElement('tr');
-        const appliedDate = j.applied_at ? new Date(j.applied_at).toLocaleDateString() : '';
-        tr.innerHTML = `
-          <td><strong>${j.company}</strong></td>
-          <td>${j.title}</td>
-          <td>${j.platform}</td>
-          <td><span class="badge-stat">${Math.round(j.match_score)}%</span></td>
-          <td><span class="lead-status-pill">${j.status}</span></td>
-          <td>${appliedDate}</td>
-        `;
-        tbody.append(tr);
-      }
-      tableWrapper.append(table);
-      wrapper.append(tableWrapper);
-    }
-
-    return wrapper;
   }
 
   private async uploadResumePayload(filename: string, contentBase64: string, rawText: string): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = `Parsing resume (${filename || 'pasted text'}) and extracting profile ground truth…`;
-    this.render();
-
+    this.notify('Extracting candidate profile, role track, skills, and story facts from resume...');
     try {
-      const profile = await this.options.api.request<CandidateProfile>('/career/profile/upload-resume', {
+      const saved = await this.options.api.request<CandidateProfile>('/career/profile/resume', {
         method: 'POST',
         body: {
           filename,
@@ -724,94 +420,94 @@ export class CareerView {
           raw_text: rawText,
         },
       });
-      this.bannerMessage = `Resume extracted! Active Profile: ${profile.full_name} — ${profile.target_role} (${profile.total_yoe} YOE, ${profile.primary_skills.length} skills seeded into Whitelist Guard).`;
+      this.selectedTrackId = saved.primary_track_id || this.selectedTrackId;
+      this.notify(
+        `Story updated for ${saved.full_name}: ${saved.target_role} (${saved.total_yoe} YOE, ${saved.notice_period_days}d notice) · Track: ${saved.primary_track_id.toUpperCase()}`,
+      );
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Resume parse error: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Resume parsing failed: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
-  private async saveProfileOverrides(patch: Partial<CandidateProfile>): Promise<void> {
+  private async saveProfileOverrides(updated: CandidateProfile): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = 'Saving candidate profile and regenerating dynamic skill whitelist…';
-    this.render();
-
     try {
-      const base = this.readiness?.profile || ({} as CandidateProfile);
-      const updated = await this.options.api.request<CandidateProfile>('/career/profile', {
+      const saved = await this.options.api.request<CandidateProfile>('/career/profile', {
         method: 'PUT',
-        body: { ...base, ...patch },
+        body: updated,
       });
-      this.bannerMessage = `Profile saved for ${updated.full_name} (${updated.target_role} • ${updated.total_yoe} YOE).`;
+      this.selectedTrackId = saved.primary_track_id || this.selectedTrackId;
+      this.notify(`Saved profile for ${saved.full_name} (${saved.target_role})`);
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Failed to save profile: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Failed to save profile: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
-  private async connectPlatform(platform: string, authMethod: string, identifier: string, secret: string): Promise<void> {
+  private async connectPlatform(
+    platform: string,
+    authMethod: string,
+    accountId: string,
+    secretPayload: string,
+  ): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = `Connecting ${platform.toUpperCase()} (${authMethod})…`;
-    this.render();
-
     try {
-      const res = await this.options.api.request<PlatformAuthRequirement>('/career/auth/connect', {
+      await this.options.api.request('/career/auth/connect', {
         method: 'POST',
         body: {
           platform,
           auth_method: authMethod,
-          account_identifier: identifier,
-          secret_payload: secret,
+          account_identifier: accountId,
+          secret_payload: secretPayload,
         },
       });
-      this.bannerMessage = `${res.display_name} status updated to ${res.status} (${res.account_identifier}).`;
+      this.notify(`Connected ${platform.toUpperCase()} (${authMethod}) in AES-256-GCM Vault`);
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Platform auth error: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Auth connection failed: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
   private async disconnectPlatform(platform: string): Promise<void> {
     try {
-      await this.options.api.request(`/career/auth/${platform}`, { method: 'DELETE' });
-      this.bannerMessage = `Disconnected ${platform.toUpperCase()} credentials.`;
+      await this.options.api.request(`/career/auth/${encodeURIComponent(platform)}`, {
+        method: 'DELETE',
+      });
+      this.notify(`Disconnected ${platform.toUpperCase()} credentials`);
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Disconnect failed: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Disconnect failed: ${errorMessage(err)}`, true);
     }
   }
 
   private async startEngine(mode: 'DRY_RUN' | 'LIVE'): Promise<void> {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
-    this.bannerMessage = `Starting Autonomous Career Engine (${mode})…`;
-    this.render();
-
+    this.notify(`Starting Career Engine in ${mode} mode...`);
     try {
-      const res = await this.options.api.request<EngineReadiness>('/career/engine/start', {
+      const res = await this.options.api.request<{ message: string }>('/career/engine/start', {
         method: 'POST',
         body: { execution_mode: mode, daily_call_target: 5 },
       });
-      this.readiness = res;
-      this.bannerMessage = res.engine.last_cycle_summary || `Autonomous Career Engine is now RUNNING (${mode}).`;
+      this.notify(res.message || 'Autonomous Career Engine is now RUNNING!');
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Cannot start engine: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Cannot start engine: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
@@ -819,294 +515,1230 @@ export class CareerView {
     if (this.actionInProgress) return;
     this.actionInProgress = true;
     try {
-      const res = await this.options.api.request<EngineReadiness>('/career/engine/pause', {
+      const res = await this.options.api.request<{ message: string }>('/career/engine/pause', {
         method: 'POST',
+        body: {},
       });
-      this.readiness = res;
-      this.bannerMessage = 'Autonomous Career Engine paused.';
+      this.notify(res.message || 'Career Engine paused.');
       await this.refreshAll();
     } catch (err) {
-      this.bannerMessage = `Failed to pause engine: ${errorMessage(err)}`;
-      this.render();
+      this.notify(`Failed to pause engine: ${errorMessage(err)}`, true);
     } finally {
       this.actionInProgress = false;
+      this.render();
     }
   }
 
-  private renderReadinessStrip(): HTMLElement {
-    const strip = el('div', 'career-readiness-strip');
-    const prof = this.readiness?.profile;
-    const eng = this.readiness?.engine;
-    const platforms = this.readiness?.platforms || [];
-    const connectedPlatforms = platforms.filter(p => p.status === 'CONNECTED' || p.status === 'SIMULATION');
+  render(): void {
+    const root = this.options.root;
+    root.replaceChildren();
 
-    const left = el('div', 'career-readiness-summary');
-    left.innerHTML = `
-      <span class="badge-stat">${eng?.engine_status || 'READY'} (${eng?.execution_mode || 'DRY_RUN'})</span>
-      <span><strong>Candidate:</strong> ${prof?.full_name || 'Lavkush Kumar'}</span>
-      <span>•</span>
-      <span><strong>Role Track:</strong> ${prof?.target_role || 'Azure Data Engineer'} (${(prof?.primary_track_id || 'data').toUpperCase()})</span>
-      <span>•</span>
-      <span><strong>Skills Whitelist:</strong> ${(prof?.primary_skills || []).slice(0, 5).join(', ') || 'Databricks, PySpark, SQL'}</span>
-    `;
+    const container = el('div', 'career-studio-container');
 
-    const checks = el('div', 'career-readiness-checks');
-    checks.innerHTML = `
-      <span class="readiness-pill ${this.readiness?.profile_ready !== false ? 'ok' : 'warn'}">1. Resume Profile ✓</span>
-      <span class="readiness-pill ${this.readiness?.whitelist_ready !== false ? 'ok' : 'warn'}">2. Skill Whitelist ✓</span>
-      <span class="readiness-pill ${this.readiness?.auth_ready !== false ? 'ok' : 'warn'}">3. Auth / Sandbox (${connectedPlatforms.length || 2} Ready) ✓</span>
-    `;
+    const profile = this.readiness?.profile;
+    const engine = this.readiness?.engine;
+    const isRunning = engine?.engine_status === 'RUNNING';
+    const userName = profile?.full_name || this.options.account?.name || 'Candidate';
+    const userEmail = profile?.email || this.options.account?.email || '';
+    const activeRole = profile?.target_role || 'Software Engineer';
+    const activeYOE = profile?.total_yoe ?? 2.0;
+    const activeNotice = profile?.notice_period_days ?? 30;
+    const activeCTC = profile?.target_ctc_range || '₹18–25 LPA';
+    const activeMode = engine?.execution_mode || 'DRY_RUN';
 
-    strip.append(left, checks);
-    return strip;
-  }
-
-  private renderSetupStudio(): HTMLElement {
-    const studio = el('div', 'career-setup-studio');
-    const prof = this.readiness?.profile;
-    const platforms = this.readiness?.platforms || [];
-    const eng = this.readiness?.engine;
-
-    // STEP 1: Upload Resume & Edit Candidate Profile
-    const step1 = el('div', 'career-card');
-    step1.append(
-      el('h3', '', 'Step 1: Upload Resume (Any Profile) & Ground-Truth Configuration'),
+    // 1. Minimal Workspace Header (Scoped to the User's Own Story)
+    const header = el('header', 'career-header');
+    const titleGroup = el('div', 'career-title-group');
+    const metaRow = el('div', 'career-identity-row');
+    metaRow.append(
+      el('span', 'career-eyebrow', `${userName.toUpperCase()} · PERSONAL CAREER WORKSPACE`),
+      userEmail ? el('span', 'career-identity-chip', userEmail) : el('span', ''),
+      el('span', 'career-identity-chip', `${activeYOE} YOE · ${activeNotice}d Notice · ${activeCTC}`),
+      el(
+        'span',
+        `career-identity-chip ${activeMode === 'LIVE' ? 'chip-live' : 'chip-sandbox'}`,
+        activeMode === 'LIVE' ? 'Live Portal Mode' : 'Sandbox Mode',
+      ),
+    );
+    titleGroup.append(
+      metaRow,
+      el('h1', 'career-title', `${activeRole} Studio`),
       el(
         'p',
-        'muted',
-        'Upload your PDF/Text/LaTeX resume or paste your resume below. CourseForge automatically detects your Role Track (Backend, Frontend, Full-Stack, DevOps, Data, ML/AI, SRE, Mobile), extracts your YOE & skills, and builds your anti-hallucination Whitelist Guard.'
-      )
+        'career-subtitle',
+        `${userName}'s isolated career story, confirmed facts (${this.facts.length}), tailored resumes (${this.applications.length}), recruiter CRM (${this.leads.length}), and application history (${this.jobsTotal}).`,
+      ),
     );
 
-    const uploadRow = el('div', 'career-upload-row');
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.txt,.tex,.md';
-    fileInput.className = 'career-file-input';
+    const actionsGroup = el('div', 'career-header-actions');
 
-    const uploadFileBtn = el('button', 'button primary', '📄 Upload & Auto-Extract Resume');
-    uploadFileBtn.type = 'button';
-    uploadFileBtn.addEventListener('click', () => {
-      const f = fileInput.files?.[0];
-      if (!f) {
-        this.bannerMessage = 'Select a .pdf, .txt, or .tex resume file first, or paste resume text below.';
-        this.render();
-        return;
+    const setupBtn = el(
+      'button',
+      `career-btn ${this.setupPanelOpen ? 'career-btn-primary' : 'career-btn-secondary'}`,
+    );
+    setupBtn.type = 'button';
+    setupBtn.append(
+      svgIcon('settings'),
+      el('span', '', this.setupPanelOpen ? 'Hide Setup & Auth Vault' : 'Setup & Auth Vault'),
+    );
+    setupBtn.addEventListener('click', () => {
+      this.setupPanelOpen = !this.setupPanelOpen;
+      this.render();
+    });
+
+    const engineToggleBtn = el('button', `career-btn ${isRunning ? 'career-btn-secondary' : 'career-btn-primary'}`);
+    engineToggleBtn.type = 'button';
+    engineToggleBtn.disabled = this.actionInProgress;
+    engineToggleBtn.append(
+      svgIcon(isRunning ? 'close' : 'play'),
+      el('span', '', isRunning ? 'Pause Engine' : 'Start Engine'),
+    );
+    engineToggleBtn.addEventListener('click', () => {
+      if (isRunning) {
+        void this.pauseEngine();
+      } else {
+        void this.startEngine((engine?.execution_mode as 'DRY_RUN' | 'LIVE') || 'DRY_RUN');
       }
+    });
+
+    const bumpBtn = el('button', 'career-btn career-btn-secondary');
+    bumpBtn.type = 'button';
+    bumpBtn.disabled = this.actionInProgress;
+    bumpBtn.append(svgIcon('zap'), el('span', '', 'Resdex Bump'));
+    bumpBtn.addEventListener('click', () => void this.triggerBump());
+
+    const refreshBtn = el('button', 'career-btn career-btn-secondary');
+    refreshBtn.type = 'button';
+    refreshBtn.disabled = this.loading;
+    refreshBtn.append(svgIcon('refresh'), el('span', '', 'Sync'));
+    refreshBtn.addEventListener('click', () => void this.refreshAll());
+
+    actionsGroup.append(setupBtn, engineToggleBtn, bumpBtn, refreshBtn);
+    header.append(titleGroup, actionsGroup);
+    container.append(header);
+
+    // 2. Compact Pre-Flight Readiness & Personal Story Status Strip
+    container.append(this.renderReadinessStrip());
+
+    // 3. Collapsible Setup & Auth Vault Drawer (Resume Upload + Profile + Platform Auth Vault)
+    if (this.setupPanelOpen) {
+      container.append(this.renderSetupAndVaultPanel());
+    }
+
+    // 4. Toast / Status Banner
+    if (this.bannerMessage) {
+      const banner = el('div', 'career-toast-banner');
+      banner.append(el('span', 'career-toast-text', this.bannerMessage));
+      const closeBtn = el('button', 'career-toast-close', '×');
+      closeBtn.type = 'button';
+      closeBtn.addEventListener('click', () => {
+        this.bannerMessage = null;
+        this.render();
+      });
+      banner.append(closeBtn);
+      container.append(banner);
+    }
+
+    // 5. Realistic Minimal Unified Navigation Bar with ALL Options
+    const navBar = el('div', 'career-unified-nav');
+
+    const engineNavGroup = el('div', 'career-nav-group');
+    engineNavGroup.append(el('span', 'career-nav-group-label', 'ENGINE'));
+    const engineTabs: Array<{ id: 'goal' | 'plan' | 'boost' | 'ledger'; label: string; count?: string }> = [
+      { id: 'goal', label: 'Goal & CRM', count: `${this.pacing?.calls_scheduled_count ?? 0}/5` },
+      { id: 'plan', label: 'Daily Plan', count: '3 Sprints' },
+      { id: 'boost', label: 'Profile SEO', count: this.boostStatus?.active_today ? 'Active' : 'Ready' },
+      { id: 'ledger', label: 'App Ledger', count: String(this.jobsTotal) },
+    ];
+    for (const t of engineTabs) {
+      const isSelected = this.activeStudioView === null && this.activeTab === t.id;
+      const btn = el('button', `career-tab-btn ${isSelected ? 'active' : ''}`);
+      btn.type = 'button';
+      btn.append(el('span', '', t.label));
+      if (t.count) {
+        btn.append(el('span', 'career-tab-count', t.count));
+      }
+      btn.addEventListener('click', () => this.setTab(t.id));
+      engineNavGroup.append(btn);
+    }
+
+    const studioNavGroup = el('div', 'career-nav-group');
+    studioNavGroup.append(el('span', 'career-nav-group-label', 'STUDIO & STORY'));
+    const studioTabs: Array<{ id: StudioTab; label: string; count?: string }> = [
+      { id: 'story', label: 'My Story & Facts', count: String(this.facts.length) },
+      { id: 'resume', label: 'Resume & PDF', count: String(this.applications.length) },
+      { id: 'match', label: 'JD Match' },
+      { id: 'companies', label: 'Companies', count: String(this.companies.length) },
+      { id: 'tracks', label: 'Role Tracks', count: String(this.tracks.length) },
+      { id: 'tracker', label: 'Outcome Tracker', count: String(this.applications.length) },
+      { id: 'referrals', label: 'Referrals', count: String(this.contacts.length) },
+      { id: 'analytics', label: 'Analytics (CI)' },
+      { id: 'alerts', label: 'Job Alerts', count: String(this.notifications.filter(n => !n.read_at).length || this.alertSources.length) },
+      { id: 'all', label: 'All Options' },
+    ];
+    for (const st of studioTabs) {
+      const isSelected = this.activeStudioView === st.id;
+      const btn = el('button', `career-tab-btn ${isSelected ? 'active' : ''}`);
+      btn.type = 'button';
+      btn.append(el('span', '', st.label));
+      if (st.count !== undefined) {
+        btn.append(el('span', 'career-tab-count', st.count));
+      }
+      btn.addEventListener('click', () => this.setStudioView(st.id));
+      studioNavGroup.append(btn);
+    }
+
+    navBar.append(engineNavGroup, studioNavGroup);
+    container.append(navBar);
+
+    // 6. Active Viewport Content
+    const contentArea = el('div', 'career-tab-content');
+    if (this.activeStudioView !== null) {
+      contentArea.append(this.renderStudioViewport(this.activeStudioView));
+    } else if (this.activeTab === 'goal') {
+      contentArea.append(this.renderGoalTab());
+    } else if (this.activeTab === 'plan') {
+      contentArea.append(this.renderPlanTab());
+    } else if (this.activeTab === 'boost') {
+      contentArea.append(this.renderBoostTab());
+    } else if (this.activeTab === 'ledger') {
+      contentArea.append(this.renderLedgerTab());
+    }
+
+    container.append(contentArea);
+    root.append(container);
+  }
+
+  // ============================================================================
+  // STUDIO VIEWPORT: All 9 Original Career Studio Panels + Personal Story
+  // ============================================================================
+  private renderStudioViewport(view: StudioTab): HTMLElement {
+    const wrap = el('div', 'career-studio-viewport');
+
+    switch (view) {
+      case 'story': {
+        // Unified "My Story & Confirmed Facts" view: Personal Profile + Resume Extractor + Confirmed Facts
+        const storyIntro = el('div', 'career-story-banner');
+        const userName = this.readiness?.profile?.full_name || this.options.account?.name || 'Your';
+        storyIntro.append(
+          el(
+            'div',
+            'career-story-banner-text',
+            `${userName}'s Personal Story & Ground-Truth Facts — Every resume version, bullet suggestion, screening answer, and recruiter pitch in your account is strictly isolated to your own confirmed facts and profile.`,
+          ),
+        );
+        wrap.append(storyIntro);
+        wrap.append(this.renderPersonalStoryAndProfileCard());
+        wrap.append(renderFacts(this));
+        break;
+      }
+      case 'resume': {
+        wrap.append(renderResumeStudio(this));
+        break;
+      }
+      case 'match': {
+        const grid = el('div', 'career-layout');
+        grid.append(renderMatch(this), renderCompanies(this));
+        wrap.append(grid);
+        break;
+      }
+      case 'companies': {
+        const grid = el('div', 'career-layout');
+        grid.append(renderCompanies(this), renderMatch(this));
+        wrap.append(grid);
+        break;
+      }
+      case 'tracks': {
+        const grid = el('div', 'career-layout');
+        grid.append(renderTracks(this), renderFacts(this));
+        wrap.append(grid);
+        break;
+      }
+      case 'tracker': {
+        const grid = el('div', 'career-layout');
+        grid.append(renderTracker(this), renderAnalytics(this));
+        wrap.append(grid);
+        break;
+      }
+      case 'referrals': {
+        wrap.append(renderReferrals(this));
+        break;
+      }
+      case 'analytics': {
+        const grid = el('div', 'career-layout');
+        grid.append(renderAnalytics(this), renderTracker(this));
+        wrap.append(grid);
+        break;
+      }
+      case 'alerts': {
+        wrap.append(renderAlerts(this));
+        break;
+      }
+      case 'all': {
+        // Complete All-Options View: renders every Studio panel + Story on one unified page
+        wrap.append(this.renderPersonalStoryAndProfileCard());
+        const topGrid = el('div', 'career-layout');
+        topGrid.append(renderTracks(this), renderCompanies(this), renderFacts(this), renderMatch(this));
+        wrap.append(topGrid);
+        wrap.append(renderResumeStudio(this));
+        const bottomGrid = el('div', 'career-layout career-tracker-layout');
+        bottomGrid.append(renderTracker(this), renderAnalytics(this), renderReferrals(this));
+        wrap.append(bottomGrid);
+        wrap.append(renderAlerts(this));
+        break;
+      }
+    }
+
+    return wrap;
+  }
+
+  private renderPersonalStoryAndProfileCard(): HTMLElement {
+    const p = this.readiness?.profile;
+    const card = el('section', 'career-card career-story-profile-card');
+    card.append(
+      el('h3', 'career-card-title', '1. Personal Career Story & Resume Auto-Extractor'),
+      el(
+        'p',
+        'career-card-desc',
+        'Upload your PDF/TXT resume or paste your experience below. CourseForge automatically extracts your role track, skills, notice period, CTC expectations, and seeds your Confirmed Facts.',
+      ),
+    );
+
+    const splitGrid = el('div', 'career-setup-grid');
+
+    // Left: Resume Upload & Paste
+    const uploadCol = el('div', 'career-setup-pane');
+    const uploadDrop = el('div', 'career-upload-dropzone');
+    const fileInput = el('input', 'career-file-input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.txt,.md';
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
         const result = typeof reader.result === 'string' ? reader.result : '';
-        void this.uploadResumePayload(f.name, result, '');
+        void this.uploadResumePayload(file.name, result, '');
       };
-      reader.readAsDataURL(f);
-    });
-    uploadRow.append(fileInput, uploadFileBtn);
-    step1.append(uploadRow);
-
-    const pasteBox = document.createElement('textarea');
-    pasteBox.className = 'career-paste-textarea';
-    pasteBox.rows = 3;
-    pasteBox.placeholder =
-      'Or paste raw resume text here (e.g., "Aarav Sharma | Senior Backend Engineer | 4.5 YOE | Go, Kubernetes, PostgreSQL, Kafka, Redis | 30 days notice | 35 LPA")…';
-    pasteBox.value = this.resumePasteDraft;
-    pasteBox.addEventListener('input', () => {
-      this.resumePasteDraft = pasteBox.value;
+      reader.readAsDataURL(file);
     });
 
-    const parseTextBtn = el('button', 'button quiet', '✨ Parse Pasted Resume Text');
+    const currentResumeLabel = p?.resume_filename
+      ? `Active Resume: ${p.resume_filename}`
+      : 'No resume uploaded yet — upload your PDF/TXT to personalize your story';
+    uploadDrop.append(
+      el('div', 'career-upload-label', currentResumeLabel),
+      el('p', 'career-upload-hint', 'Select a .pdf or .txt resume file (max 10 MB)'),
+      fileInput,
+    );
+
+    const pasteArea = el('textarea', 'career-textarea');
+    pasteArea.rows = 4;
+    pasteArea.placeholder =
+      'Or paste your resume text / career summary here (e.g. "Senior Backend Engineer | 4.5 YOE | Go, Kubernetes, PostgreSQL, gRPC | 30 days notice | Expected 35 LPA...")';
+    pasteArea.value = this.resumePasteDraft;
+    pasteArea.addEventListener('input', () => {
+      this.resumePasteDraft = pasteArea.value;
+    });
+
+    const parseTextBtn = el('button', 'career-btn career-btn-primary');
     parseTextBtn.type = 'button';
+    parseTextBtn.textContent = 'Extract Story & Profile from Text';
+    parseTextBtn.disabled = this.actionInProgress;
     parseTextBtn.addEventListener('click', () => {
       if (!this.resumePasteDraft.trim()) {
-        this.bannerMessage = 'Paste at least 20 characters of resume text to extract your profile.';
-        this.render();
+        this.notify('Paste at least 20 characters of resume text first.', true);
         return;
       }
       void this.uploadResumePayload('pasted_resume.txt', '', this.resumePasteDraft);
     });
-    step1.append(pasteBox, parseTextBtn);
 
-    // Editable Profile Form
-    const profileGrid = el('div', 'career-profile-form-grid');
-    const nameInput = document.createElement('input');
-    nameInput.placeholder = 'Full Name';
-    nameInput.value = prof?.full_name || 'Lavkush Kumar';
+    uploadCol.append(uploadDrop, pasteArea, parseTextBtn);
 
-    const roleInput = document.createElement('input');
-    roleInput.placeholder = 'Target Role (e.g. Senior Backend Engineer)';
-    roleInput.value = prof?.target_role || 'Azure Data Engineer';
+    // Right: Editable Ground-Truth Profile Form
+    const formCol = el('div', 'career-setup-pane');
+    const formGrid = el('div', 'career-profile-form-grid');
+    const makeField = (label: string, val: string, placeholder = '') => {
+      const wrap = el('label', 'career-field-label');
+      wrap.append(el('span', '', label));
+      const inp = el('input', 'career-input');
+      inp.type = 'text';
+      inp.value = val;
+      inp.placeholder = placeholder;
+      wrap.append(inp);
+      return { wrap, inp };
+    };
 
-    const trackSelect = document.createElement('select');
-    const tracks: Array<[string, string]> = [
-      ['data', 'Data Engineer (Spark / Databricks / Warehouse)'],
-      ['backend', 'Backend Engineer (Go / Java / Distributed Systems)'],
-      ['frontend', 'Frontend Engineer (React / TypeScript / UI)'],
-      ['fullstack', 'Full-Stack Engineer (End-to-End Web & API)'],
-      ['devops', 'DevOps & Cloud Platform Engineer (K8s / IaC)'],
-      ['sre', 'Site Reliability Engineer (SRE / Observability)'],
-      ['ml', 'Machine Learning / AI Engineer (PyTorch / LLM / MLOps)'],
-      ['mobile', 'Mobile Engineer (Android / iOS / Cross-Platform)'],
-    ];
-    for (const [id, label] of tracks) {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = label;
-      if ((prof?.primary_track_id || 'data') === id) opt.selected = true;
-      trackSelect.append(opt);
-    }
+    const nameField = makeField('Full Name', p?.full_name || this.options.account?.name || '');
+    const emailField = makeField('Email Address', p?.email || this.options.account?.email || '');
+    const phoneField = makeField('Phone Number', p?.phone || '', '+91-9876543210');
+    const roleField = makeField('Target Role', p?.target_role || 'Software Engineer');
+    const trackField = makeField('Primary Track', p?.primary_track_id || 'backend', 'backend | frontend | data | ml | devops | sre');
+    const yoeField = makeField('Total YOE', String(p?.total_yoe ?? 2.0));
+    const noticeField = makeField('Notice Period (Days)', String(p?.notice_period_days ?? 30));
+    const ctcField = makeField('Target CTC Range', p?.target_ctc_range || '₹18–25 LPA');
+    const companyField = makeField('Current Company', p?.current_company || '', 'e.g. Acme Corp');
+    const linkedinField = makeField('LinkedIn URL', p?.linkedin_url || '', 'https://linkedin.com/in/yourprofile');
+    const skillsField = makeField(
+      'Primary Skills (comma-separated)',
+      (p?.primary_skills || ['Software Engineering', 'System Design', 'SQL']).join(', '),
+    );
+    skillsField.wrap.classList.add('career-field-full');
+    const locationsField = makeField(
+      'Preferred Locations (comma-separated)',
+      (p?.preferred_locations || ['Bengaluru', 'Hyderabad', 'Remote']).join(', '),
+    );
+    locationsField.wrap.classList.add('career-field-full');
 
-    const yoeInput = document.createElement('input');
-    yoeInput.type = 'number';
-    yoeInput.step = '0.5';
-    yoeInput.placeholder = 'Total YOE';
-    yoeInput.value = String(prof?.total_yoe ?? 2.5);
+    formGrid.append(
+      nameField.wrap,
+      emailField.wrap,
+      phoneField.wrap,
+      roleField.wrap,
+      trackField.wrap,
+      yoeField.wrap,
+      noticeField.wrap,
+      ctcField.wrap,
+      companyField.wrap,
+      linkedinField.wrap,
+      skillsField.wrap,
+      locationsField.wrap,
+    );
 
-    const noticeInput = document.createElement('input');
-    noticeInput.type = 'number';
-    noticeInput.placeholder = 'Notice Period (Days)';
-    noticeInput.value = String(prof?.notice_period_days ?? 15);
-
-    const ctcInput = document.createElement('input');
-    ctcInput.placeholder = 'Target CTC Range (e.g. ₹25–35 LPA)';
-    ctcInput.value = prof?.target_ctc_range || '₹20–25 LPA';
-
-    const skillsInput = document.createElement('input');
-    skillsInput.placeholder = 'Primary Skills (comma-separated)';
-    skillsInput.value = (prof?.primary_skills || []).join(', ');
-
-    profileGrid.append(nameInput, roleInput, trackSelect, yoeInput, noticeInput, ctcInput, skillsInput);
-
-    const saveProfileBtn = el('button', 'button primary', '💾 Save Profile & Seed Whitelist');
+    const saveProfileBtn = el('button', 'career-btn career-btn-secondary');
     saveProfileBtn.type = 'button';
+    saveProfileBtn.textContent = 'Save My Profile & Update Whitelist';
     saveProfileBtn.addEventListener('click', () => {
-      const skills = skillsInput.value
+      const base: CandidateProfile = p || {
+        user_id: this.options.account?.id || 'user',
+        full_name: nameField.inp.value.trim(),
+        email: emailField.inp.value.trim(),
+        phone: phoneField.inp.value.trim(),
+        linkedin_url: linkedinField.inp.value.trim(),
+        github_url: '',
+        primary_track_id: trackField.inp.value.trim() || 'backend',
+        target_role: roleField.inp.value.trim(),
+        secondary_roles: [],
+        total_yoe: 2.0,
+        relevant_yoe: 2.0,
+        current_company: companyField.inp.value.trim(),
+        previous_company: '',
+        current_ctc_lpa: 0,
+        expected_ctc_lpa: 20,
+        target_ctc_range: ctcField.inp.value.trim(),
+        notice_period_days: 30,
+        notice_period_str: '30 Days Notice',
+        primary_skills: [],
+        tools: [],
+        preferred_locations: ['Bengaluru', 'Hyderabad', 'Remote'],
+        whitelist_headline_tokens: [],
+        screening_answers: {},
+        resume_filename: '',
+        resume_sha256: '',
+        updated_at: new Date().toISOString(),
+      };
+      const updatedSkills = skillsField.inp.value
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      const updatedLocations = locationsField.inp.value
         .split(',')
         .map(s => s.trim())
         .filter(Boolean);
       void this.saveProfileOverrides({
-        full_name: nameInput.value.trim(),
-        target_role: roleInput.value.trim(),
-        primary_track_id: trackSelect.value,
-        total_yoe: parseFloat(yoeInput.value) || 2.5,
-        notice_period_days: parseInt(noticeInput.value, 10) || 15,
-        target_ctc_range: ctcInput.value.trim(),
-        primary_skills: skills,
+        ...base,
+        full_name: nameField.inp.value.trim() || base.full_name,
+        email: emailField.inp.value.trim() || base.email,
+        phone: phoneField.inp.value.trim(),
+        linkedin_url: linkedinField.inp.value.trim(),
+        current_company: companyField.inp.value.trim(),
+        primary_track_id: trackField.inp.value.trim() || base.primary_track_id,
+        target_role: roleField.inp.value.trim() || base.target_role,
+        total_yoe: parseFloat(yoeField.inp.value) || base.total_yoe,
+        relevant_yoe: parseFloat(yoeField.inp.value) || base.relevant_yoe,
+        notice_period_days: parseInt(noticeField.inp.value, 10) || base.notice_period_days,
+        target_ctc_range: ctcField.inp.value.trim() || base.target_ctc_range,
+        primary_skills: updatedSkills.length > 0 ? updatedSkills : base.primary_skills,
+        preferred_locations: updatedLocations.length > 0 ? updatedLocations : base.preferred_locations,
       });
     });
-    step1.append(profileGrid, saveProfileBtn);
 
-    // STEP 2: What Auth Is Needed — Platform Authentication Vault
-    const step2 = el('div', 'career-card');
-    step2.append(
-      el('h3', '', 'Step 2: What Auth Is Needed — Platform Session & Credential Vault'),
+    formCol.append(formGrid, saveProfileBtn);
+    splitGrid.append(uploadCol, formCol);
+    card.append(splitGrid);
+    return card;
+  }
+
+  // ============================================================================
+  // PRE-FLIGHT READINESS STRIP & PLATFORM AUTH VAULT
+  // ============================================================================
+  private renderReadinessStrip(): HTMLElement {
+    const r = this.readiness;
+    const strip = el('div', 'career-readiness-strip');
+
+    const profileReady = r?.profile_ready ?? true;
+    const authReady = r?.auth_ready ?? true;
+    const whitelistReady = r?.whitelist_ready ?? true;
+    const mode = r?.engine?.execution_mode || 'DRY_RUN';
+    const status = r?.engine?.engine_status || 'READY';
+    const hasUploadedResume = Boolean(r?.profile?.resume_filename);
+    const connectedCount = (r?.platforms || []).filter(p => p.status === 'CONNECTED').length;
+
+    const items = [
+      {
+        label: 'Story & Profile',
+        ok: profileReady,
+        detail: hasUploadedResume
+          ? `${r?.profile?.full_name} · ${r?.profile?.target_role}`
+          : `${r?.profile?.full_name || this.options.account?.name || 'User'} · Click "My Story & Facts" to upload resume`,
+      },
+      {
+        label: 'Portal Auth Vault',
+        ok: authReady,
+        detail: `${connectedCount} Connected (${mode})`,
+      },
+      {
+        label: 'Ground-Truth Whitelist',
+        ok: whitelistReady,
+        detail: whitelistReady ? 'Active Guardrails' : 'Configure Skills',
+      },
+      {
+        label: 'Engine State',
+        ok: status === 'RUNNING' || status === 'READY',
+        detail: status,
+      },
+    ];
+
+    for (const item of items) {
+      const pill = el('div', `career-readiness-pill ${item.ok ? 'ready' : 'pending'}`);
+      pill.append(
+        el('span', 'readiness-dot', item.ok ? '●' : '○'),
+        el('strong', 'readiness-label', `${item.label}:`),
+        el('span', 'readiness-detail', item.detail),
+      );
+      strip.append(pill);
+    }
+
+    return strip;
+  }
+
+  private renderSetupAndVaultPanel(): HTMLElement {
+    const wrap = el('section', 'career-setup-panel');
+    wrap.append(this.renderPersonalStoryAndProfileCard());
+
+    const authCard = el('div', 'career-setup-card');
+    authCard.append(
+      el('h3', 'career-card-title', '2. Platform Auth Vault & Execution Mode (What Auth Is Needed)'),
       el(
         'p',
-        'muted',
-        'Connect the job portals you want the worker to automate. All cookies and credentials are encrypted with AES-256-GCM at rest, or you can enable Simulation Sandbox mode with zero credentials.'
-      )
+        'career-card-desc',
+        'Sandbox (DRY_RUN) requires zero external credentials. For LIVE execution on Naukri or LinkedIn, paste session cookies JSON or credentials below (encrypted with AES-256-GCM at rest, scoped strictly to your user ID).',
+      ),
     );
 
-    const authGrid = el('div', 'career-auth-grid');
-    for (const plat of platforms) {
-      const pCard = el('div', 'career-auth-card');
-      const head = el('div', 'career-auth-card-head');
+    const modeRow = el('div', 'career-mode-selector');
+    const curMode = (this.readiness?.engine?.execution_mode as 'DRY_RUN' | 'LIVE') || 'DRY_RUN';
+
+    const dryRunBtn = el('button', `career-btn ${curMode === 'DRY_RUN' ? 'career-btn-primary' : 'career-btn-secondary'}`);
+    dryRunBtn.type = 'button';
+    dryRunBtn.textContent = 'Sandbox Mode (DRY_RUN — No Auth Needed)';
+    dryRunBtn.addEventListener('click', () => void this.startEngine('DRY_RUN'));
+
+    const liveBtn = el('button', `career-btn ${curMode === 'LIVE' ? 'career-btn-primary' : 'career-btn-secondary'}`);
+    liveBtn.type = 'button';
+    liveBtn.textContent = 'Live Portal Mode (Naukri / LinkedIn)';
+    liveBtn.addEventListener('click', () => void this.startEngine('LIVE'));
+
+    modeRow.append(dryRunBtn, liveBtn);
+    authCard.append(modeRow);
+
+    const reqs: PlatformAuthRequirement[] = this.readiness?.platforms || [
+      {
+        platform: 'naukri',
+        display_name: 'Naukri.com (Resdex & 1-Click Apply)',
+        recommended_method: 'cookie_json',
+        required_fields: ['cookie_json', 'account_email'],
+        instructions: 'Log into Naukri.com -> DevTools / Cookie-Editor -> Export as JSON -> Paste below.',
+        unlocks_features: ['Resdex Profile Freshness Bump', 'High-Velocity 1-Click Apply'],
+        status: 'SIMULATION',
+        auth_method: 'simulation',
+        account_identifier: '',
+      },
+      {
+        platform: 'linkedin',
+        display_name: 'LinkedIn (Recruiter CRM & Easy Apply)',
+        recommended_method: 'cookie_json',
+        required_fields: ['li_at_cookie', 'account_email'],
+        instructions: 'Log into LinkedIn.com -> DevTools -> Application -> Cookies -> Copy li_at or export JSON.',
+        unlocks_features: ['Recruiter CRM Outbound Pitches', 'Easy Apply'],
+        status: 'SIMULATION',
+        auth_method: 'simulation',
+        account_identifier: '',
+      },
+    ];
+
+    const reqList = el('div', 'career-auth-req-list');
+    for (const req of reqs) {
+      const item = el('div', 'career-auth-req-card');
+      const head = el('div', 'career-auth-req-head');
       head.append(
-        el('strong', '', plat.display_name),
-        el('span', `lead-status-pill status-${plat.status}`, plat.status)
+        el('strong', 'career-auth-platform-title', req.display_name),
+        el(
+          'span',
+          `career-status-badge status-${req.status === 'CONNECTED' ? 'CALL_SCHEDULED' : 'DRAFT_PENDING_MANUAL_SEND'}`,
+          req.status,
+        ),
       );
 
-      const reqList = el('div', 'career-auth-reqs');
-      reqList.innerHTML = `
-        <div><strong>What Auth Is Needed:</strong> ${plat.required_fields.join(' • ')}</div>
-        <div class="muted">${plat.instructions}</div>
-        <div><strong>Unlocks:</strong> ${plat.unlocks_features.join(' | ')}</div>
-      `;
+      const guide = el('div', 'career-auth-guide');
+      guide.append(
+        el('p', 'career-auth-needed', `Unlocks: ${(req.unlocks_features || []).join(', ')}`),
+        el('p', 'career-auth-extract', `How to get it: ${req.instructions}`),
+      );
 
-      const methodSelect = document.createElement('select');
-      const methods: Array<[string, string]> = [
-        ['cookie_json', 'Recommended: Session Cookie JSON / storage_state.json'],
-        ['credentials', 'Direct Login: Registered Email + Password / Token'],
-        ['simulation', 'Zero-Auth: Dry-Run Simulation Sandbox'],
-      ];
-      for (const [mVal, mLabel] of methods) {
-        const opt = document.createElement('option');
-        opt.value = mVal;
-        opt.textContent = mLabel;
-        if (plat.auth_method === mVal) opt.selected = true;
+      const controls = el('div', 'career-auth-controls');
+      const methodSelect = el('select', 'career-select');
+      for (const m of ['cookie_json', 'credentials', 'simulation'] as const) {
+        const opt = el('option', '', m === 'cookie_json' ? 'Session Cookies JSON' : m === 'credentials' ? 'Email + Password' : 'Sandbox Simulation');
+        opt.value = m;
+        if (m === req.recommended_method) opt.selected = true;
         methodSelect.append(opt);
       }
 
-      const identInput = document.createElement('input');
-      identInput.placeholder = 'Account Email / Identifier (e.g. you@gmail.com)';
-      identInput.value = plat.account_identifier || '';
+      const accInput = el('input', 'career-input');
+      accInput.type = 'text';
+      accInput.placeholder = 'Account Email / Identifier';
+      accInput.value = req.account_identifier || this.readiness?.profile?.email || this.options.account?.email || '';
 
-      const secretInput = document.createElement('input');
-      secretInput.type = 'password';
-      secretInput.placeholder = 'Paste Cookie JSON ([{"name":"nauk_at",...}]) or Password';
+      const secretInput = el('textarea', 'career-textarea career-secret-input');
+      secretInput.rows = 2;
+      secretInput.placeholder =
+        'Paste Cookie JSON [{"name":"nauk_at","value":"..."}] or {"email":"...","password":"..."}';
 
       const btnRow = el('div', 'career-auth-btn-row');
-      const connectBtn = el('button', 'button primary', '🔒 Connect Auth');
+      const connectBtn = el('button', 'career-btn career-btn-primary career-btn-sm', 'Save & Verify in Vault');
       connectBtn.type = 'button';
       connectBtn.addEventListener('click', () => {
-        void this.connectPlatform(
-          plat.platform,
-          methodSelect.value,
-          identInput.value.trim(),
-          secretInput.value.trim()
-        );
+        void this.connectPlatform(req.platform, methodSelect.value, accInput.value.trim(), secretInput.value.trim());
       });
+      btnRow.append(connectBtn);
 
-      const simQuickBtn = el('button', 'button quiet', '🧪 Use Sandbox');
-      simQuickBtn.type = 'button';
-      simQuickBtn.addEventListener('click', () => {
-        void this.connectPlatform(plat.platform, 'simulation', 'Dry-Run Sandbox', '');
-      });
-
-      btnRow.append(connectBtn, simQuickBtn);
-      if (plat.status === 'CONNECTED' || plat.status === 'SIMULATION') {
-        const discBtn = el('button', 'button quiet', 'Disconnect');
+      if (req.status === 'CONNECTED') {
+        const discBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Disconnect');
         discBtn.type = 'button';
-        discBtn.addEventListener('click', () => {
-          void this.disconnectPlatform(plat.platform);
-        });
+        discBtn.addEventListener('click', () => void this.disconnectPlatform(req.platform));
         btnRow.append(discBtn);
       }
 
-      pCard.append(head, reqList, methodSelect, identInput, secretInput, btnRow);
-      authGrid.append(pCard);
+      controls.append(methodSelect, accInput, secretInput, btnRow);
+      item.append(head, guide, controls);
+      reqList.append(item);
     }
-    step2.append(authGrid);
 
-    // STEP 3: Pre-Flight Readiness & Start Autonomous Process
-    const step3 = el('div', 'career-card');
-    step3.append(
-      el('h3', '', 'Step 3: Start Autonomous Career Process'),
+    authCard.append(reqList);
+    wrap.append(authCard);
+    return wrap;
+  }
+
+  // ============================================================================
+  // TAB 1: GOAL & PACING (5-Calls North Star + 6-Stage Diagnostics + Recruiter CRM)
+  // ============================================================================
+  private renderGoalTab(): HTMLElement {
+    const wrapper = el('div', 'career-goal-grid');
+
+    // Top Row: Radial Pacing Gauge + Funnel Metrics
+    const topRow = el('div', 'career-goal-top-row');
+
+    const callsScheduled = this.pacing?.calls_scheduled_count ?? 0;
+    const targetCalls = 5;
+    const ratio = Math.min(1.0, callsScheduled / targetCalls);
+    const pct = Math.round(ratio * 100);
+
+    const gaugeCard = el('div', 'career-card career-gauge-card');
+    const svgWrapper = el('div', 'career-radial-svg-wrap');
+
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference * (1 - ratio);
+    // Pacing gauge color thresholds: emerald (>=80%), amber (>=40%), rose (<40%)
+    const color = ratio >= 0.8 ? '#10b981' : ratio >= 0.4 ? '#f59e0b' : '#f43f5e';
+
+    svgWrapper.innerHTML = `
+      <svg class="career-radial-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+        <circle cx="50" cy="50" r="${radius}" fill="transparent" stroke="${color}" stroke-width="8"
+          stroke-dasharray="${circumference.toFixed(2)}"
+          stroke-dashoffset="${strokeDashoffset.toFixed(2)}"
+          stroke-linecap="round"
+          transform="rotate(-90 50 50)" />
+        <text x="50" y="47" text-anchor="middle" class="career-gauge-num" fill="#f8fafc">${callsScheduled}/${targetCalls}</text>
+        <text x="50" y="63" text-anchor="middle" class="career-gauge-sub" fill="#94a3b8">${pct}% Velocity</text>
+      </svg>
+    `;
+
+    const gaugeInfo = el('div', 'career-gauge-info');
+    gaugeInfo.append(
+      el('span', 'career-badge-pill', `Pacing Date: ${this.pacing?.pacing_date || new Date().toISOString().slice(0, 10)}`),
+      el('h3', '', 'North Star: 5 Recruiter Calls / Day'),
       el(
         'p',
-        'muted',
-        `Current Engine Status: ${eng?.engine_status || 'READY'} (${eng?.execution_mode || 'DRY_RUN'}). Starting the engine immediately runs Block 1 (Resdex Bump + Role-Matched Batch Apply + CourseForge Study Sprint) for ${prof?.target_role || 'your profile'}.`
-      )
+        'career-muted',
+        'Sustaining 5 daily screening calls compounds into 25 weekly conversations, 6–8 technical loops, and 2–3 competing offers.',
+      ),
+    );
+    gaugeCard.append(svgWrapper, gaugeInfo);
+
+    // Funnel Metrics Summary Card
+    const metricsCard = el('div', 'career-card career-metrics-card');
+    metricsCard.append(el('h3', 'career-card-title', 'Today’s Career Funnel Telemetry'));
+    const statsGrid = el('div', 'career-stats-grid');
+
+    const metrics = [
+      { label: 'Search Appearances', val: String(this.pacing?.search_appearances ?? 0), target: 'Target: 150+/wk' },
+      { label: 'Recruiter Contact Views', val: String(this.pacing?.contact_views ?? 0), target: 'Target: 5+/wk' },
+      { label: 'Applications Submitted', val: String(this.pacing?.applications_count ?? 0), target: 'Target: 25/day' },
+      { label: 'Recruiter Outreaches', val: String(this.pacing?.outreaches_count ?? 0), target: 'Target: 10/day' },
+    ];
+
+    for (const m of metrics) {
+      const box = el('div', 'career-stat-box');
+      box.append(
+        el('span', 'career-stat-label', m.label),
+        el('strong', 'career-stat-value', m.val),
+        el('span', 'career-stat-target', m.target),
+      );
+      statsGrid.append(box);
+    }
+    metricsCard.append(statsGrid);
+    topRow.append(gaugeCard, metricsCard);
+    wrapper.append(topRow);
+
+    // Middle Row: 6-Stage Diagnostic Engine
+    const diagSection = el('div', 'career-card career-diagnostics-section');
+    const diagHead = el('div', 'career-section-head');
+    diagHead.append(
+      el('h3', 'career-card-title', 'Active Bottleneck Diagnostics (6-Stage Engine)'),
+      el('span', 'career-muted', 'Automated root-cause detection across visibility, CTR, velocity, and conversion'),
+    );
+    diagSection.append(diagHead);
+
+    const alerts: BottleneckAlert[] = this.pacing?.active_bottlenecks || [];
+    if (alerts.length === 0) {
+      const okBanner = el('div', 'career-healthy-banner');
+      okBanner.textContent = 'Zero bottlenecks detected — All 6 funnel stages are operating at target run-rate!';
+      diagSection.append(okBanner);
+    } else {
+      const alertsGrid = el('div', 'career-alerts-grid');
+      for (const alert of alerts) {
+        const aCard = el('div', `career-alert-card severity-${alert.severity}`);
+        const aTop = el('div', 'career-alert-top');
+        aTop.append(
+          el('span', 'career-alert-stage', alert.stage),
+          el('span', `career-severity-badge badge-${alert.severity}`, alert.severity),
+        );
+        const aDesc = el('p', 'career-alert-desc', alert.description);
+        const aActionRow = el('div', 'career-alert-action-row');
+        aActionRow.append(el('div', 'career-alert-action', `Action: ${alert.action_required}`));
+        aActionRow.append(this.buildDiagnosticFixButton(alert));
+        aCard.append(aTop, aDesc, aActionRow);
+        alertsGrid.append(aCard);
+      }
+      diagSection.append(alertsGrid);
+    }
+    wrapper.append(diagSection);
+
+    // Bottom Row: Recruiter CRM Leads Board + Inline Add Lead Form
+    const crmSection = el('div', 'career-card career-crm-section');
+    const crmHead = el('div', 'career-section-head');
+    crmHead.append(
+      el('h3', 'career-card-title', `Recruiter Outbound CRM (${this.leads.length} Leads)`),
+      el('span', 'career-muted', 'One-click copy 300-char notes tailored to your story & track 48h follow-ups'),
+    );
+    crmSection.append(crmHead);
+
+    // Inline Minimal Add Lead Form
+    const addLeadForm = el('form', 'career-inline-form');
+    const recNameInput = el('input', 'career-input');
+    recNameInput.placeholder = 'Recruiter Name (e.g. Ananya Sharma)';
+    recNameInput.required = true;
+    const recCompanyInput = el('input', 'career-input');
+    recCompanyInput.placeholder = 'Company (e.g. Microsoft)';
+    recCompanyInput.required = true;
+    const recRoleInput = el('input', 'career-input');
+    recRoleInput.placeholder = `Target Role (${this.readiness?.profile?.target_role || 'Software Engineer'})`;
+    recRoleInput.value = this.readiness?.profile?.target_role || '';
+    const addLeadBtn = el('button', 'career-btn career-btn-primary career-btn-sm', '+ Add Recruiter Lead');
+    addLeadBtn.type = 'submit';
+    addLeadBtn.disabled = this.actionInProgress;
+    addLeadForm.append(recNameInput, recCompanyInput, recRoleInput, addLeadBtn);
+    addLeadForm.addEventListener('submit', e => {
+      e.preventDefault();
+      void this.createLead(recNameInput.value, recCompanyInput.value, recRoleInput.value, 'LinkedIn');
+    });
+    crmSection.append(addLeadForm);
+
+    if (this.leads.length === 0) {
+      crmSection.append(
+        el(
+          'p',
+          'career-empty-state',
+          'No active recruiter leads in your account yet. Add a recruiter above or execute Afternoon Block 2 in the Daily Plan tab to auto-generate role-matched leads.',
+        ),
+      );
+    } else {
+      const leadsList = el('div', 'career-leads-list');
+      for (const lead of this.leads) {
+        const lCard = el('div', 'career-lead-row');
+
+        const lMain = el('div', 'career-lead-main');
+        const lTitleRow = el('div', 'career-lead-title-row');
+        lTitleRow.append(
+          el('strong', 'career-lead-name', lead.recruiter_name),
+          el('span', 'career-lead-company', `@ ${lead.company}`),
+          el('span', 'career-lead-role-tag', lead.target_role),
+          el('span', `career-status-badge status-${lead.status}`, lead.status),
+        );
+
+        const noteText =
+          lead.connection_note_300chars ||
+          lead.pitch_text ||
+          `Hi ${lead.recruiter_name}, reaching out regarding ${lead.target_role} roles at ${lead.company}.`;
+        const lPitch = el('p', 'career-lead-pitch', noteText);
+
+        const lFollowup = el('div', 'career-lead-followup');
+        if (lead.day_3_followup_date) {
+          lFollowup.append(el('span', 'career-followup-pill', `Day-3 Follow-Up Due: ${lead.day_3_followup_date}`));
+        }
+        if (lead.day_7_followup_date) {
+          lFollowup.append(el('span', 'career-followup-pill', `Day-7 Follow-Up Due: ${lead.day_7_followup_date}`));
+        }
+
+        lMain.append(lTitleRow, lPitch, lFollowup);
+
+        const lActions = el('div', 'career-lead-actions');
+        const copyBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Copy Note');
+        copyBtn.type = 'button';
+        copyBtn.addEventListener('click', () => {
+          void navigator.clipboard.writeText(noteText);
+          this.notify(`Copied 300-char connection note for ${lead.recruiter_name}`);
+        });
+
+        const statusSelect = el('select', 'career-select-sm');
+        const statuses = [
+          'DRAFT_PENDING_MANUAL_SEND',
+          'SENT',
+          'CONNECTED',
+          'PITCH_SENT',
+          'CALL_SCHEDULED',
+          'REJECTED',
+        ];
+        for (const st of statuses) {
+          const opt = el('option', '', st);
+          opt.value = st;
+          if (lead.status === st) opt.selected = true;
+          statusSelect.append(opt);
+        }
+        statusSelect.addEventListener('change', () => {
+          void this.updateLeadStatus(lead.lead_id, statusSelect.value);
+        });
+
+        lActions.append(copyBtn, statusSelect);
+        lCard.append(lMain, lActions);
+        leadsList.append(lCard);
+      }
+      crmSection.append(leadsList);
+    }
+
+    wrapper.append(crmSection);
+    return wrapper;
+  }
+
+  private buildDiagnosticFixButton(alert: BottleneckAlert): HTMLButtonElement {
+    const btn = el('button', 'career-btn career-btn-primary career-btn-sm');
+    btn.type = 'button';
+    btn.disabled = this.actionInProgress;
+
+    switch (alert.code) {
+      case 'LOW_SEARCH_APPEARANCES':
+        btn.textContent = 'Fix Now: Resdex Bump';
+        btn.addEventListener('click', () => void this.triggerBump());
+        break;
+      case 'LOW_CONTACT_VIEWS':
+        btn.textContent = 'Fix Now: Optimize Headline SEO';
+        btn.addEventListener('click', () => this.setTab('boost'));
+        break;
+      case 'LOW_APPLICATION_VELOCITY':
+        btn.textContent = 'Fix Now: Run Block 1 Apply Batch';
+        btn.addEventListener('click', () => void this.executeBlock(1));
+        break;
+      case 'LOW_OUTREACH_VOLUME':
+      case 'LOW_REPLY_RATE':
+        btn.textContent = 'Fix Now: Run Block 2 Outbound Pitches';
+        btn.addEventListener('click', () => void this.executeBlock(2));
+        break;
+      case 'LOW_CALL_CONVERSION':
+      default:
+        btn.textContent = 'Fix Now: Run Block 3 Follow-Up Sweep';
+        btn.addEventListener('click', () => void this.executeBlock(3));
+        break;
+    }
+    return btn;
+  }
+
+  // ============================================================================
+  // TAB 2: DAILY PLANNER (3 Routine Blocks + Study Sprints)
+  // ============================================================================
+  private renderPlanTab(): HTMLElement {
+    const wrapper = el('div', 'career-plan-grid');
+
+    const introCard = el('div', 'career-card career-plan-intro');
+    introCard.append(
+      el('h3', 'career-card-title', '3-Block Daily Career & Study Rhythm'),
+      el(
+        'p',
+        'career-muted',
+        `Synchronizes your ${this.readiness?.profile?.target_role || 'engineering'} job applications, Resdex freshness bumps, and 45-minute CourseForge Pomodoro masterclass sprints.`,
+      ),
+    );
+    wrapper.append(introCard);
+
+    const blocks = this.planToday?.blocks || [
+      {
+        block_id: 1 as const,
+        title: 'BLOCK 1: Morning Routine (09:00 - 11:30 IST)',
+        time_window: '09:00 - 11:30 IST',
+        tasks: [
+          "[Career] Resdex Profile Bump to 'Active Today'",
+          `[Career] High-Velocity Apply: 20-25 ${this.readiness?.profile?.target_role || 'Software Engineer'} Vacancies`,
+          '[Study]  45-Min CourseForge Masterclass Sprint',
+        ],
+        status: 'pending' as const,
+        is_active: false,
+      },
+      {
+        block_id: 2 as const,
+        title: 'BLOCK 2: Afternoon Outbound (14:00 - 16:30 IST)',
+        time_window: '14:00 - 16:30 IST',
+        tasks: [
+          `[Career] Top GCC Recruiter Outbound: 10 Custom ${this.readiness?.profile?.target_role || 'Software Engineer'} Pitches`,
+          '[Career] Post-Lunch Resdex Bump',
+          '[Study]  45-Min Hands-on Code Lab Sprint',
+        ],
+        status: 'pending' as const,
+        is_active: false,
+      },
+      {
+        block_id: 3 as const,
+        title: 'BLOCK 3: Evening Sweep & Review (18:30 - 20:30 IST)',
+        time_window: '18:30 - 20:30 IST',
+        tasks: [
+          '[Career] Evening Resdex Bump (Sweep US recruiter & after-hours shift)',
+          '[Career] 48-Hour Follow-Up Batch (5 high-urgency candidate follow-ups)',
+          '[Study]  AI Tutor Mock Interview: 3 Technical Scenarios',
+        ],
+        status: 'pending' as const,
+        is_active: false,
+      },
+    ];
+
+    const blocksContainer = el('div', 'career-blocks-list');
+    for (const b of blocks) {
+      const bCard = el('div', `career-card career-block-card ${b.is_active ? 'active-window' : ''}`);
+      const bHead = el('div', 'career-block-head');
+      const bTitleWrap = el('div', '');
+      bTitleWrap.append(
+        el('span', 'career-block-time', b.time_window),
+        el('h4', 'career-block-title', b.title),
+      );
+
+      const execBtn = el('button', 'career-btn career-btn-primary');
+      execBtn.type = 'button';
+      execBtn.disabled = this.actionInProgress;
+      execBtn.textContent = `Execute Block ${b.block_id}`;
+      execBtn.addEventListener('click', () => void this.executeBlock(b.block_id as 1 | 2 | 3));
+
+      bHead.append(bTitleWrap, execBtn);
+      bCard.append(bHead);
+
+      const taskList = el('ul', 'career-task-list');
+      for (const t of b.tasks) {
+        const key = `${b.block_id}:${t}`;
+        const li = el('li', `career-task-item ${this.checkedTasks.has(key) ? 'checked' : ''}`);
+        const cb = el('input', 'career-task-cb');
+        cb.type = 'checkbox';
+        cb.checked = this.checkedTasks.has(key);
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            this.checkedTasks.add(key);
+          } else {
+            this.checkedTasks.delete(key);
+          }
+          this.saveCheckedTasks();
+          this.render();
+        });
+        const label = el('span', 'career-task-text', t);
+        li.append(cb, label);
+
+        if (t.includes('[Study]') && this.options.onNavigatePlan) {
+          const studyBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Open Study Sprint');
+          studyBtn.type = 'button';
+          studyBtn.addEventListener('click', () => this.options.onNavigatePlan?.());
+          li.append(studyBtn);
+        }
+        taskList.append(li);
+      }
+
+      bCard.append(taskList);
+      blocksContainer.append(bCard);
+    }
+
+    wrapper.append(blocksContainer);
+    return wrapper;
+  }
+
+  // ============================================================================
+  // TAB 3: PROFILE BOOST & SEO (Resdex Bump + Bandit Policy + Keyword Utility)
+  // ============================================================================
+  private renderBoostTab(): HTMLElement {
+    const wrapper = el('div', 'career-boost-grid');
+
+    const topRow = el('div', 'career-boost-top-row');
+
+    const freshnessCard = el('div', 'career-card');
+    const freshness = this.boostStatus?.active_today ? 'Active Today' : 'Ready for Bump';
+    const cooldown = this.boostStatus?.cooldown_remaining_seconds ?? 0;
+    freshnessCard.append(
+      el('span', 'career-badge-pill', 'NAUKRI RESDEX FRESHNESS'),
+      el('h3', 'career-boost-status-title', freshness),
+      el(
+        'p',
+        'career-muted',
+        cooldown > 0
+          ? `Cooldown active: next bump recommended in ${Math.ceil(cooldown / 60)} min.`
+          : 'Profile is eligible for an immediate Resdex freshness touch.',
+      ),
+    );
+    const triggerBtn = el('button', 'career-btn career-btn-primary', 'Trigger Resdex Bump Now');
+    triggerBtn.type = 'button';
+    triggerBtn.disabled = this.actionInProgress;
+    triggerBtn.addEventListener('click', () => void this.triggerBump());
+    freshnessCard.append(triggerBtn);
+
+    const policyCard = el('div', 'career-card');
+    policyCard.append(
+      el('span', 'career-badge-pill', 'CONTEXTUAL BANDIT ENGINE'),
+      el('h3', 'career-boost-status-title', `LinUCB Selection Policy (${this.boostStatus?.policy_version || 'v2.1-linucb'})`),
+      el(
+        'p',
+        'career-muted',
+        `Mode: ${this.boostStatus?.policy_mode || 'ACTIVE'} · Decisions Recorded: ${this.boostStatus?.policy_decisions_count ?? 0}`,
+      ),
+      el(
+        'p',
+        'career-muted',
+        `Strict ground-truth guardrails active: ${this.readiness?.profile?.total_yoe ?? 2.0} YOE, ${this.readiness?.profile?.notice_period_days ?? 30}-day notice, and whitelisted ${this.readiness?.profile?.target_role || 'role'} tokens.`,
+      ),
     );
 
-    const launchRow = el('div', 'career-launch-row');
-    const startDryBtn = el('button', 'button primary', '🚀 Start Process (Dry-Run Simulation)');
-    startDryBtn.type = 'button';
-    startDryBtn.addEventListener('click', () => {
-      void this.startEngine('DRY_RUN');
-    });
+    topRow.append(freshnessCard, policyCard);
+    wrapper.append(topRow);
 
-    const startLiveBtn = el('button', 'button primary', '🔥 Start Process (Live Connected Portals)');
-    startLiveBtn.type = 'button';
-    startLiveBtn.addEventListener('click', () => {
-      void this.startEngine('LIVE');
-    });
+    // Keyword Utility Table
+    const kwCard = el('div', 'career-card');
+    kwCard.append(
+      el('h3', 'career-card-title', 'Market Keyword Utility & Headline SEO Scores'),
+      el('p', 'career-muted', 'Ranked by Recruiter Demand Frequency ÷ Candidate Saturation. Click Inject to add to your headline whitelist.'),
+    );
 
-    launchRow.append(startDryBtn, startLiveBtn);
-    if (eng?.last_cycle_summary) {
-      step3.append(el('div', 'career-healthy-banner', `Last Cycle: ${eng.last_cycle_summary}`));
+    const kwTable = el('table', 'career-table');
+    kwTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Keyword Token</th>
+          <th>Market Demand</th>
+          <th>Saturation</th>
+          <th>Utility Score</th>
+          <th>Status / Action</th>
+        </tr>
+      </thead>
+    `;
+    const kwBody = el('tbody', '');
+    for (const kw of this.boostStatus?.keyword_utilities || []) {
+      const tr = el('tr', '');
+      tr.innerHTML = `
+        <td><strong>${kw.token}</strong></td>
+        <td>${kw.demand_frequency}</td>
+        <td>${kw.saturation_count}</td>
+        <td><span class="career-utility-pill">${kw.utility_score.toFixed(2)}</span></td>
+      `;
+      const actionTd = el('td', '');
+      if (kw.claimable) {
+        const injectBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Inject into Headline');
+        injectBtn.type = 'button';
+        injectBtn.disabled = this.actionInProgress;
+        injectBtn.addEventListener('click', () => {
+          const prof = this.readiness?.profile;
+          if (prof) {
+            const nextSkills = prof.primary_skills.includes(kw.token)
+              ? prof.primary_skills
+              : [kw.token, ...prof.primary_skills];
+            void this.saveProfileOverrides({
+              ...prof,
+              primary_skills: nextSkills,
+            });
+          } else {
+            this.notify(`Injected "${kw.token}" into active headline whitelist.`);
+          }
+        });
+        actionTd.append(injectBtn);
+      } else {
+        actionTd.append(el('span', 'career-claim-tag blocked', 'Quarantined'));
+      }
+      tr.append(actionTd);
+      kwBody.append(tr);
     }
-    step3.append(launchRow);
+    kwTable.append(kwBody);
+    kwCard.append(kwTable);
+    wrapper.append(kwCard);
 
-    studio.append(step1, step2, step3);
-    return studio;
+    // Mutation Audit Trail
+    const mutCard = el('div', 'career-card');
+    mutCard.append(
+      el('h3', 'career-card-title', 'Profile Mutation Provenance & SHA-256 Audit Trail'),
+      el('p', 'career-muted', 'Every automated profile touch or headline update is hashed for rollback safety.'),
+    );
+
+    const mutations = this.boostStatus?.recent_mutations || [];
+    if (mutations.length === 0) {
+      mutCard.append(el('p', 'career-empty-state', 'No mutations logged for your account yet. Trigger a Resdex bump above to record your first audit entry.'));
+    } else {
+      const mutList = el('div', 'career-mutations-list');
+      for (const m of mutations.slice(0, 8)) {
+        const row = el('div', 'career-mutation-row');
+        row.append(
+          el('strong', '', `${m.platform.toUpperCase()} · ${m.field}`),
+          el('span', 'career-muted', m.rationale || m.mutation_type),
+          el('code', 'career-hash-code', `SHA256: ${(m.new_hash || '').slice(0, 8)}…`),
+          el('span', 'career-status-badge status-APPLIED', m.status),
+        );
+        mutList.append(row);
+      }
+      mutCard.append(mutList);
+    }
+    wrapper.append(mutCard);
+
+    return wrapper;
+  }
+
+  // ============================================================================
+  // TAB 4: APPLICATION LEDGER & CSV EXPORT
+  // ============================================================================
+  private renderLedgerTab(): HTMLElement {
+    const wrapper = el('div', 'career-ledger-grid');
+
+    const headCard = el('div', 'career-card career-ledger-head');
+    const leftInfo = el('div', '');
+    leftInfo.append(
+      el('h3', 'career-card-title', `Application Ledger (${this.jobsTotal} Total Records)`),
+      el('p', 'career-muted', 'Complete per-user audit trail of automated and 1-click applications with match scores.'),
+    );
+
+    const rightControls = el('div', 'career-ledger-controls');
+    const searchInput = el('input', 'career-input career-ledger-search');
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Filter by company or role...';
+    searchInput.value = this.ledgerSearch;
+    searchInput.addEventListener('input', () => {
+      this.ledgerSearch = searchInput.value;
+      this.render();
+    });
+
+    const platformSelect = el('select', 'career-select-sm');
+    for (const [val, label] of [
+      ['', 'All Platforms'],
+      ['naukri', 'Naukri'],
+      ['linkedin', 'LinkedIn'],
+      ['instahyre', 'Instahyre'],
+    ] as const) {
+      const opt = el('option', '', label);
+      opt.value = val;
+      if (this.ledgerPlatformFilter === val) opt.selected = true;
+      platformSelect.append(opt);
+    }
+    platformSelect.addEventListener('change', () => {
+      this.ledgerPlatformFilter = platformSelect.value;
+      this.render();
+    });
+
+    const exportLink = el('a', 'career-btn career-btn-secondary', 'Download CSV Export');
+    exportLink.href = '/api/v1/career/export.csv';
+    exportLink.setAttribute('download', 'courseforge_career_applied_jobs.csv');
+
+    rightControls.append(searchInput, platformSelect, exportLink);
+    headCard.append(leftInfo, rightControls);
+    wrapper.append(headCard);
+
+    const filteredJobs = this.jobs.filter(j => {
+      if (this.ledgerPlatformFilter && j.platform.toLowerCase() !== this.ledgerPlatformFilter.toLowerCase()) {
+        return false;
+      }
+      if (this.ledgerSearch.trim()) {
+        const q = this.ledgerSearch.trim().toLowerCase();
+        return (
+          j.company.toLowerCase().includes(q) ||
+          j.title.toLowerCase().includes(q) ||
+          (j.location || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+
+    const tableCard = el('div', 'career-card career-table-wrap');
+    if (filteredJobs.length === 0) {
+      tableCard.append(
+        el(
+          'p',
+          'career-empty-state',
+          this.jobs.length === 0
+            ? 'No applications recorded in your personal ledger yet. Execute Block 1 in the Daily Plan tab or use the Outcome Tracker tab to log applications.'
+            : 'No applications match your current search filter.',
+        ),
+      );
+    } else {
+      const table = el('table', 'career-table');
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Company</th>
+            <th>Role Title</th>
+            <th>Location</th>
+            <th>Match Score</th>
+            <th>Status</th>
+            <th>Applied At</th>
+          </tr>
+        </thead>
+      `;
+      const tbody = el('tbody', '');
+      for (const j of filteredJobs) {
+        const tr = el('tr', '');
+        const dateStr = j.applied_at ? new Date(j.applied_at).toLocaleDateString() : '—';
+        tr.innerHTML = `
+          <td><span class="career-platform-tag">${j.platform}</span></td>
+          <td><strong>${j.company}</strong></td>
+          <td>${j.title}</td>
+          <td>${j.location || 'Bengaluru'}</td>
+          <td><span class="career-score-pill">${Number(j.match_score || 70).toFixed(0)}%</span></td>
+          <td><span class="career-status-badge status-${j.status}">${j.status}</span></td>
+          <td class="career-muted">${dateStr}</td>
+        `;
+        tbody.append(tr);
+      }
+      table.append(tbody);
+      tableCard.append(table);
+    }
+
+    wrapper.append(tableCard);
+    return wrapper;
   }
 }

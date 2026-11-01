@@ -123,22 +123,22 @@ func DefaultCandidateProfile(userID string) CandidateProfile {
 		userID = "lavkush"
 	}
 	return CandidateProfile{
-		UserID:          userID,
-		FullName:        "Lavkush Kumar",
-		Email:           "lav84095@gmail.com",
-		Phone:           "+91-9122036484",
-		LinkedInURL:     "https://linkedin.com/in/lavkushry",
-		GitHubURL:       "https://github.com/lavkushry",
-		PrimaryTrackID:  "data",
-		TargetRole:      "Azure Data Engineer",
-		SecondaryRoles:  []string{"Senior Data Engineer", "PySpark Developer", "Databricks Engineer"},
-		TotalYOE:        2.5,
-		RelevantYOE:     2.5,
-		CurrentCompany:  "CGI",
-		PreviousCompany: "HFCL",
-		CurrentCTCLPA:   12.0,
-		ExpectedCTCLPA:  22.0,
-		TargetCTCRange:  "₹20–25 LPA",
+		UserID:           userID,
+		FullName:         "Lavkush Kumar",
+		Email:            "lav84095@gmail.com",
+		Phone:            "+91-9122036484",
+		LinkedInURL:      "https://linkedin.com/in/lavkushry",
+		GitHubURL:        "https://github.com/lavkushry",
+		PrimaryTrackID:   "data",
+		TargetRole:       "Azure Data Engineer",
+		SecondaryRoles:   []string{"Senior Data Engineer", "PySpark Developer", "Databricks Engineer"},
+		TotalYOE:         2.5,
+		RelevantYOE:      2.5,
+		CurrentCompany:   "CGI",
+		PreviousCompany:  "HFCL",
+		CurrentCTCLPA:    12.0,
+		ExpectedCTCLPA:   22.0,
+		TargetCTCRange:   "₹20–25 LPA",
 		NoticePeriodDays: 15,
 		NoticePeriodStr:  "15 Days or less (Immediate Joiner)",
 		PrimarySkills: []string{
@@ -201,6 +201,24 @@ func (s *Service) ParseResumeIntoProfile(ctx context.Context, userID, filename s
 	}
 
 	profile := DefaultCandidateProfile(userID)
+	if !isLegacyLavkushUser(userID, "") {
+		profile = CandidateProfile{
+			UserID:             userID,
+			FullName:           "Candidate",
+			PrimaryTrackID:     "backend",
+			TargetRole:         "Software Engineer",
+			SecondaryRoles:     []string{"Software Engineer", "Senior Software Engineer"},
+			TotalYOE:           2.0,
+			RelevantYOE:        2.0,
+			CurrentCTCLPA:      0,
+			ExpectedCTCLPA:     20.0,
+			TargetCTCRange:     "₹18–25 LPA",
+			NoticePeriodDays:   30,
+			NoticePeriodStr:    "30 Days Notice",
+			PreferredLocations: []string{"Bengaluru", "Hyderabad", "Pune", "Noida", "Remote"},
+			ScreeningAnswers:   map[string]string{},
+		}
+	}
 	profile.ResumeFilename = filename
 	if profile.ResumeFilename == "" {
 		profile.ResumeFilename = "uploaded_resume.txt"
@@ -434,7 +452,126 @@ func buildWhitelistTokens(p CandidateProfile) []string {
 	return out
 }
 
-// GetCandidateProfile loads a user's profile from PostgreSQL or returns DefaultCandidateProfile.
+func isLegacyLavkushUser(userID, email string) bool {
+	uid := strings.ToLower(strings.TrimSpace(userID))
+	em := strings.ToLower(strings.TrimSpace(email))
+	if uid == "" || uid == "lavkush" || uid == "usr_lavkush" {
+		return true
+	}
+	if strings.HasPrefix(em, "lav84095") || strings.HasPrefix(em, "lavkush") || strings.HasPrefix(em, "lavkroy") {
+		return true
+	}
+	return false
+}
+
+func (s *Service) buildUserInitialProfile(ctx context.Context, userID string) CandidateProfile {
+	var userName, userEmail string
+	if s.Pool != nil {
+		_ = s.Pool.QueryRow(ctx, `SELECT COALESCE(name, ''), COALESCE(email, '') FROM users WHERE id = $1`, userID).Scan(&userName, &userEmail)
+	}
+	if isLegacyLavkushUser(userID, userEmail) {
+		return DefaultCandidateProfile(userID)
+	}
+	if strings.TrimSpace(userName) == "" {
+		userName = userID
+	}
+
+	p := CandidateProfile{
+		UserID:             userID,
+		FullName:           strings.TrimSpace(userName),
+		Email:              strings.TrimSpace(userEmail),
+		Phone:              "",
+		LinkedInURL:        "",
+		GitHubURL:          "",
+		PrimaryTrackID:     "backend",
+		TargetRole:         "Software Engineer",
+		SecondaryRoles:     []string{"Software Engineer", "Backend Engineer", "Full-Stack Engineer"},
+		TotalYOE:           2.0,
+		RelevantYOE:        2.0,
+		CurrentCompany:     "",
+		PreviousCompany:    "",
+		CurrentCTCLPA:      0,
+		ExpectedCTCLPA:     20.0,
+		TargetCTCRange:     "₹18–25 LPA",
+		NoticePeriodDays:   30,
+		NoticePeriodStr:    "30 Days Notice",
+		PrimarySkills:      []string{},
+		Tools:              []string{},
+		PreferredLocations: []string{"Bengaluru", "Hyderabad", "Pune", "Noida", "Remote"},
+		ScreeningAnswers:   map[string]string{},
+		ResumeFilename:     "",
+		UpdatedAt:          s.now(),
+	}
+
+	if s.Pool != nil {
+		// Check if user already has a tailored application in career_applications
+		var appTrack, appTitle string
+		var appSkills []string
+		err := s.Pool.QueryRow(ctx, `
+			SELECT COALESCE(track_id, 'backend'), COALESCE(title, ''), target_skills
+			FROM career_applications
+			WHERE user_id = $1
+			ORDER BY updated_at DESC LIMIT 1
+		`, userID).Scan(&appTrack, &appTitle, &appSkills)
+		if err == nil {
+			if appTrack != "" {
+				p.PrimaryTrackID = appTrack
+			}
+			if appTitle != "" {
+				p.TargetRole = appTitle
+				p.SecondaryRoles = []string{appTitle, "Senior " + appTitle}
+			}
+			for _, sk := range appSkills {
+				if strings.TrimSpace(sk) != "" {
+					p.PrimarySkills = append(p.PrimarySkills, formatTokenLabel(sk))
+				}
+			}
+		}
+
+		// Also merge skills from user's career_confirmed_facts ("My Story")
+		rows, fErr := s.Pool.Query(ctx, `
+			SELECT skills FROM career_confirmed_facts WHERE user_id = $1 ORDER BY created_at DESC LIMIT 25
+		`, userID)
+		if fErr == nil {
+			defer rows.Close()
+			seen := map[string]bool{}
+			for _, sk := range p.PrimarySkills {
+				seen[strings.ToLower(sk)] = true
+			}
+			for rows.Next() {
+				var factSkills []string
+				if rows.Scan(&factSkills) == nil {
+					for _, sk := range factSkills {
+						label := formatTokenLabel(sk)
+						key := strings.ToLower(label)
+						if label != "" && !seen[key] && len(p.PrimarySkills) < 16 {
+							seen[key] = true
+							p.PrimarySkills = append(p.PrimarySkills, label)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if len(p.PrimarySkills) == 0 {
+		p.PrimarySkills = []string{"Software Engineering", "System Design", "APIs", "SQL", "Cloud"}
+	}
+	p.Tools = p.PrimarySkills
+	p.WhitelistHeadlineTokens = buildWhitelistTokens(p)
+	p.ScreeningAnswers = map[string]string{
+		"notice_period":   fmt.Sprintf("%d days", p.NoticePeriodDays),
+		"current_ctc":     fmt.Sprintf("%.1f LPA", p.CurrentCTCLPA),
+		"expected_ctc":    fmt.Sprintf("%.1f LPA", p.ExpectedCTCLPA),
+		"total_yoe":       fmt.Sprintf("%.1f", p.TotalYOE),
+		"target_role":     p.TargetRole,
+		"relocate":        "Yes",
+		"work_authorized": "Yes",
+	}
+	return p
+}
+
+// GetCandidateProfile loads a user's profile from PostgreSQL or builds their own user-scoped initial profile.
 func (s *Service) GetCandidateProfile(ctx context.Context, userID string) (CandidateProfile, error) {
 	if s.Pool == nil {
 		return DefaultCandidateProfile(userID), nil
@@ -461,9 +598,9 @@ func (s *Service) GetCandidateProfile(ctx context.Context, userID string) (Candi
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return DefaultCandidateProfile(userID), nil
+			return s.buildUserInitialProfile(ctx, userID), nil
 		}
-		return DefaultCandidateProfile(userID), nil
+		return s.buildUserInitialProfile(ctx, userID), nil
 	}
 	_ = json.Unmarshal(screeningJSON, &p.ScreeningAnswers)
 	if p.ScreeningAnswers == nil {
@@ -578,6 +715,18 @@ func (s *Service) SaveCandidateProfile(ctx context.Context, p CandidateProfile, 
 	}
 
 	// Dynamically seed career_keyword_utility tokens for this user's profile skills
+	noticeToken := fmt.Sprintf("%d Days Notice", p.NoticePeriodDays)
+	_, _ = s.Pool.Exec(ctx, `
+		INSERT INTO career_keyword_utility (user_id, token, demand_frequency, saturation_count, utility_score, claimable, updated_at)
+		VALUES ($1, $2, 180, 12, 15.0, true, $3)
+		ON CONFLICT (user_id, token) DO UPDATE SET
+			demand_frequency = EXCLUDED.demand_frequency,
+			saturation_count = EXCLUDED.saturation_count,
+			utility_score = EXCLUDED.utility_score,
+			claimable = true,
+			updated_at = EXCLUDED.updated_at
+	`, p.UserID, noticeToken, p.UpdatedAt)
+
 	for idx, sk := range p.PrimarySkills {
 		if idx >= 12 {
 			break
@@ -597,7 +746,84 @@ func (s *Service) SaveCandidateProfile(ctx context.Context, p CandidateProfile, 
 		`, p.UserID, sk, demand, saturation, utility, p.UpdatedAt)
 	}
 
+	// If rawResumeText is provided, auto-extract grounded achievement bullets into career_confirmed_facts
+	// when the user has not yet created confirmed facts, so each user has their own Story ready.
+	if strings.TrimSpace(rawResumeText) != "" {
+		s.seedConfirmedFactsFromResume(ctx, p, rawResumeText)
+	}
+
 	return p, nil
+}
+
+var metricExtractRegex = regexp.MustCompile(`(?i)(\d+(?:\.\d+)?\s*(?:%|x|ms|s|tb|gb|k\+|m\+|hrs?|hours?|days?|lpa|p99|p95))`)
+
+func (s *Service) seedConfirmedFactsFromResume(ctx context.Context, p CandidateProfile, rawText string) {
+	if s.Pool == nil {
+		return
+	}
+	var existingCount int
+	_ = s.Pool.QueryRow(ctx, `SELECT COUNT(*) FROM career_confirmed_facts WHERE user_id = $1`, p.UserID).Scan(&existingCount)
+	if existingCount > 0 {
+		return
+	}
+
+	lines := strings.Split(rawText, "\n")
+	added := 0
+	for _, line := range lines {
+		if added >= 5 {
+			break
+		}
+		trimmed := strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(line), "•-*·>"))
+		if len(trimmed) < 25 || len(trimmed) > 260 || strings.Contains(trimmed, "@") {
+			continue
+		}
+		lower := strings.ToLower(trimmed)
+		isBullet := strings.HasPrefix(strings.TrimSpace(line), "-") ||
+			strings.HasPrefix(strings.TrimSpace(line), "•") ||
+			strings.HasPrefix(strings.TrimSpace(line), "*")
+		hasActionVerb := false
+		for _, verb := range []string{"built", "designed", "developed", "engineered", "migrated", "optimized", "reduced", "scaled", "implemented", "architected", "automated", "led", "delivered", "deployed", "crafted"} {
+			if strings.Contains(lower, verb) {
+				hasActionVerb = true
+				break
+			}
+		}
+		if !isBullet && !hasActionVerb {
+			continue
+		}
+
+		action := trimmed
+		impact := fmt.Sprintf("delivered production impact as %s", p.TargetRole)
+		if parts := strings.SplitN(trimmed, " to ", 2); len(parts) == 2 && len(parts[0]) >= 15 && len(parts[1]) >= 10 {
+			action = strings.TrimSpace(parts[0])
+			impact = strings.TrimSpace(parts[1])
+		} else if parts := strings.SplitN(trimmed, ", ", 2); len(parts) == 2 && len(parts[0]) >= 15 && len(parts[1]) >= 10 {
+			action = strings.TrimSpace(parts[0])
+			impact = strings.TrimSpace(parts[1])
+		}
+
+		var metricPtr *string
+		if m := metricExtractRegex.FindString(trimmed); m != "" {
+			mClean := strings.TrimSpace(m)
+			metricPtr = &mClean
+		}
+
+		factSkills := uniqNormalized(p.PrimarySkills)
+		if len(factSkills) > 5 {
+			factSkills = factSkills[:5]
+		}
+		if len(action) > 200 {
+			action = action[:200]
+		}
+		if len(impact) > 400 {
+			impact = impact[:400]
+		}
+		_, _ = s.Pool.Exec(ctx, `
+			INSERT INTO career_confirmed_facts(id, user_id, action, impact, metric, skills, confirmed)
+			VALUES ($1, $2, $3, $4, $5, $6, true)
+		`, newID("fact_"), p.UserID, action, impact, metricPtr, factSkills)
+		added++
+	}
 }
 
 // HTTP Handlers for Profile & Resume Upload

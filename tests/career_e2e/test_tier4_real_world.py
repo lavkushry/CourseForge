@@ -432,3 +432,82 @@ class TestTier4_RealWorldScenarios:
         assert "connectPlatform" in view_ts
         assert "startEngine" in view_ts
         assert "What Auth Is Needed" in view_ts
+
+    def test_scenario_16_multi_user_story_isolation_and_realistic_minimal_all_options(self):
+        """
+        Scenario 16: Verify each user has their own isolated Career Story (zero leakage of
+        Lavkush's name/email/phone/track to other users) and the Realistic Minimal UI
+        exposes ALL Career Studio + Autonomous Engine options.
+        """
+        from services.career_worker.core.candidate_profile import CandidateProfile
+
+        # 1. Non-Lavkush user with sparse payload never inherits Lavkush's personal identity
+        nikku = CandidateProfile.from_dict({"user_id": "usr_nikku_99", "full_name": "Nikku"})
+        assert nikku.full_name == "Nikku"
+        assert nikku.email == ""
+        assert nikku.phone == ""
+        assert nikku.primary_track_id == "backend"
+        assert "Lavkush" not in nikku.full_name
+        assert "8102026606" not in nikku.phone
+
+        # 2. Verify Realistic Minimal UI exposes all 4 Engine tabs + all 10 Studio/Story views
+        repo_root = Path(__file__).resolve().parents[2]
+        view_ts = (repo_root / "web" / "src" / "career" / "view.ts").read_text()
+        for panel_import in [
+            "renderFacts",
+            "renderResumeStudio",
+            "renderMatch",
+            "renderCompanies",
+            "renderTracks",
+            "renderTracker",
+            "renderReferrals",
+            "renderAnalytics",
+            "renderAlerts",
+        ]:
+            assert panel_import in view_ts, f"Missing Studio panel {panel_import} in CareerView"
+
+        for studio_tab in ["'story'", "'resume'", "'match'", "'companies'", "'tracks'", "'tracker'", "'referrals'", "'analytics'", "'alerts'", "'all'"]:
+            assert studio_tab in view_ts, f"Missing studio tab {studio_tab} in CareerView"
+
+        # 3. Verify browser localStorage keys are scoped per user across Career, Tutor, and Settings
+        tutor_ts = (repo_root / "web" / "src" / "tutor" / "view.ts").read_text()
+        settings_ts = (repo_root / "web" / "src" / "settings" / "view.ts").read_text()
+        assert "courseforge_tutor_history_" in tutor_ts
+        assert "courseforge_daily_goal_" in settings_ts
+        assert "courseforge_career_tasks_" in view_ts
+
+
+    def test_scenario_16_per_user_platform_session_isolation(self, tmp_path, monkeypatch, worker_client):
+        """
+        Scenario 16: Each user has their own story — a non-owner user must never borrow the
+        legacy owner's global Naukri session, and a user's vaulted cookies are written only
+        to that user's isolated session file.
+        """
+        import services.career_worker.config as cfg
+        from services.career_worker import app as worker_app
+
+        monkeypatch.setattr(cfg, "COOKIES_DIR", tmp_path)
+        legacy_global = tmp_path / "naukri_cookies.json"
+        legacy_global.write_text(json.dumps([{"name": "nauk_at", "value": "owner", "domain": ".naukri.com", "path": "/"}]))
+
+        # Owner keeps the legacy global session; any other user gets an isolated (empty) path.
+        assert cfg.resolve_user_cookie_path("lavkush", "naukri") == legacy_global
+        other = cfg.resolve_user_cookie_path("rohan@example.com", "naukri")
+        assert other != legacy_global
+        assert other.parent.name == "rohan_example_com"
+        assert not other.exists()
+
+        # A user's own vaulted cookies are persisted only to their own file.
+        adapter = worker_app._user_naukri_adapter(
+            "rohan@example.com",
+            {"cookies": [{"name": "nauk_at", "value": "rohan", "domain": ".naukri.com", "path": "/"}]},
+        )
+        assert adapter.cookie_path == tmp_path / "rohan_example_com" / "naukri_cookies.json"
+        saved = json.loads(adapter.cookie_path.read_text())
+        assert saved[0]["value"] == "rohan"
+        assert json.loads(legacy_global.read_text())[0]["value"] == "owner"
+
+        # A third user without vaulted cookies is not bound to anyone else's session.
+        stranger = worker_app._user_naukri_adapter("priya", None)
+        assert stranger.cookie_path == tmp_path / "priya" / "naukri_cookies.json"
+        assert not stranger.cookie_path.exists()

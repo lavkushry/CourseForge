@@ -51,11 +51,13 @@ set -euo pipefail
 
 cd /home/ubuntu/CourseForge
 
-echo "1. Applying PostgreSQL Migration 015_career_studio.sql..."
+echo "1. Applying PostgreSQL Migrations 015_career_studio.sql & 035_universal_career_profiles.sql..."
 if docker ps --format '{{.Names}}' | grep -q '^courseforge-rewrite-postgres-1$'; then
   docker exec -i courseforge-rewrite-postgres-1 psql -U courseforge -d courseforge_rewrite < backend/internal/store/migrations/015_career_studio.sql
+  docker exec -i courseforge-rewrite-postgres-1 psql -U courseforge -d courseforge_rewrite < backend/internal/store/migrations/035_universal_career_profiles.sql
 elif docker ps --format '{{.Names}}' | grep -q '^courseforge_db$'; then
   docker exec -i courseforge_db psql -U courseforge -d courseforge_rewrite < backend/internal/store/migrations/015_career_studio.sql
+  docker exec -i courseforge_db psql -U courseforge -d courseforge_rewrite < backend/internal/store/migrations/035_universal_career_profiles.sql
 else
   echo "Warning: postgres docker container not detected running. Skipping direct psql injection."
 fi
@@ -78,13 +80,13 @@ if [ -f /home/ubuntu/Resume/applied_jobs.db ]; then
     --sqlite-db /home/ubuntu/Resume/applied_jobs.db \
     --outreach-json /home/ubuntu/Resume/outreach_tracker.json \
     --pg-url "${PG_URL}" \
-    --user-id "lavkush"
+    --user-id "lavkush" || true
   PYTHONPATH=/home/ubuntu/CourseForge /home/ubuntu/Resume/.venv/bin/python3 \
     services/career_worker/migrate_data.py \
     --sqlite-db /home/ubuntu/Resume/applied_jobs.db \
     --outreach-json /home/ubuntu/Resume/outreach_tracker.json \
     --pg-url "${PG_URL}" \
-    --user-id "usr_lavkush"
+    --user-id "usr_lavkush" || true
 fi
 
 echo "4. Installing systemd user services and timers..."

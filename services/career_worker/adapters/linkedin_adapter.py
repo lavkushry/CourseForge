@@ -1,7 +1,8 @@
 import time
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import Dict, Any, List, Optional
 
 from services.career_worker.core.base_adapter import BasePlatformAdapter
 from services.career_worker.core.session_vault import SessionVault
@@ -16,12 +17,14 @@ class LinkedInAdapter(BasePlatformAdapter):
     Executes Easy Apply and Recruiter Connection/InMail outbounds.
     """
 
-    def __init__(self, headless: bool = HEADLESS):
+    def __init__(self, headless: bool = HEADLESS, cookie_path: Optional[Path] = None):
         self.headless = headless
+        # Per-user session file; defaults to the legacy owner session for backward compatibility.
+        self.cookie_path = Path(cookie_path) if cookie_path is not None else LINKEDIN_COOKIES_PATH
         self._sim = SimulationAdapter(platform="linkedin")
 
     def login(self) -> bool:
-        if SessionVault.has_valid_session(LINKEDIN_COOKIES_PATH):
+        if SessionVault.has_valid_session(self.cookie_path):
             return True
         return self._sim.login()
 

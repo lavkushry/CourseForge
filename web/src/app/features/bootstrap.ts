@@ -116,6 +116,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.tutorView = new TutorView({
       root: required<HTMLElement>('#tutor-panel'),
       api: ctx.api,
+      account,
       onNavigateLesson: (lessonId, timestamp) => {
         void ctx.api
           .lesson(lessonId, ctx.navigationScope.signal)
@@ -136,7 +137,12 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.careerView = new CareerView({
       root: required<HTMLElement>('#career-panel'),
       api: ctx.api,
+      account,
       feedback: ctx.feedback,
+      onNavigatePlan: () => {
+        const btn = document.querySelector<HTMLButtonElement>('#primary-nav [data-catalog-view="planner"]');
+        btn?.click();
+      },
     });
     ctx.pathsView = new PathsView(
       required<HTMLElement>('#paths-panel'),

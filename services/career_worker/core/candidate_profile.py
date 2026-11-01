@@ -87,11 +87,19 @@ class CandidateProfile:
             return cls()
         if isinstance(data, cls):
             return data
-        full_name = data.get("full_name") or data.get("name") or CANDIDATE_FACTS["full_name"]
-        target_role = data.get("target_role") or CANDIDATE_FACTS["target_role"]
+        uid = str(data.get("user_id") or "lavkush").strip()
+        is_legacy_lavkush = uid.lower() in ("lavkush", "usr_lavkush")
+        default_name = CANDIDATE_FACTS["full_name"] if is_legacy_lavkush else uid
+        default_email = CANDIDATE_FACTS["email"] if is_legacy_lavkush else ""
+        default_phone = CANDIDATE_FACTS["phone"] if is_legacy_lavkush else ""
+        default_role = CANDIDATE_FACTS["target_role"] if is_legacy_lavkush else "Software Engineer"
+        default_track = "data" if is_legacy_lavkush else "backend"
+
+        full_name = data.get("full_name") or data.get("name") or default_name
+        target_role = data.get("target_role") or default_role
         total_yoe = float(data.get("total_yoe", CANDIDATE_FACTS["total_yoe"]))
         notice_days = int(data.get("notice_period_days", CANDIDATE_FACTS["notice_period_days"]))
-        skills = data.get("primary_skills") or list(CANDIDATE_FACTS["primary_skills"])
+        skills = data.get("primary_skills") or (list(CANDIDATE_FACTS["primary_skills"]) if is_legacy_lavkush else ["Software Engineering", "System Design", "APIs", "SQL", "Cloud"])
         whitelist = data.get("whitelist_headline_tokens") or [
             target_role,
             f"{total_yoe} YOE",
@@ -100,11 +108,11 @@ class CandidateProfile:
             *skills[:8],
         ]
         return cls(
-            user_id=str(data.get("user_id", "lavkush")),
+            user_id=uid,
             full_name=str(full_name),
-            email=str(data.get("email", CANDIDATE_FACTS["email"])),
-            phone=str(data.get("phone", CANDIDATE_FACTS["phone"])),
-            primary_track_id=str(data.get("primary_track_id", "data")),
+            email=str(data.get("email", default_email)),
+            phone=str(data.get("phone", default_phone)),
+            primary_track_id=str(data.get("primary_track_id", default_track)),
             target_role=str(target_role),
             total_yoe=total_yoe,
             relevant_yoe=float(data.get("relevant_yoe", total_yoe)),

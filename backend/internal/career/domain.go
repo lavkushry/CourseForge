@@ -2,6 +2,7 @@ package career
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 )
 
@@ -155,6 +156,8 @@ type WorkerBumpRequest struct {
 	UserID  string            `json:"user_id"`
 	DryRun  bool              `json:"dry_run"`
 	Profile *CandidateProfile `json:"profile,omitempty"`
+	// SessionCookies carries only the requesting user's own decrypted platform cookies (LIVE mode).
+	SessionCookies json.RawMessage `json:"session_cookies,omitempty"`
 }
 
 type WorkerBumpResponse struct {
@@ -167,6 +170,8 @@ type WorkerApplyRequest struct {
 	Block   int               `json:"block"`
 	DryRun  bool              `json:"dry_run"`
 	Profile *CandidateProfile `json:"profile,omitempty"`
+	// SessionCookies carries only the requesting user's own decrypted platform cookies (LIVE mode).
+	SessionCookies json.RawMessage `json:"session_cookies,omitempty"`
 }
 
 type WorkerApplyResponse struct {
@@ -181,6 +186,8 @@ type WorkerOutreachRequest struct {
 	Count   int               `json:"count"`
 	DryRun  bool              `json:"dry_run"`
 	Profile *CandidateProfile `json:"profile,omitempty"`
+	// SessionCookies carries only the requesting user's own decrypted platform cookies (LIVE mode).
+	SessionCookies json.RawMessage `json:"session_cookies,omitempty"`
 }
 
 type WorkerOutreachResponse struct {

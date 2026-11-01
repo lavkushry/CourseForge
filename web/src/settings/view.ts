@@ -20,8 +20,12 @@ export interface SettingsViewOptions {
 export class SettingsView {
   private dailyMinutes = 30;
 
+  private get goalKey(): string {
+    return `courseforge_daily_goal_${this.options.account.id}`;
+  }
+
   constructor(private readonly options: SettingsViewOptions) {
-    const savedGoal = localStorage.getItem('courseforge_daily_goal');
+    const savedGoal = localStorage.getItem(this.goalKey);
     if (savedGoal) {
       const parsed = parseInt(savedGoal, 10);
       if (!isNaN(parsed) && parsed > 0) this.dailyMinutes = parsed;
@@ -173,7 +177,7 @@ export class SettingsView {
       pill.addEventListener('click', async () => {
         this.dailyMinutes = mVal;
         select.value = String(mVal);
-        localStorage.setItem('courseforge_daily_goal', String(mVal));
+        localStorage.setItem(this.goalKey, String(mVal));
         this.render();
         try {
           await this.options.api.request('/me/habit-preferences', {
@@ -199,7 +203,7 @@ export class SettingsView {
     select.addEventListener('change', async () => {
       const val = parseInt(select.value, 10);
       this.dailyMinutes = val;
-      localStorage.setItem('courseforge_daily_goal', String(val));
+      localStorage.setItem(this.goalKey, String(val));
       this.render();
       try {
         await this.options.api.request('/me/habit-preferences', {

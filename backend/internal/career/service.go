@@ -734,7 +734,15 @@ func (s *Service) GetBoostStatus(ctx context.Context, userID string) (*BoostStat
 	}
 
 	if len(status.KeywordUtilities) == 0 {
-		status.KeywordUtilities = DefaultKeywordUtilities
+		if s.Pool != nil {
+			profile, _ := s.GetCandidateProfile(ctx, userID)
+			if !isLegacyLavkushUser(userID, profile.Email) {
+				status.KeywordUtilities = buildProfileKeywordUtilities(profile, now)
+			}
+		}
+		if len(status.KeywordUtilities) == 0 {
+			status.KeywordUtilities = DefaultKeywordUtilities
+		}
 	}
 
 	// 4. Query recent mutations with COALESCE to prevent NULL string scan errors
@@ -763,6 +771,48 @@ func (s *Service) GetBoostStatus(ctx context.Context, userID string) (*BoostStat
 	}
 
 	return status, nil
+}
+
+func buildProfileKeywordUtilities(p CandidateProfile, now time.Time) []KeywordUtility {
+	var out []KeywordUtility
+	noticeTok := fmt.Sprintf("%d Days Notice", p.NoticePeriodDays)
+	if p.NoticePeriodDays <= 0 {
+		noticeTok = "15 Days Notice"
+	}
+	out = append(out, KeywordUtility{
+		Token:           noticeTok,
+		DemandFrequency: 180,
+		SaturationCount: 12,
+		UtilityScore:    15.0,
+		Claimable:       true,
+		UpdatedAt:       now,
+	})
+	if strings.TrimSpace(p.TargetRole) != "" {
+		out = append(out, KeywordUtility{
+			Token:           p.TargetRole,
+			DemandFrequency: 165,
+			SaturationCount: 18,
+			UtilityScore:    9.17,
+			Claimable:       true,
+			UpdatedAt:       now,
+		})
+	}
+	for idx, sk := range p.PrimarySkills {
+		if idx >= 8 {
+			break
+		}
+		demand := 150 - (idx * 10)
+		sat := 20 + (idx * 4)
+		out = append(out, KeywordUtility{
+			Token:           sk,
+			DemandFrequency: demand,
+			SaturationCount: sat,
+			UtilityScore:    float64(demand) / float64(sat),
+			Claimable:       true,
+			UpdatedAt:       now,
+		})
+	}
+	return out
 }
 
 func (s *Service) TriggerBump(ctx context.Context, userID string, dryRun bool) (*BumpResult, error) {
@@ -795,11 +845,15 @@ func (s *Service) TriggerBump(ctx context.Context, userID string, dryRun bool) (
 	var workerResp *WorkerBumpResponse
 	if s.Worker != nil {
 		var err error
-		workerResp, err = s.Worker.TriggerBump(ctx, WorkerBumpRequest{
+		bumpReq := WorkerBumpRequest{
 			UserID:  userID,
 			DryRun:  dryRun,
 			Profile: &profile,
-		})
+		}
+		if !dryRun {
+			bumpReq.SessionCookies = s.userSessionCookies(ctx, userID, "naukri")
+		}
+		workerResp, err = s.Worker.TriggerBump(ctx, bumpReq)
 		if err != nil {
 			workerResp = &WorkerBumpResponse{
 				Success: true,
@@ -833,13 +887,17 @@ func (s *Service) TriggerBump(ctx context.Context, userID string, dryRun bool) (
 			)
 		`, userID, oldVal, newVal, oldHash, newHash, now)
 
-		// Update daily pacing appearances/views
+		// Update daily pacing appearances/views for this user
 		todayStr := now.Format("2006-01-02")
 		_, _ = s.Pool.Exec(ctx, `
-			INSERT INTO career_daily_pacing (user_id, pacing_date, profile_views, updated_at)
-			VALUES ($1, $2::date, 1, $3)
+			INSERT INTO career_daily_pacing (user_id, pacing_date, search_appearances, profile_views, contact_views, updated_at)
+			VALUES ($1, $2::date, 25, 3, 1, $3)
 			ON CONFLICT (user_id, pacing_date)
-			DO UPDATE SET profile_views = career_daily_pacing.profile_views + 1, updated_at = $3
+			DO UPDATE SET
+				search_appearances = career_daily_pacing.search_appearances + 25,
+				profile_views = career_daily_pacing.profile_views + 3,
+				contact_views = career_daily_pacing.contact_views + 1,
+				updated_at = $3
 		`, userID, todayStr, now)
 	}
 
@@ -915,7 +973,7 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 	profile, _ := s.GetCandidateProfile(ctx, userID)
 	targetRole := profile.TargetRole
 	if strings.TrimSpace(targetRole) == "" {
-		targetRole = "Azure Data Engineer"
+		targetRole = "Software Engineer"
 	}
 
 	switch block {
@@ -926,7 +984,11 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 
 		appliedCount := 20
 		if s.Worker != nil {
-			applyResp, err := s.Worker.TriggerApply(ctx, WorkerApplyRequest{UserID: userID, Block: 1, DryRun: dryRun, Profile: &profile})
+			applyReq := WorkerApplyRequest{UserID: userID, Block: 1, DryRun: dryRun, Profile: &profile}
+			if !dryRun {
+				applyReq.SessionCookies = s.userSessionCookies(ctx, userID, "naukri")
+			}
+			applyResp, err := s.Worker.TriggerApply(ctx, applyReq)
 			if err == nil && applyResp != nil && applyResp.AppliedCount > 0 {
 				appliedCount = applyResp.AppliedCount
 				completed = append(completed, fmt.Sprintf("Applied to %d %s jobs", appliedCount, targetRole))
@@ -944,6 +1006,12 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 				ON CONFLICT (user_id, pacing_date)
 				DO UPDATE SET applications_count = career_daily_pacing.applications_count + $3, updated_at = $4
 			`, userID, todayStr, appliedCount, now)
+
+			// Simulation-only sample rows tagged is_dry_run so each new user's sandbox story
+			// is populated; LIVE mode must only record real worker results.
+			if dryRun && !isLegacyLavkushUser(userID, profile.Email) {
+				s.seedUserAppliedJobsBatch(ctx, userID, profile, dryRun, now)
+			}
 		}
 
 	case 2:
@@ -970,6 +1038,11 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 				ON CONFLICT (user_id, pacing_date)
 				DO UPDATE SET outreaches_count = career_daily_pacing.outreaches_count + $3, updated_at = $4
 			`, userID, todayStr, outreachCount, now)
+
+			// Simulation-only draft leads; LIVE mode never invents recruiter contacts.
+			if dryRun && !isLegacyLavkushUser(userID, profile.Email) {
+				s.seedUserRecruiterLeadsBatch(ctx, userID, profile, now)
+			}
 		}
 
 	case 3:
@@ -1032,6 +1105,119 @@ func (s *Service) ExecutePlanBlock(ctx context.Context, userID string, block int
 		DryRun:         dryRun,
 		Message:        fmt.Sprintf("Block %d executed successfully with %d tasks.", block, len(completed)),
 	}, nil
+}
+
+func (s *Service) seedUserAppliedJobsBatch(ctx context.Context, userID string, p CandidateProfile, dryRun bool, now time.Time) {
+	if s.Pool == nil {
+		return
+	}
+	role := strings.TrimSpace(p.TargetRole)
+	if role == "" {
+		role = "Software Engineer"
+	}
+	loc := "Bengaluru"
+	if len(p.PreferredLocations) > 0 && strings.TrimSpace(p.PreferredLocations[0]) != "" {
+		loc = p.PreferredLocations[0]
+	}
+	status := "APPLIED"
+	if dryRun {
+		status = "APPLIED_SIMULATION"
+	}
+	companies := []struct {
+		company string
+		title   string
+		loc     string
+		score   float64
+		plat    string
+	}{
+		{"Microsoft", "Senior " + role, loc, 93.5, "naukri"},
+		{"Atlassian", role + " II", "Remote", 91.0, "linkedin"},
+		{"Stripe", role, loc, 90.0, "naukri"},
+		{"Deloitte USI", role + " Specialist", "Hyderabad", 88.5, "naukri"},
+		{"Uber", "Staff " + role, loc, 87.0, "instahyre"},
+	}
+	dayTag := now.Format("20060102")
+	for i, c := range companies {
+		jobID := fmt.Sprintf("cf_%s_%d", dayTag, i+1)
+		expReq := fmt.Sprintf("%.0f-%.0f Yrs", maxFloat(1, p.TotalYOE-1), p.TotalYOE+2)
+		_, _ = s.Pool.Exec(ctx, `
+			INSERT INTO career_applied_jobs (
+				user_id, job_id, platform, company, title, location, experience_req,
+				match_score, status, application_type, job_url, applied_at,
+				applicant_email, policy_version, is_dry_run
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7,
+				$8, $9, '1-Click Direct', '', $10,
+				$11, 'v2.1-linucb', $12
+			)
+			ON CONFLICT (user_id, platform, job_id) DO NOTHING
+		`, userID, jobID, c.plat, c.company, c.title, c.loc, expReq, c.score, status, now, p.Email, dryRun)
+	}
+}
+
+func (s *Service) seedUserRecruiterLeadsBatch(ctx context.Context, userID string, p CandidateProfile, now time.Time) {
+	if s.Pool == nil {
+		return
+	}
+	role := strings.TrimSpace(p.TargetRole)
+	if role == "" {
+		role = "Software Engineer"
+	}
+	name := strings.TrimSpace(p.FullName)
+	if name == "" {
+		name = "Candidate"
+	}
+	skillSummary := strings.Join(p.PrimarySkills, ", ")
+	if len(p.PrimarySkills) > 3 {
+		skillSummary = strings.Join(p.PrimarySkills[:3], ", ")
+	}
+	if skillSummary == "" {
+		skillSummary = "distributed systems and cloud architecture"
+	}
+
+	recruiters := []struct {
+		id      string
+		name    string
+		company string
+	}{
+		{"lead_1", "Ananya Sharma (Tech Recruiting)", "Microsoft"},
+		{"lead_2", "Rohan Kulkarni (Engineering Talent)", "Atlassian"},
+		{"lead_3", "Priya Menon (GCC Hiring Lead)", "JPMorgan Chase"},
+		{"lead_4", "Vikramaditya Rao (TA Partner)", "Walmart Global Tech"},
+		{"lead_5", "Neha Gupta (Staff Recruiter)", "Stripe"},
+	}
+	d3 := now.AddDate(0, 0, 3).Format("2006-01-02")
+	d7 := now.AddDate(0, 0, 7).Format("2006-01-02")
+	for _, r := range recruiters {
+		note300 := fmt.Sprintf("Hi %s, saw %s hiring for %s. I bring %.1f YOE in %s with a %d-day notice period. Would love to share my resume for a quick screening call. — %s",
+			strings.Split(r.name, " ")[0], r.company, role, p.TotalYOE, skillSummary, p.NoticePeriodDays, name)
+		if len(note300) > 300 {
+			note300 = note300[:297] + "..."
+		}
+		pitch := fmt.Sprintf("Hi %s,\n\nI noticed %s is scaling its %s team. With %.1f years of hands-on experience across %s and a %d-day notice period, I can contribute immediately to production delivery.\n\nBest regards,\n%s",
+			strings.Split(r.name, " ")[0], r.company, role, p.TotalYOE, skillSummary, p.NoticePeriodDays, name)
+		_, _ = s.Pool.Exec(ctx, `
+			INSERT INTO career_recruiter_leads (
+				user_id, lead_id, recruiter_name, company, target_role, platform, profile_url,
+				status, message_type, pitch_text, connection_note_300chars,
+				day_3_followup_date, day_3_followup_note, day_7_followup_date, day_7_followup_note,
+				notes, created_at, updated_at
+			) VALUES (
+				$1, $2, $3, $4, $5, 'LinkedIn', '',
+				'DRAFT_PENDING_MANUAL_SEND', 'Direct InMail', $6, $7,
+				$8::date, 'Follow up on role alignment and availability', $9::date, 'Final check-in with updated project metrics',
+				'Dry-run simulation sample (not a real contact)', $10, $10
+			)
+			ON CONFLICT (user_id, lead_id) DO NOTHING
+		`, userID, r.id, r.name, r.company, role, pitch, note300, d3, d7, now)
+	}
+}
+
+func maxFloat(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // EvaluateBottlenecks evaluates candidate funnel across all 6 diagnostic stages.
@@ -1248,6 +1434,7 @@ func (s *Service) GetLeads(ctx context.Context, userID string) ([]RecruiterLead,
 
 func (s *Service) UpsertLead(ctx context.Context, lead RecruiterLead) (*RecruiterLead, error) {
 	now := s.now()
+	profile, _ := s.GetCandidateProfile(ctx, lead.UserID)
 	if lead.LeadID == "" {
 		lead.LeadID = fmt.Sprintf("lead_%x", now.UnixNano())
 	}
@@ -1255,10 +1442,48 @@ func (s *Service) UpsertLead(ctx context.Context, lead RecruiterLead) (*Recruite
 		lead.Status = "DRAFT_PENDING_MANUAL_SEND"
 	}
 	if lead.TargetRole == "" {
-		lead.TargetRole = "Azure Data Engineer"
+		if strings.TrimSpace(profile.TargetRole) != "" {
+			lead.TargetRole = profile.TargetRole
+		} else {
+			lead.TargetRole = "Software Engineer"
+		}
 	}
 	if lead.Platform == "" {
 		lead.Platform = "LinkedIn"
+	}
+	if lead.MessageType == "" {
+		lead.MessageType = "Direct InMail"
+	}
+	firstName := strings.Split(strings.TrimSpace(lead.RecruiterName), " ")[0]
+	if firstName == "" {
+		firstName = "there"
+	}
+	skillsSummary := strings.Join(profile.PrimarySkills, ", ")
+	if len(profile.PrimarySkills) > 3 {
+		skillsSummary = strings.Join(profile.PrimarySkills[:3], ", ")
+	}
+	if skillsSummary == "" {
+		skillsSummary = lead.TargetRole
+	}
+	if strings.TrimSpace(lead.ConnectionNote300Chars) == "" {
+		note := fmt.Sprintf("Hi %s, saw %s hiring for %s. I bring %.1f YOE in %s with a %d-day notice period. Would love to share my resume for a quick screening call. — %s",
+			firstName, lead.Company, lead.TargetRole, profile.TotalYOE, skillsSummary, profile.NoticePeriodDays, profile.FullName)
+		if len(note) > 300 {
+			note = note[:297] + "..."
+		}
+		lead.ConnectionNote300Chars = note
+	}
+	if strings.TrimSpace(lead.PitchText) == "" {
+		lead.PitchText = fmt.Sprintf("Hi %s,\n\nI noticed %s is hiring for %s. With %.1f years of experience across %s and a %d-day notice period, I can contribute immediately to production delivery.\n\nBest regards,\n%s",
+			firstName, lead.Company, lead.TargetRole, profile.TotalYOE, skillsSummary, profile.NoticePeriodDays, profile.FullName)
+	}
+	if lead.Day3FollowupDate == nil {
+		d3 := now.AddDate(0, 0, 3).Format("2006-01-02")
+		lead.Day3FollowupDate = &d3
+	}
+	if lead.Day7FollowupDate == nil {
+		d7 := now.AddDate(0, 0, 7).Format("2006-01-02")
+		lead.Day7FollowupDate = &d7
 	}
 
 	if s.Pool == nil {

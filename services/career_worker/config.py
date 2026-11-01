@@ -54,3 +54,26 @@ def resolve_cookie_path(platform: str) -> Path:
 
 NAUKRI_COOKIES_PATH = resolve_cookie_path("naukri")
 LINKEDIN_COOKIES_PATH = resolve_cookie_path("linkedin")
+
+LEGACY_OWNER_USER_IDS = {"lavkush", "usr_lavkush"}
+
+
+def resolve_user_cookie_path(user_id: str, platform: str) -> Path:
+    """
+    Returns the session cookie file owned by ``user_id`` for ``platform``.
+
+    Each user gets an isolated file at ``COOKIES_DIR/<user>/<platform>_cookies.json``.
+    Only the legacy owner account may fall back to the pre-merge global session files;
+    every other user without their own vaulted session gets a non-existent path, which
+    makes adapters fall back to simulation instead of borrowing someone else's account.
+    """
+    import re
+
+    safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", (user_id or "").strip() or "default")
+    safe_platform = re.sub(r"[^a-zA-Z0-9_\-]", "_", platform or "naukri")
+    per_user = COOKIES_DIR / safe_user / f"{safe_platform}_cookies.json"
+    if per_user.exists() and per_user.stat().st_size > 10:
+        return per_user
+    if (user_id or "").strip().lower() in LEGACY_OWNER_USER_IDS:
+        return resolve_cookie_path(safe_platform)
+    return per_user

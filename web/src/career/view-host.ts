@@ -1,4 +1,5 @@
 import type { ApiClient } from '../api';
+import type { User } from '../contracts';
 import type { CareerApi } from './api';
 import type {
   AlertSource,
@@ -21,7 +22,9 @@ import type {
 export interface CareerViewOptions {
   root: HTMLElement;
   api: ApiClient;
+  account?: User;
   feedback: (message: string, error?: boolean) => void;
+  onNavigatePlan?: () => void;
 }
 
 /** Shared mutable studio state + lifecycle hooks used by panel modules. */

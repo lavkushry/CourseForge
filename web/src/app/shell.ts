@@ -28,6 +28,10 @@ export function installShell(ctx: AppContext): void {
     ctx.libraryView = null;
     ctx.planningView?.deactivate();
     ctx.planningView = null;
+    ctx.historyView?.deactivate();
+    ctx.historyView = null;
+    ctx.settingsView?.deactivate();
+    ctx.settingsView = null;
     ctx.reviewsView?.deactivate();
     ctx.reviewsView = null;
     ctx.tutorView?.deactivate();
@@ -36,6 +40,10 @@ export function installShell(ctx: AppContext): void {
     ctx.labsView = null;
     ctx.careerView?.deactivate();
     ctx.careerView = null;
+    ctx.pathsView?.deactivate();
+    ctx.pathsView = null;
+    ctx.adminView?.deactivate();
+    ctx.adminView = null;
     ctx.syllabusDialog?.close();
     ctx.syllabusDialog = null;
     ctx.studyRail = null;

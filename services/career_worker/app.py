@@ -16,9 +16,10 @@ from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 import uvicorn
 
-from services.career_worker.config import HOST, PORT, DRY_RUN
+from services.career_worker.config import HOST, PORT, DRY_RUN, resolve_user_cookie_path
 from services.career_worker.core.lock import acquire_worker_lock
 from services.career_worker.core.candidate_profile import CandidateProfile
+from services.career_worker.core.session_vault import SessionVault
 from services.career_worker.adapters.naukri_adapter import NaukriAdapter
 from services.career_worker.adapters.simulation_adapter import SimulationAdapter
 from services.career_worker.modules.plan.daily_blocks import DailyBlockOrchestrator
@@ -38,6 +39,8 @@ class BumpRequest(BaseModel):
     user_id: str = "lavkush"
     dry_run: bool = False
     profile: Optional[Dict[str, Any]] = None
+    # Caller's own decrypted session cookies (list or Playwright storage_state); never shared across users.
+    session_cookies: Optional[Any] = None
 
 class BumpResponse(BaseModel):
     success: bool
@@ -50,6 +53,8 @@ class ApplyRequest(BaseModel):
     block: int = 1
     dry_run: bool = False
     profile: Optional[Dict[str, Any]] = None
+    # Caller's own decrypted session cookies (list or Playwright storage_state); never shared across users.
+    session_cookies: Optional[Any] = None
 
 class ApplyResponse(BaseModel):
     success: bool
@@ -62,6 +67,8 @@ class OutreachRequest(BaseModel):
     count: int = 10
     dry_run: bool = False
     profile: Optional[Dict[str, Any]] = None
+    # Caller's own decrypted session cookies (list or Playwright storage_state); never shared across users.
+    session_cookies: Optional[Any] = None
 
 class OutreachResponse(BaseModel):
     success: bool
@@ -72,6 +79,19 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     timestamp: str
+
+def _user_naukri_adapter(user_id: str, session_cookies: Optional[Any]) -> NaukriAdapter:
+    """Builds a Naukri adapter bound to the requesting user's own session file."""
+    cookie_path = resolve_user_cookie_path(user_id, "naukri")
+    if session_cookies:
+        cookies = session_cookies.get("cookies") if isinstance(session_cookies, dict) else session_cookies
+        if isinstance(cookies, list) and cookies:
+            from services.career_worker.config import COOKIES_DIR
+            import re
+            safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", (user_id or "").strip() or "default")
+            cookie_path = COOKIES_DIR / safe_user / "naukri_cookies.json"
+            SessionVault.save_cookies(cookie_path, cookies)
+    return NaukriAdapter(cookie_path=cookie_path)
 
 # ----------------- Endpoints -----------------
 
@@ -93,7 +113,7 @@ def execute_bump(req: BumpRequest):
             )
 
         prof = CandidateProfile.from_dict(req.profile) if req.profile else CandidateProfile(user_id=req.user_id)
-        adapter = SimulationAdapter(platform="naukri") if req.dry_run or DRY_RUN else NaukriAdapter()
+        adapter = SimulationAdapter(platform="naukri") if req.dry_run or DRY_RUN else _user_naukri_adapter(req.user_id, req.session_cookies)
         res = adapter.bump_profile()
         return {
             "success": res.get("success", True),
@@ -112,7 +132,7 @@ def execute_apply(req: ApplyRequest):
             )
 
         prof = CandidateProfile.from_dict(req.profile) if req.profile else CandidateProfile(user_id=req.user_id)
-        adapter = SimulationAdapter(platform="naukri") if req.dry_run or DRY_RUN else NaukriAdapter()
+        adapter = SimulationAdapter(platform="naukri") if req.dry_run or DRY_RUN else _user_naukri_adapter(req.user_id, req.session_cookies)
         orchestrator = DailyBlockOrchestrator(adapter, profile=prof)
         result = orchestrator.execute_block(req.block, dry_run=req.dry_run or DRY_RUN)
 

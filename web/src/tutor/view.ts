@@ -1,7 +1,7 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
 import { errorMessage } from '../api';
-import type { Course } from '../contracts';
+import type { Course, User } from '../contracts';
 import type { TutorSource } from '../learning/contracts';
 import { cleanLessonTitle } from '../discovery/view';
 import { appendExploreCitation } from '../spatial/ui';
@@ -22,6 +22,7 @@ function formatTime(seconds: number): string {
 export interface TutorViewOptions {
   root: HTMLElement;
   api: ApiClient;
+  account?: User;
   onNavigateLesson: (lessonId: string, timestamp?: number) => void;
 }
 
@@ -38,7 +39,42 @@ export class TutorView {
     timestamp: Date;
   }> = [];
 
-  constructor(private readonly options: TutorViewOptions) {}
+  constructor(private readonly options: TutorViewOptions) {
+    this.loadUserHistory();
+  }
+
+  private get storageKey(): string {
+    return `courseforge_tutor_history_${this.options.account?.id || 'guest'}`;
+  }
+
+  private loadUserHistory(): void {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Array<{
+          question: string;
+          answer: string;
+          sources: TutorSource[];
+          mode: string;
+          timestamp: string;
+        }>;
+        if (Array.isArray(parsed)) {
+          this.history = parsed.map(item => ({
+            ...item,
+            timestamp: new Date(item.timestamp),
+          }));
+        }
+      }
+    } catch {
+      this.history = [];
+    }
+  }
+
+  private saveUserHistory(): void {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.history.slice(0, 30)));
+    } catch {}
+  }
 
   activate(signal: AbortSignal): void {
     this.options.root.hidden = false;
@@ -202,6 +238,7 @@ export class TutorView {
           mode: this.tutorMode,
           timestamp: new Date(),
         });
+        this.saveUserHistory();
       } catch (err) {
         alert(errorMessage(err));
       } finally {
@@ -215,7 +252,22 @@ export class TutorView {
     // 4. Conversation Feed
     if (this.history.length > 0) {
       const feed = el('div', 'tutor-feed');
-      feed.append(el('h3', 'tutor-feed-heading', 'Conversation History'));
+      const feedHead = el('div', 'tutor-feed-head');
+      feedHead.style.display = 'flex';
+      feedHead.style.justifyContent = 'space-between';
+      feedHead.style.alignItems = 'center';
+      feedHead.append(el('h3', 'tutor-feed-heading', 'Conversation History'));
+      const clearBtn = el('button', 'button quiet', 'Clear History');
+      clearBtn.type = 'button';
+      clearBtn.addEventListener('click', () => {
+        this.history = [];
+        try {
+          localStorage.removeItem(this.storageKey);
+        } catch {}
+        this.render();
+      });
+      feedHead.append(clearBtn);
+      feed.append(feedHead);
 
       for (const h of this.history) {
         const threadItem = el('div', 'tutor-thread-item');

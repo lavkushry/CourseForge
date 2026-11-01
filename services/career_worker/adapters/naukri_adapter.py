@@ -1,7 +1,8 @@
 import time
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import Dict, Any, List, Optional
 
 from services.career_worker.core.base_adapter import BasePlatformAdapter
 from services.career_worker.core.session_vault import SessionVault
@@ -18,12 +19,14 @@ class NaukriAdapter(BasePlatformAdapter):
     are not installed, if session cookies are absent, or if live network is restricted.
     """
 
-    def __init__(self, headless: bool = HEADLESS):
+    def __init__(self, headless: bool = HEADLESS, cookie_path: Optional[Path] = None):
         self.headless = headless
+        # Per-user session file; defaults to the legacy owner session for backward compatibility.
+        self.cookie_path = Path(cookie_path) if cookie_path is not None else NAUKRI_COOKIES_PATH
         self._sim = SimulationAdapter(platform="naukri")
 
     def login(self) -> bool:
-        if SessionVault.has_valid_session(NAUKRI_COOKIES_PATH):
+        if SessionVault.has_valid_session(self.cookie_path):
             return True
         logger.info("Naukri cookie session not found on disk; defaulting to simulation fallback.")
         return self._sim.login()
@@ -33,7 +36,7 @@ class NaukriAdapter(BasePlatformAdapter):
         Touches profile timestamp on Naukri to update status to 'Today'.
         Interacts with the resume headline section using Playwright stealth automation.
         """
-        if not SessionVault.has_valid_session(NAUKRI_COOKIES_PATH):
+        if not SessionVault.has_valid_session(self.cookie_path):
             logger.info("No valid Naukri session cookie found; using deterministic simulation.")
             return self._sim.bump_profile()
 
@@ -42,7 +45,7 @@ class NaukriAdapter(BasePlatformAdapter):
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=self.headless)
                 context = browser.new_context()
-                cookies = SessionVault.load_cookies(NAUKRI_COOKIES_PATH)
+                cookies = SessionVault.load_cookies(self.cookie_path)
                 if cookies:
                     context.add_cookies(cookies)
 

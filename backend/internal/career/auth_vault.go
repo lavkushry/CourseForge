@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -292,4 +293,26 @@ func (s *Service) handleDisconnectAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, map[string]any{"deleted": true, "platform": platform})
+}
+
+// userSessionCookies returns the caller's own decrypted cookie JSON for a platform, or nil
+// when the user has not vaulted a cookie session (adapters then fall back to simulation).
+func (s *Service) userSessionCookies(ctx context.Context, userID, platform string) json.RawMessage {
+	if s.Pool == nil || strings.TrimSpace(userID) == "" {
+		return nil
+	}
+	var method, encrypted string
+	err := s.Pool.QueryRow(ctx, `
+		SELECT auth_method, COALESCE(encrypted_secret, '')
+		FROM career_platform_credentials
+		WHERE user_id = $1 AND platform = $2 AND status = 'CONNECTED'
+	`, userID, platform).Scan(&method, &encrypted)
+	if err != nil || method != "cookie_json" || encrypted == "" {
+		return nil
+	}
+	plain, err := DecryptVaultSecret(encrypted)
+	if err != nil || !json.Valid([]byte(plain)) {
+		return nil
+	}
+	return json.RawMessage(plain)
 }
