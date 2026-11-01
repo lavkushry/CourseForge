@@ -49,7 +49,7 @@ def run_tier(name: str, test_file: Path, verbose: bool = False) -> tuple[int, in
         raise RuntimeError(
             f"pytest is not installed in Python interpreter '{pytest_bin}'.\n"
             f"Run E2E tests using the project virtual environment:\n"
-            f"  /Users/lavkushkumar/Desktop/Resume/.venv/bin/python3 {BASE_DIR / 'runner.py'}"
+            f"  /home/ubuntu/Resume/.venv/bin/python3 {BASE_DIR / 'runner.py'}"
         )
 
     passed = 0
