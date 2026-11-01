@@ -20,12 +20,16 @@ export interface SettingsViewOptions {
 export class SettingsView {
   private dailyMinutes = 30;
 
-  private get goalKey(): string {
-    return `courseforge_daily_goal_${this.options.account.id}`;
+  private get goalKey(): string | null {
+    const uid = this.options.account.id;
+    return uid ? `courseforge_daily_goal_${uid}` : null;
   }
 
   constructor(private readonly options: SettingsViewOptions) {
-    const savedGoal = localStorage.getItem(this.goalKey);
+    try {
+      localStorage.removeItem('courseforge_daily_goal_undefined');
+    } catch {}
+    const savedGoal = this.goalKey ? localStorage.getItem(this.goalKey) : null;
     if (savedGoal) {
       const parsed = parseInt(savedGoal, 10);
       if (!isNaN(parsed) && parsed > 0) this.dailyMinutes = parsed;
@@ -177,7 +181,7 @@ export class SettingsView {
       pill.addEventListener('click', async () => {
         this.dailyMinutes = mVal;
         select.value = String(mVal);
-        localStorage.setItem(this.goalKey, String(mVal));
+        if (this.goalKey) localStorage.setItem(this.goalKey, String(mVal));
         this.render();
         try {
           await this.options.api.request('/me/habit-preferences', {
@@ -203,7 +207,7 @@ export class SettingsView {
     select.addEventListener('change', async () => {
       const val = parseInt(select.value, 10);
       this.dailyMinutes = val;
-      localStorage.setItem(this.goalKey, String(val));
+      if (this.goalKey) localStorage.setItem(this.goalKey, String(val));
       this.render();
       try {
         await this.options.api.request('/me/habit-preferences', {

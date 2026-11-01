@@ -43,11 +43,18 @@ export class TutorView {
     this.loadUserHistory();
   }
 
-  private get storageKey(): string {
-    return `courseforge_tutor_history_${this.options.account?.id || 'guest'}`;
+  private get storageKey(): string | null {
+    const uid = this.options.account?.id;
+    return uid ? `courseforge_tutor_history_${uid}` : null;
   }
 
   private loadUserHistory(): void {
+    // Purge the pre-isolation shared bucket: history stored under the old
+    // 'guest' fallback key was readable by every user of this browser.
+    try {
+      localStorage.removeItem('courseforge_tutor_history_guest');
+    } catch {}
+    if (!this.storageKey) return;
     try {
       const raw = localStorage.getItem(this.storageKey);
       if (raw) {
@@ -71,6 +78,7 @@ export class TutorView {
   }
 
   private saveUserHistory(): void {
+    if (!this.storageKey) return;
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.history.slice(0, 30)));
     } catch {}
@@ -262,7 +270,7 @@ export class TutorView {
       clearBtn.addEventListener('click', () => {
         this.history = [];
         try {
-          localStorage.removeItem(this.storageKey);
+          if (this.storageKey) localStorage.removeItem(this.storageKey);
         } catch {}
         this.render();
       });
