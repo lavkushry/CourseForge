@@ -1376,8 +1376,9 @@ export class CareerView implements CareerStudioHost {
         const copyBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Copy Note');
         copyBtn.type = 'button';
         copyBtn.addEventListener('click', () => {
-          void navigator.clipboard.writeText(noteText);
-          this.notify(`Copied 300-char connection note for ${lead.recruiter_name}`);
+          void (navigator.clipboard?.writeText(noteText) ?? Promise.reject(new Error("Clipboard API unavailable")))
+            .then(() => this.notify(`Copied 300-char connection note for ${lead.recruiter_name}`))
+            .catch(() => this.notify('Copy failed — clipboard unavailable in this browser context.', true));
         });
 
         const statusSelect = el('select', 'career-select-sm');
@@ -1622,12 +1623,11 @@ export class CareerView implements CareerStudioHost {
     const kwBody = el('tbody', '');
     for (const kw of this.boostStatus?.keyword_utilities || []) {
       const tr = el('tr', '');
-      tr.innerHTML = `
-        <td><strong>${kw.token}</strong></td>
-        <td>${kw.demand_frequency}</td>
-        <td>${kw.saturation_count}</td>
-        <td><span class="career-utility-pill">${kw.utility_score.toFixed(2)}</span></td>
-      `;
+      const tokenTd = el('td', '');
+      tokenTd.append(el('strong', '', kw.token));
+      const utilityTd = el('td', '');
+      utilityTd.append(el('span', 'career-utility-pill', kw.utility_score.toFixed(2)));
+      tr.append(tokenTd, el('td', '', String(kw.demand_frequency)), el('td', '', String(kw.saturation_count)), utilityTd);
       const actionTd = el('td', '');
       if (kw.claimable) {
         const injectBtn = el('button', 'career-btn career-btn-secondary career-btn-sm', 'Inject into Headline');
@@ -1707,7 +1707,14 @@ export class CareerView implements CareerStudioHost {
     searchInput.value = this.ledgerSearch;
     searchInput.addEventListener('input', () => {
       this.ledgerSearch = searchInput.value;
+      const caret = searchInput.selectionStart;
       this.render();
+      // render() rebuilds the DOM; restore focus/caret so typing is not interrupted.
+      const next = this.options.root.querySelector<HTMLInputElement>('.career-ledger-search');
+      if (next) {
+        next.focus();
+        if (caret !== null) next.setSelectionRange(caret, caret);
+      }
     });
 
     const platformSelect = el('select', 'career-select-sm');
@@ -1780,15 +1787,23 @@ export class CareerView implements CareerStudioHost {
       for (const j of filteredJobs) {
         const tr = el('tr', '');
         const dateStr = j.applied_at ? new Date(j.applied_at).toLocaleDateString() : '—';
-        tr.innerHTML = `
-          <td><span class="career-platform-tag">${j.platform}</span></td>
-          <td><strong>${j.company}</strong></td>
-          <td>${j.title}</td>
-          <td>${j.location || 'Bengaluru'}</td>
-          <td><span class="career-score-pill">${Number(j.match_score || 70).toFixed(0)}%</span></td>
-          <td><span class="career-status-badge status-${j.status}">${j.status}</span></td>
-          <td class="career-muted">${dateStr}</td>
-        `;
+        const platformTd = el('td', '');
+        platformTd.append(el('span', 'career-platform-tag', j.platform));
+        const companyTd = el('td', '');
+        companyTd.append(el('strong', '', j.company));
+        const scoreTd = el('td', '');
+        scoreTd.append(el('span', 'career-score-pill', `${Number(j.match_score || 70).toFixed(0)}%`));
+        const statusTd = el('td', '');
+        statusTd.append(el('span', `career-status-badge status-${j.status}`, j.status));
+        tr.append(
+          platformTd,
+          companyTd,
+          el('td', '', j.title),
+          el('td', '', j.location || 'Bengaluru'),
+          scoreTd,
+          statusTd,
+          el('td', 'career-muted', dateStr),
+        );
         tbody.append(tr);
       }
       table.append(tbody);
