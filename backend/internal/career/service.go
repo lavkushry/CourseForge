@@ -1570,6 +1570,9 @@ func (s *Service) GetAppliedJobs(ctx context.Context, userID string, filter JobF
 	if filter.Limit > 200 {
 		filter.Limit = 200
 	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
 
 	if s.Pool == nil {
 		return []AppliedJob{}, 0, nil
@@ -1621,17 +1624,31 @@ func (s *Service) GetAppliedJobs(ctx context.Context, userID string, filter JobF
 			&j.ID, &j.UserID, &j.JobID, &j.Platform, &j.Company, &j.Title, &j.Location, &j.ExperienceReq,
 			&j.MatchScore, &j.Status, &j.ApplicationType, &j.JobURL, &j.AppliedAt, &j.ApplicantEmail,
 			&j.EvidencePath, &j.OutcomeLabel, &j.OutcomeObservedAt, &j.PolicyVersion, &j.IsDryRun, &j.IsBackfill,
-		); scanErr == nil {
-			jobs = append(jobs, j)
+		); scanErr != nil {
+			return nil, 0, fmt.Errorf("scan applied job: %w", scanErr)
 		}
+		jobs = append(jobs, j)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("iterate applied jobs: %w", err)
 	}
 	return jobs, total, nil
 }
 
 func (s *Service) ExportJobsCSV(ctx context.Context, userID string) ([]byte, error) {
-	jobs, _, err := s.GetAppliedJobs(ctx, userID, JobFilter{Limit: 2000})
-	if err != nil {
-		return nil, err
+	// GetAppliedJobs clamps a single page to 200 rows for the API, so page
+	// through it: a CSV export must contain the full ledger, not page one.
+	const exportPageSize = 200
+	var jobs []AppliedJob
+	for offset := 0; ; offset += exportPageSize {
+		page, total, err := s.GetAppliedJobs(ctx, userID, JobFilter{Limit: exportPageSize, Offset: offset})
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, page...)
+		if len(page) == 0 || len(jobs) >= total {
+			break
+		}
 	}
 
 	buf := &bytes.Buffer{}
