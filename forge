@@ -1,0 +1,210 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# CourseForge & ForgeCareer — Unified Developer & Operational Command Line (forge)
+# ==============================================================================
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REMOTE_HOST="130.210.19.226"
+REMOTE_USER="ubuntu"
+SSH_KEY="${HOME}/.ssh/ssh-key-2026-08-30.key"
+VENV_PYTHON="${HOME}/Desktop/Resume/.venv/bin/python3"
+VENV_PYTEST="${HOME}/Desktop/Resume/.venv/bin/pytest"
+
+# Color constants
+BOLD="\033[1m"
+GREEN="\033[32m"
+RED="\033[31m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RESET="\033[0m"
+
+log_info()  { echo -e "${CYAN}${BOLD}[forge]${RESET} $*"; }
+log_ok()    { echo -e "${GREEN}${BOLD}[forge:ok]${RESET} $*"; }
+log_warn()  { echo -e "${YELLOW}${BOLD}[forge:warn]${RESET} $*"; }
+log_err()   { echo -e "${RED}${BOLD}[forge:err]${RESET} $*"; }
+
+usage() {
+  cat << EOF
+${BOLD}CourseForge Unified CLI${RESET}
+Usage: ./forge <command> [arguments]
+
+${CYAN}Core Commands:${RESET}
+  status          Check status and health of all local & remote services
+  test            Run full test suite (Go unit tests, Web build, Python tests, 382 E2E tests)
+  build           Build Go backend binary and Vite web bundle locally
+  deploy          Commit, push, build, reload nginx, restart systemd services on server
+  tunnel          Establish background SSH port forwards (PostgreSQL: 15439, Worker: 18095)
+  logs            Stream remote production service logs in real time
+
+${CYAN}Automation Actions:${RESET}
+  bump            Trigger Resdex profile timestamp bump
+  apply [block]   Execute daily plan apply block (default: 1)
+  outreach [num]  Generate recruiter outreach pitches (default: 10)
+  pacing          View current daily 5-calls pacing gauge and bottleneck diagnostics
+
+EOF
+}
+
+cmd_status() {
+  log_info "Checking local & remote CourseForge system health..."
+  echo ""
+  echo -e "${BOLD}Local Services & Ports:${RESET}"
+  for p in 15439 18090 18095 8000 5173; do
+    if lsof -i :$p >/dev/null 2>&1; then
+      echo -e "  Port $p: ${GREEN}OPEN${RESET} ($(lsof -i :$p | awk 'NR==2{print $1, "PID:"$2}'))"
+    else
+      echo -e "  Port $p: ${YELLOW}CLOSED${RESET}"
+    fi
+  done
+
+  echo ""
+  echo -e "${BOLD}Remote Production Health (ubuntu@${REMOTE_HOST}):${RESET}"
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" '
+    echo "• Systemd Units:"
+    systemctl --user is-active courseforge-api@18090.service courseforge-api@18091.service courseforge-career-worker.service courseforge-tunnel.service 2>&1 | paste - - - - | awk "{print \"  API-18090: \" \$1 \" | API-18091: \" \$2 \" | Worker: \" \$3 \" | Tunnel: \" \$4}"
+    echo "• Worker Health (:18095):"
+    curl -s http://127.0.0.1:18095/health || echo "Worker offline"
+    echo ""
+    echo "• Edge Delivery (:8000 TLS):"
+    curl -k -s https://127.0.0.1:8000/api/health || echo "Nginx offline"
+    echo ""
+    echo "• Active Systemd Timers:"
+    systemctl --user list-timers --no-pager | grep courseforge | head -5
+  '
+}
+
+cmd_tunnel() {
+  log_info "Verifying SSH port-forwarding tunnel for PostgreSQL :15439..."
+  if lsof -i :15439 >/dev/null 2>&1; then
+    log_ok "Port 15439 already forwarded locally."
+  else
+    ssh -f -N -L 15439:127.0.0.1:15439 -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}"
+    log_ok "Port forward established: localhost:15439 -> 127.0.0.1:15439."
+  fi
+}
+
+cmd_test() {
+  cmd_tunnel
+  log_info "1/4. Running Go backend tests..."
+  (cd "${ROOT_DIR}/backend" && go test -v ./internal/career/... ./internal/store/migrations/... ./cmd/api/...)
+  log_ok "Go backend tests passed."
+
+  log_info "2/4. Building Web frontend..."
+  (cd "${ROOT_DIR}/web" && npm run build)
+  log_ok "Web frontend built successfully."
+
+  log_info "3/4. Running Python worker tests..."
+  "${VENV_PYTEST}" -v "${ROOT_DIR}/services/career_worker/tests/"
+  log_ok "Python worker tests passed."
+
+  log_info "4/4. Running full 382-test 4-Tier E2E Suite..."
+  "${VENV_PYTHON}" "${ROOT_DIR}/tests/career_e2e/runner.py"
+  log_ok "All test tiers passed with 100% verification!"
+}
+
+cmd_build() {
+  log_info "Building Go backend API binary..."
+  export GOCACHE="${TMPDIR:-/tmp}/go-build-cache"
+  (cd "${ROOT_DIR}/backend" && go build -o "${ROOT_DIR}/bin/courseforge-api" ./cmd/api)
+  log_ok "Go binary built: bin/courseforge-api"
+
+  log_info "Building Web bundle..."
+  (cd "${ROOT_DIR}/web" && npm run build)
+  log_ok "Web bundle built: web/dist"
+}
+
+cmd_deploy() {
+  cd "${ROOT_DIR}"
+  log_info "Deploying CourseForge & ForgeCareer to ${REMOTE_USER}@${REMOTE_HOST}..."
+  
+  # Ensure git status is clean or commit
+  if [[ -n $(git status -s) ]]; then
+    log_info "Staging and committing local changes..."
+    git add .
+    git commit -m "feat(ui): keyboard shortcuts and developer forge CLI" || true
+  fi
+
+  log_info "Pushing to GitHub origin main..."
+  git push origin main
+
+  log_info "Executing remote build, sync, and reload sequence..."
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" 'set -e
+    export PATH=$PATH:/usr/local/go/bin:/snap/bin:$HOME/go/bin
+    cd /home/ubuntu/CourseForge
+    git fetch origin
+    git reset --hard origin/main
+    
+    export GOCACHE=/tmp/go-build-cache
+    cd /home/ubuntu/CourseForge/backend && go build -o /home/ubuntu/CourseForge/bin/courseforge-api ./cmd/api
+    rm -rf /tmp/go-build-cache
+    
+    cd /home/ubuntu/CourseForge/web && npm run build
+    cp -r dist/* /home/ubuntu/releases/20261026-f1eb844/web/dist/
+    docker exec courseforge-production-web nginx -s reload
+    
+    systemctl --user restart courseforge-api@18090.service courseforge-api@18091.service courseforge-career-worker.service
+    sleep 2
+    
+    echo "✓ Production deployment complete:"
+    curl -s http://127.0.0.1:18095/health
+    echo ""
+    curl -k -s https://127.0.0.1:8000/api/health
+    echo ""
+  '
+  log_ok "Deployment to production Linux server completed successfully!"
+}
+
+cmd_logs() {
+  log_info "Streaming remote production logs (Ctrl+C to stop)..."
+  ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" 'journalctl --user -f -u courseforge-api@18090 -u courseforge-api@18091 -u courseforge-career-worker'
+}
+
+cmd_bump() {
+  log_info "Triggering Resdex Profile Bump..."
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" 'curl -s -X POST http://127.0.0.1:18095/execute/bump -H "Content-Type: application/json" -d "{\"user_id\":\"lavkush\",\"dry_run\":true}"'
+  echo ""
+}
+
+cmd_apply() {
+  local block="${1:-1}"
+  log_info "Triggering Daily Plan Block ${block} Apply..."
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" "curl -s -X POST http://127.0.0.1:18095/execute/apply -H 'Content-Type: application/json' -d '{\"user_id\":\"lavkush\",\"block\":${block},\"dry_run\":true}'"
+  echo ""
+}
+
+cmd_outreach() {
+  local count="${1:-10}"
+  log_info "Triggering Recruiter Outreach (${count} pitches)..."
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" "curl -s -X POST http://127.0.0.1:18095/execute/outreach -H 'Content-Type: application/json' -d '{\"user_id\":\"lavkush\",\"count\":${count},\"dry_run\":true}'"
+  echo ""
+}
+
+cmd_pacing() {
+  log_info "Evaluating North Star 5-Calls Daily Pacing & Funnel Diagnostics..."
+  ssh -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" 'curl -s "http://127.0.0.1:18095/evaluate/pacing?calls=2&apps=20&outreach=8"'
+  echo ""
+}
+
+# Main CLI Router
+ACTION="${1:-help}"
+shift || true
+
+case "${ACTION}" in
+  status)   cmd_status ;;
+  tunnel)   cmd_tunnel ;;
+  test)     cmd_test ;;
+  build)    cmd_build ;;
+  deploy)   cmd_deploy ;;
+  logs)     cmd_logs ;;
+  bump)     cmd_bump ;;
+  apply)    cmd_apply "$@" ;;
+  outreach) cmd_outreach "$@" ;;
+  pacing)   cmd_pacing ;;
+  help|--help|-h) usage ;;
+  *)
+    log_err "Unknown command: ${ACTION}"
+    usage
+    exit 1
+    ;;
+esac

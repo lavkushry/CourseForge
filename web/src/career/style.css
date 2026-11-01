@@ -1186,3 +1186,14 @@
 .career-studio-container .badge-count {
   font-variant-numeric: tabular-nums;
 }
+
+.career-shortcuts-chip {
+  cursor: help;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.career-shortcuts-chip:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}

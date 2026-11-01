@@ -83,6 +83,7 @@ export class CareerView implements CareerStudioHost {
   private resumePasteDraft = '';
   private ledgerSearch = '';
   private ledgerPlatformFilter = '';
+  private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
   // CareerStudioHost State (9 Studio Panels)
   tracks: RoleTrack[] = [];
@@ -145,7 +146,58 @@ export class CareerView implements CareerStudioHost {
   activate(signal?: AbortSignal): void {
     this.options.root.hidden = false;
     this.signal = signal ?? null;
+    this.attachKeyboardShortcuts();
     void this.init();
+  }
+
+  private attachKeyboardShortcuts(): void {
+    if (this.keyboardHandler) {
+      window.removeEventListener('keydown', this.keyboardHandler);
+    }
+    this.keyboardHandler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === '1' || e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        this.setTab('goal');
+      } else if (e.key === '2' || e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        this.setTab('plan');
+      } else if (e.key === '3' || e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        this.setTab('boost');
+      } else if (e.key === '4' || e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        this.setTab('ledger');
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        void this.triggerBump();
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        void this.refreshAll();
+      } else if (e.key === 'Escape') {
+        if (this.setupPanelOpen) {
+          e.preventDefault();
+          this.setupPanelOpen = false;
+          this.render();
+        } else if (this.bannerMessage) {
+          e.preventDefault();
+          this.bannerMessage = null;
+          this.render();
+        }
+      }
+    };
+    window.addEventListener('keydown', this.keyboardHandler);
   }
 
   async init(): Promise<void> {
@@ -156,6 +208,10 @@ export class CareerView implements CareerStudioHost {
   }
 
   deactivate(): void {
+    if (this.keyboardHandler) {
+      window.removeEventListener('keydown', this.keyboardHandler);
+      this.keyboardHandler = null;
+    }
     this.abortController?.abort();
     this.abortController = null;
     this.signal = null;
@@ -559,6 +615,7 @@ export class CareerView implements CareerStudioHost {
         `career-identity-chip ${activeMode === 'LIVE' ? 'chip-live' : 'chip-sandbox'}`,
         activeMode === 'LIVE' ? 'Live Portal Mode' : 'Sandbox Mode',
       ),
+      el('span', 'career-identity-chip career-shortcuts-chip', '⌨️ 1-4 · R · S'),
     );
     titleGroup.append(
       metaRow,
