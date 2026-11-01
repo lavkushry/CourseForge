@@ -87,8 +87,7 @@ def _user_naukri_adapter(user_id: str, session_cookies: Optional[Any]) -> Naukri
         cookies = session_cookies.get("cookies") if isinstance(session_cookies, dict) else session_cookies
         if isinstance(cookies, list) and cookies:
             from services.career_worker.config import COOKIES_DIR
-            import re
-            safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", (user_id or "").strip() or "default")
+            safe_user = SessionVault._safe_component(user_id, "default")
             cookie_path = COOKIES_DIR / safe_user / "naukri_cookies.json"
             SessionVault.save_cookies(cookie_path, cookies)
     return NaukriAdapter(cookie_path=cookie_path)
