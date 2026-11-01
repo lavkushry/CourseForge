@@ -117,13 +117,23 @@ export class CareerView implements CareerStudioHost {
     this.loadCheckedTasks();
   }
 
-  private get userStoragePrefix(): string {
-    const uid = this.options.account?.id || this.readiness?.profile?.user_id || 'user';
+  private get userStoragePrefix(): string | null {
+    const uid = this.options.account?.id || this.readiness?.profile?.user_id;
+    if (!uid) return null;
     const day = new Date().toISOString().slice(0, 10);
     return `courseforge_career_tasks_${uid}_${day}`;
   }
 
   private loadCheckedTasks(): void {
+    // Purge pre-isolation shared buckets: the old fallback wrote checklists
+    // under courseforge_career_tasks_user_<day>, shared by every user.
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('courseforge_career_tasks_user_')) localStorage.removeItem(k);
+      }
+    } catch {}
+    if (!this.userStoragePrefix) return;
     try {
       const raw = localStorage.getItem(this.userStoragePrefix);
       if (raw) {
@@ -138,6 +148,7 @@ export class CareerView implements CareerStudioHost {
   }
 
   private saveCheckedTasks(): void {
+    if (!this.userStoragePrefix) return;
     try {
       localStorage.setItem(this.userStoragePrefix, JSON.stringify([...this.checkedTasks]));
     } catch {}
