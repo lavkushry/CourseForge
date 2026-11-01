@@ -4,7 +4,6 @@
 
 CourseForge indexes lectures you already own, transcribes them locally, and lets you search inside them, ask an AI tutor that cites the exact timestamp, take quizzes, run graded hands-on labs, and plan your career — without sending your library to anyone's cloud.
 
-[![CI](https://github.com/lavkushry/CourseForge/actions/workflows/ci.yml/badge.svg)](https://github.com/lavkushry/CourseForge/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/lavkushry/CourseForge?style=flat)](https://github.com/lavkushry/CourseForge/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
