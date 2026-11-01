@@ -1,0 +1,12 @@
+[Unit]
+Description=Trigger CourseForge Career Daily Routine 3x Daily (IST 09:15, 14:30, 18:00)
+
+[Timer]
+OnCalendar=*-*-* 03:45:00
+OnCalendar=*-*-* 09:00:00
+OnCalendar=*-*-* 12:30:00
+RandomizedDelaySec=120
+Persistent=true
+
+[Install]
+WantedBy=timers.target

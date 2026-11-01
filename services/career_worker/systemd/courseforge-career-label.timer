@@ -1,0 +1,10 @@
+[Unit]
+Description=Trigger CourseForge Career Outcome Labeling Daily at 21:00 IST (15:30 UTC)
+
+[Timer]
+OnCalendar=*-*-* 15:30:00
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

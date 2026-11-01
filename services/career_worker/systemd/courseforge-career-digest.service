@@ -1,0 +1,11 @@
+[Unit]
+Description=CourseForge Career Monday 03:00 IST Digest Routine
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/CourseForge
+Environment="PYTHONPATH=/home/ubuntu/CourseForge"
+ExecStart=/home/ubuntu/Resume/.venv/bin/python3 -m services.career_worker.runner --action digest
+StandardOutput=journal
+StandardError=journal

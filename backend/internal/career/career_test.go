@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"courseforge/backend/internal/identity"
 	"courseforge/backend/internal/testutil"
@@ -313,4 +314,233 @@ func TestCareerHTTPTracksCompaniesMatch(t *testing.T) {
 
 	w = f.call("", "GET", "/api/v1/career/role-tracks", nil)
 	expect(t, w, 401)
+}
+
+type mockWorkerClient struct {
+	bumpCount     int
+	applyCount    int
+	outreachCount int
+}
+
+func (m *mockWorkerClient) TriggerBump(ctx context.Context, req WorkerBumpRequest) (*WorkerBumpResponse, error) {
+	m.bumpCount++
+	return &WorkerBumpResponse{
+		Success: true,
+		Message: "Mock bump succeeded",
+	}, nil
+}
+
+func (m *mockWorkerClient) TriggerApply(ctx context.Context, req WorkerApplyRequest) (*WorkerApplyResponse, error) {
+	m.applyCount++
+	return &WorkerApplyResponse{
+		Success:        true,
+		AppliedCount:   22,
+		TasksCompleted: []string{"Job 1 applied", "Job 2 applied"},
+		Message:        "Mock apply succeeded",
+	}, nil
+}
+
+func (m *mockWorkerClient) TriggerOutreach(ctx context.Context, req WorkerOutreachRequest) (*WorkerOutreachResponse, error) {
+	m.outreachCount++
+	return &WorkerOutreachResponse{
+		Success:       true,
+		OutreachCount: req.Count,
+		Message:       "Mock outreach succeeded",
+	}, nil
+}
+
+func (m *mockWorkerClient) GetWorkerHealth(ctx context.Context) (*WorkerHealthResponse, error) {
+	return &WorkerHealthResponse{
+		Status:    "healthy",
+		Version:   "2.1.0",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}, nil
+}
+
+func TestDailyPlanBlocks(t *testing.T) {
+	worker := &mockWorkerClient{}
+	svc := New(nil, worker)
+
+	plan, err := svc.GetPlanToday(context.Background(), "test-user")
+	if err != nil {
+		t.Fatalf("GetPlanToday failed: %v", err)
+	}
+
+	if len(plan.Blocks) != 3 {
+		t.Fatalf("expected 3 blocks, got %d", len(plan.Blocks))
+	}
+
+	if plan.Blocks[0].BlockID != 1 || plan.Blocks[1].BlockID != 2 || plan.Blocks[2].BlockID != 3 {
+		t.Errorf("unexpected block IDs: %+v", plan.Blocks)
+	}
+
+	for _, b := range plan.Blocks {
+		if len(b.Tasks) == 0 {
+			t.Errorf("block %d has empty tasks", b.BlockID)
+		}
+	}
+}
+
+func TestBottleneckRuleEvaluationAllStages(t *testing.T) {
+	// 1. Test scenario triggering LOW_SEARCH_APPEARANCES, LOW_APPLICATION_VELOCITY, LOW_OUTREACH_VOLUME, LOW_CALL_CONVERSION
+	pacing := &DailyPacing{
+		SearchAppearances:   80, // < 150 -> LOW_SEARCH_APPEARANCES
+		ContactViews:        2,
+		ApplicationsCount:   10, // < 25 -> LOW_APPLICATION_VELOCITY
+		OutreachesCount:     4,  // < 10 -> LOW_OUTREACH_VOLUME
+		CallsScheduledCount: 1,  // < 5 -> LOW_CALL_CONVERSION
+		PacingRatio:         0.2,
+	}
+
+	alerts := EvaluateBottlenecks(pacing, 0)
+	codes := map[string]bool{}
+	for _, a := range alerts {
+		codes[a.Code] = true
+	}
+
+	if !codes["LOW_SEARCH_APPEARANCES"] {
+		t.Error("expected LOW_SEARCH_APPEARANCES")
+	}
+	if !codes["LOW_APPLICATION_VELOCITY"] {
+		t.Error("expected LOW_APPLICATION_VELOCITY")
+	}
+	if !codes["LOW_OUTREACH_VOLUME"] {
+		t.Error("expected LOW_OUTREACH_VOLUME")
+	}
+	if !codes["LOW_CALL_CONVERSION"] {
+		t.Error("expected LOW_CALL_CONVERSION")
+	}
+
+	// 2. Test scenario triggering LOW_CONTACT_VIEWS (>= 100 appearances and < 5 views)
+	pacingCTR := &DailyPacing{
+		SearchAppearances:   180, // >= 100 and >= 150
+		ContactViews:        3,   // < 5 -> LOW_CONTACT_VIEWS
+		ApplicationsCount:   30,
+		OutreachesCount:     15,
+		CallsScheduledCount: 5,
+		PacingRatio:         1.0,
+	}
+	alertsCTR := EvaluateBottlenecks(pacingCTR, 3)
+	codesCTR := map[string]bool{}
+	for _, a := range alertsCTR {
+		codesCTR[a.Code] = true
+	}
+	if !codesCTR["LOW_CONTACT_VIEWS"] {
+		t.Error("expected LOW_CONTACT_VIEWS")
+	}
+	if codesCTR["LOW_SEARCH_APPEARANCES"] {
+		t.Error("LOW_SEARCH_APPEARANCES should not trigger when appearances >= 150")
+	}
+
+	// 3. Test scenario triggering LOW_REPLY_RATE (outreach >= 10 and replies / outreach < 0.15)
+	pacingReply := &DailyPacing{
+		SearchAppearances:   200,
+		ContactViews:        10,
+		ApplicationsCount:   35,
+		OutreachesCount:     20,
+		CallsScheduledCount: 5,
+		PacingRatio:         1.0,
+	}
+	// 1 reply from 20 outreaches = 5% (< 15%)
+	alertsReply := EvaluateBottlenecks(pacingReply, 1)
+	codesReply := map[string]bool{}
+	for _, a := range alertsReply {
+		codesReply[a.Code] = true
+	}
+	if !codesReply["LOW_REPLY_RATE"] {
+		t.Error("expected LOW_REPLY_RATE")
+	}
+
+	// 4. Test scenario with healthy metrics: ZERO bottlenecks
+	pacingHealthy := &DailyPacing{
+		SearchAppearances:   250,
+		ContactViews:        15,
+		ApplicationsCount:   35,
+		OutreachesCount:     15,
+		CallsScheduledCount: 5,
+		PacingRatio:         1.0,
+	}
+	// 4 replies from 15 outreaches = 26.7% (> 15%)
+	alertsHealthy := EvaluateBottlenecks(pacingHealthy, 4)
+	if len(alertsHealthy) != 0 {
+		t.Errorf("expected 0 bottlenecks for healthy pacing, got %d: %+v", len(alertsHealthy), alertsHealthy)
+	}
+}
+
+func TestExecutePlanBlockExecution(t *testing.T) {
+	worker := &mockWorkerClient{}
+	svc := New(nil, worker)
+
+	// Test Block 1 (Morning)
+	res1, err := svc.ExecutePlanBlock(context.Background(), "user-1", 1, true)
+	if err != nil {
+		t.Fatalf("Block 1 failed: %v", err)
+	}
+	if res1.Block != 1 || res1.Status != "completed" {
+		t.Errorf("unexpected Block 1 result: %+v", res1)
+	}
+	if worker.bumpCount != 1 || worker.applyCount != 1 {
+		t.Errorf("expected 1 bump and 1 apply, got %d bumps, %d applies", worker.bumpCount, worker.applyCount)
+	}
+
+	// Test Block 2 (Afternoon)
+	res2, err := svc.ExecutePlanBlock(context.Background(), "user-1", 2, true)
+	if err != nil {
+		t.Fatalf("Block 2 failed: %v", err)
+	}
+	if res2.Block != 2 || res2.Status != "completed" {
+		t.Errorf("unexpected Block 2 result: %+v", res2)
+	}
+	if worker.outreachCount != 1 {
+		t.Errorf("expected 1 outreach, got %d", worker.outreachCount)
+	}
+
+	// Test Block 3 (Evening)
+	res3, err := svc.ExecutePlanBlock(context.Background(), "user-1", 3, true)
+	if err != nil {
+		t.Fatalf("Block 3 failed: %v", err)
+	}
+	if res3.Block != 3 || res3.Status != "completed" {
+		t.Errorf("unexpected Block 3 result: %+v", res3)
+	}
+
+	// Test invalid block ID
+	_, err = svc.ExecutePlanBlock(context.Background(), "user-1", 99, true)
+	if err == nil {
+		t.Error("expected error for invalid block ID 99")
+	}
+}
+
+func TestGetBoostStatusDefaultKeywords(t *testing.T) {
+	svc := New(nil, nil)
+	status, err := svc.GetBoostStatus(context.Background(), "test-user")
+	if err != nil {
+		t.Fatalf("GetBoostStatus failed: %v", err)
+	}
+
+	if len(status.KeywordUtilities) == 0 {
+		t.Fatal("expected default keyword utilities when database pool is nil")
+	}
+	if status.KeywordUtilities[0].Token != "15 Days Notice" {
+		t.Errorf("expected '15 Days Notice' as top token, got %s", status.KeywordUtilities[0].Token)
+	}
+}
+
+func TestWorkerClientMock(t *testing.T) {
+	worker := &mockWorkerClient{}
+	health, err := worker.GetWorkerHealth(context.Background())
+	if err != nil {
+		t.Fatalf("health check failed: %v", err)
+	}
+	if health.Status != "healthy" {
+		t.Errorf("expected healthy, got %s", health.Status)
+	}
+
+	bumpResp, err := worker.TriggerBump(context.Background(), WorkerBumpRequest{UserID: "u1", DryRun: true})
+	if err != nil || !bumpResp.Success {
+		t.Fatalf("bump failed: %v", err)
+	}
+	if worker.bumpCount != 1 {
+		t.Errorf("expected bumpCount 1, got %d", worker.bumpCount)
+	}
 }

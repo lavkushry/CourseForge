@@ -1,0 +1,11 @@
+[Unit]
+Description=CourseForge Career Daily Pacing & Execution Routine (Block 1, 2, 3)
+After=network.target courseforge-career-worker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/CourseForge
+Environment="PYTHONPATH=/home/ubuntu/CourseForge"
+ExecStart=/home/ubuntu/Resume/.venv/bin/python3 -m services.career_worker.runner --action block --block auto
+StandardOutput=journal
+StandardError=journal

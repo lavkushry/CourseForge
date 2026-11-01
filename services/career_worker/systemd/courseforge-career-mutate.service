@@ -1,0 +1,11 @@
+[Unit]
+Description=CourseForge Career Controlled Profile Mutator Cycle (Tue/Thu)
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/CourseForge
+Environment="PYTHONPATH=/home/ubuntu/CourseForge"
+ExecStart=/home/ubuntu/Resume/.venv/bin/python3 -m services.career_worker.runner --action mutate
+StandardOutput=journal
+StandardError=journal

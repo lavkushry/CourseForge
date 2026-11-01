@@ -1,0 +1,20 @@
+[Unit]
+Description=CourseForge Career Studio FastAPI Worker Sidecar (:18095)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ubuntu/CourseForge
+Environment="PYTHONPATH=/home/ubuntu/CourseForge"
+Environment="CF_CAREER_HOST=127.0.0.1"
+Environment="CF_CAREER_PORT=18095"
+Environment="CF_CAREER_HEADLESS=true"
+Environment="DATABASE_URL=postgres://courseforge:courseforge@localhost:5432/courseforge_rewrite?sslmode=disable"
+ExecStart=/home/ubuntu/Resume/.venv/bin/python3 -m services.career_worker.app
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

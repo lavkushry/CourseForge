@@ -1,0 +1,10 @@
+[Unit]
+Description=Trigger Profile Mutation Cycle Tuesdays & Thursdays at 09:30 IST (04:00 UTC)
+
+[Timer]
+OnCalendar=Tue,Thu *-*-* 04:00:00
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target
