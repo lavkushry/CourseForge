@@ -12,19 +12,35 @@ DAILY_QUOTAS = {
     "calls_scheduled": {"target": 5.0}
 }
 
+def _count(value: Any) -> int:
+    """Coerces a metric to a non-negative int count.
+
+    Missing/None/non-numeric funnel metrics (an empty history is normal for
+    a new user) previously raised TypeError inside the ratio math; they now
+    degrade to 0, and negative counts clamp to 0.
+    """
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return 0
+    if v != v or v in (float("inf"), float("-inf")):
+        return 0
+    return int(max(0.0, v))
+
+
 class PacingCalculator:
     @staticmethod
     def calculate_pacing_ratio(calls_scheduled: int) -> float:
         """Pacing ratio: calls / 5.0 (1.0 = 100% of North Star goal)."""
         target = DAILY_QUOTAS["calls_scheduled"]["target"]
-        return round(float(calls_scheduled) / target, 2)
+        return round(_count(calls_scheduled) / target, 2)
 
     @staticmethod
     def evaluate_funnel_health(metrics: Dict[str, Any]) -> Dict[str, Any]:
-        calls = metrics.get("calls_scheduled", 0)
-        apps = metrics.get("applications", 0)
-        outreach = metrics.get("recruiter_outreach", 0)
-        followups = metrics.get("follow_ups", 0)
+        calls = _count(metrics.get("calls_scheduled", 0))
+        apps = _count(metrics.get("applications", 0))
+        outreach = _count(metrics.get("recruiter_outreach", 0))
+        followups = _count(metrics.get("follow_ups", 0))
 
         ratio = PacingCalculator.calculate_pacing_ratio(calls)
 
