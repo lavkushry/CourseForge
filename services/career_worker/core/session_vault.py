@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import re
@@ -8,11 +9,38 @@ logger = logging.getLogger("CareerWorker.SessionVault")
 
 class SessionVault:
     @staticmethod
+    def _safe_component(value: Optional[str], default: str) -> str:
+        """Maps an id to one safe path component without merging tenants.
+
+        Replacing unsafe characters is lossy: "a/b", "a b" and "a@b" would all
+        collapse to "a_b" and silently share a single cookie file. Whenever
+        sanitising changes the value, append a deterministic hash of the
+        original so distinct user/platform ids can never collide, while
+        already-safe ids keep their readable form.
+        """
+        raw = (value or "").strip()
+        if not raw:
+            return default
+        safe = re.sub(r"[^a-zA-Z0-9_\-]", "_", raw)
+        if not safe:
+            return default
+        if safe != raw:
+            digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:10]
+            safe = f"{safe}-{digest}"
+        return safe
+
+    @staticmethod
     def user_cookie_path(base_dir: Path, user_id: str, platform: str) -> Path:
         """Returns an isolated per-user, per-platform session cookie file path."""
-        safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", user_id or "default")
-        safe_platform = re.sub(r"[^a-zA-Z0-9_\-]", "_", platform or "naukri")
-        return base_dir / safe_user / f"{safe_platform}_cookies.json"
+        safe_user = SessionVault._safe_component(user_id, "default")
+        safe_platform = SessionVault._safe_component(platform, "naukri")
+        path = base_dir / safe_user / f"{safe_platform}_cookies.json"
+        # Defence in depth: the resolved path must stay inside base_dir,
+        # whatever a caller passes as either argument.
+        resolved_base = Path(base_dir).resolve()
+        if resolved_base not in path.resolve().parents:
+            raise ValueError("cookie path escapes its base directory")
+        return path
 
     @staticmethod
     def load_cookies(cookie_path: Path) -> List[Dict[str, Any]]:
@@ -47,4 +75,9 @@ class SessionVault:
     @staticmethod
     def has_valid_session(cookie_path: Path) -> bool:
         """Quick check if a non-empty cookie file exists."""
-        return cookie_path.exists() and cookie_path.stat().st_size > 10
+        try:
+            # is_file(), not exists(): a directory at this path would
+            # otherwise report a "valid session" on its directory size.
+            return cookie_path.is_file() and cookie_path.stat().st_size > 10
+        except OSError:
+            return False
