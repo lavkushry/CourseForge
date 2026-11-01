@@ -83,3 +83,14 @@ __pycache__/
 temp_videos/
 
 node_modules
+
+# Public docs images (narrow exception to the *.png rules above)
+!docs/images/
+!docs/images/*.png
+
+# Local course-data dumps and session artifacts (never commit)
+/*_raw.json
+/COMPANION_MATERIALS_AUDIT.json
+/MATERIAL_VIDEO_MAPPINGS.json
+*.session
+*.session-journal
