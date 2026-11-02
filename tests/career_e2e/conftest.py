@@ -9,8 +9,9 @@ import pytest
 from pathlib import Path
 from fastapi.testclient import TestClient
 
-# Path resolution
-REPO_ROOT = Path("/Users/lavkushkumar/Desktop/Courses/CourseForge")
+# Path resolution: REPO_ROOT derives from this file (same pattern runner.py uses);
+# RESUME_ROOT stays the harness path - its data files are the frozen snapshot.
+REPO_ROOT = Path(__file__).resolve().parents[2]
 RESUME_ROOT = Path("/Users/lavkushkumar/Desktop/Resume")
 WORKER_DIR = REPO_ROOT / "services" / "career_worker"
 

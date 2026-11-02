@@ -494,7 +494,7 @@ class TestTier4_RealWorldScenarios:
         assert cfg.resolve_user_cookie_path("lavkush", "naukri") == legacy_global
         other = cfg.resolve_user_cookie_path("rohan@example.com", "naukri")
         assert other != legacy_global
-        assert other.parent.name == "rohan_example_com"
+        assert other.parent.name == "rohan_example_com-0733eda6a6"
         assert not other.exists()
 
         # A user's own vaulted cookies are persisted only to their own file.
@@ -502,7 +502,7 @@ class TestTier4_RealWorldScenarios:
             "rohan@example.com",
             {"cookies": [{"name": "nauk_at", "value": "rohan", "domain": ".naukri.com", "path": "/"}]},
         )
-        assert adapter.cookie_path == tmp_path / "rohan_example_com" / "naukri_cookies.json"
+        assert adapter.cookie_path == tmp_path / "rohan_example_com-0733eda6a6" / "naukri_cookies.json"
         saved = json.loads(adapter.cookie_path.read_text())
         assert saved[0]["value"] == "rohan"
         assert json.loads(legacy_global.read_text())[0]["value"] == "owner"

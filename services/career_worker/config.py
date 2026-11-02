@@ -67,10 +67,15 @@ def resolve_user_cookie_path(user_id: str, platform: str) -> Path:
     every other user without their own vaulted session gets a non-existent path, which
     makes adapters fall back to simulation instead of borrowing someone else's account.
     """
-    import re
+    from services.career_worker.core.session_vault import SessionVault
 
-    safe_user = re.sub(r"[^a-zA-Z0-9_\-]", "_", (user_id or "").strip() or "default")
-    safe_platform = re.sub(r"[^a-zA-Z0-9_\-]", "_", platform or "naukri")
+    # Sanitise with the vault's shared helper: plain character replacement
+    # is lossy ("a/b", "a b" and "a@b" all collapse to "a_b" and would
+    # silently share one tenant's cookie file), so ids altered by sanitising
+    # get a deterministic hash suffix. This keeps the path built here
+    # identical to SessionVault.user_cookie_path(COOKIES_DIR, ...).
+    safe_user = SessionVault._safe_component(user_id, "default")
+    safe_platform = SessionVault._safe_component(platform, "naukri")
     per_user = COOKIES_DIR / safe_user / f"{safe_platform}_cookies.json"
     if per_user.exists() and per_user.stat().st_size > 10:
         return per_user

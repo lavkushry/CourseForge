@@ -28,6 +28,7 @@ export function renderCompanies(host: CareerStudioHost): HTMLElement {
   panel.append(form);
 
   const list = el('div', 'career-company-list');
+  if (!host.companies.length) list.append(el('p', 'career-empty-state', 'No companies yet. Add a target company above.'));
   for (const company of host.companies) {
     const card = el(
       'button',

@@ -105,6 +105,7 @@ export function renderResumeStudio(host: CareerStudioHost): HTMLElement {
     });
     tmplRow.append(btn);
   }
+  if (!host.templates.length) tmplRow.append(el('span', 'muted', 'No templates loaded yet'));
   form.append(tmplRow);
 
   const actions = el('div', 'career-chip-row');
@@ -160,7 +161,7 @@ export function renderResumeStudio(host: CareerStudioHost): HTMLElement {
       box.append(el('p', 'career-warn', host.latestVersion.error_message));
     }
     if (host.latestVersion.skim_score) {
-      box.append(el('p', '', `Recruiter skim score: ${host.latestVersion.skim_score.score}%`));
+      box.append(el('p', '', `Recruiter skim score: ${Math.round(host.latestVersion.skim_score.score)}%`));
       for (const fb of host.latestVersion.skim_score.feedback) {
         box.append(el('p', fb.ok ? 'muted' : 'career-warn', `${fb.ok ? '✓' : '!'} ${fb.message}`));
       }
@@ -357,7 +358,7 @@ export async function generateResume(
     );
     host.latestVersion = version;
     if (version.status === 'ready') {
-      host.options.feedback(`Resume ready · skim ${version.skim_score?.score ?? 0}%`);
+      host.options.feedback(`Resume ready · skim ${Math.round(version.skim_score?.score ?? 0)}%`);
     } else {
       host.options.feedback(version.error_message || 'Resume generation failed', true);
     }

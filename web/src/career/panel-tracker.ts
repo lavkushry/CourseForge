@@ -70,6 +70,7 @@ export function renderTracker(host: CareerStudioHost): HTMLElement {
   panel.append(form);
 
   const list = el('div', 'career-fact-list');
+  if (!host.applications.length) list.append(el('p', 'career-empty-state', 'No applications tracked yet. Add one above or import a CSV baseline below.'));
   for (const app of host.applications) {
     const row = el('div', 'career-fact-card');
     const days = app.applied_days_after_posting != null ? ` · +${app.applied_days_after_posting}d after posting` : '';

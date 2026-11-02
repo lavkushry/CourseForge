@@ -29,6 +29,12 @@ class LinkedInAdapter(BasePlatformAdapter):
         return self._sim.login()
 
     def bump_profile(self) -> Dict[str, Any]:
+        if not SessionVault.has_valid_session(self.cookie_path):
+            # Previously this returned success without checking for a session
+            # at all. Fall back to the deterministic simulator, like the
+            # Naukri adapter, so a dry-run result is labelled as one.
+            logger.info("No valid LinkedIn session cookie found; using deterministic simulation.")
+            return self._sim.bump_profile()
         return {
             "success": True,
             "platform": "linkedin",

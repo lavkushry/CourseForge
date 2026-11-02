@@ -8,6 +8,7 @@ export function renderTracks(host: CareerStudioHost): HTMLElement {
     el('p', 'muted', 'Section order and keyword weights for each target role.'),
   );
   const list = el('div', 'career-track-list');
+  if (!host.tracks.length) list.append(el('p', 'career-empty-state', 'No role tracks available yet.'));
   for (const track of host.tracks) {
     const btn = el(
       'button',

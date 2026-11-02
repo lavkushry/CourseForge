@@ -41,7 +41,7 @@ export function renderFacts(host: CareerStudioHost): HTMLElement {
   panel.append(form);
 
   const list = el('div', 'career-fact-list');
-  if (!host.facts.length) list.append(el('p', 'muted', 'No confirmed facts yet.'));
+  if (!host.facts.length) list.append(el('p', 'career-empty-state', 'No confirmed facts yet. Add one above to unlock grounded suggestions.'));
   for (const fact of host.facts) {
     const row = el('div', 'career-fact-card');
     const metricLabel = fact.metric ? fact.metric : '[METRIC] needed';
