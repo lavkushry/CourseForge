@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"courseforge/backend/internal/httpx"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func vaultAESKey() [32]byte {
@@ -241,7 +243,7 @@ func (s *Service) ConnectPlatformAuth(ctx context.Context, userID string, req Co
 	}
 	return PlatformAuthRequirement{
 		Platform:          platform,
-		DisplayName:       strings.Title(platform),
+		DisplayName:       cases.Title(language.English).String(platform),
 		AuthMethod:        method,
 		AccountIdentifier: ident,
 		Status:            status,

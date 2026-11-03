@@ -57,9 +57,10 @@ func (s *Service) GetEngineReadiness(ctx context.Context, userID string) (Engine
 	connectedCount := 0
 	simCount := 0
 	for _, pl := range platforms {
-		if pl.Status == "CONNECTED" {
+		switch pl.Status {
+		case "CONNECTED":
 			connectedCount++
-		} else if pl.Status == "SIMULATION" {
+		case "SIMULATION":
 			simCount++
 		}
 	}

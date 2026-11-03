@@ -1,5 +1,5 @@
 import { svgIcon } from '../icons';
-import { ApiClient, errorMessage, isAbort } from '../api';
+import { errorMessage, isAbort } from '../api';
 import { CareerApi } from './api';
 import { emptyResumeDraft } from './contracts';
 import './style.css';

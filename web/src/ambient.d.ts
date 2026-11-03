@@ -9,13 +9,37 @@ declare module 'vitest' {
   export function test(name: string, fn: () => void | Promise<void>): void;
   export function beforeEach(fn: () => void | Promise<void>): void;
   export function afterEach(fn: () => void | Promise<void>): void;
+  export interface Assertion {
+    toBe: (expected: unknown) => void;
+    toEqual: (expected: unknown) => void;
+    toThrow: (expected?: unknown) => void;
+    toContain: (expected: unknown) => void;
+    toMatchObject: (expected: object) => void;
+    toMatch: (expected: string | RegExp) => void;
+    toHaveLength: (length: number) => void;
+    toBeNull: () => void;
+    toBeInstanceOf: (ctor: abstract new (...args: never[]) => unknown) => void;
+    toBeGreaterThanOrEqual: (expected: number) => void;
+    toHaveBeenCalled: () => void;
+    toHaveBeenCalledOnce: () => void;
+    toHaveBeenCalledTimes: (times: number) => void;
+    toHaveBeenCalledWith: (...args: unknown[]) => void;
+    not: Assertion;
+    resolves: Assertion;
+    rejects: Assertion;
+  }
   export interface ExpectStatic {
-    (actual: any): any;
-    any: (ctor: any) => any;
-    objectContaining: (obj: Record<string, any>) => any;
-    stringContaining: (str: string) => any;
+    (actual: unknown): Assertion;
+    any: (ctor: unknown) => unknown;
+    objectContaining: (obj: Record<string, unknown>) => unknown;
+    stringContaining: (str: string) => unknown;
   }
   export const expect: ExpectStatic;
+  // The mock surface below intentionally mirrors vitest's own loose typing:
+  // a MockInstance must stay assignable to whatever function type it stands
+  // in for (fetch, callbacks, server methods), which is only expressible
+  // with any. Keep it confined to this stub; app code stays fully typed.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   export interface MockInstance<T extends (...args: any[]) => any = (...args: any[]) => any> {
     (...args: Parameters<T>): ReturnType<T>;
     mock: {
@@ -39,4 +63,5 @@ declare module 'vitest' {
     stubGlobal: (name: string, value: any) => void;
     restoreAllMocks: () => void;
   };
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
