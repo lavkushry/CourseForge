@@ -1,22 +1,9 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
-  return node;
-}
-
-export interface LabChallenge {
-  id: string;
-  title: string;
-  category: string;
-  level: string;
-  description: string;
-  filename: string;
-  starterCode: string;
-}
+import { errorMessage, isAbort } from '../api';
+import type { LabDefinition } from '../api/labs';
+import { el, emptyState } from '../components';
+import { labsRunDisabled, labsUnavailableBanner } from './status';
 
 export interface LabsViewOptions {
   root: HTMLElement;
@@ -24,83 +11,48 @@ export interface LabsViewOptions {
 }
 
 export class LabsView {
-  private challenges: LabChallenge[] = [
-    {
-      id: 'sql-window-func',
-      title: 'SQL: Dense Rank & Sliding Window Aggregations',
-      category: 'Data Engineering',
-      level: 'Intermediate',
-      description:
-        'Calculate employee salary rankings per department and rolling 3-month moving average sales using SQL CTEs and Window Functions without self-joins.',
-      filename: 'solution.sql',
-      starterCode: `-- Calculate rolling 3-month sales and rank per department
-WITH RankedSalaries AS (
-    SELECT 
-        department_id,
-        employee_id,
-        salary,
-        DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rank
-    FROM employees
-)
-SELECT * FROM RankedSalaries WHERE rank <= 3;`,
-    },
-    {
-      id: 'pyspark-broadcast-join',
-      title: 'PySpark: High-Performance Broadcast Hash Join',
-      category: 'Big Data & Spark',
-      level: 'Advanced',
-      description:
-        'Optimize a skewed 100M-row transaction dataset joined against a small 50k-row lookup dimension table by preventing shuffle skew with broadcast joins.',
-      filename: 'spark_join.py',
-      starterCode: `from pyspark.sql import SparkSession
-from pyspark.sql.functions import broadcast, col
-
-spark = SparkSession.builder.appName("BroadcastJoinOptimization").getOrCreate()
-
-# Load large transaction dataset and dimension table
-transactions_df = spark.read.parquet("/data/transactions")
-dim_stores_df = spark.read.parquet("/data/dim_stores")
-
-# Perform broadcast join to eliminate expensive shuffle stages
-optimized_df = transactions_df.join(
-    broadcast(dim_stores_df),
-    transactions_df.store_id == dim_stores_df.store_id,
-    "inner"
-)
-optimized_df.write.mode("overwrite").parquet("/output/sales_summary")`,
-    },
-    {
-      id: 'agentic-tool-call',
-      title: 'Agentic AI: Stateful Tool-Calling with Structured Output',
-      category: 'AI & Agents',
-      level: 'Advanced',
-      description:
-        'Construct an autonomous agent loop that verifies query parameters, invokes an external API tool, and handles backpressure and error retries.',
-      filename: 'agent_tool.py',
-      starterCode: `from typing import Dict, Any
-import json
-
-def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
-    """Execute autonomous tool calling with stateful verification."""
-    # 1. Parse intent
-    print(f"Agent received prompt: {prompt}")
-    # 2. Select appropriate tool
-    if "database" in prompt.lower():
-        result = tools["query_db"]("SELECT COUNT(*) FROM orders WHERE status = 'pending'")
-        return f"Executed database tool with verified result: {result}"
-    return "Handled general reasoning step without tool invocation."`,
-    },
-  ];
-
-  private activeLab: LabChallenge = this.challenges[0]!;
-  private running = false;
-  private testOutput = '';
+  private labs: LabDefinition[] = [];
+  private gradingAvailable = false;
+  private kindAvailable = false;
+  private activeLab: LabDefinition | null = null;
+  private loading = false;
+  private loadError: string | null = null;
+  private loadSignal: AbortSignal | null = null;
+  private notice: string | null = null;
 
   constructor(private readonly options: LabsViewOptions) {}
 
-  activate(_signal?: AbortSignal): void {
+  activate(signal?: AbortSignal): void {
     this.options.root.hidden = false;
+    const sig = signal ?? new AbortController().signal;
+    this.loadSignal = sig;
+    this.loading = true;
+    this.loadError = null;
+    this.notice = null;
     this.render();
+
+    void this.options.api
+      .labsCatalog(sig)
+      .then(catalog => {
+        if (sig.aborted) return;
+        this.labs = catalog.labs;
+        this.gradingAvailable = catalog.grading_available;
+        this.kindAvailable = catalog.kind_available;
+        this.activeLab = this.labs[0] ?? null;
+        this.loading = false;
+        this.loadError = null;
+        this.render();
+      })
+      .catch(error => {
+        if (sig.aborted || isAbort(error)) return;
+        this.loading = false;
+        this.labs = [];
+        this.activeLab = null;
+        this.gradingAvailable = false;
+        this.kindAvailable = false;
+        this.loadError = errorMessage(error);
+        this.render();
+      });
   }
 
   deactivate(): void {
@@ -113,30 +65,80 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
 
     const pageHead = el('div', 'page-heading');
     pageHead.append(
-      el('span', 'eyebrow', 'HANDS-ON PRACTICE SANDBOX'),
-      el('h1', '', 'Verified Engineering Labs'),
+      el('span', 'eyebrow', 'HANDS-ON DOCKER GRADED EXERCISES'),
+      el('h1', '', 'Interactive Practice Labs'),
       el(
         'p',
         'muted',
-        'Write and test real production code. Verify SQL queries, distributed Spark pipelines, and AI agent implementations.',
+        'Curated lab definitions from the Go catalog. Grading runs only when a trusted Docker executor is configured.',
       ),
     );
     this.options.root.append(pageHead);
 
+    if (this.loading) {
+      this.options.root.append(el('p', 'muted', 'Loading lab catalog…'));
+      return;
+    }
+
+    if (this.loadError) {
+      const retry = el('button', 'button primary');
+      retry.type = 'button';
+      retry.textContent = 'Retry';
+      retry.addEventListener('click', () => {
+        this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
+      });
+      this.options.root.append(
+        emptyState({
+          className: 'catalog-empty labs-empty-state',
+          icon: 'terminal',
+          title: 'Could not load labs',
+          description: this.loadError,
+          action: retry,
+        }),
+      );
+      return;
+    }
+
+    if (this.labs.length === 0) {
+      this.options.root.append(
+        emptyState({
+          className: 'catalog-empty labs-empty-state',
+          icon: 'terminal',
+          title: 'No curated labs published',
+          description: 'The lab catalog is empty. Nothing is fabricated when graders are offline.',
+        }),
+      );
+      return;
+    }
+
+    const unavailable = labsUnavailableBanner(this.gradingAvailable, this.kindAvailable);
+    if (unavailable) {
+      const banner = el('div', 'labs-unavailable-banner panel');
+      banner.append(el('strong', '', 'Graders unavailable'), el('p', 'muted', unavailable));
+      this.options.root.append(banner);
+    }
+
+    if (this.notice) {
+      this.options.root.append(el('p', 'planning-status-alert', this.notice));
+    }
+
     const layout = el('div', 'labs-layout-grid');
 
-    // Sidebar: Track picker
     const pickerCol = el('div', 'labs-picker-col');
     pickerCol.append(el('h3', '', 'Curated Challenges'));
 
     const list = el('div', 'labs-challenge-list');
-    for (const c of this.challenges) {
-      const card = el('button', this.activeLab.id === c.id ? 'lab-picker-card active' : 'lab-picker-card');
+    for (const c of this.labs) {
+      const card = el('button', this.activeLab?.slug === c.slug ? 'lab-picker-card active' : 'lab-picker-card');
       card.type = 'button';
-      card.append(el('span', 'tag', c.category), el('strong', '', c.title), el('span', 'muted', c.level));
+      card.append(
+        el('span', 'tag', c.category || c.type || 'Lab'),
+        el('strong', '', c.title),
+        el('span', 'muted', c.level || c.type),
+      );
       card.addEventListener('click', () => {
         this.activeLab = c;
-        this.testOutput = '';
+        this.notice = null;
         this.render();
       });
       list.append(card);
@@ -144,66 +146,80 @@ def execute_agent_loop(prompt: str, tools: Dict[str, Any]) -> str:
     pickerCol.append(list);
     layout.append(pickerCol);
 
-    // Main: Code Editor Workspace
     const editorCol = el('div', 'labs-editor-col');
+    if (!this.activeLab) {
+      editorCol.append(el('p', 'muted', 'Select a lab to inspect its objective and starter file name.'));
+      layout.append(editorCol);
+      this.options.root.append(layout);
+      return;
+    }
+
+    const lab = this.activeLab;
     const labHeader = el('div', 'lab-editor-head');
     labHeader.append(
-      el('span', 'eyebrow', `${this.activeLab.category.toUpperCase()} · ${this.activeLab.level.toUpperCase()}`),
-      el('h2', '', this.activeLab.title),
-      el('p', 'muted', this.activeLab.description),
+      el(
+        'span',
+        'eyebrow',
+        `${(lab.category || lab.type || 'LAB').toUpperCase()}${lab.level ? ` · ${lab.level.toUpperCase()}` : ''}`,
+      ),
+      el('h2', '', lab.title),
+      el('p', 'muted', lab.objective || 'No objective published for this lab.'),
     );
+    if (lab.tip) labHeader.append(el('p', 'muted', `Tip: ${lab.tip}`));
     editorCol.append(labHeader);
 
-    // Code Editor Shell
     const editorShell = el('div', 'code-editor-shell');
     const editorTop = el('div', 'editor-tab-bar');
     editorTop.append(
       (() => {
         const s = el('span', 'editor-file-tab');
-        s.append(svgIcon('file'), ` ${this.activeLab.filename}`);
+        s.append(svgIcon('file'), ` ${lab.filename}`);
         return s;
       })(),
-      el('span', 'editor-lang-tag', this.activeLab.filename.endsWith('.py') ? 'Python 3.12' : 'PostgreSQL 18'),
+      el('span', 'editor-lang-tag', lab.type),
     );
 
-    const textarea = el('textarea', 'code-editor-textarea');
-    textarea.setAttribute('aria-label', `${this.activeLab.title} starter code`);
-    textarea.value = this.activeLab.starterCode;
-    textarea.rows = 14;
-    textarea.spellcheck = false;
+    const starterNote = el(
+      'pre',
+      'code-editor-textarea labs-starter-placeholder',
+      lab.starter
+        ? lab.starter
+        : '// Starter source is issued when you start an owned lab session.\n// Catalog listings omit starter bodies until a session is opened.',
+    );
+    starterNote.setAttribute('aria-label', `${lab.title} starter preview`);
 
     const editorFooter = el('div', 'editor-footer-bar');
-    const runBtn = el(
-      'button',
-      'button primary run-checks-btn',
-      this.running ? 'Running Checks…' : 'Run Verified Checks',
-    );
+    const runBtn = el('button', 'button primary run-checks-btn', 'Run & Grade Lab');
     runBtn.type = 'button';
-    runBtn.disabled = this.running;
-
+    runBtn.disabled = labsRunDisabled(this.gradingAvailable);
+    runBtn.title = this.gradingAvailable
+      ? 'Submit to the trusted Docker grader'
+      : 'Graders are not available in this environment';
     runBtn.addEventListener('click', () => {
-      this.running = true;
-      this.render();
-
-      setTimeout(() => {
-        this.running = false;
-        this.testOutput = `[PASS] Syntax and structure validation passed.\n[PASS] Zero-shuffle execution pattern verified.\n[PASS] Output schema matches expected relational contract.\n\nResult: 100% Passed (3/3 checks passed in 0.04s)`;
+      if (labsRunDisabled(this.gradingAvailable)) {
+        this.notice =
+          'Lab grading requires a configured Docker executor. This environment does not invent pass/fail results.';
         this.render();
-      }, 700);
+        return;
+      }
+      this.notice =
+        'Session submit is available through the labs API when graders are online. Open a lab session from a machine with Docker graders configured.';
+      this.render();
     });
 
-    editorFooter.append(el('span', 'muted', 'Instant automated verification in sandbox container'), runBtn);
+    editorFooter.append(
+      el(
+        'span',
+        'muted',
+        this.gradingAvailable
+          ? 'Trusted Docker grading available'
+          : 'Browse-only · no fabricated verification output',
+      ),
+      runBtn,
+    );
 
-    editorShell.append(editorTop, textarea, editorFooter);
+    editorShell.append(editorTop, starterNote, editorFooter);
     editorCol.append(editorShell);
-
-    // Test Output Drawer
-    if (this.testOutput) {
-      const outputBox = el('div', 'labs-output-box');
-      outputBox.append(el('h4', '', 'Execution Output & Check Results'), el('pre', 'output-log-text', this.testOutput));
-      editorCol.append(outputBox);
-    }
-
     layout.append(editorCol);
     this.options.root.append(layout);
   }

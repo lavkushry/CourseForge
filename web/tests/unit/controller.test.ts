@@ -85,6 +85,28 @@ describe('player lifecycle and watch accounting', () => {
     await controller.close();
   });
 
+  it('crossing 98 percent mid-lesson does not start end-only autoplay', async () => {
+    const { controller, video, server, next } = setup();
+    vi.mocked(server.create).mockResolvedValue({ ...session(), preferences: { autoplay: true, speed: 1 } });
+    await controller.open(lesson);
+    await controller.requestPlay();
+    video.value.paused = false;
+    video.value.duration = 100;
+    video.value.position = 97;
+    video.event('timeupdate');
+    video.value.position = 98.5;
+    video.event('timeupdate');
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(next).not.toHaveBeenCalled();
+    video.value.position = 100;
+    video.value.paused = true;
+    video.value.ended = true;
+    video.event('ended');
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(next).toHaveBeenCalledOnce();
+    await controller.close();
+  });
+
   it('pauses and releases on hide, never steals ownership on visibility/reconnect, and claims deliberately', async () => {
     const test = setup();
     await test.controller.open(lesson);

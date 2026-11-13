@@ -23,6 +23,7 @@ export interface PlanningHost {
   currentHabits: c.Habits | null;
   currentInsights: c.Insights | null;
   statusMessage: string;
+  loadError: string | null;
   focusLessonId: string | undefined;
   focusTitle: string;
   focusDurationMinutes: number;

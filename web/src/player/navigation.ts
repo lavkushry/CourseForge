@@ -1,9 +1,10 @@
 import { browserClock } from './clock';
 import type { Clock, Timer } from './clock';
 
-// Completion credit does not trigger navigation. Only a real ended event can
-// start this countdown, and disabling autoplay cancels it immediately.
-/** True once playback crosses the threshold during continuous play, not after it. */
+// Completion credit and near-end progress do not trigger navigation. Only a
+// real ended event can start this countdown, and disabling autoplay cancels it
+// immediately.
+/** True once continuous play crosses a fraction of duration (not used for autoplay). */
 export function crossedPlaybackThreshold(
   previous: number,
   current: number,

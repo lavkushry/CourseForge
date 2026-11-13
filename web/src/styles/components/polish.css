@@ -557,10 +557,8 @@ button.note-del-btn:not([hidden]),
 
 .hero-kicker,
 .hero-metadata span,
-.hero-badge-match,
 .hero-chip,
-.hero-chip-badge,
-.hero-tech-badge {
+.hero-chip-badge {
   text-transform: none;
   letter-spacing: 0.01em;
 }

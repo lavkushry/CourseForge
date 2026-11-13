@@ -1,13 +1,8 @@
 import { svgIcon } from '../icons';
-import type { AuthResponse } from '../contracts';
+import type { AuthResponse, PlayerPreferences } from '../contracts';
 import type { ApiClient } from '../api';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
+import { errorMessage, isAbort } from '../api';
+import { el } from '../components';
 
 export interface SettingsViewOptions {
   root: HTMLElement;
@@ -19,6 +14,10 @@ export interface SettingsViewOptions {
 
 export class SettingsView {
   private dailyMinutes = 30;
+  private plannerRevision = 0;
+  private playerPrefs: PlayerPreferences = { autoplay: false, speed: 1 };
+  private prefsLoading = false;
+  private prefsError: string | null = null;
 
   private get goalKey(): string | null {
     const uid = this.options.account.id;
@@ -38,17 +37,41 @@ export class SettingsView {
 
   activate(signal: AbortSignal): void {
     this.options.root.hidden = false;
+    this.prefsLoading = true;
+    this.prefsError = null;
     this.render();
 
-    void this.options.api
-      .request<{ preferences: { daily_minutes?: number } }>('/planner/preferences', { signal })
-      .then(res => {
-        if (res?.preferences?.daily_minutes) {
-          this.dailyMinutes = res.preferences.daily_minutes;
-          this.render();
-        }
-      })
-      .catch(() => {});
+    void Promise.allSettled([
+      this.options.api.request<{ preferences: { daily_minutes?: number } }>('/planner/preferences', { signal }),
+      this.options.api.preferences(signal),
+    ]).then(([plannerRes, playerRes]) => {
+      if (signal.aborted) return;
+      if (plannerRes.status === 'fulfilled') {
+        const prefs = plannerRes.value as {
+          daily_minutes?: number;
+          revision?: number;
+          preferences?: { daily_minutes?: number; revision?: number };
+        };
+        const minutes = prefs.daily_minutes ?? prefs.preferences?.daily_minutes;
+        const revision = prefs.revision ?? prefs.preferences?.revision;
+        if (typeof minutes === 'number' && minutes > 0) this.dailyMinutes = minutes;
+        if (typeof revision === 'number' && Number.isFinite(revision)) this.plannerRevision = revision;
+      }
+      if (playerRes.status === 'fulfilled') {
+        this.playerPrefs = {
+          autoplay: playerRes.value.autoplay === true,
+          speed:
+            Number.isFinite(playerRes.value.speed) && playerRes.value.speed >= 0.5 && playerRes.value.speed <= 3
+              ? playerRes.value.speed
+              : 1,
+        };
+        this.prefsError = null;
+      } else if (!isAbort(playerRes.reason)) {
+        this.prefsError = errorMessage(playerRes.reason);
+      }
+      this.prefsLoading = false;
+      this.render();
+    });
   }
 
   deactivate(): void {
@@ -63,12 +86,12 @@ export class SettingsView {
     const pageHead = el('div', 'page-heading settings-header');
     const headText = el('div', 'page-heading-left');
     headText.append(
-      el('span', 'eyebrow', 'STUDIO PREFERENCES & ACCOUNT'),
-      el('h1', 'page-title', 'Studio Settings'),
+      el('span', 'eyebrow', 'ACCOUNT & WORKSPACE PREFERENCES'),
+      el('h1', 'page-title', 'Settings'),
       el(
         'p',
         'muted page-subtitle',
-        'Configure your learning environment, visual themes, daily study budgets, and account credentials.',
+        'Theme, player defaults, study goals, and account session. Status rows only reflect measured preferences — not invented latency.',
       ),
     );
     pageHead.append(headText);
@@ -80,8 +103,8 @@ export class SettingsView {
     const appearanceCard = el('section', 'panel settings-panel-card');
     const appHead = el('div', 'settings-panel-head');
     appHead.append(
-      el('h2', '', 'Appearance & Visual Theme'),
-      el('p', 'muted', 'Customize the cinematic obsidian backdrop and accent highlights.'),
+      el('h2', '', 'Appearance & Theme'),
+      el('p', 'muted', 'Stored locally in this browser.'),
     );
     appearanceCard.append(appHead);
 
@@ -115,7 +138,6 @@ export class SettingsView {
     const accentRow = el('div', 'accent-toggle-row');
     const rawAccent =
       document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'coral';
-    // Migrate the historical indigo key to the coral default.
     const currentAccent = rawAccent === 'indigo' ? 'coral' : rawAccent;
     if (rawAccent === 'indigo') {
       document.documentElement.dataset.accent = 'coral';
@@ -149,12 +171,77 @@ export class SettingsView {
     appearanceCard.append(themeWrap, accentWrap);
     grid.append(appearanceCard);
 
-    // Panel 2: Daily Study Goal
+    // Panel 2: Video player defaults (authorized API)
+    const playerCard = el('section', 'panel settings-panel-card');
+    const playerHead = el('div', 'settings-panel-head');
+    playerHead.append(
+      el('h2', '', 'Video Player Defaults'),
+      el('p', 'muted', 'Saved to your account when the playback preferences API acknowledges the write.'),
+    );
+    playerCard.append(playerHead);
+
+    if (this.prefsLoading) {
+      playerCard.append(el('p', 'muted', 'Loading player preferences…'));
+    } else if (this.prefsError) {
+      playerCard.append(el('p', 'planning-status-alert', `Could not load player preferences: ${this.prefsError}`));
+    } else {
+      const autoplayGroup = el('div', 'setting-group');
+      const autoplayLabel = el('label', 'input-label');
+      const autoplayCheck = document.createElement('input');
+      autoplayCheck.type = 'checkbox';
+      autoplayCheck.checked = this.playerPrefs.autoplay;
+      autoplayCheck.id = 'settings-autoplay';
+      autoplayLabel.htmlFor = 'settings-autoplay';
+      autoplayLabel.append(autoplayCheck, document.createTextNode(' Autoplay next lecture after end'));
+      autoplayCheck.addEventListener('change', async () => {
+        const next = { ...this.playerPrefs, autoplay: autoplayCheck.checked };
+        try {
+          this.playerPrefs = await this.options.api.savePreferences(next, new AbortController().signal);
+          this.options.feedback(
+            this.playerPrefs.autoplay ? 'Autoplay enabled after durable save.' : 'Autoplay disabled after durable save.',
+          );
+          this.render();
+        } catch (err) {
+          autoplayCheck.checked = this.playerPrefs.autoplay;
+          this.options.feedback(errorMessage(err), true);
+        }
+      });
+      autoplayGroup.append(autoplayLabel);
+
+      const speedGroup = el('div', 'setting-group');
+      const speedLabel = el('label', 'input-label', 'Default Playback Speed');
+      speedLabel.htmlFor = 'settings-speed';
+      const speedSelect = el('select', 'form-input');
+      speedSelect.id = 'settings-speed';
+      for (const speed of [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]) {
+        const opt = el('option', '', `${speed}×`);
+        opt.value = String(speed);
+        if (this.playerPrefs.speed === speed) opt.selected = true;
+        speedSelect.append(opt);
+      }
+      speedSelect.addEventListener('change', async () => {
+        const speed = Number(speedSelect.value);
+        const next = { ...this.playerPrefs, speed };
+        try {
+          this.playerPrefs = await this.options.api.savePreferences(next, new AbortController().signal);
+          this.options.feedback(`Default speed set to ${this.playerPrefs.speed}×.`);
+          this.render();
+        } catch (err) {
+          speedSelect.value = String(this.playerPrefs.speed);
+          this.options.feedback(errorMessage(err), true);
+        }
+      });
+      speedGroup.append(speedLabel, speedSelect);
+      playerCard.append(autoplayGroup, speedGroup);
+    }
+    grid.append(playerCard);
+
+    // Panel 3: Daily Study Goal
     const goalCard = el('section', 'panel settings-panel-card');
     const goalHead = el('div', 'settings-panel-head');
     goalHead.append(
       el('h2', '', 'Study Habit Target'),
-      el('p', 'muted', 'Set your daily target to preserve streaks and schedule study reminders.'),
+      el('p', 'muted', 'Local fallback is used when habit preferences cannot be saved remotely.'),
     );
     goalCard.append(goalHead);
 
@@ -163,7 +250,6 @@ export class SettingsView {
     goalLabel.htmlFor = 'daily-goal-duration';
     goalGroup.append(goalLabel);
 
-    // Quick pills
     const goalPills = el('div', 'budget-pills-row settings-goal-pills');
     for (const [mVal, mLabel] of [
       [15, '15 min'],
@@ -184,11 +270,22 @@ export class SettingsView {
         if (this.goalKey) localStorage.setItem(this.goalKey, String(mVal));
         this.render();
         try {
-          await this.options.api.request('/me/habit-preferences', {
-            method: 'PUT',
-            body: { goal: 'minutes', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' },
-          });
-          this.options.feedback(`Target set to ${mVal} minutes per day.`);
+          const saved = await this.options.api.request<{ daily_minutes: number; revision: number }>(
+            '/planner/preferences',
+            {
+              method: 'PUT',
+              body: {
+                daily_minutes: mVal,
+                path_id: null,
+                expected_revision: this.plannerRevision,
+              },
+              idempotencyKey: crypto.randomUUID(),
+            },
+          );
+          if (typeof saved.revision === 'number') this.plannerRevision = saved.revision;
+          if (typeof saved.daily_minutes === 'number') this.dailyMinutes = saved.daily_minutes;
+          this.options.feedback(`Target set to ${this.dailyMinutes} minutes per day.`);
+          this.render();
         } catch {
           this.options.feedback(`Saved target to ${mVal} minutes locally.`);
         }
@@ -210,14 +307,22 @@ export class SettingsView {
       if (this.goalKey) localStorage.setItem(this.goalKey, String(val));
       this.render();
       try {
-        await this.options.api.request('/me/habit-preferences', {
-          method: 'PUT',
-          body: {
-            goal: 'minutes',
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        const saved = await this.options.api.request<{ daily_minutes: number; revision: number }>(
+          '/planner/preferences',
+          {
+            method: 'PUT',
+            body: {
+              daily_minutes: val,
+              path_id: null,
+              expected_revision: this.plannerRevision,
+            },
+            idempotencyKey: crypto.randomUUID(),
           },
-        });
-        this.options.feedback(`Updated daily study goal to ${val} minutes.`);
+        );
+        if (typeof saved.revision === 'number') this.plannerRevision = saved.revision;
+        if (typeof saved.daily_minutes === 'number') this.dailyMinutes = saved.daily_minutes;
+        this.options.feedback(`Updated daily study goal to ${this.dailyMinutes} minutes.`);
+        this.render();
       } catch {
         this.options.feedback(`Saved daily goal to ${val} minutes locally.`);
       }
@@ -227,21 +332,21 @@ export class SettingsView {
     goalCard.append(goalGroup);
     grid.append(goalCard);
 
-    // Panel 3: Account & Session
+    // Panel 4: Account & Session
     const accountCard = el('section', 'panel settings-panel-card');
     const accHead = el('div', 'settings-panel-head');
     accHead.append(
       el('h2', '', 'Account & Authentication'),
-      el('p', 'muted', 'Signed in as verified CourseForge learner.'),
+      el('p', 'muted', 'Signed-in learner identity from the auth session.'),
     );
     accountCard.append(accHead);
 
     const infoList = el('dl', 'account-meta-list');
     infoList.append(
       el('dt', '', 'Learner ID:'),
-      el('dd', '', this.options.account.id || 'Current User'),
+      el('dd', '', this.options.account.id || '—'),
       el('dt', '', 'Email:'),
-      el('dd', '', this.options.account.email || 'learner@courseforge.local'),
+      el('dd', '', this.options.account.email || '—'),
       el('dt', '', 'Role:'),
       el('dd', '', (this.options.account.role || 'learner').toUpperCase()),
     );
@@ -256,32 +361,18 @@ export class SettingsView {
     accountCard.append(signOutBtn);
     grid.append(accountCard);
 
-    // Panel 4: Platform & Performance
+    // Panel 5: Honest about local-only notes (no fabricated latency/CDN status)
     const aboutCard = el('section', 'panel settings-panel-card');
     const aboutHead = el('div', 'settings-panel-head');
     aboutHead.append(
-      el('h2', '', 'Platform & Infrastructure'),
-      el('p', 'muted', 'CourseForge 2.4.0 (Streaming Edition) · Built for Deep Focus.'),
+      el('h2', '', 'Workspace notes'),
+      el(
+        'p',
+        'muted',
+        'Theme and accent are browser-local. Player defaults require a durable preferences acknowledgment. Service health is not probed from this page.',
+      ),
     );
     aboutCard.append(aboutHead);
-
-    const statusList = el('div', 'settings-status-list');
-    const makeStatus = (title: string, sub: string, dotClass: string) => {
-      const row = el('div', 'settings-status-row');
-      const dot = el('span', `status-indicator-dot ${dotClass}`);
-      const textWrap = el('div');
-      textWrap.append(el('strong', '', title), el('span', 'muted', ` · ${sub}`));
-      row.append(dot, textWrap);
-      return row;
-    };
-
-    statusList.append(
-      makeStatus('Go High-Performance API Gateway', 'Active (<4ms latency)', 'dot-green'),
-      makeStatus('Go Range Streaming Media Server', 'High-Throughput (<12ms seek latency)', 'dot-green'),
-      makeStatus('PostgreSQL Primary Store', 'Schema v2.4 fully synchronized', 'dot-green'),
-      makeStatus('Odysee Multi-Account CDN Stream Pool', '3-token rotational balancing', 'dot-green'),
-    );
-    aboutCard.append(statusList);
     grid.append(aboutCard);
 
     root.append(grid);

@@ -33,6 +33,7 @@ export class PlanningView implements PlanningHost {
   currentHabits: c.Habits | null = null;
   currentInsights: c.Insights | null = null;
   statusMessage = '';
+  loadError: string | null = null;
   focusLessonId: string | undefined = undefined;
   focusTitle = 'Source study';
   focusDurationMinutes = 25;
@@ -104,6 +105,7 @@ export class PlanningView implements PlanningHost {
     this.activeTab = tab;
     this.root.hidden = false;
     this.root.setAttribute('aria-busy', 'true');
+    this.loadError = null;
 
     try {
       if (this.hooks.paths) {
@@ -129,6 +131,7 @@ export class PlanningView implements PlanningHost {
         this.hooks.unauthorized();
         return;
       }
+      this.loadError = err instanceof Error ? err.message : 'Planning data unavailable.';
       this.render();
     } finally {
       this.root.setAttribute('aria-busy', 'false');
@@ -138,10 +141,17 @@ export class PlanningView implements PlanningHost {
   private async loadDaily(signal: AbortSignal): Promise<void> {
     try {
       this.preferences = await this.planningApi.preferences(signal);
-    } catch {}
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+    }
     try {
       this.currentDay = await this.planningApi.day(this.studyDate, signal);
-    } catch {}
+      this.loadError = null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+      this.currentDay = null;
+      this.loadError = err instanceof Error ? err.message : 'Daily plan unavailable.';
+    }
   }
 
   private async loadWeekly(signal: AbortSignal): Promise<void> {
@@ -150,22 +160,39 @@ export class PlanningView implements PlanningHost {
       if (this.weekPreferences && this.weekPreferences.weekday_minutes.length === 7) {
         this.weekdayMinutes = [...this.weekPreferences.weekday_minutes];
       }
-    } catch {}
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+    }
     try {
       this.currentWeek = await this.planningApi.week(this.weekStart, signal);
-    } catch {}
+      this.loadError = null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+      this.currentWeek = null;
+      this.loadError = err instanceof Error ? err.message : 'Weekly plan unavailable.';
+    }
   }
 
   private async loadFocus(signal: AbortSignal): Promise<void> {
     try {
       this.currentFocus = await this.planningApi.active(signal);
-    } catch {}
+      this.loadError = null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+      this.currentFocus = null;
+      this.loadError = err instanceof Error ? err.message : 'Focus timer unavailable.';
+    }
   }
 
   private async loadHabits(signal: AbortSignal): Promise<void> {
     try {
       this.currentHabits = await this.planningApi.habits(signal);
-    } catch {}
+      this.loadError = null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw err;
+      this.currentHabits = null;
+      this.loadError = err instanceof Error ? err.message : 'Habits unavailable.';
+    }
   }
 
   render(): void {
@@ -210,7 +237,9 @@ export class PlanningView implements PlanningHost {
     statusEl.className = 'planning-status-alert';
     statusEl.setAttribute('role', 'status');
     statusEl.setAttribute('aria-live', 'polite');
-    statusEl.textContent = this.statusMessage;
+    statusEl.textContent = this.loadError
+      ? `Could not load planning data: ${this.loadError}`
+      : this.statusMessage;
     wrap.append(statusEl);
 
     // Content by tab

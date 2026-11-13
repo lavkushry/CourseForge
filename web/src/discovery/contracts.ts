@@ -12,6 +12,24 @@ export interface ContinueItem extends Lesson {
   percent: number;
   completed: boolean;
 }
+export interface TrendingItem {
+  rank: number;
+  lesson_id: string;
+  title: string;
+  course_id: string;
+  duration_seconds: number;
+  viewers: number;
+}
+export interface HomeFeedRow {
+  id: string;
+  title: string;
+  kind: string;
+  items: unknown;
+}
+export interface HomeFeed {
+  hero: Course[];
+  rows: HomeFeedRow[];
+}
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new ContractError('discovery response');
   return value as Record<string, unknown>;
@@ -63,4 +81,108 @@ export function courseCover(course: Course): string | null {
   } catch {
     return null;
   }
+}
+export function parseTrending(value: unknown): TrendingItem[] {
+  const data = object(value);
+  if (!Array.isArray(data.items) || data.items.length > 15) throw new ContractError('trending list');
+  return data.items.map(raw => {
+    const item = object(raw);
+    if (
+      typeof item.rank !== 'number' ||
+      !Number.isInteger(item.rank) ||
+      item.rank < 1 ||
+      item.rank > 10 ||
+      typeof item.viewers !== 'number' ||
+      !Number.isFinite(item.viewers) ||
+      item.viewers < 1 ||
+      typeof item.duration_seconds !== 'number' ||
+      !Number.isFinite(item.duration_seconds) ||
+      item.duration_seconds < 0
+    )
+      throw new ContractError('trending item');
+    return {
+      rank: item.rank,
+      lesson_id: text(item.lesson_id),
+      title: text(item.title),
+      course_id: text(item.course_id),
+      duration_seconds: item.duration_seconds,
+      viewers: item.viewers,
+    };
+  });
+}
+export function parseHomeFeed(value: unknown): HomeFeed {
+  const data = object(value);
+  if (!Array.isArray(data.hero) || data.hero.length > 10) throw new ContractError('home feed hero');
+  if (!Array.isArray(data.rows) || data.rows.length > 20) throw new ContractError('home feed rows');
+  const rows = data.rows.map(raw => {
+    const row = object(raw);
+    const id = text(row.id);
+    const title = text(row.title);
+    const kind = text(row.kind);
+    if (kind === 'rank_card' && id !== 'trending-top-10') throw new ContractError('ranked row id');
+    return { id, title, kind, items: row.items };
+  });
+  // Ranked chrome is only valid when the row claims measured trending items.
+  for (const row of rows) {
+    if (row.kind !== 'rank_card') continue;
+    const ranked = parseTrending({ items: row.items });
+    if (!ranked.length) throw new ContractError('empty ranked row');
+  }
+  return {
+    hero: data.hero.map(item => {
+      const course = object(item);
+      return {
+        id: text(course.id),
+        title: text(course.title),
+        ...(typeof course.description === 'string' ? { description: course.description } : {}),
+        ...(typeof course.cover_url === 'string' ? { cover_url: course.cover_url } : {}),
+        ...(typeof course.category === 'string' ? { category: course.category } : {}),
+        ...(typeof course.instructor === 'string' ? { instructor: course.instructor } : {}),
+        ...(typeof course.lesson_count === 'number' ? { lesson_count: course.lesson_count } : {}),
+        ...(typeof course.duration_seconds === 'number' ? { duration_seconds: course.duration_seconds } : {}),
+        ...(typeof course.enrolled === 'boolean' ? { enrolled: course.enrolled } : {}),
+        ...(Array.isArray(course.tags) ? { tags: course.tags.filter((t): t is string => typeof t === 'string') } : {}),
+      };
+    }),
+    rows,
+  };
+}
+/** Measured trending items only — rejects fabricated zero-viewer ranks. */
+export function measuredTrending(items: TrendingItem[]): TrendingItem[] {
+  return items.filter(item => item.viewers >= 1 && item.rank >= 1 && item.rank <= 10).slice(0, 10);
+}
+
+/** Pull personal discovery rows from a measured home-feed response. */
+export function personalRowsFromHomeFeed(feed: HomeFeed): {
+  continued: ContinueItem[];
+  saved: SavedItem[];
+  trending: TrendingItem[];
+} {
+  let continued: ContinueItem[] = [];
+  let saved: SavedItem[] = [];
+  let trending: TrendingItem[] = [];
+  for (const row of feed.rows) {
+    if (row.id === 'continue-watching' || row.kind === 'lecture_card') {
+      try {
+        continued = parseContinued({ items: row.items });
+      } catch {
+        /* Keep prior empty — never invent resume positions. */
+      }
+    }
+    if (row.id === 'my-list' || row.kind === 'saved_card') {
+      try {
+        saved = parseSaved({ items: row.items, next_cursor: '' }).items;
+      } catch {
+        /* Keep prior empty. */
+      }
+    }
+    if (row.id === 'trending-top-10' || row.kind === 'rank_card') {
+      try {
+        trending = measuredTrending(parseTrending({ items: row.items }));
+      } catch {
+        /* Rank chrome stays empty without measured viewers. */
+      }
+    }
+  }
+  return { continued, saved, trending };
 }

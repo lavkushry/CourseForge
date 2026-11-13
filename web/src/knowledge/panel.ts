@@ -313,8 +313,10 @@ function statusLabel(status: string): string {
     case 'ready':
       return 'Ready';
     case 'failed':
-      return 'Unavailable';
+      return 'Indexing failed — content is not invented';
+    case 'pending':
+      return 'Indexing pending';
     default:
-      return 'Processing';
+      return `Unknown status: ${status}`;
   }
 }

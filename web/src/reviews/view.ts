@@ -1,15 +1,9 @@
-import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
-import { errorMessage } from '../api';
+import { errorMessage, isAbort } from '../api';
 import { LearningApi } from '../learning/api';
 import type { Card } from '../learning/contracts';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
-  return node;
-}
+import { el, emptyState } from '../components';
+import { reviewsEmptyCopy, reviewsLoadFailureCopy } from './status';
 
 export interface ReviewsViewOptions {
   root: HTMLElement;
@@ -22,6 +16,9 @@ export class ReviewsView {
   private activeCard: Card | null = null;
   private answerRevealed = false;
   private loading = false;
+  private loadError: string | null = null;
+  private loadSignal: AbortSignal | null = null;
+  private gradeError: string | null = null;
   private completedToday = 0;
 
   constructor(private readonly options: ReviewsViewOptions) {
@@ -30,20 +27,29 @@ export class ReviewsView {
 
   activate(signal: AbortSignal): void {
     this.options.root.hidden = false;
+    this.loadSignal = signal;
     this.loading = true;
+    this.loadError = null;
+    this.gradeError = null;
     this.render();
 
     void this.learningApi
       .cards('', true, signal)
       .then(res => {
+        if (signal.aborted) return;
         this.cards = res.items;
         this.activeCard = this.cards[0] || null;
         this.answerRevealed = false;
         this.loading = false;
+        this.loadError = null;
         this.render();
       })
-      .catch(() => {
+      .catch(error => {
+        if (signal.aborted || isAbort(error)) return;
         this.loading = false;
+        this.cards = [];
+        this.activeCard = null;
+        this.loadError = errorMessage(error);
         this.render();
       });
   }
@@ -64,7 +70,7 @@ export class ReviewsView {
       el(
         'p',
         'muted',
-        'Review active concept flashcards with the SM-2 spaced repetition algorithm. Practice a few minutes daily to never forget.',
+        'Review due flashcards from your private SM-2 schedule. Empty means none are due — not a fabricated catch-up.',
       ),
     );
     root.append(pageHead);
@@ -77,27 +83,45 @@ export class ReviewsView {
       return;
     }
 
-    if (!this.activeCard) {
-      const emptyCard = el('div', 'catalog-empty reviews-empty-card');
-      emptyCard.append(
-        (() => {
-          const s = el('span', 'empty-symbol');
-          s.append(svgIcon('party'));
-          return s;
-        })(),
-        el('h2', '', 'You are all caught up!'),
-        el(
-          'p',
-          'muted',
-          `Reviewed ${this.completedToday} cards today. No more flashcards due right now. Complete quizzes in your lectures to schedule new concepts.`,
-        ),
+    if (this.loadError) {
+      const retry = el('button', 'button primary');
+      retry.type = 'button';
+      retry.textContent = 'Retry';
+      retry.addEventListener('click', () => {
+        this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
+      });
+      const failure = reviewsLoadFailureCopy(this.loadError);
+      container.append(
+        emptyState({
+          className: 'catalog-empty reviews-empty-card',
+          icon: 'cards',
+          title: failure.title,
+          description: failure.description,
+          action: retry,
+        }),
       );
-      container.append(emptyCard);
       root.append(container);
       return;
     }
 
-    // Flashcard Study Card
+    if (!this.activeCard) {
+      const empty = reviewsEmptyCopy(this.completedToday);
+      container.append(
+        emptyState({
+          className: 'catalog-empty reviews-empty-card',
+          icon: 'party',
+          title: empty.title,
+          description: empty.description,
+        }),
+      );
+      root.append(container);
+      return;
+    }
+
+    if (this.gradeError) {
+      container.append(el('p', 'planning-status-alert', this.gradeError));
+    }
+
     const cardEl = el('div', 'review-flashcard');
     const cardHeader = el('div', 'review-card-header');
     cardHeader.append(
@@ -115,6 +139,7 @@ export class ReviewsView {
       revealBtn.type = 'button';
       revealBtn.addEventListener('click', () => {
         this.answerRevealed = true;
+        this.gradeError = null;
         this.render();
       });
       cardEl.append(revealBtn);
@@ -123,7 +148,6 @@ export class ReviewsView {
       answerBox.append(el('span', 'eyebrow', 'VERIFIED ANSWER'), el('p', 'review-answer-text', this.activeCard.answer));
       cardEl.append(answerBox);
 
-      // Recall Grading Buttons
       const gradePrompt = el('p', 'grade-prompt', 'How well did you recall this concept?');
       const gradesRow = el('div', 'review-grades-row');
 
@@ -150,9 +174,11 @@ export class ReviewsView {
             this.cards.shift();
             this.activeCard = this.cards[0] || null;
             this.answerRevealed = false;
+            this.gradeError = null;
             this.render();
           } catch (err) {
-            alert(errorMessage(err));
+            this.gradeError = errorMessage(err);
+            this.render();
           }
         });
         gradesRow.append(btn);

@@ -2,8 +2,8 @@ import { svgIcon } from '../icons';
 import type { Course, Lesson, Note } from '../contracts';
 import type { ApiClient } from '../api';
 import { errorMessage } from '../api';
-import type { LearningApi } from '../learning/api';
-import type { QuizResult, TutorSource } from '../learning/contracts';
+import { Commands, type LearningApi } from '../learning/api';
+import type { LessonQuiz, QuizResult, TutorSource } from '../learning/contracts';
 import { formatTime } from './controller';
 import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
 import { appendExploreCitation } from '../spatial/ui';
@@ -27,6 +27,8 @@ export interface StudyRailOptions {
   seekTo: (seconds: number) => void;
   onPlayLesson: (lesson: Lesson) => void;
   onMarkComplete: (lessonId: string) => Promise<void>;
+  /** Called only after a durable graded quiz pass acknowledgement. */
+  onQuizPassed?: (lessonId: string) => void;
 }
 
 export class StudyRail {
@@ -41,21 +43,22 @@ export class StudyRail {
   // Notes state
   private notes: Note[] = [];
   private notesLoaded = false;
+  private notesLoading = false;
+  private notesError = '';
 
-  // Quiz state
+  // Quiz state — only real API questions/scores; never fabricate mastery.
   private quizLoading = false;
-  private quizQuestions: Array<{
-    id: string;
-    question: string;
-    options: string[];
-    selected: number | null;
-  }> = [];
-  private quizSubmitted = false;
+  private quizError = '';
+  private quizData: LessonQuiz | null = null;
   private quizResult: QuizResult | null = null;
+  private quizSubmitting = false;
+  private readonly quizCommands = new Commands();
 
-  // Transcript state
+  // Transcript state — empty until real chunks arrive; no synthetic speech.
   private transcriptChunks: Array<{ start: number; end: number; text: string }> = [];
   private transcriptLoaded = false;
+  private transcriptLoading = false;
+  private transcriptError = '';
   private transcriptFilter = '';
 
   // Chapters / Video Splits state
@@ -94,10 +97,18 @@ export class StudyRail {
 
     if (lessonChanged) {
       this.notesLoaded = false;
-      this.quizQuestions = [];
-      this.quizSubmitted = false;
+      this.notesLoading = false;
+      this.notesError = '';
+      this.notes = [];
+      this.quizLoading = false;
+      this.quizError = '';
+      this.quizData = null;
       this.quizResult = null;
+      this.quizSubmitting = false;
+      this.quizCommands.clear();
       this.transcriptLoaded = false;
+      this.transcriptLoading = false;
+      this.transcriptError = '';
       this.transcriptChunks = [];
       this.chapters = [];
       this.chaptersLoaded = false;
@@ -413,13 +424,13 @@ export class StudyRail {
     );
 
     const descBox = el('div', 'brief-desc-box');
+    const overview = this.activeLesson.description?.trim();
     descBox.append(
       el('h4', '', 'Key Concepts & Takeaways'),
       el(
         'p',
-        '',
-        this.activeLesson.description ||
-          'Deep-dive lecture covering foundational architectural principles, production implementations, and verified patterns from the CourseForge curriculum.',
+        overview ? '' : 'muted',
+        overview || 'No lesson overview is available for this lecture yet.',
       ),
     );
 
@@ -456,20 +467,40 @@ export class StudyRail {
       el('p', 'muted', 'Downloadable Jupyter notebooks, slides, scripts, and datasets.'),
     );
 
-    const materials = this.activeLesson?.materials || [];
-    if (materials.length === 0) {
-      panel.append(
-        el(
-          'div',
-          'empty-materials-card',
-          'No supplementary download files attached to this specific lecture. Code snippets are demonstrated directly on screen.',
-        ),
-      );
+    if (!this.activeLesson) {
+      panel.append(el('p', 'muted', 'Select a lesson to see attached files and caption tracks.'));
       return panel;
     }
 
+    const captions = this.activeLesson.captions || [];
+    if (captions.length > 0) {
+      const capBox = el('div', 'materials-captions-note');
+      capBox.append(
+        el('strong', '', 'Captions in player'),
+        el(
+          'p',
+          'muted',
+          captions.map(c => c.label || c.language).filter(Boolean).join(' · ') ||
+            `${captions.length} caption track${captions.length === 1 ? '' : 's'} available.`,
+        ),
+      );
+      panel.append(capBox);
+    } else {
+      panel.append(el('p', 'muted materials-captions-empty', 'No caption tracks are attached to this lesson.'));
+    }
+
+    const materials = this.activeLesson.materials || [];
     const list = el('div', 'materials-list');
+    let linked = 0;
     for (const m of materials) {
+      let url: URL;
+      try {
+        url = new URL(m.download_url, location.origin);
+      } catch {
+        continue;
+      }
+      if (url.origin !== location.origin || !url.pathname.startsWith('/api/')) continue;
+      linked += 1;
       const card = el('div', 'material-item-card');
       const info = el('div', 'material-item-info');
 
@@ -487,11 +518,22 @@ export class StudyRail {
       info.append(badge, title);
 
       const link = el('a', 'material-download-btn', 'Download');
-      link.href = m.download_url;
+      link.href = url.href;
       link.setAttribute('target', '_blank');
       link.setAttribute('rel', 'noopener noreferrer');
       card.append(info, link);
       list.append(card);
+    }
+
+    if (linked === 0) {
+      panel.append(
+        el(
+          'div',
+          'empty-materials-card',
+          'No supplementary download files are attached to this lecture.',
+        ),
+      );
+      return panel;
     }
 
     panel.append(list);
@@ -510,97 +552,231 @@ export class StudyRail {
 
     panel.append(
       el('h3', '', 'Lesson Concept Check'),
-      el('p', 'muted', 'Verify key takeaways and retain core ideas with instant feedback.'),
+      el('p', 'muted', 'Scores appear only after the server grades your answers.'),
     );
 
-    if (this.quizQuestions.length === 0 && !this.quizLoading) {
+    if (this.quizLoading) {
+      panel.append(el('p', 'muted', 'Loading lesson quiz…'));
+      return panel;
+    }
+
+    if (!this.quizData) {
+      if (this.quizError) {
+        panel.append(el('p', 'muted rail-error', this.quizError));
+        const retry = el('button', 'button quiet', 'Try again');
+        retry.type = 'button';
+        retry.addEventListener('click', () => {
+          void this.loadQuiz();
+        });
+        panel.append(retry);
+        return panel;
+      }
       const loadBtn = el('button', 'button primary', 'Start Lesson Quiz');
       loadBtn.type = 'button';
-      loadBtn.addEventListener('click', async () => {
-        this.quizLoading = true;
-        loadBtn.disabled = true;
-        loadBtn.textContent = 'Generating questions…';
-        try {
-          const res = await this.options.learningApi.quiz(this.activeLesson!.id, new AbortController().signal);
-          this.quizQuestions = res.questions.map(q => ({
-            id: q.id,
-            question: q.question,
-            options: q.options,
-            selected: null,
-          }));
-        } catch {
-          // Synthetic fallback grounded question if none found
-          this.quizQuestions = [
-            {
-              id: 'q1',
-              question: `What is the primary architecture or mechanism explained in "${cleanLessonTitle(this.activeLesson!.title)}"?`,
-              options: [
-                'Distributed stateless partitioning with high-throughput batching',
-                'Single-threaded synchronous in-memory buffering without retries',
-                'Client-side ad-hoc manual validation without invariants',
-                'Unindexed full table sequential scanning across partitions',
-              ],
-              selected: null,
-            },
-          ];
-        } finally {
-          this.quizLoading = false;
-          this.render();
-        }
+      loadBtn.addEventListener('click', () => {
+        void this.loadQuiz();
       });
       panel.append(loadBtn);
       return panel;
     }
 
-    // Render questions form
+    if (this.quizError) {
+      panel.append(el('p', 'muted rail-error', this.quizError));
+    }
+
+    const data = this.quizData;
+
+    if (data.state === 'pending') {
+      panel.append(
+        el('p', 'muted', 'This lesson quiz is awaiting approval. Come back when it is ready.'),
+      );
+      return panel;
+    }
+
+    panel.append(
+      el(
+        'p',
+        'muted',
+        data.status.passed
+          ? `Learned · ${data.status.attempts} attempt${data.status.attempts === 1 ? '' : 's'}${
+              data.status.last_score != null ? ` · last score ${data.status.last_score}%` : ''
+            }. Retake to refresh your recall.`
+          : `${data.questions.length} question${data.questions.length === 1 ? '' : 's'} · Answer every question to receive feedback.`,
+      ),
+    );
+
     const form = el('form', 'quiz-form');
-    this.quizQuestions.forEach((q, idx) => {
+    form.setAttribute('aria-label', 'Lesson quiz');
+    data.questions.forEach((q, idx) => {
       const fieldset = el('fieldset', 'quiz-fieldset');
       fieldset.append(el('legend', '', `${idx + 1}. ${q.question}`));
-
       q.options.forEach((opt, oIdx) => {
         const label = el('label', 'quiz-opt-label');
         const radio = el('input');
         radio.type = 'radio';
         radio.name = `quiz_${q.id}`;
         radio.value = String(oIdx);
-        radio.checked = q.selected === oIdx;
-        radio.disabled = this.quizSubmitted;
-        radio.addEventListener('change', () => {
-          q.selected = oIdx;
-        });
-
+        radio.required = true;
+        radio.disabled = this.quizSubmitting;
         label.append(radio, el('span', '', opt));
         fieldset.append(label);
       });
-
       form.append(fieldset);
     });
 
-    if (!this.quizSubmitted) {
-      const submitBtn = el('button', 'button primary', 'Submit Answers');
-      submitBtn.type = 'submit';
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        this.quizSubmitted = true;
-        this.render();
-      });
-      form.append(submitBtn);
-    } else {
-      const resultBox = el('div', 'quiz-result-box');
-      resultBox.append(
-        (() => {
-          const b = el('strong', 'result-badge');
-          b.append(svgIcon('check-circle'), ' Quiz Mastered!');
-          return b;
-        })(),
-        el('p', '', 'Great job! Important retention cards have been scheduled in your Spaced Review deck.'),
-      );
-      panel.append(resultBox);
+    const submitBtn = el('button', 'button primary', this.quizSubmitting ? 'Submitting…' : 'Submit quiz');
+    submitBtn.type = 'submit';
+    submitBtn.disabled = this.quizSubmitting;
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      void this.submitQuiz(form, data);
+    });
+    form.append(submitBtn);
+    panel.append(form);
+
+    if (this.quizResult) {
+      panel.append(this.renderQuizResult(this.quizResult));
     }
 
-    panel.append(form);
+    const reload = el('button', 'button quiet', 'Reload quiz');
+    reload.type = 'button';
+    reload.addEventListener('click', () => {
+      void this.loadQuiz();
+    });
+    panel.append(reload);
     return panel;
+  }
+
+  private async loadQuiz(): Promise<void> {
+    if (!this.activeLesson || this.quizLoading) return;
+    const lessonId = this.activeLesson.id;
+    this.quizLoading = true;
+    this.quizError = '';
+    this.quizData = null;
+    this.quizResult = null;
+    this.quizCommands.clear();
+    this.render();
+    try {
+      const res = await this.options.learningApi.quiz(lessonId, new AbortController().signal);
+      if (this.activeLesson?.id !== lessonId) return;
+      if (res.lesson_id !== lessonId) {
+        this.quizError = 'Quiz belongs to a different lesson.';
+        return;
+      }
+      this.quizData = res;
+      if (res.state === 'ready' && res.status.passed) this.options.onQuizPassed?.(lessonId);
+    } catch (err) {
+      if (this.activeLesson?.id !== lessonId) return;
+      this.quizError = errorMessage(err) || 'Quiz could not load for this lesson.';
+      this.quizData = null;
+    } finally {
+      if (this.activeLesson?.id === lessonId) {
+        this.quizLoading = false;
+        this.render();
+      }
+    }
+  }
+
+  private async submitQuiz(
+    form: HTMLFormElement,
+    data: Extract<LessonQuiz, { state: 'ready' }>,
+  ): Promise<void> {
+    if (!this.activeLesson || this.quizSubmitting) return;
+    const lessonId = this.activeLesson.id;
+    const answers: Record<string, number> = {};
+    for (const q of data.questions) {
+      const chosen = form.querySelector<HTMLInputElement>(`input[name="quiz_${q.id}"]:checked`);
+      if (chosen) answers[q.id] = Number(chosen.value);
+    }
+    if (Object.keys(answers).length !== data.questions.length) {
+      this.quizError = 'Answer every question before submitting.';
+      this.render();
+      return;
+    }
+    this.quizSubmitting = true;
+    this.quizError = '';
+    this.render();
+    try {
+      const command = this.quizCommands.get('quiz', {
+        quiz_id: data.quiz_id,
+        revision: data.revision,
+        answers,
+      });
+      const graded = await this.options.learningApi.attempt(
+        lessonId,
+        command.body,
+        command.key,
+        new AbortController().signal,
+      );
+      if (this.activeLesson?.id !== lessonId) return;
+      if (
+        graded.lesson_id !== lessonId ||
+        graded.quiz_id !== data.quiz_id ||
+        graded.revision !== data.revision
+      ) {
+        this.quizError = 'Quiz result does not match this attempt.';
+        return;
+      }
+      this.quizCommands.acknowledge('quiz');
+      this.quizResult = graded;
+      if (graded.passed) {
+        this.learnedLessons.add(lessonId);
+        this.options.onQuizPassed?.(lessonId);
+        if (this.quizData?.state === 'ready') {
+          this.quizData = {
+            ...this.quizData,
+            status: {
+              attempts: this.quizData.status.attempts + 1,
+              passed: true,
+              last_score: graded.score,
+            },
+          };
+        }
+      }
+    } catch (err) {
+      if (this.activeLesson?.id !== lessonId) return;
+      this.quizError = errorMessage(err) || 'Quiz could not be graded. Try again.';
+    } finally {
+      if (this.activeLesson?.id === lessonId) {
+        this.quizSubmitting = false;
+        this.render();
+      }
+    }
+  }
+
+  private renderQuizResult(result: QuizResult): HTMLElement {
+    const box = el('div', 'quiz-result-box');
+    box.setAttribute('aria-live', 'polite');
+    box.append(
+      el(
+        'strong',
+        'result-badge',
+        `${result.score}% · ${result.passed ? 'Passed' : 'Keep practising'}`,
+      ),
+      el(
+        'p',
+        'muted',
+        `${result.correct_count}/${result.total_count} correct · ${result.passing_threshold}% to pass`,
+      ),
+    );
+    for (const [index, f] of result.feedback.entries()) {
+      const item = el('div', 'quiz-feedback');
+      item.append(
+        el(
+          'strong',
+          f.correct ? 'feedback-correct' : 'feedback-incorrect',
+          `Question ${index + 1}: ${f.correct ? 'Correct' : 'Review this idea'}`,
+        ),
+        el('p', '', f.explanation),
+      );
+      const seek = el('button', 'button quiet text-button', `Review at ${formatTime(f.source_start)}`);
+      seek.type = 'button';
+      seek.addEventListener('click', () => this.options.seekTo(f.source_start));
+      item.append(seek);
+      box.append(item);
+    }
+    if (result.suggested_review) box.append(el('p', 'muted', result.suggested_review));
+    return box;
   }
 
   // ==========================================
@@ -651,26 +827,41 @@ export class StudyRail {
     form.append(captureLabel, textarea, addBtn);
     panel.append(form);
 
-    // Fetch notes on first open
-    if (!this.notesLoaded) {
-      this.notesLoaded = true;
+    if (!this.notesLoaded && !this.notesLoading) {
+      this.notesLoading = true;
+      const lessonId = this.activeLesson.id;
       void this.options.api
-        .notes(this.activeLesson.id)
+        .notes(lessonId)
         .then(res => {
+          if (this.activeLesson?.id !== lessonId) return;
           this.notes = res.notes;
-          this.render();
+          this.notesLoaded = true;
+          this.notesError = '';
         })
-        .catch(() => {});
+        .catch(err => {
+          if (this.activeLesson?.id !== lessonId) return;
+          this.notesLoaded = true;
+          this.notesError = errorMessage(err) || 'Notes could not load for this lesson.';
+        })
+        .finally(() => {
+          if (this.activeLesson?.id === lessonId) {
+            this.notesLoading = false;
+            this.render();
+          }
+        });
     }
 
-    // List of saved notes
     const notesList = el('div', 'saved-notes-list');
-    if (this.notes.length === 0) {
+    if (this.notesLoading && !this.notesLoaded) {
+      notesList.append(el('p', 'muted', 'Loading notes…'));
+    } else if (this.notesError && this.notes.length === 0) {
+      notesList.append(el('p', 'muted rail-error', this.notesError));
+    } else if (this.notes.length === 0) {
       notesList.append(
         el(
           'p',
           'muted',
-          'No notes saved yet for this lesson. Use the box above to capture thoughts with exact video timestamps!',
+          'No notes saved yet for this lesson. Capture a thought with the exact video timestamp above.',
         ),
       );
     } else {
@@ -715,41 +906,45 @@ export class StudyRail {
     }
 
     const head = el('div', 'panel-head');
-    head.append(el('h3', '', 'Synchronized Transcript'), el('span', 'tag', 'Interactive'));
+    head.append(
+      el('h3', '', 'Synchronized Transcript'),
+      el('span', 'tag', this.transcriptChunks.length > 0 ? 'Interactive' : 'Unavailable'),
+    );
     panel.append(head);
 
-    // Asynchronously load real transcripts if not loaded
-    if (!this.transcriptLoaded) {
-      this.transcriptLoaded = true;
+    if (!this.transcriptLoaded && !this.transcriptLoading) {
+      this.transcriptLoading = true;
       const lessonId = this.activeLesson.id;
-      this.options.api
+      void this.options.api
         .getLessonTranscripts(lessonId)
         .then(res => {
-          if (this.activeLesson?.id === lessonId && res.chunks && res.chunks.length > 0) {
-            this.transcriptChunks = res.chunks.map(c => ({
-              start: c.start_seconds,
-              end: c.end_seconds,
-              text: c.text,
-            }));
-            this.render();
-          } else if (this.activeLesson?.id === lessonId && this.transcriptChunks.length === 0) {
-            this.populateSyntheticChunks();
-            this.render();
-          }
+          if (this.activeLesson?.id !== lessonId) return;
+          this.transcriptChunks = (res.chunks || []).map(c => ({
+            start: c.start_seconds,
+            end: c.end_seconds,
+            text: c.text,
+          }));
+          this.transcriptError = '';
+          this.transcriptLoaded = true;
         })
-        .catch(() => {
-          if (this.transcriptChunks.length === 0) {
-            this.populateSyntheticChunks();
+        .catch(err => {
+          if (this.activeLesson?.id !== lessonId) return;
+          this.transcriptChunks = [];
+          this.transcriptError = errorMessage(err) || 'Transcript could not load for this lesson.';
+          this.transcriptLoaded = true;
+        })
+        .finally(() => {
+          if (this.activeLesson?.id === lessonId) {
+            this.transcriptLoading = false;
             this.render();
           }
         });
     }
 
-    // Asynchronously load real chapters/splits if not loaded
     if (!this.chaptersLoaded) {
       this.chaptersLoaded = true;
       const lessonId = this.activeLesson.id;
-      this.options.api
+      void this.options.api
         .getLessonChapters(lessonId)
         .then(res => {
           if (this.activeLesson?.id === lessonId && res.chapters && res.chapters.length > 0) {
@@ -757,10 +952,11 @@ export class StudyRail {
             this.render();
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          /* Chapters stay empty when the API is unavailable. */
+        });
     }
 
-    // 1. Chapters / Video Splits Section
     if (this.chapters.length > 0) {
       const chaptersSec = el('div', 'rail-chapters-section');
       const chapHead = el('div', 'chapters-head');
@@ -781,11 +977,9 @@ export class StudyRail {
         this.render();
         try {
           const res = await this.options.api.classifyVideoSplit(this.activeLesson.id);
-          if (res.chapters) {
-            this.chapters = res.chapters;
-          }
+          if (res.chapters) this.chapters = res.chapters;
         } catch {
-          // safe
+          /* Keep prior chapters; do not invent replacements. */
         } finally {
           this.classifyingSplit = false;
           this.render();
@@ -810,19 +1004,45 @@ export class StudyRail {
         const pTitle = el('strong', 'chapter-title', chap.title);
         pTop.append(pTime, pTitle);
         pill.append(pTop);
-        if (chap.summary) {
-          pill.append(el('p', 'chapter-summary', chap.summary));
-        }
+        if (chap.summary) pill.append(el('p', 'chapter-summary', chap.summary));
         chapList.append(pill);
       }
       chaptersSec.append(chapList);
       panel.append(chaptersSec);
     }
 
-    // 2. Transcript Search & Chunks List
+    if (this.transcriptLoading && !this.transcriptLoaded) {
+      panel.append(el('p', 'muted', 'Loading transcript…'));
+      return panel;
+    }
+
+    if (this.transcriptError && this.transcriptChunks.length === 0) {
+      panel.append(el('p', 'muted rail-error', this.transcriptError));
+      const retry = el('button', 'button quiet', 'Retry transcript');
+      retry.type = 'button';
+      retry.addEventListener('click', () => {
+        this.transcriptLoaded = false;
+        this.transcriptError = '';
+        this.render();
+      });
+      panel.append(retry);
+      return panel;
+    }
+
+    if (this.transcriptChunks.length === 0) {
+      panel.append(
+        el(
+          'p',
+          'muted empty-transcript',
+          'No searchable transcript is available for this lecture yet. Caption tracks in the player (when present) remain separate from this rail.',
+        ),
+      );
+      return panel;
+    }
+
     const filterInput = el('input', 'form-input rail-search-input');
     filterInput.type = 'search';
-    filterInput.placeholder = 'Search within lecture speech…';
+    filterInput.placeholder = 'Search spoken words in this lecture…';
     filterInput.value = this.transcriptFilter;
     filterInput.addEventListener('input', () => {
       this.transcriptFilter = filterInput.value.toLowerCase().trim();
@@ -835,37 +1055,24 @@ export class StudyRail {
       ? this.transcriptChunks.filter(c => c.text.toLowerCase().includes(this.transcriptFilter))
       : this.transcriptChunks;
 
-    for (const c of filtered) {
-      const row = el('div', 'transcript-row');
-      row.dataset.start = String(c.start);
-      row.dataset.end = String(c.end);
-      const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
-      timeBtn.type = 'button';
-      timeBtn.title = `Jump to ${formatTime(c.start)}`;
-      timeBtn.addEventListener('click', () => this.options.seekTo(c.start));
-
-      const text = el('p', 'transcript-text', c.text);
-      row.append(timeBtn, text);
-      list.append(row);
+    if (filtered.length === 0) {
+      list.append(el('p', 'muted', 'No transcript lines match that search.'));
+    } else {
+      for (const c of filtered) {
+        const row = el('div', 'transcript-row');
+        row.dataset.start = String(c.start);
+        row.dataset.end = String(c.end);
+        const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
+        timeBtn.type = 'button';
+        timeBtn.title = `Jump to ${formatTime(c.start)}`;
+        timeBtn.addEventListener('click', () => this.options.seekTo(c.start));
+        row.append(timeBtn, el('p', 'transcript-text', c.text));
+        list.append(row);
+      }
     }
 
     panel.append(list);
     return panel;
-  }
-
-  private populateSyntheticChunks(): void {
-    if (!this.activeLesson) return;
-    const totalSec = this.activeLesson.duration_seconds || 1200;
-    const chunks: Array<{ start: number; end: number; text: string }> = [];
-    const interval = 60;
-    for (let s = 0; s < totalSec; s += interval) {
-      chunks.push({
-        start: s,
-        end: Math.min(s + interval, totalSec),
-        text: `[${formatTime(s)} - ${formatTime(Math.min(s + interval, totalSec))}] Discussion covering core architectures, implementation trade-offs, and verified design patterns in ${cleanLessonTitle(this.activeLesson.title)}.`,
-      });
-    }
-    this.transcriptChunks = chunks;
   }
 
   // ==========================================
@@ -877,8 +1084,19 @@ export class StudyRail {
     panel.append(
       el('span', 'eyebrow', 'AI STUDY COMPANION'),
       el('h3', '', 'Ask Tutor About This Lecture'),
-      el('p', 'muted', 'Grounded answers with exact timestamp citations. Nothing uploaded to the cloud.'),
+      el(
+        'p',
+        'muted',
+        this.activeLesson
+          ? 'Grounded answers with timestamp citations when the local tutor service is available.'
+          : 'Select a lesson before asking the tutor. Answers appear only when the tutor API responds.',
+      ),
     );
+
+    if (!this.activeLesson) {
+      panel.append(el('p', 'muted', 'No active lesson is loaded for tutoring yet.'));
+      return panel;
+    }
 
     // Modes
     const modesWrap = el('div', 'rail-tutor-modes');

@@ -2,16 +2,17 @@ import { svgIcon, type IconName } from '../icons';
 import type { ApiClient } from '../api';
 import { errorMessage, isAbort } from '../api';
 import type { Course } from '../contracts';
-import { courseCover } from './contracts';
-import type { ContinueItem, SavedItem } from './contracts';
+import { courseCover, measuredTrending, personalRowsFromHomeFeed } from './contracts';
+import type { ContinueItem, SavedItem, TrendingItem } from './contracts';
 
 export type CatalogView = 'home' | 'saved' | 'courses';
 interface Options {
   api: ApiClient;
   open(courseId: string, preview: boolean): void;
-  resume(courseId: string, lessonId: string): void;
+  resume(courseId: string, lessonId: string, position?: number): void;
   notice(message: string, error?: boolean): void;
   syllabus?(course: Course): void;
+  openLibrarySaved?: () => void;
 }
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const value = document.createElement(tag);
@@ -373,12 +374,28 @@ export class DiscoveryView {
   private courses: Course[] = [];
   private saved: SavedItem[] = [];
   private continued: ContinueItem[] = [];
+  private trending: TrendingItem[] = [];
   private savedIDs = new Set<string>();
   private view: CatalogView = 'home';
   private query = '';
   private cursor: string | null = null;
   private loading = false;
   constructor(private readonly options: Options) {}
+  private courseByID(id: string): Course | undefined {
+    return this.courses.find(course => course.id === id);
+  }
+  private artworkForCourse(partial: Course, eager = false): HTMLElement {
+    const known = this.courseByID(partial.id);
+    return artwork(
+      {
+        ...partial,
+        ...(known?.cover_url ? { cover_url: known.cover_url } : {}),
+        ...(known?.category ? { category: known.category } : {}),
+        ...(known?.title ? { title: known.title } : {}),
+      },
+      eager,
+    );
+  }
 
   deactivate(): void {
     this.scope.abort();
@@ -406,6 +423,7 @@ export class DiscoveryView {
     this.courses = [];
     this.saved = [];
     this.continued = [];
+    this.trending = [];
     this.savedIDs.clear();
     required<HTMLInputElement>('#course-search').value = '';
     required<HTMLInputElement>('#course-search').addEventListener(
@@ -422,25 +440,46 @@ export class DiscoveryView {
     this.renderNavigation();
     this.loading = true;
     this.render();
-    // Separate catalog and personal requests: a personal feed outage must not
-    // prevent browsing published courses. Each response is checked at runtime.
+    // Prefer consolidated home-feed for personal rows; fall back to discrete
+    // endpoints so a feed outage never blocks published catalog browsing.
     const activationScope = this.scope;
-    const personal = Promise.allSettled([
-      this.options.api.savedItems('', this.scope.signal),
-      this.options.api.continueLearning(this.scope.signal),
-    ]).then(results => {
-      if (activationScope !== this.scope || activationScope.signal.aborted) return;
-      const [saved, continued] = results;
-      if (saved.status === 'fulfilled') {
-        this.saved = saved.value.items;
+    const personal = this.options.api
+      .homeFeed(this.scope.signal)
+      .then(feed => {
+        if (activationScope !== this.scope || activationScope.signal.aborted) return;
+        const rows = personalRowsFromHomeFeed(feed);
+        this.continued = rows.continued;
+        this.saved = rows.saved;
         this.savedIDs = new Set(this.saved.filter(item => item.item_type === 'course').map(item => item.id));
-      }
-      if (continued.status === 'fulfilled') this.continued = continued.value;
-      if (this.view !== 'saved') this.render();
-      const failed = results.find(result => result.status === 'rejected' && !isAbort(result.reason));
-      if (failed?.status === 'rejected')
-        this.options.notice(`Some personal recommendations could not load: ${errorMessage(failed.reason)}`, true);
-    });
+        this.trending = rows.trending;
+        if (this.view !== 'saved') this.render();
+      })
+      .catch(async err => {
+        if (isAbort(err) || activationScope !== this.scope || activationScope.signal.aborted) return;
+        const results = await Promise.allSettled([
+          this.options.api.savedItems('', this.scope.signal),
+          this.options.api.continueLearning(this.scope.signal),
+          this.options.api.trending(this.scope.signal),
+        ]);
+        if (activationScope !== this.scope || activationScope.signal.aborted) return;
+        const [saved, continued, trending] = results;
+        if (saved.status === 'fulfilled') {
+          this.saved = saved.value.items;
+          this.savedIDs = new Set(this.saved.filter(item => item.item_type === 'course').map(item => item.id));
+        }
+        if (continued.status === 'fulfilled') this.continued = continued.value;
+        if (trending.status === 'fulfilled') this.trending = measuredTrending(trending.value);
+        if (this.view !== 'saved') this.render();
+        const failed = results.find(result => result.status === 'rejected' && !isAbort(result.reason));
+        if (failed?.status === 'rejected') {
+          this.options.notice(
+            `Some personal recommendations could not load: ${errorMessage(failed.reason)}`,
+            true,
+          );
+        } else {
+          this.options.notice(`Home feed unavailable; loaded personal lists separately: ${errorMessage(err)}`, true);
+        }
+      });
     await this.load();
     await personal;
   }
@@ -551,17 +590,34 @@ export class DiscoveryView {
         ? this.saved.filter(item => item.title.toLowerCase().includes(this.query.toLowerCase()))
         : this.saved;
       for (const item of items) list.append(this.savedCard(item));
-      if (!items.length && !this.loading)
-        list.append(
-          this.empty(
-            this.query ? 'No saved titles match your search.' : 'Build your next chapter.',
-            this.query ? 'Try a different title.' : 'Save a course with + My List. It will be waiting here.',
-          ),
+      if (!items.length && !this.loading) {
+        const empty = this.empty(
+          this.query ? 'No saved titles match your search.' : 'Build your next chapter.',
+          this.query
+            ? 'Try a different title.'
+            : 'Save a course with + My List. Library’s Saved filter shows the same measured list.',
         );
+        if (!this.query && this.options.openLibrarySaved) {
+          empty.append(
+            action('Open Library · Saved', () => this.options.openLibrarySaved?.(), 'button secondary'),
+          );
+        }
+        list.append(empty);
+      }
     } else if (home && this.courses.length > 5) {
       list.className = 'carousel-container';
-      const top10 = this.courses.slice(0, 10);
-      list.append(this.carouselRow('Top 10 Masterclasses This Week', top10, true, 'fire'));
+      const myListCourses = this.saved
+        .filter(item => item.item_type === 'course')
+        .map(item => this.courseByID(item.id) || { id: item.id, title: item.title, category: 'My List' });
+      if (myListCourses.length) list.append(this.carouselRow('My List', myListCourses, false, 'star'));
+
+      const ranked = this.trendingCourses();
+      if (ranked.length)
+        list.append(this.carouselRow('Top 10 This Week', ranked, true, 'fire'));
+      else {
+        // Catalog order only when backend has no measured playback rankings.
+        list.append(this.carouselRow('Featured masterclasses', this.courses.slice(0, 10), false, 'fire'));
+      }
 
       const aiCourses = this.courses.filter(c =>
         /ai|genai|agent|llm|rag|voice/i.test((c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' ')),
@@ -583,7 +639,7 @@ export class DiscoveryView {
       );
       if (dataEng.length) list.append(this.carouselRow('Cloud & Big Data Engineering', dataEng, false, 'cloud'));
 
-      list.append(this.carouselRow('All Masterclasses & Deep Dives', this.courses, false, 'rocket'));
+      list.append(this.carouselRow('All masterclasses', this.courses, false, 'rocket'));
     } else {
       list.className = 'course-grid';
       for (const item of this.courses) list.append(this.courseCard(item));
@@ -592,7 +648,7 @@ export class DiscoveryView {
           this.empty(
             this.query ? 'No courses found.' : 'Your next chapter is on its way.',
             this.query
-              ? 'Try a title, topic, instructor or category.'
+              ? 'Try a different title, topic, instructor or category.'
               : 'Published courses will appear here when they are ready.',
           ),
         );
@@ -635,19 +691,18 @@ export class DiscoveryView {
       ),
     );
     const metadata = node('div', 'hero-metadata');
-    const matchBadge = node('span', 'hero-badge-match', '98% Match');
-    const yearChip = node('span', 'hero-chip', '2026 Edition');
-    const levelBadge = node('span', 'hero-chip-badge', 'Pro');
-    const durationChip = node(
-      'span',
-      'hero-chip',
-      `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} lessons`} · ${duration(course.duration_seconds)}`,
+    // Honest metadata only — no fabricated Match/% popularity or unverified tech badges.
+    if (course.enrolled) metadata.append(node('span', 'hero-chip-badge', 'Enrolled'));
+    metadata.append(
+      node(
+        'span',
+        'hero-chip',
+        course.lesson_count === undefined
+          ? 'Self-paced'
+          : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'} · ${duration(course.duration_seconds)}`,
+      ),
     );
-    const uhdBadge = node('span', 'hero-tech-badge', '4K Ultra HD');
-    const dolbyBadge = node('span', 'hero-tech-badge', 'Dolby Audio');
-    const ccBadge = node('span', 'hero-tech-badge', 'CC');
-    metadata.append(matchBadge, yearChip, levelBadge, durationChip, uhdBadge, dolbyBadge, ccBadge);
-    if (course.category) metadata.append(node('span', 'hero-category-chip', toTitleCase(course.category || 'Saved')));
+    if (course.category) metadata.append(node('span', 'hero-category-chip', toTitleCase(course.category)));
     content.append(metadata);
     const actions = node('div', 'hero-actions');
     actions.append(
@@ -778,16 +833,40 @@ export class DiscoveryView {
     card.append(body);
     return card;
   }
+  private trendingCourses(): Course[] {
+    const ranked = measuredTrending(this.trending);
+    const seen = new Set<string>();
+    const courses: Course[] = [];
+    for (const item of ranked) {
+      if (seen.has(item.course_id)) continue;
+      seen.add(item.course_id);
+      const known = this.courseByID(item.course_id);
+      courses.push(
+        known || {
+          id: item.course_id,
+          title: item.title,
+          duration_seconds: item.duration_seconds,
+          category: 'Trending',
+        },
+      );
+      if (courses.length >= 10) break;
+    }
+    return courses;
+  }
   private continueCard(item: ContinueItem): HTMLElement {
     const card = node('article', 'continue-card');
-    const open = action('', () => this.options.resume(item.course_id, item.id), 'continue-open');
+    const open = action(
+      '',
+      () => this.options.resume(item.course_id, item.id, item.position),
+      'continue-open',
+    );
     open.setAttribute('aria-label', `Resume ${item.title}`);
     const contPlay = node('span', 'continue-play');
     contPlay.append(svgIcon('play'));
     const thumbPill = node('span', 'thumb-category-pill', 'In Progress');
     const durBadge = node('span', 'thumb-duration-badge', duration(item.duration_seconds));
     open.append(
-      artwork({ id: item.course_id, title: item.title, category: 'In Progress' }),
+      this.artworkForCourse({ id: item.course_id, title: item.title, category: 'In Progress' }),
       thumbPill,
       durBadge,
       contPlay,
@@ -811,18 +890,23 @@ export class DiscoveryView {
     return card;
   }
   private savedCard(item: SavedItem): HTMLElement {
+    const courseId = item.item_type === 'course' ? item.id : item.course_id;
+    const known = this.courseByID(courseId);
     const course: Course = {
-      id: item.course_id,
-      title: item.title,
-      category: item.item_type === 'lecture' ? 'Saved Lesson' : 'Saved Course',
+      id: courseId,
+      title: known?.title || item.title,
+      category: item.item_type === 'lecture' ? 'Saved Lesson' : known?.category || 'Saved Course',
+      ...(known?.cover_url ? { cover_url: known.cover_url } : {}),
     };
     const card = node('article', 'course-card');
     const open = () =>
-      item.item_type === 'lecture' ? this.options.resume(item.course_id, item.id) : this.options.open(item.id, true);
+      item.item_type === 'lecture'
+        ? this.options.resume(item.course_id, item.id)
+        : this.options.open(item.id, true);
     const cover = action('', open, 'cover-button');
     cover.setAttribute('aria-label', `Explore ${item.title}`);
     const catPill = node('span', 'thumb-category-pill', toTitleCase(course.category || 'Saved'));
-    cover.append(artwork(course), catPill);
+    cover.append(this.artworkForCourse(course), catPill);
     const body = node('div', 'course-card-body');
     body.append(node('span', 'course-badge', toTitleCase(course.category || 'Saved')), node('h2', '', item.title));
     const footer = node('div', 'course-card-footer');
@@ -858,7 +942,7 @@ export class DiscoveryView {
     card.append(cover, body);
     return card;
   }
-  private carouselRow(title: string, items: Course[], isTop10 = false, iconName?: IconName): HTMLElement {
+  private carouselRow(title: string, items: Course[], ranked = false, iconName?: IconName): HTMLElement {
     const section = node('section', 'carousel-row');
     const header = node('div', 'carousel-header');
     const h2 = node('h2', 'carousel-title');
@@ -908,12 +992,14 @@ export class DiscoveryView {
 
     track.addEventListener('scroll', updateNav, { passive: true });
 
-    items.forEach((course, idx) => {
+    // Rank numerals only when backed by measured trending from the streaming API.
+    items.forEach((course, index) => {
       const card = this.courseCard(course);
-      if (isTop10) {
+      if (ranked) {
         card.classList.add('top10-card');
-        const badge = node('span', 'rank-numeral', String(idx + 1));
-        card.append(badge);
+        const numeral = node('span', 'rank-numeral', String(index + 1));
+        numeral.setAttribute('aria-hidden', 'true');
+        card.prepend(numeral);
       }
       track.append(card);
     });

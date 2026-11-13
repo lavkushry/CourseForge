@@ -1,10 +1,25 @@
-import type { AdminLearnerReport, AdminOverview, AdminUser, AdminUserDetail } from '../admin/contracts';
-import { parseAdminOverview, parseAdminUserDetail, parseAdminUsers } from '../admin/contracts';
+import type {
+  AdminLearnerReport,
+  AdminOverview,
+  AdminSystemReport,
+  AdminUser,
+  AdminUserDetail,
+} from '../admin/contracts';
+import {
+  parseAdminOverview,
+  parseAdminSystemReport,
+  parseAdminUserDetail,
+  parseAdminUsers,
+} from '../admin/contracts';
 import { ApiError, isRecord } from './errors';
 import type { HttpClient } from './http';
 
 export function adminOverview(client: HttpClient, signal?: AbortSignal): Promise<AdminOverview> {
   return client.request('/admin/overview', signal ? { signal } : {}).then(parseAdminOverview);
+}
+
+export function adminSystem(client: HttpClient, signal?: AbortSignal): Promise<AdminSystemReport> {
+  return client.request('/admin/system', signal ? { signal } : {}).then(parseAdminSystemReport);
 }
 
 export function adminUsers(

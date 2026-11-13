@@ -52,6 +52,10 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       onMarkComplete: async lessonId => {
         await ctx.markComplete(lessonId);
       },
+      onQuizPassed: lessonId => {
+        ctx.learnedLessons.add(lessonId);
+        ctx.renderLessons();
+      },
     });
     ctx.libraryView = new LibraryView({
       root: required<HTMLElement>('#library-panel'),
@@ -61,6 +65,11 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       },
       onPlayCourse: course => {
         void ctx.loadCourse(course.id, !course.enrolled);
+      },
+      onContinueLesson: (courseId, lessonId, position) => {
+        void ctx.resumeLesson(courseId, lessonId).then(() => {
+          if (Number.isFinite(position) && position > 0 && ctx.controller) ctx.controller.seek(position);
+        });
       },
       onToggleSave: async course => {
         const isSaved = ctx.discovery?.isSaved(course.id) ?? false;
@@ -73,6 +82,9 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         }
       },
       isSaved: id => ctx.discovery?.isSaved(id) ?? false,
+      onOpenMyList: () => {
+        void ctx.loadCatalog(false, 'saved');
+      },
     });
     ctx.planningView = new PlanningView({
       root: required<HTMLElement>('#planner-panel'),
@@ -162,12 +174,21 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       open: (id, preview) => {
         void ctx.loadCourse(id, preview);
       },
-      resume: (id, lessonId) => {
-        void ctx.resumeLesson(id, lessonId);
+      resume: (id, lessonId, position) => {
+        void ctx.resumeLesson(id, lessonId).then(() => {
+          if (position !== undefined && Number.isFinite(position) && position > 0 && ctx.controller) {
+            ctx.controller.seek(position);
+          }
+        });
       },
       notice: ctx.feedback,
       syllabus: course => {
         void ctx.openCourseSyllabus(course);
+      },
+      openLibrarySaved: () => {
+        void ctx.showLibrary().then(() => {
+          ctx.libraryView?.setStatusFilter('saved');
+        });
       },
     });
     ctx.omniSearch?.destroy();

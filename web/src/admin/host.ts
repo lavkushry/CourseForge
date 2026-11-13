@@ -1,7 +1,9 @@
 import type { ApiClient } from '../api';
 import type { Course } from '../contracts';
 import type { IconName } from '../icons';
-import type { AdminOverview, AdminUser } from './contracts';
+import type { AiDependencyStatus } from '../ai/status';
+import type { PublicJob } from '../jobs/status';
+import type { AdminOverview, AdminSystemReport, AdminUser } from './contracts';
 import type { AdminTab, StudentModalTab } from './helpers';
 
 export interface AdminHost {
@@ -10,6 +12,11 @@ export interface AdminHost {
   notice: (msg: string, error?: boolean) => void;
   activeTab: AdminTab;
   overviewData: AdminOverview | null;
+  overviewError: string | null;
+  systemReport: AdminSystemReport | null;
+  aiStatus: AiDependencyStatus | null;
+  jobs: PublicJob[];
+  jobsError: string | null;
   users: AdminUser[];
   catalogCourses: Course[];
   loading: boolean;
