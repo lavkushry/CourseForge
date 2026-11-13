@@ -74,10 +74,26 @@
   font-size: 0.88rem;
 }
 
+.lms-shell > .notice,
+.shell-workspace > .notice,
+#app-shell > .notice {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  z-index: var(--z-toast, 950);
+  margin: 0.5rem 1rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
 .notice.is-error {
   background: #3b2324;
   color: #ffcbc6;
   border-color: #874044;
+}
+
+.notice.is-success {
+  background: #1e2a24;
+  color: #c8f0d8;
+  border-color: #3d6b52;
 }
 
 .course-card-footer .list-button {

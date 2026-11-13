@@ -1,4 +1,5 @@
 import { svgIcon, type IconName } from '../icons';
+import { ApiError } from '../api';
 import type { ApiClient } from '../api';
 import type { Course } from '../contracts';
 import type { AiDependencyStatus } from '../ai/status';
@@ -6,12 +7,14 @@ import type { PublicJob } from '../jobs/status';
 import type { AdminOverview, AdminSystemReport, AdminUser } from './contracts';
 import { button, el, type AdminTab, type StudentModalTab } from './helpers';
 import type { AdminHost } from './host';
+import { adminDeniedCopy } from './rbac';
 import { adminCatalogCount } from './status';
 import { renderOverviewTab } from './overview-tab';
 import { renderLearnersTab } from './learners-tab';
 import { openStudentAccessModal as openStudentModal } from './student-modal';
 import { renderAuditTab, renderAiTab, renderSystemTab } from './ops-tabs';
 import { renderFunnelsTab, renderRetentionTab, renderActivityTab } from './analytics-tabs';
+import { panelSkeleton } from '../ui/skeleton';
 
 export class AdminView implements AdminHost {
   activeTab: AdminTab = 'overview';
@@ -62,11 +65,13 @@ export class AdminView implements AdminHost {
       this.systemReport = systemResp;
     } catch (err) {
       this.overviewData = null;
-      this.overviewError = err instanceof Error ? err.message : String(err);
-      this.notice(
-        'Could not load administrator dashboard: ' + this.overviewError,
-        true,
-      );
+      if (err instanceof ApiError && (err.status === 403 || err.status === 401)) {
+        const denied = adminDeniedCopy();
+        this.overviewError = `${denied.title}. ${denied.description}`;
+      } else {
+        this.overviewError = err instanceof Error ? err.message : String(err);
+      }
+      this.notice('Could not load administrator dashboard: ' + this.overviewError, true);
     } finally {
       this.loading = false;
       this.render();
@@ -160,7 +165,7 @@ export class AdminView implements AdminHost {
 
     const body = el('div', 'admin-content');
     if (this.loading) {
-      body.append(el('p', 'muted', 'Loading administrator metrics…'));
+      body.append(panelSkeleton({ variant: 'panel', count: 4, label: 'Loading administrator metrics…' }));
     } else {
       switch (this.activeTab) {
         case 'overview':

@@ -289,6 +289,21 @@
   justify-content: center;
 }
 
+.history-card-thumb .history-thumb-art,
+.history-card-thumb .course-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.history-card-thumb .course-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .history-thumb-glow {
   position: absolute;
   inset: 0;

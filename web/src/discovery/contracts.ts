@@ -152,15 +152,46 @@ export function measuredTrending(items: TrendingItem[]): TrendingItem[] {
   return items.filter(item => item.viewers >= 1 && item.rank >= 1 && item.rank <= 10).slice(0, 10);
 }
 
+function parseCourseCardList(items: unknown): Course[] {
+  if (!Array.isArray(items) || items.length > 50) return [];
+  const out: Course[] = [];
+  for (const raw of items) {
+    try {
+      const course = object(raw);
+      out.push({
+        id: text(course.id),
+        title: text(course.title),
+        ...(typeof course.description === 'string' ? { description: course.description } : {}),
+        ...(typeof course.cover_url === 'string' ? { cover_url: course.cover_url } : {}),
+        ...(typeof course.category === 'string' ? { category: course.category } : {}),
+        ...(typeof course.instructor === 'string' ? { instructor: course.instructor } : {}),
+        ...(typeof course.lesson_count === 'number' ? { lesson_count: course.lesson_count } : {}),
+        ...(typeof course.duration_seconds === 'number' ? { duration_seconds: course.duration_seconds } : {}),
+        ...(typeof course.enrolled === 'boolean' ? { enrolled: course.enrolled } : {}),
+        ...(Array.isArray(course.tags)
+          ? { tags: course.tags.filter((t): t is string => typeof t === 'string') }
+          : {}),
+      });
+    } catch {
+      /* Skip malformed cards — never invent catalog entries. */
+    }
+  }
+  return out;
+}
+
 /** Pull personal discovery rows from a measured home-feed response. */
 export function personalRowsFromHomeFeed(feed: HomeFeed): {
   continued: ContinueItem[];
   saved: SavedItem[];
   trending: TrendingItem[];
+  forYou: Course[];
+  featured: Course[];
 } {
   let continued: ContinueItem[] = [];
   let saved: SavedItem[] = [];
   let trending: TrendingItem[] = [];
+  let forYou: Course[] = [];
+  let featured: Course[] = [];
   for (const row of feed.rows) {
     if (row.id === 'continue-watching' || row.kind === 'lecture_card') {
       try {
@@ -183,6 +214,29 @@ export function personalRowsFromHomeFeed(feed: HomeFeed): {
         /* Rank chrome stays empty without measured viewers. */
       }
     }
+    if (row.id === 'for-you' || (row.kind === 'course_card' && row.id === 'for-you')) {
+      forYou = parseCourseCardList(row.items);
+    }
+    if (row.id === 'featured-titles' || (row.kind === 'course_card' && row.id === 'featured-titles')) {
+      featured = parseCourseCardList(row.items);
+    }
   }
-  return { continued, saved, trending };
+  return { continued, saved, trending, forYou, featured };
+}
+
+/** Prefer authenticated home-feed hero cards; fall back to first featured title. */
+export function heroFromHomeFeed(feed: HomeFeed): Course | null {
+  if (feed.hero.length > 0) return feed.hero[0] ?? null;
+  const { featured, forYou } = personalRowsFromHomeFeed(feed);
+  return forYou[0] ?? featured[0] ?? null;
+}
+
+/** Seed catalog cards from home-feed course rows without inventing IDs. */
+export function catalogSeedFromHomeFeed(feed: HomeFeed): Course[] {
+  const { forYou, featured } = personalRowsFromHomeFeed(feed);
+  const byId = new Map<string, Course>();
+  for (const course of [...feed.hero, ...forYou, ...featured]) {
+    if (!byId.has(course.id)) byId.set(course.id, course);
+  }
+  return [...byId.values()];
 }

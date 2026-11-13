@@ -1,10 +1,11 @@
 import { svgIcon } from '../icons';
-import type { HistoryItem } from '../contracts';
+import type { Course, HistoryItem } from '../contracts';
 import { errorMessage, isAbort } from '../api';
 import type { ApiClient } from '../api';
 import { el, emptyState } from '../components';
 import { formatTime } from '../player/controller';
-import { cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
+import { artwork, cleanLessonTitle, formatModuleBadge, toTitleCase } from '../discovery/view';
+import { panelSkeleton } from '../ui/skeleton';
 import { historyLoadFailureCopy, historyStatusLabels } from './status';
 
 export interface HistoryViewOptions {
@@ -15,6 +16,8 @@ export interface HistoryViewOptions {
 
 export class HistoryView {
   private items: HistoryItem[] = [];
+  private courseTitles = new Map<string, string>();
+  private courseCovers = new Map<string, Course>();
   private loading = false;
   private busyClear = false;
   private loadError: string | null = null;
@@ -29,21 +32,34 @@ export class HistoryView {
     this.loadError = null;
     this.render();
 
-    void this.options.api
-      .history('', signal)
-      .then(res => {
-        if (signal.aborted) return;
-        this.items = res.history || [];
+    void Promise.allSettled([
+      this.options.api.history('', signal),
+      this.options.api.courses('', signal),
+    ]).then(([historyRes, coursesRes]) => {
+      if (signal.aborted) return;
+
+      if (coursesRes.status === 'fulfilled') {
+        this.courseTitles.clear();
+        this.courseCovers.clear();
+        for (const course of coursesRes.value.courses) {
+          this.courseTitles.set(course.id, course.title);
+          this.courseCovers.set(course.id, course);
+        }
+      }
+
+      if (historyRes.status === 'rejected') {
+        if (isAbort(historyRes.reason)) return;
         this.loading = false;
-        this.loadError = null;
+        this.loadError = errorMessage(historyRes.reason);
         this.render();
-      })
-      .catch(error => {
-        if (signal.aborted || isAbort(error)) return;
-        this.loading = false;
-        this.loadError = errorMessage(error);
-        this.render();
-      });
+        return;
+      }
+
+      this.items = historyRes.value.history;
+      this.loading = false;
+      this.loadError = null;
+      this.render();
+    });
   }
 
   deactivate(): void {
@@ -95,11 +111,7 @@ export class HistoryView {
     root.append(pageHead);
 
     if (this.loading) {
-      const loadingBox = el('div', 'history-grid history-loading');
-      for (let i = 0; i < 4; i++) {
-        loadingBox.append(el('div', 'history-card-skeleton'));
-      }
-      root.append(loadingBox);
+      root.append(panelSkeleton({ variant: 'history', count: 4, label: 'Loading watch history…' }));
       return;
     }
 
@@ -139,10 +151,20 @@ export class HistoryView {
     const grid = el('div', 'history-grid');
     for (const item of this.items) {
       const card = el('article', 'history-card');
+      const courseMeta = this.courseCovers.get(item.course_id);
+      const courseTitle =
+        this.courseTitles.get(item.course_id) ||
+        toTitleCase((item.course_id || 'Masterclass').replace(/-/g, ' '));
 
       const thumb = el('div', 'history-card-thumb');
-      const thumbGlow = el('div', 'history-thumb-glow');
-      const watermarkPill = el('span', 'history-watermark', 'COURSEFORGE');
+      const cover = artwork(
+        courseMeta || {
+          id: item.course_id,
+          title: cleanLessonTitle(item.title),
+          category: item.section_title || 'Lecture',
+        },
+      );
+      cover.classList.add('history-thumb-art');
       const thumbBadge = el('span', 'history-thumb-badge', formatModuleBadge(item.section_title));
       const durBadge = el('span', 'history-dur-badge', formatTime(item.duration_seconds));
       const playOverlay = el('div', 'history-thumb-play');
@@ -155,17 +177,13 @@ export class HistoryView {
       fill.style.width = `${pct}%`;
       bar.append(fill);
 
-      thumb.append(thumbGlow, watermarkPill, thumbBadge, durBadge, playOverlay, bar);
+      thumb.append(cover, thumbBadge, durBadge, playOverlay, bar);
       thumb.addEventListener('click', () => {
         this.options.onResumeLesson(item.course_id, item.id, item.position);
       });
 
       const body = el('div', 'history-card-body');
-      const courseBadge = el(
-        'span',
-        'history-course-badge',
-        toTitleCase((item.course_id || 'Masterclass').replace(/-/g, ' ')),
-      );
+      const courseBadge = el('span', 'history-course-badge', courseTitle);
       const title = el('h3', 'history-lesson-title', cleanLessonTitle(item.title));
       title.title = item.title;
       const section = el('p', 'history-section-name', item.section_title || 'Core Lecture');

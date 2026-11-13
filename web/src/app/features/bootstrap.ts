@@ -71,15 +71,15 @@ export function installFeatureBootstraps(ctx: AppContext): void {
           if (Number.isFinite(position) && position > 0 && ctx.controller) ctx.controller.seek(position);
         });
       },
-      onToggleSave: async course => {
-        const isSaved = ctx.discovery?.isSaved(course.id) ?? false;
-        if (isSaved) {
+      onToggleSave: async (course, currentlySaved) => {
+        if (currentlySaved) {
           await ctx.api.removeSaved('course', course.id, ctx.navigationScope.signal);
+          ctx.discovery?.setSaved(course.id, false);
           return false;
-        } else {
-          await ctx.api.saveCourse(course.id, ctx.navigationScope.signal);
-          return true;
         }
+        await ctx.api.saveCourse(course.id, ctx.navigationScope.signal);
+        ctx.discovery?.setSaved(course.id, true);
+        return true;
       },
       isSaved: id => ctx.discovery?.isSaved(id) ?? false,
       onOpenMyList: () => {

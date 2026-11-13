@@ -1,5 +1,6 @@
 import type { ApiClient } from '../api';
 import { ApiError } from '../api';
+import { panelSkeleton } from '../ui/skeleton';
 import { PlanningApi } from './api';
 import { Commands } from '../learning/api';
 import * as c from './contracts';
@@ -30,10 +31,12 @@ export class PlanningView implements PlanningHost {
   preferences: c.Preferences | null = null;
   weekPreferences: c.WeekPreferences | null = null;
   currentFocus: c.Focus | null = null;
+  focusReceivedAt = 0;
   currentHabits: c.Habits | null = null;
   currentInsights: c.Insights | null = null;
   statusMessage = '';
   loadError: string | null = null;
+  loading = false;
   focusLessonId: string | undefined = undefined;
   focusTitle = 'Source study';
   focusDurationMinutes = 25;
@@ -106,6 +109,8 @@ export class PlanningView implements PlanningHost {
     this.root.hidden = false;
     this.root.setAttribute('aria-busy', 'true');
     this.loadError = null;
+    this.loading = true;
+    this.render();
 
     try {
       if (this.hooks.paths) {
@@ -125,12 +130,14 @@ export class PlanningView implements PlanningHost {
       } else if (tab === 'habits') {
         await this.loadHabits(sig);
       }
+      this.loading = false;
       this.render();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401 && this.hooks.unauthorized) {
         this.hooks.unauthorized();
         return;
       }
+      this.loading = false;
       this.loadError = err instanceof Error ? err.message : 'Planning data unavailable.';
       this.render();
     } finally {
@@ -176,12 +183,20 @@ export class PlanningView implements PlanningHost {
   private async loadFocus(signal: AbortSignal): Promise<void> {
     try {
       this.currentFocus = await this.planningApi.active(signal);
+      this.focusReceivedAt = this.currentFocus ? Date.now() : 0;
       this.loadError = null;
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) throw err;
       this.currentFocus = null;
+      this.focusReceivedAt = 0;
       this.loadError = err instanceof Error ? err.message : 'Focus timer unavailable.';
     }
+  }
+
+  /** Stamp a fresh focus snapshot so the countdown tracks server remaining honestly. */
+  noteFocusSnapshot(session: c.Focus | null): void {
+    this.currentFocus = session;
+    this.focusReceivedAt = session ? Date.now() : 0;
   }
 
   private async loadHabits(signal: AbortSignal): Promise<void> {
@@ -241,6 +256,12 @@ export class PlanningView implements PlanningHost {
       ? `Could not load planning data: ${this.loadError}`
       : this.statusMessage;
     wrap.append(statusEl);
+
+    if (this.loading) {
+      wrap.append(panelSkeleton({ variant: 'panel', count: 2, label: 'Loading study plan…' }));
+      this.root.append(wrap);
+      return;
+    }
 
     // Content by tab
     if (this.activeTab === 'daily') {

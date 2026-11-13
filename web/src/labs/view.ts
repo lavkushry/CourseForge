@@ -1,9 +1,15 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
 import { errorMessage, isAbort } from '../api';
-import type { LabDefinition } from '../api/labs';
+import type { LabDefinition, LabSession } from '../api/labs';
 import { el, emptyState } from '../components';
-import { labsRunDisabled, labsUnavailableBanner } from './status';
+import { panelSkeleton } from '../ui/skeleton';
+import {
+  labsIsolationCopy,
+  labsLoadFailureCopy,
+  labsRunDisabled,
+  labsUnavailableBanner,
+} from './status';
 
 export interface LabsViewOptions {
   root: HTMLElement;
@@ -15,6 +21,9 @@ export class LabsView {
   private gradingAvailable = false;
   private kindAvailable = false;
   private activeLab: LabDefinition | null = null;
+  private session: LabSession | null = null;
+  private draft = '';
+  private busy = false;
   private loading = false;
   private loadError: string | null = null;
   private loadSignal: AbortSignal | null = null;
@@ -29,6 +38,8 @@ export class LabsView {
     this.loading = true;
     this.loadError = null;
     this.notice = null;
+    this.session = null;
+    this.draft = '';
     this.render();
 
     void this.options.api
@@ -76,7 +87,7 @@ export class LabsView {
     this.options.root.append(pageHead);
 
     if (this.loading) {
-      this.options.root.append(el('p', 'muted', 'Loading lab catalog…'));
+      this.options.root.append(panelSkeleton({ variant: 'cards', count: 4, label: 'Loading lab catalog…' }));
       return;
     }
 
@@ -87,12 +98,13 @@ export class LabsView {
       retry.addEventListener('click', () => {
         this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
       });
+      const failure = labsLoadFailureCopy(this.loadError);
       this.options.root.append(
         emptyState({
           className: 'catalog-empty labs-empty-state',
           icon: 'terminal',
-          title: 'Could not load labs',
-          description: this.loadError,
+          title: failure.title,
+          description: failure.description,
           action: retry,
         }),
       );
@@ -115,6 +127,11 @@ export class LabsView {
     if (unavailable) {
       const banner = el('div', 'labs-unavailable-banner panel');
       banner.append(el('strong', '', 'Graders unavailable'), el('p', 'muted', unavailable));
+      banner.append(el('p', 'muted', labsIsolationCopy()));
+      this.options.root.append(banner);
+    } else {
+      const banner = el('div', 'labs-available-banner panel');
+      banner.append(el('strong', '', 'Docker graders online'), el('p', 'muted', labsIsolationCopy()));
       this.options.root.append(banner);
     }
 
@@ -138,6 +155,8 @@ export class LabsView {
       );
       card.addEventListener('click', () => {
         this.activeLab = c;
+        this.session = null;
+        this.draft = '';
         this.notice = null;
         this.render();
       });
@@ -173,54 +192,183 @@ export class LabsView {
     editorTop.append(
       (() => {
         const s = el('span', 'editor-file-tab');
-        s.append(svgIcon('file'), ` ${lab.filename}`);
+        s.append(svgIcon('file'), ` ${this.session?.filename || lab.filename}`);
         return s;
       })(),
       el('span', 'editor-lang-tag', lab.type),
     );
 
-    const starterNote = el(
-      'pre',
-      'code-editor-textarea labs-starter-placeholder',
-      lab.starter
-        ? lab.starter
-        : '// Starter source is issued when you start an owned lab session.\n// Catalog listings omit starter bodies until a session is opened.',
-    );
-    starterNote.setAttribute('aria-label', `${lab.title} starter preview`);
+    const canEdit = this.gradingAvailable && this.session !== null;
+    let editorBody: HTMLElement;
+    if (canEdit) {
+      const textarea = el('textarea', 'code-editor-textarea') as HTMLTextAreaElement;
+      textarea.value = this.draft;
+      textarea.spellcheck = false;
+      textarea.setAttribute('aria-label', `${lab.title} solution editor`);
+      textarea.addEventListener('input', () => {
+        this.draft = textarea.value;
+      });
+      editorBody = textarea;
+    } else {
+      const starterNote = el(
+        'pre',
+        'code-editor-textarea labs-starter-placeholder',
+        lab.starter
+          ? lab.starter
+          : '// Starter source is issued when you start an owned lab session.\n// Catalog listings omit starter bodies until a session is opened.',
+      );
+      starterNote.setAttribute('aria-label', `${lab.title} starter preview`);
+      editorBody = starterNote;
+    }
 
     const editorFooter = el('div', 'editor-footer-bar');
-    const runBtn = el('button', 'button primary run-checks-btn', 'Run & Grade Lab');
-    runBtn.type = 'button';
-    runBtn.disabled = labsRunDisabled(this.gradingAvailable);
-    runBtn.title = this.gradingAvailable
-      ? 'Submit to the trusted Docker grader'
-      : 'Graders are not available in this environment';
-    runBtn.addEventListener('click', () => {
-      if (labsRunDisabled(this.gradingAvailable)) {
+    const actions = el('div', 'labs-editor-actions');
+
+    if (!this.gradingAvailable) {
+      const runBtn = el('button', 'button primary run-checks-btn', 'Run & Grade Lab');
+      runBtn.type = 'button';
+      runBtn.disabled = true;
+      runBtn.title = 'Graders are not available in this environment';
+      runBtn.addEventListener('click', () => {
         this.notice =
-          'Lab grading requires a configured Docker executor. This environment does not invent pass/fail results.';
+          'Lab grading requires a configured Docker executor (isolated, no network, no root). This environment does not invent pass/fail results.';
         this.render();
-        return;
-      }
-      this.notice =
-        'Session submit is available through the labs API when graders are online. Open a lab session from a machine with Docker graders configured.';
-      this.render();
-    });
+      });
+      actions.append(runBtn);
+    } else if (!this.session) {
+      const startBtn = el('button', 'button primary', 'Start lab session');
+      startBtn.type = 'button';
+      startBtn.disabled = this.busy;
+      startBtn.addEventListener('click', () => void this.startSession(lab));
+      actions.append(startBtn);
+    } else {
+      const saveBtn = el('button', 'button quiet', 'Save draft');
+      saveBtn.type = 'button';
+      saveBtn.disabled = this.busy;
+      saveBtn.addEventListener('click', () => void this.saveDraft());
+
+      const submitBtn = el('button', 'button primary run-checks-btn', 'Submit & Grade');
+      submitBtn.type = 'button';
+      submitBtn.disabled = this.busy || labsRunDisabled(this.session.grading_available);
+      submitBtn.title = 'Submit to the trusted Docker grader';
+      submitBtn.addEventListener('click', () => void this.submitSession());
+      actions.append(saveBtn, submitBtn);
+    }
 
     editorFooter.append(
       el(
         'span',
         'muted',
-        this.gradingAvailable
-          ? 'Trusted Docker grading available'
-          : 'Browse-only · no fabricated verification output',
+        this.session
+          ? `Session ${this.session.status} · rev ${this.session.revision}`
+          : this.gradingAvailable
+            ? 'Trusted Docker grading available'
+            : 'Browse-only · no fabricated verification output',
       ),
-      runBtn,
+      actions,
     );
 
-    editorShell.append(editorTop, starterNote, editorFooter);
+    editorShell.append(editorTop, editorBody, editorFooter);
     editorCol.append(editorShell);
+
+    if (this.session?.result) {
+      const result = this.session.result;
+      const resultCard = el('div', result.passed ? 'lab-result-card passed' : 'lab-result-card failed');
+      resultCard.append(
+        el('strong', '', result.passed ? 'Passed' : 'Not passed'),
+        el('p', 'muted', `Measured Docker grade · ${result.checks.length} checks`),
+      );
+      const checks = el('ul', 'lab-result-checks');
+      for (const check of result.checks) {
+        checks.append(
+          el('li', check.passed ? 'check-pass' : 'check-fail', `${check.passed ? '✓' : '✗'} ${check.name}${check.detail ? ` — ${check.detail}` : ''}`),
+        );
+      }
+      resultCard.append(checks);
+      editorCol.append(resultCard);
+    }
+
     layout.append(editorCol);
     this.options.root.append(layout);
+  }
+
+  private async startSession(lab: LabDefinition): Promise<void> {
+    this.busy = true;
+    this.notice = null;
+    this.render();
+    try {
+      const session = await this.options.api.startLab(lab.slug, crypto.randomUUID(), this.loadSignal ?? undefined);
+      this.session = session;
+      this.draft = session.content;
+      this.notice = 'Session started. Edit, save, then submit for isolated Docker grading.';
+    } catch (err) {
+      this.notice = errorMessage(err);
+    } finally {
+      this.busy = false;
+      this.render();
+    }
+  }
+
+  private async saveDraft(): Promise<void> {
+    if (!this.session) return;
+    this.busy = true;
+    this.notice = null;
+    this.render();
+    try {
+      const session = await this.options.api.saveLabFile(
+        this.session.session_id,
+        this.draft,
+        this.session.revision,
+        crypto.randomUUID(),
+        this.loadSignal ?? undefined,
+      );
+      this.session = session;
+      this.draft = session.content;
+      this.notice = 'Draft saved.';
+    } catch (err) {
+      this.notice = errorMessage(err);
+    } finally {
+      this.busy = false;
+      this.render();
+    }
+  }
+
+  private async submitSession(): Promise<void> {
+    if (!this.session) return;
+    this.busy = true;
+    this.notice = null;
+    this.render();
+    try {
+      // Persist latest draft before submit so the grader sees the edited body.
+      const saved = await this.options.api.saveLabFile(
+        this.session.session_id,
+        this.draft,
+        this.session.revision,
+        crypto.randomUUID(),
+        this.loadSignal ?? undefined,
+      );
+      this.session = saved;
+      this.draft = saved.content;
+      const graded = await this.options.api.submitLab(
+        saved.session_id,
+        saved.revision,
+        crypto.randomUUID(),
+        this.loadSignal ?? undefined,
+      );
+      this.session = graded;
+      this.draft = graded.content;
+      if (graded.result) {
+        this.notice = graded.result.passed
+          ? 'Docker grader reported pass.'
+          : 'Docker grader reported not passed — see checks below.';
+      } else {
+        this.notice = `Submitted · job status: ${graded.status}. Result appears when the grader finishes.`;
+      }
+    } catch (err) {
+      this.notice = errorMessage(err);
+    } finally {
+      this.busy = false;
+      this.render();
+    }
   }
 }

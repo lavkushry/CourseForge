@@ -3,7 +3,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  catalogSeedFromHomeFeed,
   courseCover,
+  heroFromHomeFeed,
   measuredTrending,
   parseContinued,
   parseHomeFeed,
@@ -12,6 +14,7 @@ import {
   personalRowsFromHomeFeed,
 } from '../../src/discovery/contracts';
 import { toTitleCase, cleanLessonTitle, formatModuleBadge, createSvgThumbnailDataUri } from '../../src/discovery/view';
+import { parseHistory } from '../../src/history/contracts';
 
 describe('untrusted discovery responses', () => {
   it('accepts saved course and lesson ownership metadata, including empty lists', () => {
@@ -147,7 +150,7 @@ describe('streaming feed honesty parsers', () => {
     ).toThrow();
   });
 
-  it('extracts continue/saved/trending from home-feed without inventing rows', () => {
+  it('extracts continue/saved/trending/for-you from home-feed without inventing rows', () => {
     const lesson = {
       id: 'lesson-z',
       course_id: 'course-a',
@@ -158,7 +161,7 @@ describe('streaming feed honesty parsers', () => {
       completed: false,
     };
     const feed = parseHomeFeed({
-      hero: [{ id: 'course-a', title: 'Published A' }],
+      hero: [{ id: 'course-a', title: 'Published A', cover_url: '/api/v1/courses/course-a/cover' }],
       rows: [
         { id: 'continue-watching', title: 'Continue Watching', kind: 'lecture_card', items: [lesson] },
         {
@@ -168,17 +171,58 @@ describe('streaming feed honesty parsers', () => {
           items: [{ id: 'course-a', item_type: 'course', course_id: 'course-a', title: 'Published A' }],
         },
         { id: 'trending-top-10', title: 'Top 10 This Week', kind: 'rank_card', items: [measured] },
+        {
+          id: 'for-you',
+          title: 'Your courses',
+          kind: 'course_card',
+          items: [{ id: 'course-b', title: 'Enrolled B', enrolled: true }],
+        },
+        {
+          id: 'featured-titles',
+          title: 'Featured Titles',
+          kind: 'course_card',
+          items: [{ id: 'course-c', title: 'Featured C' }],
+        },
       ],
     });
     const personal = personalRowsFromHomeFeed(feed);
     expect(personal.continued[0]?.position).toBe(12);
     expect(personal.saved[0]?.id).toBe('course-a');
     expect(personal.trending[0]?.viewers).toBe(2);
+    expect(personal.forYou[0]?.id).toBe('course-b');
+    expect(personal.featured[0]?.id).toBe('course-c');
+    expect(heroFromHomeFeed(feed)?.id).toBe('course-a');
+    expect(catalogSeedFromHomeFeed(feed).map(c => c.id)).toEqual(['course-a', 'course-b', 'course-c']);
     expect(personalRowsFromHomeFeed(parseHomeFeed({ hero: [], rows: [] }))).toEqual({
       continued: [],
       saved: [],
       trending: [],
+      forYou: [],
+      featured: [],
     });
+  });
+});
+
+describe('streaming history parser', () => {
+  it('accepts measured history rows and rejects invented progress', () => {
+    const row = {
+      id: 'lesson-1',
+      course_id: 'course-a',
+      title: 'Lecture One',
+      sort_order: 1,
+      duration_seconds: 600,
+      section_title: 'Module 1',
+      flow_order: 1,
+      position: 120,
+      percent: 20,
+      completed: false,
+      watched_at: '2026-03-20T12:00:00.000Z',
+    };
+    expect(parseHistory({ history: [row] }).history[0]?.position).toBe(120);
+    expect(parseHistory({ items: [row], next_cursor: 'abc' }).next_cursor).toBe('abc');
+    expect(() => parseHistory({ history: [{ ...row, percent: 140 }] })).toThrow();
+    expect(() => parseHistory({ history: [{ ...row, position: -1 }] })).toThrow();
+    expect(() => parseHistory({ history: [{ ...row, watched_at: 'not-a-date' }] })).toThrow();
   });
 });
 

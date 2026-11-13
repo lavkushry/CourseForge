@@ -20,10 +20,13 @@ export interface PlanningHost {
   preferences: c.Preferences | null;
   weekPreferences: c.WeekPreferences | null;
   currentFocus: c.Focus | null;
+  /** Client clock when the focus snapshot was received — used for honest countdown. */
+  focusReceivedAt: number;
   currentHabits: c.Habits | null;
   currentInsights: c.Insights | null;
   statusMessage: string;
   loadError: string | null;
+  loading: boolean;
   focusLessonId: string | undefined;
   focusTitle: string;
   focusDurationMinutes: number;
@@ -36,4 +39,5 @@ export interface PlanningHost {
   readonly signal: AbortSignal;
   open(tab?: PlanningTab, externalSignal?: AbortSignal): Promise<void>;
   render(): void;
+  noteFocusSnapshot(session: c.Focus | null): void;
 }

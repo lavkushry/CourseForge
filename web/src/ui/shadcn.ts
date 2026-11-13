@@ -4,6 +4,21 @@
  * and cross-platform runtime adaptation for iOS, Android, macOS, and Windows Desktop.
  */
 
+export { debounce, type DebouncedFn } from './debounce';
+export {
+  applyActiveNav,
+  isMobileSecondaryRoute,
+  isNavRouteId,
+  MOBILE_PRIMARY_ROUTES,
+  MOBILE_SECONDARY_ROUTES,
+  NAV_CRUMBS,
+  NAV_DOMAIN_IDS,
+  NAV_ROUTE_LABELS,
+  type NavDomainId,
+  type NavRouteId,
+} from './nav';
+export { inlineSkeleton, panelSkeleton, type PanelSkeletonOptions, type PanelSkeletonVariant } from './skeleton';
+
 export type PlatformOS = 'ios' | 'android' | 'macos' | 'windows' | 'linux';
 export type FormFactor = 'compact' | 'medium' | 'expanded';
 

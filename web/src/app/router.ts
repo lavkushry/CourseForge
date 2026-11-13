@@ -3,6 +3,8 @@ import type { Course } from '../contracts';
 import type { CatalogView } from '../discovery/view';
 import { errorMessage, isAbort } from '../api';
 import { required } from '../components';
+import { adminDeniedCopy } from '../admin/rbac';
+import { applyActiveNav } from '../ui/nav';
 
 export function installRouter(ctx: AppContext): void {
   ctx.newNavigation = function newNavigation(): {
@@ -70,31 +72,7 @@ export function installRouter(ctx: AppContext): void {
   };
 
   ctx.setActiveNav = function setActiveNav(name: string): void {
-    for (const link of document.querySelectorAll('[data-catalog-view]')) {
-      if (link.getAttribute('data-catalog-view') === name) link.setAttribute('aria-current', 'page');
-      else link.removeAttribute('aria-current');
-    }
-    const crumbSec = document.querySelector<HTMLElement>('#crumb-section');
-    const crumbCur = document.querySelector<HTMLElement>('#crumb-current');
-    const map: Record<string, [string, string]> = {
-      home: ['Discovery', '2026 Masterclass Catalog'],
-      courses: ['Courses', 'All Engineering Tracks'],
-      saved: ['Courses', 'My Saved List'],
-      library: ['Workspace', 'Course Library'],
-      planner: ['Workspace', 'Daily Plan & Schedule'],
-      history: ['Workspace', 'Watch History'],
-      reviews: ['Studio', 'Spaced Repetition Deck'],
-      tutor: ['Studio', 'AI Study Partner'],
-      labs: ['Studio', 'Cloud IDE Labs'],
-      paths: ['Studio', 'Learning Roadmaps'],
-      career: ['Studio', 'Career & Resume'],
-      settings: ['Studio', 'Studio Settings'],
-      admin: ['Studio', 'Command Center'],
-    };
-    if (name && map[name]) {
-      if (crumbSec) crumbSec.textContent = map[name]![0];
-      if (crumbCur) crumbCur.textContent = map[name]![1];
-    }
+    applyActiveNav(name);
   };
 
   ctx.showLibrary = async function showLibrary(): Promise<void> {
@@ -263,7 +241,15 @@ export function installRouter(ctx: AppContext): void {
   };
 
   ctx.showAdmin = async function showAdmin(): Promise<void> {
-    if (!ctx.user || ctx.user.role !== 'admin') return;
+    if (!ctx.user || ctx.user.role !== 'admin') {
+      const denied = adminDeniedCopy();
+      ctx.feedback(`${denied.title}. ${denied.description}`, true);
+      return;
+    }
+    if (!ctx.adminView) {
+      ctx.feedback('Administrator workspace is not available for this session.', true);
+      return;
+    }
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
     if (!navigation.current()) return;
@@ -274,7 +260,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#admin-panel').hidden = false;
     ctx.setActiveNav('admin');
     ctx.feedback('');
-    await ctx.adminView?.activate(navigation.signal);
+    await ctx.adminView.activate(navigation.signal);
   };
 
   ctx.loadCatalog = async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise<void> {

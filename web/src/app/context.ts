@@ -146,12 +146,24 @@ export function createBaseContext(app: HTMLElement): AppContext {
     learnedLoaded: false,
   } as unknown as AppContext;
 
+  let feedbackClearTimer: ReturnType<typeof setTimeout> | undefined;
   ctx.feedback = (message: string, error = false): void => {
     const node = document.querySelector<HTMLElement>('#notice');
     if (!node) return;
+    if (feedbackClearTimer !== undefined) clearTimeout(feedbackClearTimer);
     node.textContent = message;
     node.classList.toggle('is-error', error);
+    node.classList.toggle('is-success', Boolean(message) && !error);
     node.hidden = !message;
+    if (message) {
+      feedbackClearTimer = setTimeout(() => {
+        if (node.textContent === message) {
+          node.textContent = '';
+          node.hidden = true;
+          node.classList.remove('is-error', 'is-success');
+        }
+      }, error ? 8_000 : 5_000);
+    }
   };
 
   return ctx;

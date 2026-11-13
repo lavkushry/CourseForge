@@ -76,7 +76,7 @@ export function renderDaily(host: PlanningHost): HTMLElement {
   for (let i = 0; i < 7; i++) {
     const dayPill = document.createElement('div');
     // Highlight only the selected study date — never invent day-complete streaks.
-    let dayDate = '';
+    let dayDate: string;
     try {
       dayDate = addDays(host.weekStart, i);
     } catch {

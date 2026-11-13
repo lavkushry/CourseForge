@@ -35,7 +35,7 @@ import * as pathsApi from './paths';
 import * as playbackApi from './playback';
 import * as streamingApi from './streaming';
 import * as labsApi from './labs';
-import type { LabsCatalog } from './labs';
+import type { LabsCatalog, LabSession } from './labs';
 
 export class ApiClient extends HttpClient implements PlaybackTransport {
   setAuth(auth: AuthResponse): void {
@@ -357,6 +357,29 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
 
   labsCatalog(signal?: AbortSignal): Promise<LabsCatalog> {
     return labsApi.labsCatalog(this, signal);
+  }
+
+  startLab(slug: string, idempotencyKey: string, signal?: AbortSignal): Promise<LabSession> {
+    return labsApi.startLab(this, slug, idempotencyKey, signal);
+  }
+
+  saveLabFile(
+    sessionId: string,
+    content: string,
+    expectedRevision: number,
+    idempotencyKey: string,
+    signal?: AbortSignal,
+  ): Promise<LabSession> {
+    return labsApi.saveLabFile(this, sessionId, content, expectedRevision, idempotencyKey, signal);
+  }
+
+  submitLab(
+    sessionId: string,
+    expectedRevision: number,
+    idempotencyKey: string,
+    signal?: AbortSignal,
+  ): Promise<LabSession> {
+    return labsApi.submitLab(this, sessionId, expectedRevision, idempotencyKey, signal);
   }
 
   aiStatus(signal?: AbortSignal): Promise<AiDependencyStatus> {

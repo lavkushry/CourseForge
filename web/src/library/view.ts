@@ -1,9 +1,11 @@
 import { svgIcon } from '../icons';
 import type { Course, HistoryItem } from '../contracts';
 import type { ContinueItem, SavedItem } from '../discovery/contracts';
+import { personalRowsFromHomeFeed } from '../discovery/contracts';
 import { errorMessage, isAbort } from '../api';
 import type { ApiClient } from '../api';
 import { el, emptyState } from '../components';
+import { panelSkeleton } from '../ui/skeleton';
 import { artwork, toTitleCase } from '../discovery/view';
 import {
   completedCourseIds,
@@ -33,7 +35,7 @@ export interface LibraryViewOptions {
   onOpenSyllabus: (course: Course) => void;
   onPlayCourse: (course: Course) => void;
   onContinueLesson?: (courseId: string, lessonId: string, position: number) => void;
-  onToggleSave: (course: Course) => Promise<boolean>;
+  onToggleSave: (course: Course, currentlySaved: boolean) => Promise<boolean>;
   isSaved: (courseId: string) => boolean;
   onOpenMyList?: () => void;
 }
@@ -65,10 +67,11 @@ export class LibraryView {
 
     void Promise.allSettled([
       this.options.api.courses('', signal),
-      this.options.api.continueLearning(signal),
+      this.options.api.homeFeed(signal),
       this.options.api.history('', signal),
+      this.options.api.continueLearning(signal),
       this.options.api.savedItems('', signal),
-    ]).then(([coursesRes, continueRes, historyRes, savedRes]) => {
+    ]).then(([coursesRes, feedRes, historyRes, continueRes, savedRes]) => {
       if (signal.aborted) return;
 
       if (coursesRes.status === 'rejected') {
@@ -80,9 +83,18 @@ export class LibraryView {
       }
 
       this.courses = coursesRes.value.courses.filter(c => !c.id.startsWith('fixture-'));
-      this.continueItems = continueRes.status === 'fulfilled' ? continueRes.value : [];
-      this.historyItems = historyRes.status === 'fulfilled' ? historyRes.value.history || [] : [];
-      this.savedItems = savedRes.status === 'fulfilled' ? savedRes.value.items : [];
+
+      // Prefer consolidated home-feed personal rows; fall back to discrete endpoints.
+      if (feedRes.status === 'fulfilled') {
+        const personal = personalRowsFromHomeFeed(feedRes.value);
+        this.continueItems = personal.continued;
+        this.savedItems = personal.saved;
+      } else {
+        this.continueItems = continueRes.status === 'fulfilled' ? continueRes.value : [];
+        this.savedItems = savedRes.status === 'fulfilled' ? savedRes.value.items : [];
+      }
+
+      this.historyItems = historyRes.status === 'fulfilled' ? historyRes.value.history : [];
       this.progress = progressByCourse(this.continueItems);
       this.completedIds = completedCourseIds(this.historyItems);
       this.savedIds = savedCourseIds(this.savedItems);
@@ -238,9 +250,7 @@ export class LibraryView {
     grid.replaceChildren();
 
     if (this.loading) {
-      for (let i = 0; i < 6; i++) {
-        grid.append(el('div', 'course-skeleton'));
-      }
+      grid.append(panelSkeleton({ variant: 'cards', count: 6, label: 'Loading masterclasses…' }));
       countBadge.textContent = 'Loading masterclasses…';
       return;
     }
@@ -380,7 +390,8 @@ export class LibraryView {
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
         try {
-          const nowSaved = await this.options.onToggleSave(c);
+          const currentlySaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
+          const nowSaved = await this.options.onToggleSave(c, currentlySaved);
           if (nowSaved) this.savedIds.add(c.id);
           else this.savedIds.delete(c.id);
           saveBtn.textContent = nowSaved ? 'In My List' : '+ My List';

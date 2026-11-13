@@ -2,7 +2,10 @@ import { svgIcon } from '../icons';
 import type { AuthResponse, PlayerPreferences } from '../contracts';
 import type { ApiClient } from '../api';
 import { errorMessage, isAbort } from '../api';
+import type { AiDependencyStatus } from '../ai/status';
 import { el } from '../components';
+import { inlineSkeleton } from '../ui/skeleton';
+import { settingsAiPanelCopy, settingsPrivacyCopy } from './status';
 
 export interface SettingsViewOptions {
   root: HTMLElement;
@@ -18,6 +21,8 @@ export class SettingsView {
   private playerPrefs: PlayerPreferences = { autoplay: false, speed: 1 };
   private prefsLoading = false;
   private prefsError: string | null = null;
+  private aiStatus: AiDependencyStatus | null = null;
+  private aiStatusError: string | null = null;
 
   private get goalKey(): string | null {
     const uid = this.options.account.id;
@@ -42,16 +47,17 @@ export class SettingsView {
     this.render();
 
     void Promise.allSettled([
-      this.options.api.request<{ preferences: { daily_minutes?: number } }>('/planner/preferences', { signal }),
+      this.options.api.request<{
+        daily_minutes?: number;
+        revision?: number;
+        preferences?: { daily_minutes?: number; revision?: number };
+      }>('/planner/preferences', { signal }),
       this.options.api.preferences(signal),
-    ]).then(([plannerRes, playerRes]) => {
+      this.options.api.aiStatus(signal),
+    ]).then(([plannerRes, playerRes, aiRes]) => {
       if (signal.aborted) return;
       if (plannerRes.status === 'fulfilled') {
-        const prefs = plannerRes.value as {
-          daily_minutes?: number;
-          revision?: number;
-          preferences?: { daily_minutes?: number; revision?: number };
-        };
+        const prefs = plannerRes.value;
         const minutes = prefs.daily_minutes ?? prefs.preferences?.daily_minutes;
         const revision = prefs.revision ?? prefs.preferences?.revision;
         if (typeof minutes === 'number' && minutes > 0) this.dailyMinutes = minutes;
@@ -68,6 +74,13 @@ export class SettingsView {
         this.prefsError = null;
       } else if (!isAbort(playerRes.reason)) {
         this.prefsError = errorMessage(playerRes.reason);
+      }
+      if (aiRes.status === 'fulfilled') {
+        this.aiStatus = aiRes.value;
+        this.aiStatusError = null;
+      } else if (!isAbort(aiRes.reason)) {
+        this.aiStatus = null;
+        this.aiStatusError = errorMessage(aiRes.reason);
       }
       this.prefsLoading = false;
       this.render();
@@ -181,7 +194,7 @@ export class SettingsView {
     playerCard.append(playerHead);
 
     if (this.prefsLoading) {
-      playerCard.append(el('p', 'muted', 'Loading player preferences…'));
+      playerCard.append(inlineSkeleton('Loading player preferences…'));
     } else if (this.prefsError) {
       playerCard.append(el('p', 'planning-status-alert', `Could not load player preferences: ${this.prefsError}`));
     } else {
@@ -361,17 +374,43 @@ export class SettingsView {
     accountCard.append(signOutBtn);
     grid.append(accountCard);
 
-    // Panel 5: Honest about local-only notes (no fabricated latency/CDN status)
+    // Panel 5: Local AI status (measured; never starts Ollama)
+    const aiCard = el('section', 'panel settings-panel-card');
+    const aiHead = el('div', 'settings-panel-head');
+    aiHead.append(
+      el('h2', '', 'Local AI companion'),
+      el('p', 'muted', 'Read-only status from /ai/status. Ollama is never started from Settings.'),
+    );
+    aiCard.append(aiHead);
+    if (this.prefsLoading) {
+      aiCard.append(inlineSkeleton('Checking AI status…'));
+    } else if (this.aiStatusError) {
+      aiCard.append(el('p', 'planning-status-alert', `Could not read AI status: ${this.aiStatusError}`));
+    } else {
+      const copy = settingsAiPanelCopy(this.aiStatus);
+      aiCard.append(
+        el('p', copy.ready ? 'settings-ai-ready' : 'planning-status-alert', copy.title),
+        el('p', 'muted', copy.description),
+      );
+      if (this.aiStatus) {
+        const meta = el('dl', 'account-meta-list');
+        meta.append(
+          el('dt', '', 'Chat model:'),
+          el('dd', '', this.aiStatus.ollama_chat_model || '—'),
+          el('dt', '', 'Indexed chunks:'),
+          el('dd', '', String(this.aiStatus.transcript_chunks)),
+          el('dt', '', 'pgvector:'),
+          el('dd', '', this.aiStatus.pgvector_active ? 'active' : 'inactive'),
+        );
+        aiCard.append(meta);
+      }
+    }
+    grid.append(aiCard);
+
+    // Panel 6: Privacy / honesty notes
     const aboutCard = el('section', 'panel settings-panel-card');
     const aboutHead = el('div', 'settings-panel-head');
-    aboutHead.append(
-      el('h2', '', 'Workspace notes'),
-      el(
-        'p',
-        'muted',
-        'Theme and accent are browser-local. Player defaults require a durable preferences acknowledgment. Service health is not probed from this page.',
-      ),
-    );
+    aboutHead.append(el('h2', '', 'Privacy & workspace notes'), el('p', 'muted', settingsPrivacyCopy()));
     aboutCard.append(aboutHead);
     grid.append(aboutCard);
 
