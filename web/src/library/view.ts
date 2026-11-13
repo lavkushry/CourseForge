@@ -1,14 +1,21 @@
 import { svgIcon } from '../icons';
-import type { Course } from '../contracts';
+import type { Course, HistoryItem } from '../contracts';
+import type { ContinueItem, SavedItem } from '../discovery/contracts';
+import { errorMessage, isAbort } from '../api';
 import type { ApiClient } from '../api';
+import { el, emptyState } from '../components';
 import { artwork, toTitleCase } from '../discovery/view';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  node.className = className;
-  node.textContent = text;
-  return node;
-}
+import {
+  completedCourseIds,
+  filterLibraryCourses,
+  libraryLoadFailureCopy,
+  progressByCourse,
+  savedCourseIds,
+  sortLibraryCourses,
+  type CourseProgressSummary,
+  type LibrarySortOption,
+  type LibraryStatusFilter,
+} from './status';
 
 function formatDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return 'Self-paced';
@@ -18,49 +25,81 @@ function formatDuration(seconds: number): string {
   return `${mins} min`;
 }
 
-export type StatusFilter = 'all' | 'progress' | 'completed' | 'unstarted';
-export type SortOption = 'recent' | 'title' | 'progress' | 'duration';
+export type { LibraryStatusFilter as StatusFilter, LibrarySortOption as SortOption };
 
 export interface LibraryViewOptions {
   root: HTMLElement;
   api: ApiClient;
   onOpenSyllabus: (course: Course) => void;
   onPlayCourse: (course: Course) => void;
+  onContinueLesson?: (courseId: string, lessonId: string, position: number) => void;
   onToggleSave: (course: Course) => Promise<boolean>;
   isSaved: (courseId: string) => boolean;
+  onOpenMyList?: () => void;
 }
 
 export class LibraryView {
   private courses: Course[] = [];
+  private continueItems: ContinueItem[] = [];
+  private historyItems: HistoryItem[] = [];
+  private savedItems: SavedItem[] = [];
+  private progress = new Map<string, CourseProgressSummary>();
+  private completedIds = new Set<string>();
+  private savedIds = new Set<string>();
   private loading = false;
-  private statusFilter: StatusFilter = 'all';
+  private loadError: string | null = null;
+  private loadSignal: AbortSignal | null = null;
+  private statusFilter: LibraryStatusFilter = 'all';
   private categoryFilter = 'all';
-  private sortOption: SortOption = 'recent';
+  private sortOption: LibrarySortOption = 'recent';
   private searchQuery = '';
 
   constructor(private readonly options: LibraryViewOptions) {}
 
   activate(signal: AbortSignal): void {
     this.options.root.hidden = false;
+    this.loadSignal = signal;
     this.loading = true;
+    this.loadError = null;
     this.render();
 
-    void this.options.api
-      .courses('', signal)
-      .then(res => {
-        this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
+    void Promise.allSettled([
+      this.options.api.courses('', signal),
+      this.options.api.continueLearning(signal),
+      this.options.api.history('', signal),
+      this.options.api.savedItems('', signal),
+    ]).then(([coursesRes, continueRes, historyRes, savedRes]) => {
+      if (signal.aborted) return;
+
+      if (coursesRes.status === 'rejected') {
+        if (isAbort(coursesRes.reason)) return;
         this.loading = false;
+        this.loadError = errorMessage(coursesRes.reason);
         this.render();
-      })
-      .catch(_err => {
-        this.loading = false;
-        this.render();
-      });
+        return;
+      }
+
+      this.courses = coursesRes.value.courses.filter(c => !c.id.startsWith('fixture-'));
+      this.continueItems = continueRes.status === 'fulfilled' ? continueRes.value : [];
+      this.historyItems = historyRes.status === 'fulfilled' ? historyRes.value.history || [] : [];
+      this.savedItems = savedRes.status === 'fulfilled' ? savedRes.value.items : [];
+      this.progress = progressByCourse(this.continueItems);
+      this.completedIds = completedCourseIds(this.historyItems);
+      this.savedIds = savedCourseIds(this.savedItems);
+      this.loading = false;
+      this.loadError = null;
+      this.render();
+    });
   }
 
   deactivate(): void {
     this.options.root.hidden = true;
     this.options.root.replaceChildren();
+  }
+
+  setStatusFilter(filter: LibraryStatusFilter): void {
+    this.statusFilter = filter;
+    if (!this.options.root.hidden) this.render();
   }
 
   render(): void {
@@ -70,21 +109,43 @@ export class LibraryView {
     const pageHead = el('div', 'page-heading');
     const headText = el('div');
     headText.append(
-      el('span', 'eyebrow', 'ORGANIZED KNOWLEDGE'),
+      el('span', 'eyebrow', 'YOUR PERSONAL LEARNING STUDIO'),
       el('h1', '', 'My Course Library'),
-      el('p', 'muted', 'Your masterclasses and engineering curriculums, organized in one place.'),
+      el(
+        'p',
+        'muted',
+        'Enrolled and catalog masterclasses with progress from your private continue-watching and history state.',
+      ),
     );
     pageHead.append(headText);
     root.append(pageHead);
 
-    // Controls: Search, Status Filter, Category, Sort
+    if (this.loadError && !this.loading) {
+      const retry = el('button', 'button primary');
+      retry.type = 'button';
+      retry.textContent = 'Retry';
+      retry.addEventListener('click', () => {
+        this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
+      });
+      const failure = libraryLoadFailureCopy(this.loadError);
+      root.append(
+        emptyState({
+          className: 'catalog-empty library-empty-state',
+          icon: 'book',
+          title: failure.title,
+          description: failure.description,
+          action: retry,
+        }),
+      );
+      return;
+    }
+
     const controls = el('div', 'library-controls-bar');
 
-    // 1. Search
     const searchWrap = el('div', 'library-search-wrap');
     const searchInput = el('input', 'form-input library-search-input');
     searchInput.type = 'search';
-    searchInput.placeholder = 'Search by title, instructor, or skill…';
+    searchInput.placeholder = 'Search courses by title, instructor, or topic…';
     searchInput.value = this.searchQuery;
     searchInput.addEventListener('input', () => {
       this.searchQuery = searchInput.value.toLowerCase().trim();
@@ -92,16 +153,15 @@ export class LibraryView {
     });
     searchWrap.append(searchInput);
 
-    // 2. Status Filters
     const filtersGroup = el('div', 'library-status-filters');
     filtersGroup.setAttribute('role', 'group');
     filtersGroup.setAttribute('aria-label', 'Filter courses by progress status');
 
-    const statusOptions: Array<{ id: StatusFilter; label: string }> = [
+    const statusOptions: Array<{ id: LibraryStatusFilter; label: string }> = [
       { id: 'all', label: 'All Courses' },
       { id: 'progress', label: 'In Progress' },
       { id: 'completed', label: 'Completed' },
-      { id: 'unstarted', label: 'Not Started' },
+      { id: 'saved', label: 'Saved' },
     ];
 
     for (const opt of statusOptions) {
@@ -118,10 +178,8 @@ export class LibraryView {
       filtersGroup.append(btn);
     }
 
-    // 3. Selects: Category & Sort
     const selectsRow = el('div', 'library-selects-row');
 
-    // Category Select
     const catLabel = el('label', 'select-label');
     catLabel.append(el('span', '', 'Category '));
     const catSelect = el('select', 'form-input');
@@ -142,11 +200,10 @@ export class LibraryView {
     });
     catLabel.append(catSelect);
 
-    // Sort Select
     const sortLabel = el('label', 'select-label');
     sortLabel.append(el('span', '', 'Sort '));
     const sortSelect = el('select', 'form-input');
-    const sortOptionsList: Array<{ id: SortOption; label: string }> = [
+    const sortOptionsList: Array<{ id: LibrarySortOption; label: string }> = [
       { id: 'recent', label: 'Recently active' },
       { id: 'title', label: 'Alphabetical A–Z' },
       { id: 'progress', label: 'Most progress' },
@@ -159,7 +216,7 @@ export class LibraryView {
       sortSelect.append(opt);
     }
     sortSelect.addEventListener('change', () => {
-      this.sortOption = sortSelect.value as SortOption;
+      this.sortOption = sortSelect.value as LibrarySortOption;
       this.renderGrid(grid, countBadge);
     });
     sortLabel.append(sortSelect);
@@ -168,11 +225,9 @@ export class LibraryView {
     controls.append(searchWrap, filtersGroup, selectsRow);
     root.append(controls);
 
-    // Count Badge
     const countBadge = el('div', 'library-count-badge');
     root.append(countBadge);
 
-    // Course Grid
     const grid = el('div', 'course-grid library-course-grid');
     root.append(grid);
 
@@ -190,9 +245,12 @@ export class LibraryView {
       return;
     }
 
-    let filtered = [...this.courses];
+    let filtered = filterLibraryCourses(this.courses, this.statusFilter, {
+      progress: this.progress,
+      completed: this.completedIds,
+      saved: this.savedIds,
+    });
 
-    // Filter by Search Query
     if (this.searchQuery) {
       filtered = filtered.filter(
         c =>
@@ -203,48 +261,54 @@ export class LibraryView {
       );
     }
 
-    // Filter by Category
     if (this.categoryFilter !== 'all') {
       filtered = filtered.filter(c => c.category === this.categoryFilter);
     }
 
-    // Filter by Status
-    if (this.statusFilter === 'progress') {
-      filtered = filtered.filter(c => c.enrolled);
-    } else if (this.statusFilter === 'completed') {
-      filtered = filtered.filter(c => c.enrolled === true);
-    } else if (this.statusFilter === 'unstarted') {
-      filtered = filtered.filter(c => !c.enrolled);
-    }
-
-    // Sort
-    if (this.sortOption === 'title') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    } else if (this.sortOption === 'duration') {
-      filtered.sort((a, b) => (b.duration_seconds || 0) - (a.duration_seconds || 0));
-    }
+    filtered = sortLibraryCourses(filtered, this.sortOption, this.progress);
 
     countBadge.textContent = `Showing ${filtered.length} of ${this.courses.length} courses`;
 
     if (filtered.length === 0) {
-      const empty = el('div', 'catalog-empty');
-      empty.append(
-        (() => {
-          const s = el('span', 'empty-symbol');
-          s.append(svgIcon('book'));
-          return s;
-        })(),
-        el('h2', '', 'No matching courses found'),
-        el('p', 'muted', 'Try clearing your filters or searching for different topics.'),
+      const emptyTitles: Record<LibraryStatusFilter, string> = {
+        all: 'No courses in the catalog yet',
+        progress: 'No courses in progress',
+        completed: 'No completed courses yet',
+        saved: 'No saved courses yet',
+      };
+      const emptyDesc: Record<LibraryStatusFilter, string> = {
+        all: 'Courses appear here once published to the catalog.',
+        progress: 'Resume a lecture from Discovery or History to populate In Progress.',
+        completed: 'Completed lessons from your private watch history appear here.',
+        saved: 'Add courses to My List from Discovery or Library cards.',
+      };
+      const emptyAction =
+        this.statusFilter === 'saved' && this.options.onOpenMyList
+          ? (() => {
+              const btn = el('button', 'button secondary');
+              btn.type = 'button';
+              btn.textContent = 'Open My List';
+              btn.addEventListener('click', () => this.options.onOpenMyList?.());
+              return btn;
+            })()
+          : undefined;
+      grid.append(
+        emptyState({
+          className: 'catalog-empty library-empty-state',
+          icon: 'book',
+          title: emptyTitles[this.statusFilter],
+          description: emptyDesc[this.statusFilter],
+          ...(emptyAction ? { action: emptyAction } : {}),
+        }),
       );
-      grid.append(empty);
       return;
     }
 
     for (const c of filtered) {
       const card = el('article', 'course-card library-card');
+      const progress = this.progress.get(c.id);
+      const isCompleted = this.completedIds.has(c.id) || progress?.completed === true;
 
-      // Cover Artwork
       const coverBtn = el('button', 'cover-button');
       coverBtn.type = 'button';
       coverBtn.setAttribute('aria-label', `View syllabus for ${c.title}`);
@@ -256,10 +320,25 @@ export class LibraryView {
       coverBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
       card.append(coverBtn);
 
-      // Body
+      if (progress && !isCompleted) {
+        const bar = el('div', 'library-progress-bar');
+        const fill = el('div', 'library-progress-fill');
+        fill.style.width = `${Math.min(100, Math.max(0, progress.percent))}%`;
+        bar.append(fill);
+        bar.setAttribute('aria-label', `${Math.round(progress.percent)}% watched`);
+        card.append(bar);
+      }
+
       const body = el('div', 'course-card-body');
+      const statusBadge = isCompleted
+        ? 'Completed'
+        : progress
+          ? `${Math.round(progress.percent)}% watched`
+          : c.enrolled
+            ? 'Enrolled'
+            : toTitleCase(c.category || 'Masterclass');
       body.append(
-        el('span', 'course-badge', toTitleCase(c.category || 'Masterclass')),
+        el('span', 'course-badge', statusBadge),
         el('h2', '', c.title),
         el(
           'p',
@@ -274,13 +353,24 @@ export class LibraryView {
         ),
       );
 
-      // Footer
       const footer = el('div', 'course-card-footer');
-      const syllabusBtn = el('button', 'text-button', 'View Syllabus →');
+
+      const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open course' : 'Start Course';
+      const primaryBtn = el('button', 'button primary library-primary-btn', primaryLabel);
+      primaryBtn.type = 'button';
+      primaryBtn.addEventListener('click', () => {
+        if (progress && !isCompleted && this.options.onContinueLesson) {
+          this.options.onContinueLesson(c.id, progress.lessonId, progress.position);
+          return;
+        }
+        this.options.onPlayCourse(c);
+      });
+
+      const syllabusBtn = el('button', 'text-button', 'Syllabus');
       syllabusBtn.type = 'button';
       syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
 
-      const isSaved = this.options.isSaved(c.id);
+      const isSaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
       const saveBtn = el(
         'button',
         isSaved ? 'button list-button' : 'button quiet list-button',
@@ -289,12 +379,19 @@ export class LibraryView {
       saveBtn.type = 'button';
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
-        const nowSaved = await this.options.onToggleSave(c);
-        saveBtn.disabled = false;
-        saveBtn.textContent = nowSaved ? 'In My List' : '+ My List';
+        try {
+          const nowSaved = await this.options.onToggleSave(c);
+          if (nowSaved) this.savedIds.add(c.id);
+          else this.savedIds.delete(c.id);
+          saveBtn.textContent = nowSaved ? 'In My List' : '+ My List';
+          saveBtn.className = nowSaved ? 'button list-button' : 'button quiet list-button';
+          if (this.statusFilter === 'saved') this.renderGrid(grid, countBadge);
+        } finally {
+          saveBtn.disabled = false;
+        }
       });
 
-      footer.append(syllabusBtn, saveBtn);
+      footer.append(primaryBtn, syllabusBtn, saveBtn);
       body.append(footer);
       card.append(body);
       grid.append(card);

@@ -14,17 +14,28 @@ import type {
 } from '../contracts';
 import type { CertificateResponse, VerificationResult } from '../certificates/contracts';
 import type { LearningPath } from '../paths/contracts';
-import type { AdminLearnerReport, AdminOverview, AdminUser, AdminUserDetail } from '../admin/contracts';
+import type {
+  AdminLearnerReport,
+  AdminOverview,
+  AdminSystemReport,
+  AdminUser,
+  AdminUserDetail,
+} from '../admin/contracts';
+import type { AiDependencyStatus } from '../ai/status';
+import type { PublicJob } from '../jobs/status';
 import * as adminApi from './admin';
 import * as aiApi from './ai';
 import * as authApi from './auth';
 import * as catalogApi from './catalog';
 import * as certificatesApi from './certificates';
 import { HttpClient } from './http';
+import * as jobsApi from './jobs';
 import * as notesApi from './notes';
 import * as pathsApi from './paths';
 import * as playbackApi from './playback';
 import * as streamingApi from './streaming';
+import * as labsApi from './labs';
+import type { LabsCatalog } from './labs';
 
 export class ApiClient extends HttpClient implements PlaybackTransport {
   setAuth(auth: AuthResponse): void {
@@ -77,6 +88,14 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
 
   continueLearning(signal?: AbortSignal) {
     return streamingApi.continueLearning(this, signal);
+  }
+
+  trending(signal?: AbortSignal) {
+    return streamingApi.trending(this, signal);
+  }
+
+  homeFeed(signal?: AbortSignal) {
+    return streamingApi.homeFeed(this, signal);
   }
 
   saveCourse(id: string, signal?: AbortSignal): Promise<void> {
@@ -212,6 +231,34 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
     return adminApi.adminOverview(this, signal);
   }
 
+  adminSystem(signal?: AbortSignal): Promise<AdminSystemReport> {
+    return adminApi.adminSystem(this, signal);
+  }
+
+  listJobs(limit = 50, cursor = '', signal?: AbortSignal): Promise<{ jobs: PublicJob[]; next_cursor: string }> {
+    return jobsApi.listJobs(this, limit, cursor, signal);
+  }
+
+  getJob(id: string, signal?: AbortSignal): Promise<PublicJob> {
+    return jobsApi.getJob(this, id, signal);
+  }
+
+  cancelJob(id: string, signal?: AbortSignal): Promise<{ canceled: boolean }> {
+    return jobsApi.cancelJob(this, id, signal);
+  }
+
+  submitJob(
+    command: { kind: string; lesson_id: string; payload?: Record<string, unknown> },
+    idempotencyKey: string,
+    signal?: AbortSignal,
+  ): Promise<PublicJob> {
+    return jobsApi.submitJob(this, command, idempotencyKey, signal);
+  }
+
+  getKnowledgeJob(id: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
+    return jobsApi.getKnowledgeJob(this, id, signal);
+  }
+
   adminUsers(
     limit = 50,
     cursor = '',
@@ -308,7 +355,11 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
     return adminApi.adminAccessEvents(this, userId, limit, signal);
   }
 
-  aiStatus(signal?: AbortSignal) {
+  labsCatalog(signal?: AbortSignal): Promise<LabsCatalog> {
+    return labsApi.labsCatalog(this, signal);
+  }
+
+  aiStatus(signal?: AbortSignal): Promise<AiDependencyStatus> {
     return aiApi.aiStatus(this, signal);
   }
 

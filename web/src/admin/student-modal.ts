@@ -1,5 +1,6 @@
 import { svgIcon, type IconName } from '../icons';
 import type { AdminHost } from './host';
+import { adminCatalogCount } from './status';
 import { button, el, initialsOf, type StudentModalTab } from './helpers';
 import type { AdminUser } from './contracts';
 
@@ -24,7 +25,7 @@ export async function openStudentAccessModal(
 
   const renderModal = () => {
     modalShell.replaceChildren();
-    const totalCatalog = host.catalogCourses.length || 29;
+    const totalCatalog = adminCatalogCount(host.catalogCourses.length, host.overviewData);
 
     // Modal Top Header
     const header = el('div', 'student-modal-header');

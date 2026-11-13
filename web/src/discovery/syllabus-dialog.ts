@@ -86,7 +86,6 @@ export class SyllabusDialog {
     const completedCount = lessons.filter(l => learnedLessons.has(l.id)).length;
 
     metaRow.append(
-      el('span', 'meta-chip quality', '1080p HD'),
       el('span', 'meta-chip', `${lessons.length} Lectures`),
       el('span', 'meta-chip', formatDuration(totalDuration)),
       el('span', 'meta-chip instructor', course.instructor ? `With ${course.instructor}` : 'CourseForge Faculty'),

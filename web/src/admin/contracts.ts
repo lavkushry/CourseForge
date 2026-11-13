@@ -84,9 +84,48 @@ export interface AdminAuditEntry {
 
 export interface AdminSystemReport {
   server_now: string;
-  database: Record<string, unknown>;
-  jobs: Record<string, unknown>;
-  capabilities: Record<string, unknown>;
+  capabilities: {
+    registration_mode?: string;
+    email_configured?: boolean | null;
+    provider_configured?: boolean | null;
+  };
+  tasks: Record<string, unknown>;
+  courses: Array<Record<string, unknown>>;
+  course_count: number;
+  course_limit: number;
+  courses_truncated: boolean;
+  pending_invitations: number;
+  audit: Array<Record<string, unknown>>;
+  retention: Record<string, unknown>;
+  unavailable: string[];
+}
+
+export function parseAdminSystemReport(value: unknown): AdminSystemReport {
+  if (!value || typeof value !== 'object') throw new ContractError('admin system');
+  const d = value as Record<string, unknown>;
+  const caps =
+    d.capabilities && typeof d.capabilities === 'object' && !Array.isArray(d.capabilities)
+      ? (d.capabilities as AdminSystemReport['capabilities'])
+      : {};
+  return {
+    server_now: String(d.server_now || ''),
+    capabilities: caps,
+    tasks:
+      d.tasks && typeof d.tasks === 'object' && !Array.isArray(d.tasks)
+        ? (d.tasks as Record<string, unknown>)
+        : {},
+    courses: Array.isArray(d.courses) ? (d.courses as Array<Record<string, unknown>>) : [],
+    course_count: Number(d.course_count || 0),
+    course_limit: Number(d.course_limit || 0),
+    courses_truncated: Boolean(d.courses_truncated),
+    pending_invitations: Number(d.pending_invitations || 0),
+    audit: Array.isArray(d.audit) ? (d.audit as Array<Record<string, unknown>>) : [],
+    retention:
+      d.retention && typeof d.retention === 'object' && !Array.isArray(d.retention)
+        ? (d.retention as Record<string, unknown>)
+        : {},
+    unavailable: Array.isArray(d.unavailable) ? d.unavailable.map(String) : [],
+  };
 }
 
 export function parseAdminOverview(value: unknown): AdminOverview {

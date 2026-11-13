@@ -313,10 +313,16 @@ export class PathsView {
           return;
         }
         try {
+          generateBtn.disabled = true;
+          generateBtn.textContent = 'Generating…';
           const aiResult = await this.api.generateAiRoadmap(goal, role);
           const steps = (aiResult.steps || []) as Array<{ course_id: string }>;
           const courseIds = steps.map((s: { course_id: string }) => s.course_id).filter(Boolean);
-          if (!courseIds.length) courseIds.push('fixture-course');
+          if (!courseIds.length) {
+            throw new Error(
+              'AI returned no mapped courses. Roadmaps are not created from placeholder fixture courses.',
+            );
+          }
           const newPath = await this.api.createLearningPath(goal, courseIds.slice(0, 4), steps.length || 4);
           dialog.close();
           this.activePath = newPath;

@@ -1,4 +1,4 @@
-/* Netflix-Grade Hero Metadata Chips & Tech Badges */
+/* Cinema hero metadata — honest chips only (no Match/% or unverified tech badges) */
 
 .hero-metadata {
   display: flex;
@@ -8,35 +8,14 @@
   margin-bottom: 26px;
 }
 
-.hero-badge-match {
-  background: rgba(16, 185, 129, 0.16);
-  color: var(--success);
-  font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  padding: 3px var(--space-2);
-  border-radius: 4px;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-}
-
 .hero-chip-badge {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(229, 69, 3, 0.18);
+  border: 1px solid rgba(229, 69, 3, 0.4);
   font-weight: 750;
   font-size: 0.68rem;
   padding: 2px 7px;
   border-radius: 4px;
-  color: #fff;
-}
-
-.hero-tech-badge {
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 3px;
-  font-size: 0.62rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  padding: 2px 6px;
-  color: #e5e5ea;
+  color: #ffb395;
 }
 
 .hero-chip {
@@ -46,14 +25,12 @@
 }
 
 .hero-category-chip {
-  color: var(--accent);
+  color: var(--coral-hover);
   font-size: 0.76rem;
   font-weight: 650;
 }
 
-.hero-badge-match::before,
 .hero-chip-badge::before,
-.hero-tech-badge::before,
 .hero-chip::before,
 .hero-category-chip::before {
   content: none;
@@ -208,7 +185,7 @@
   z-index: 2;
 }
 
-/* Top 10 Styled Numeral Badges */
+/* Rank numerals only for measured streaming trending rows. */
 
 .top10-card {
   position: relative;

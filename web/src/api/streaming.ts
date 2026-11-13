@@ -1,5 +1,5 @@
 import type { HistoryItem } from '../contracts';
-import { parseContinued, parseSaved } from '../discovery/contracts';
+import { parseContinued, parseHomeFeed, parseSaved, parseTrending } from '../discovery/contracts';
 import type { HttpClient } from './http';
 
 export function history(
@@ -24,6 +24,14 @@ export function savedItems(client: HttpClient, cursor = '', signal?: AbortSignal
 
 export function continueLearning(client: HttpClient, signal?: AbortSignal) {
   return client.request('/streaming/continue-watching', signal ? { signal } : {}).then(parseContinued);
+}
+
+export function trending(client: HttpClient, signal?: AbortSignal) {
+  return client.request('/streaming/trending', signal ? { signal } : {}).then(parseTrending);
+}
+
+export function homeFeed(client: HttpClient, signal?: AbortSignal) {
+  return client.request('/streaming/home-feed', signal ? { signal } : {}).then(parseHomeFeed);
 }
 
 export function saveCourse(client: HttpClient, id: string, signal?: AbortSignal): Promise<void> {

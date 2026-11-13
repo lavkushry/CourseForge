@@ -1,5 +1,6 @@
 import { errorMessage } from '../api';
 import { svgIcon, type IconName } from '../icons';
+import { addDays } from './contracts';
 import type { PlanningHost } from './host';
 
 export function renderDaily(host: PlanningHost): HTMLElement {
@@ -74,8 +75,16 @@ export function renderDaily(host: PlanningHost): HTMLElement {
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   for (let i = 0; i < 7; i++) {
     const dayPill = document.createElement('div');
-    dayPill.className =
-      i === 1 ? 'calendar-day-pill today-active' : i < 1 ? 'calendar-day-pill day-complete' : 'calendar-day-pill';
+    // Highlight only the selected study date — never invent day-complete streaks.
+    let dayDate = '';
+    try {
+      dayDate = addDays(host.weekStart, i);
+    } catch {
+      dayDate = '';
+    }
+    const isSelected = dayDate !== '' && dayDate === host.studyDate;
+    dayPill.className = isSelected ? 'calendar-day-pill today-active' : 'calendar-day-pill';
+    if (dayDate) dayPill.setAttribute('data-date', dayDate);
     const dName = document.createElement('span');
     dName.className = 'day-pill-name';
     dName.textContent = dayNames[i] ?? '';

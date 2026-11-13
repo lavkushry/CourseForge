@@ -1,9 +1,12 @@
 import { svgIcon, type IconName } from '../icons';
 import type { ApiClient } from '../api';
 import type { Course } from '../contracts';
-import type { AdminOverview, AdminUser } from './contracts';
+import type { AiDependencyStatus } from '../ai/status';
+import type { PublicJob } from '../jobs/status';
+import type { AdminOverview, AdminSystemReport, AdminUser } from './contracts';
 import { button, el, type AdminTab, type StudentModalTab } from './helpers';
 import type { AdminHost } from './host';
+import { adminCatalogCount } from './status';
 import { renderOverviewTab } from './overview-tab';
 import { renderLearnersTab } from './learners-tab';
 import { openStudentAccessModal as openStudentModal } from './student-modal';
@@ -13,6 +16,11 @@ import { renderFunnelsTab, renderRetentionTab, renderActivityTab } from './analy
 export class AdminView implements AdminHost {
   activeTab: AdminTab = 'overview';
   overviewData: AdminOverview | null = null;
+  overviewError: string | null = null;
+  systemReport: AdminSystemReport | null = null;
+  aiStatus: AiDependencyStatus | null = null;
+  jobs: PublicJob[] = [];
+  jobsError: string | null = null;
   users: AdminUser[] = [];
   catalogCourses: Course[] = [];
   loading = false;
@@ -39,19 +47,24 @@ export class AdminView implements AdminHost {
 
   async refreshAll(signal?: AbortSignal): Promise<void> {
     this.loading = true;
+    this.overviewError = null;
     this.render();
     try {
-      const [overview, learnerResp, coursesResp] = await Promise.all([
+      const [overview, learnerResp, coursesResp, systemResp] = await Promise.all([
         this.api.adminOverview(signal),
         this.api.adminLearnerSummaries(100, '', '', signal).catch(() => this.api.adminUsers(100, '', signal)),
         this.api.courses('', signal).catch(() => ({ courses: [] as Course[] })),
+        this.api.adminSystem(signal).catch(() => null),
       ]);
       this.overviewData = overview;
       this.users = learnerResp.users;
       this.catalogCourses = coursesResp.courses;
+      this.systemReport = systemResp;
     } catch (err) {
+      this.overviewData = null;
+      this.overviewError = err instanceof Error ? err.message : String(err);
       this.notice(
-        'Could not load administrator dashboard: ' + (err instanceof Error ? err.message : String(err)),
+        'Could not load administrator dashboard: ' + this.overviewError,
         true,
       );
     } finally {
@@ -83,11 +96,15 @@ export class AdminView implements AdminHost {
     );
 
     const headRight = el('div', 'admin-header-actions');
-    const totalCourses = this.catalogCourses.length || this.overviewData?.summary.courses || 29;
+    const totalCourses = adminCatalogCount(this.catalogCourses.length, this.overviewData);
     const statsChip = el('div', 'admin-header-stat-pill');
     statsChip.append(
       svgIcon('shield'),
-      el('span', '', `${this.users.length} Accounts · ${totalCourses} Catalog Courses`),
+      el(
+        'span',
+        '',
+        `${this.users.length} Accounts · ${totalCourses} Catalog Courses`,
+      ),
     );
 
     const manageAccessQuickBtn = button(

@@ -262,7 +262,9 @@ type HomeFeedResponse struct {
 }
 
 func (s *Server) trendingItems(ctx context.Context) ([]TrendingItem, error) {
-	rows, err := s.Pool.Query(ctx, `SELECT l.id,l.title,l.course_id,l.duration_seconds,COALESCE(t.viewers,0) FROM lessons l JOIN courses c ON c.id=l.course_id LEFT JOIN(SELECT lesson_id,count(*) viewers FROM playback_totals WHERE updated_at>now()-interval '7 days' AND watched_seconds>0 GROUP BY lesson_id)t ON t.lesson_id=l.id WHERE c.published ORDER BY COALESCE(t.viewers,0) DESC,l.id LIMIT 10`)
+	// Rank only lessons with measured 7-day playback activity. Zero-viewer
+	// catalog order must not appear as "Top 10" / popularity chrome.
+	rows, err := s.Pool.Query(ctx, `SELECT l.id,l.title,l.course_id,l.duration_seconds,t.viewers FROM lessons l JOIN courses c ON c.id=l.course_id JOIN(SELECT lesson_id,count(*)::bigint viewers FROM playback_totals WHERE updated_at>now()-interval '7 days' AND watched_seconds>0 GROUP BY lesson_id)t ON t.lesson_id=l.id WHERE c.published AND t.viewers>0 ORDER BY t.viewers DESC,l.id LIMIT 10`)
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +276,26 @@ func (s *Server) trendingItems(ctx context.Context) ([]TrendingItem, error) {
 			return nil, err
 		}
 		v.Rank = len(items) + 1
+		items = append(items, v)
+	}
+	return items, rows.Err()
+}
+
+func (s *Server) savedFeedItems(ctx context.Context, p identity.Principal, limit int) ([]StreamItem, error) {
+	if p.UserID == "" || !p.Verified || limit <= 0 {
+		return []StreamItem{}, nil
+	}
+	rows, err := s.Pool.Query(ctx, `SELECT si.item_id,si.item_type,si.course_id,CASE WHEN si.item_type='course' THEN c.title ELSE l.title END,si.created_at FROM saved_items si JOIN courses c ON c.id=si.course_id LEFT JOIN lessons l ON l.id=si.lesson_id WHERE si.user_id=$1 AND (c.published OR $2='admin') AND (si.item_type='course' OR $2='admin' OR EXISTS(SELECT 1 FROM enrollments e WHERE e.user_id=$1 AND e.course_id=c.id)) ORDER BY si.created_at DESC,si.item_type,si.item_id LIMIT $3`, p.UserID, p.Role, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := make([]StreamItem, 0, limit)
+	for rows.Next() {
+		var v StreamItem
+		if err = rows.Scan(&v.ID, &v.Type, &v.CourseID, &v.Title, &v.CreatedAt); err != nil {
+			return nil, err
+		}
 		items = append(items, v)
 	}
 	return items, rows.Err()
@@ -314,6 +336,7 @@ func (s *Server) buildHomeFeed(ctx context.Context, p identity.Principal) (HomeF
 		return HomeFeedResponse{}, err
 	}
 	continued := make([]HistoryItem, 0)
+	saved := make([]StreamItem, 0)
 	if p.UserID != "" && p.Verified {
 		continued, err = s.historyItems(ctx, p, 15, historyCursor{At: time.Now().Add(24 * time.Hour), ID: strings.Repeat("z", 512)}, true)
 		if err != nil {
@@ -322,18 +345,36 @@ func (s *Server) buildHomeFeed(ctx context.Context, p identity.Principal) (HomeF
 		if len(continued) > 15 {
 			continued = continued[:15]
 		}
+		saved, err = s.savedFeedItems(ctx, p, 24)
+		if err != nil {
+			return HomeFeedResponse{}, err
+		}
 	}
 	hero := courses
 	if len(hero) > 3 {
 		hero = hero[:3]
 	}
+	feedRows := make([]HomeFeedRow, 0, 5)
+	feedRows = append(feedRows, HomeFeedRow{ID: "continue-watching", Title: "Continue Watching", Kind: "lecture_card", Items: continued})
+	if len(saved) > 0 {
+		feedRows = append(feedRows, HomeFeedRow{ID: "my-list", Title: "My List", Kind: "saved_card", Items: saved})
+	}
+	if len(trending) > 0 {
+		feedRows = append(feedRows, HomeFeedRow{ID: "trending-top-10", Title: "Top 10 This Week", Kind: "rank_card", Items: trending})
+	}
+	enrolled := make([]CourseCard, 0)
+	for _, c := range courses {
+		if c.Enrolled {
+			enrolled = append(enrolled, c)
+		}
+	}
+	if len(enrolled) > 0 {
+		feedRows = append(feedRows, HomeFeedRow{ID: "for-you", Title: "Your courses", Kind: "course_card", Items: enrolled})
+	}
+	feedRows = append(feedRows, HomeFeedRow{ID: "featured-titles", Title: "Featured Titles", Kind: "course_card", Items: courses})
 	return HomeFeedResponse{
 		Hero: hero,
-		Rows: []HomeFeedRow{
-			{ID: "continue-watching", Title: "Continue Watching", Kind: "lecture_card", Items: continued},
-			{ID: "trending-top-10", Title: "Top 10 This Week", Kind: "rank_card", Items: trending},
-			{ID: "featured-titles", Title: "Featured Titles", Kind: "course_card", Items: courses},
-		},
+		Rows: feedRows,
 	}, nil
 }
 

@@ -102,6 +102,31 @@ export async function installContractFixture(context: BrowserContext, options: {
           })
           .map(lesson => ({ ...lesson, ...currentProgress(lesson.id) })),
       });
+    if (path === '/streaming/trending') return json(route, { items: [] });
+    if (path === '/streaming/home-feed')
+      return json(route, {
+        hero: [course],
+        rows: [
+          {
+            id: 'continue-watching',
+            title: 'Continue Watching',
+            kind: 'lecture_card',
+            items: lessons
+              .filter(lesson => {
+                const item = progress.get(lesson.id);
+                return item && item.position > 10 && !item.completed;
+              })
+              .map(lesson => ({ ...lesson, ...currentProgress(lesson.id) })),
+          },
+          {
+            id: 'my-list',
+            title: 'My List',
+            kind: 'saved_card',
+            items: [...saved.values()],
+          },
+          { id: 'featured-titles', title: 'Featured Titles', kind: 'course_card', items: [course] },
+        ],
+      });
     if (path === '/streaming/my-list') {
       if (method === 'POST') {
         saved.set(`${body.item_type}:${body.item_id}`, {

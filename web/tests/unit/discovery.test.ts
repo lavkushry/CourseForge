@@ -1,5 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { courseCover, parseContinued, parseSaved } from '../../src/discovery/contracts';
+import {
+  courseCover,
+  measuredTrending,
+  parseContinued,
+  parseHomeFeed,
+  parseSaved,
+  parseTrending,
+  personalRowsFromHomeFeed,
+} from '../../src/discovery/contracts';
+import { toTitleCase, cleanLessonTitle, formatModuleBadge, createSvgThumbnailDataUri } from '../../src/discovery/view';
 
 describe('untrusted discovery responses', () => {
   it('accepts saved course and lesson ownership metadata, including empty lists', () => {
@@ -41,8 +53,6 @@ describe('untrusted discovery responses', () => {
   });
 });
 
-import { toTitleCase, cleanLessonTitle, formatModuleBadge, createSvgThumbnailDataUri } from '../../src/discovery/view';
-
 describe('dribbble LMS title and badge refinement helpers', () => {
   it('formats titles in clean Title Case preserving acronyms', () => {
     expect(toTitleCase('AI & AGENTS')).toBe('AI & Agents');
@@ -67,8 +77,14 @@ describe('dribbble LMS title and badge refinement helpers', () => {
     expect(cleanLessonTitle('Lesson 1 — Playback and progress')).toBe('Lesson 1 — Playback and progress');
     expect(cleanLessonTitle('Lesson 2')).toBe('Lesson 2');
     expect(cleanLessonTitle('[226] Week 18 Web Development React Part 1 15052026')).toBe('Web Development React Part 1');
-    expect(cleanLessonTitle('[044] Module 12 (Case Study 1 — Payment Tracking App (Splitwise) Design & Machine Coding) - Simplified Balances algorithm 1')).toBe('Simplified Balances algorithm 1');
-    expect(cleanLessonTitle('[045] Module 08 (LangChain) Day 44 Tool Calling, Custom Tools & LangChain Agents')).toBe('Day 44 Tool Calling, Custom Tools & LangChain Agents');
+    expect(
+      cleanLessonTitle(
+        '[044] Module 12 (Case Study 1 — Payment Tracking App (Splitwise) Design & Machine Coding) - Simplified Balances algorithm 1',
+      ),
+    ).toBe('Simplified Balances algorithm 1');
+    expect(cleanLessonTitle('[045] Module 08 (LangChain) Day 44 Tool Calling, Custom Tools & LangChain Agents')).toBe(
+      'Day 44 Tool Calling, Custom Tools & LangChain Agents',
+    );
   });
 
   it('shortens module badges concisely to Title Case Module X / Week X', () => {
@@ -87,5 +103,97 @@ describe('dribbble LMS title and badge refinement helpers', () => {
     expect(uri.startsWith('data:image/svg+xml;utf8,')).toBe(true);
     expect(decodeURIComponent(uri)).toContain('<svg');
     expect(decodeURIComponent(uri)).toContain('Introduction to Python');
+  });
+});
+
+describe('streaming feed honesty parsers', () => {
+  const measured = {
+    rank: 1,
+    lesson_id: 'lesson-z',
+    title: 'First',
+    course_id: 'course-a',
+    duration_seconds: 120,
+    viewers: 2,
+  };
+
+  it('accepts measured trending ranks and rejects zero-viewer popularity chrome', () => {
+    expect(parseTrending({ items: [measured] })[0]?.viewers).toBe(2);
+    expect(measuredTrending(parseTrending({ items: [measured] }))).toHaveLength(1);
+    expect(() => parseTrending({ items: [{ ...measured, viewers: 0 }] })).toThrow();
+    expect(() => parseTrending({ items: [{ ...measured, rank: 0 }] })).toThrow();
+  });
+
+  it('allows ranked home-feed rows only when trending items are measured', () => {
+    const feed = parseHomeFeed({
+      hero: [{ id: 'course-a', title: 'Published A' }],
+      rows: [
+        { id: 'continue-watching', title: 'Continue Watching', kind: 'lecture_card', items: [] },
+        { id: 'trending-top-10', title: 'Top 10 This Week', kind: 'rank_card', items: [measured] },
+        { id: 'featured-titles', title: 'Featured Titles', kind: 'course_card', items: [] },
+      ],
+    });
+    expect(feed.rows.some(row => row.kind === 'rank_card')).toBe(true);
+    expect(() =>
+      parseHomeFeed({
+        hero: [],
+        rows: [{ id: 'trending-top-10', title: 'Top 10 This Week', kind: 'rank_card', items: [] }],
+      }),
+    ).toThrow();
+    expect(() =>
+      parseHomeFeed({
+        hero: [],
+        rows: [{ id: 'fake-rank', title: 'Top 10', kind: 'rank_card', items: [measured] }],
+      }),
+    ).toThrow();
+  });
+
+  it('extracts continue/saved/trending from home-feed without inventing rows', () => {
+    const lesson = {
+      id: 'lesson-z',
+      course_id: 'course-a',
+      title: 'Lesson',
+      duration_seconds: 30,
+      position: 12,
+      percent: 30,
+      completed: false,
+    };
+    const feed = parseHomeFeed({
+      hero: [{ id: 'course-a', title: 'Published A' }],
+      rows: [
+        { id: 'continue-watching', title: 'Continue Watching', kind: 'lecture_card', items: [lesson] },
+        {
+          id: 'my-list',
+          title: 'My List',
+          kind: 'saved_card',
+          items: [{ id: 'course-a', item_type: 'course', course_id: 'course-a', title: 'Published A' }],
+        },
+        { id: 'trending-top-10', title: 'Top 10 This Week', kind: 'rank_card', items: [measured] },
+      ],
+    });
+    const personal = personalRowsFromHomeFeed(feed);
+    expect(personal.continued[0]?.position).toBe(12);
+    expect(personal.saved[0]?.id).toBe('course-a');
+    expect(personal.trending[0]?.viewers).toBe(2);
+    expect(personalRowsFromHomeFeed(parseHomeFeed({ hero: [], rows: [] }))).toEqual({
+      continued: [],
+      saved: [],
+      trending: [],
+    });
+  });
+});
+
+describe('discovery honesty chrome', () => {
+  it('does not ship fabricated Match/% popularity or unverified tech badges', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '../../src/discovery');
+    const view = readFileSync(join(root, 'view.ts'), 'utf8');
+    const syllabus = readFileSync(join(root, 'syllabus-dialog.ts'), 'utf8');
+    expect(view).not.toMatch(/98%\s*Match/);
+    expect(view).not.toMatch(/hero-badge-match/);
+    expect(view).not.toMatch(/4K Ultra HD/);
+    expect(view).not.toMatch(/Dolby Audio/);
+    expect(view).not.toMatch(/Top 10 Masterclasses/);
+    expect(view).toMatch(/measuredTrending/);
+    expect(view).toMatch(/Top 10 This Week/);
+    expect(syllabus).not.toMatch(/1080p HD/);
   });
 });

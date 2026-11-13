@@ -26,6 +26,18 @@ describe('autoplay navigation', () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(next).toHaveBeenCalledOnce();
   });
+
+  it('does not navigate when ended has no next lesson', async () => {
+    const next = vi.fn();
+    const countdown = vi.fn();
+    const navigator = new EndNavigation(next, countdown, clock);
+    navigator.preference(true);
+    navigator.ended(false);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(next).not.toHaveBeenCalled();
+    expect(countdown).toHaveBeenCalledWith(null);
+    expect(countdown).not.toHaveBeenCalledWith(expect.any(Number));
+  });
   it('disabling autoplay during a countdown cancels navigation', async () => {
     const next = vi.fn();
     const navigator = new EndNavigation(next, vi.fn(), clock);

@@ -141,6 +141,12 @@ body.academy-studio-mode .app-layout-shell {
   padding: 10px 10px var(--space-1);
 }
 
+/* Icon rail hides section labels; studio + mobile drawer reveal them. */
+.lms-nav-section {
+  display: none;
+  margin: 0;
+}
+
 .academy-side-nav {
   display: flex;
   flex-direction: column;
@@ -572,6 +578,18 @@ body.academy-studio-mode .workspace {
     overflow: visible;
     text-overflow: clip;
     overflow-wrap: anywhere;
+  }
+
+  body.mobile-menu-open #primary-nav.lms-left-rail .lms-nav-section {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 8px 4px 0;
+    padding: 0 4px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6c738f;
   }
 }
 
@@ -1860,6 +1878,21 @@ body.academy-studio-mode .workspace {
     font-size: 13.5px;
     font-weight: 500;
     color: inherit;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-section {
+    display: block;
+    margin: 12px 8px 4px;
+    padding: 0 4px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6c738f;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-section:first-child {
+    margin-top: 2px;
   }
 
   body.academy-studio-mode .app-layout-shell {

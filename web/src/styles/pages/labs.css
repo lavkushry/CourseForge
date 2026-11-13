@@ -2,6 +2,23 @@
    Labs Workspace
    ========================================================================== */
 
+.labs-unavailable-banner {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+}
+
+.labs-unavailable-banner strong {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.labs-starter-placeholder {
+  margin: 0;
+  white-space: pre-wrap;
+  min-height: 180px;
+  opacity: 0.85;
+}
+
 .labs-layout-grid {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);

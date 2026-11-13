@@ -393,7 +393,32 @@
 }
 
 .continue-section {
-  margin-top: var(--space-9);
+  margin: 0 0 var(--row-gap, 2.25rem);
+}
+
+.continue-section .row-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.continue-section .row-heading .eyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.continue-section .row-heading h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: #fff;
 }
 
 .continue-row {

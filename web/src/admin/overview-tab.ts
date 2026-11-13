@@ -1,14 +1,19 @@
 import { emptyState, escapeHtml } from '../components';
 import type { AdminHost } from './host';
+import { adminCatalogCount, adminOverviewEmptyCopy, adminOverviewFailureCopy } from './status';
 import { button, el, initialsOf, isSyntheticEmail } from './helpers';
 
 export function renderOverviewTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
-  if (!host.overviewData)
+  if (!host.overviewData) {
+    const copy = host.overviewError
+      ? adminOverviewFailureCopy(host.overviewError)
+      : adminOverviewEmptyCopy();
     return emptyState({
-      title: 'No overview data available.',
-      description: 'Refresh the command center once metrics are ready.',
+      title: copy.title,
+      description: copy.description,
     });
+  }
   const s = host.overviewData.summary;
 
   const grid = el('div', 'admin-metrics-grid');
@@ -46,7 +51,7 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
     el(
       'p',
       'muted',
-      'Grant or revoke access to any of the 29 courses, invite new students, manage roles, or revoke active sessions.',
+      'Grant or revoke measured catalog access, invite new students, manage roles, or revoke active sessions.',
     ),
   );
   const openDirectoryBtn = button(
@@ -64,7 +69,7 @@ export function renderOverviewTab(host: AdminHost): HTMLElement {
   const previewUsers = host.users.filter(u => !isSyntheticEmail(u.email)).slice(0, 6);
   if (previewUsers.length > 0) {
     const quickGrid = el('div', 'admin-student-quick-grid');
-    const totalCatalog = host.catalogCourses.length || s.courses || 29;
+    const totalCatalog = adminCatalogCount(host.catalogCourses.length, host.overviewData);
     for (const u of previewUsers) {
       const card = el('div', 'admin-student-quick-card');
       const top = el('div', 'quick-student-top');

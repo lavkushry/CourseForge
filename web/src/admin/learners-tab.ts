@@ -1,10 +1,11 @@
 import { svgIcon } from '../icons';
 import type { AdminHost } from './host';
+import { adminCatalogCount } from './status';
 import { button, el, initialsOf, isSyntheticEmail } from './helpers';
 
 export function renderLearnersTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
-  const totalCatalog = host.catalogCourses.length || host.overviewData?.summary.courses || 29;
+  const totalCatalog = adminCatalogCount(host.catalogCourses.length, host.overviewData);
 
   // 1. Provision / Invite New Student Card
   const inviteCard = el('div', 'admin-invite-card');
@@ -16,7 +17,7 @@ export function renderLearnersTab(host: AdminHost): HTMLElement {
     el(
       'p',
       'muted',
-      'Create a verified student invitation and immediately grant access to a specific course or the entire 29-course catalog.',
+      'Create a verified student invitation and grant access to a measured catalog course (or all currently loaded catalog courses).',
     ),
   );
   inviteHead.append(inviteTitleRow);

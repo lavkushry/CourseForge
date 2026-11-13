@@ -1,18 +1,32 @@
 import type { HttpClient } from './http';
 
-export function aiStatus(
-  client: HttpClient,
-  signal?: AbortSignal,
-): Promise<{
-  pgvector_active: boolean;
-  vector_dimensions: number;
-  embeddings_count: number;
-  transcript_chunks: number;
-  ollama_online: boolean;
-  ollama_embedding_model: string;
-  ollama_chat_model: string;
-}> {
-  return client.request('/ai/status', signal ? { signal } : {});
+import type { AiDependencyStatus } from '../ai/status';
+
+function object(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Invalid AI status response');
+  }
+  return value as Record<string, unknown>;
+}
+
+export function parseAiStatus(value: unknown): AiDependencyStatus {
+  const data = object(value);
+  return {
+    pgvector_active: data.pgvector_active === true,
+    vector_dimensions: typeof data.vector_dimensions === 'number' ? data.vector_dimensions : 0,
+    embeddings_count: typeof data.embeddings_count === 'number' ? data.embeddings_count : 0,
+    transcript_chunks: typeof data.transcript_chunks === 'number' ? data.transcript_chunks : 0,
+    ollama_online: data.ollama_online === true,
+    ollama_embedding_model:
+      typeof data.ollama_embedding_model === 'string' ? data.ollama_embedding_model : '',
+    ollama_chat_model: typeof data.ollama_chat_model === 'string' ? data.ollama_chat_model : '',
+    qdrant_configured: data.qdrant_configured === true,
+    qdrant_online: data.qdrant_online === true,
+  };
+}
+
+export function aiStatus(client: HttpClient, signal?: AbortSignal): Promise<AiDependencyStatus> {
+  return client.request('/ai/status', signal ? { signal } : {}).then(parseAiStatus);
 }
 
 export function aiAsk(

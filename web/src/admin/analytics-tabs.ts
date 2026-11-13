@@ -1,3 +1,4 @@
+import { emptyState } from '../components';
 import type { AdminHost } from './host';
 import { button, el } from './helpers';
 
@@ -5,8 +6,25 @@ export function renderFunnelsTab(host: AdminHost): HTMLElement {
   const wrap = el('div', 'admin-tab-pane');
   wrap.append(el('h2', '', 'Course Conversion Funnels'));
 
-  if (!host.overviewData || !host.overviewData.funnels.length) {
-    wrap.append(el('p', 'muted', 'No course funnel metrics recorded yet.'));
+  if (!host.overviewData) {
+    wrap.append(
+      emptyState({
+        className: 'admin-empty-state',
+        title: host.overviewError ? 'Could not load funnel metrics' : 'No overview data yet',
+        description: host.overviewError || 'Funnel conversion is not invented when overview is empty.',
+      }),
+    );
+    return wrap;
+  }
+
+  if (!host.overviewData.funnels.length) {
+    wrap.append(
+      emptyState({
+        className: 'admin-empty-state',
+        title: 'No course funnel metrics recorded yet',
+        description: 'Enrollment and start counts appear here when measured — not fabricated engagement.',
+      }),
+    );
     return wrap;
   }
 

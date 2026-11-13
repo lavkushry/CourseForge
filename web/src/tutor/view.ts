@@ -1,17 +1,12 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
-import { errorMessage } from '../api';
+import { errorMessage, isAbort } from '../api';
 import type { Course, User } from '../contracts';
 import type { TutorSource } from '../learning/contracts';
 import { cleanLessonTitle } from '../discovery/view';
 import { appendExploreCitation } from '../spatial/ui';
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
+import { el, emptyState } from '../components';
+import { tutorIsReady, tutorUnavailableCopy, type TutorAiStatus } from './status';
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -31,6 +26,11 @@ export class TutorView {
   private selectedScope = 'all';
   private tutorMode: 'explain' | 'notes' | 'quiz' | 'lab' = 'explain';
   private busy = false;
+  private statusLoading = false;
+  private aiStatus: TutorAiStatus | null = null;
+  private statusError: string | null = null;
+  private askError: string | null = null;
+  private loadSignal: AbortSignal | null = null;
   private history: Array<{
     question: string;
     answer: string;
@@ -49,8 +49,6 @@ export class TutorView {
   }
 
   private loadUserHistory(): void {
-    // Purge the pre-isolation shared bucket: history stored under the old
-    // 'guest' fallback key was readable by every user of this browser.
     try {
       localStorage.removeItem('courseforge_tutor_history_guest');
     } catch {}
@@ -84,17 +82,41 @@ export class TutorView {
     } catch {}
   }
 
+  private get tutorReady(): boolean {
+    return tutorIsReady(this.aiStatus);
+  }
+
   activate(signal: AbortSignal): void {
     this.options.root.hidden = false;
+    this.loadSignal = signal;
+    this.statusLoading = true;
+    this.statusError = null;
+    this.askError = null;
     this.render();
 
-    void this.options.api
-      .courses('', signal)
-      .then(res => {
-        this.courses = res.courses.filter(c => !c.id.startsWith('fixture-'));
-        this.render();
-      })
-      .catch(() => {});
+    void Promise.allSettled([
+      this.options.api.courses('', signal),
+      this.options.api.aiStatus(signal),
+    ]).then(([coursesRes, statusRes]) => {
+      if (signal.aborted) return;
+      if (coursesRes.status === 'fulfilled') {
+        this.courses = coursesRes.value.courses.filter(c => !c.id.startsWith('fixture-'));
+      }
+      if (statusRes.status === 'fulfilled') {
+        this.aiStatus = {
+          ollama_online: statusRes.value.ollama_online === true,
+          pgvector_active: statusRes.value.pgvector_active === true,
+          transcript_chunks: statusRes.value.transcript_chunks || 0,
+          ollama_chat_model: statusRes.value.ollama_chat_model || '',
+        };
+        this.statusError = null;
+      } else if (!isAbort(statusRes.reason)) {
+        this.aiStatus = null;
+        this.statusError = errorMessage(statusRes.reason);
+      }
+      this.statusLoading = false;
+      this.render();
+    });
   }
 
   deactivate(): void {
@@ -114,17 +136,63 @@ export class TutorView {
       el(
         'p',
         'muted page-subtitle',
-        'Grounded explanations and study notes drawn exclusively from your masterclass lectures with clickable video timestamps.',
+        'Grounded answers require a local Ollama chat model and indexed lecture chunks. No fabricated replies when AI is offline.',
       ),
     );
     pageHead.append(headText);
     root.append(pageHead);
 
+    if (this.statusLoading) {
+      root.append(el('p', 'muted', 'Checking AI tutor availability…'));
+      return;
+    }
+
+    if (this.statusError) {
+      const retry = el('button', 'button primary');
+      retry.type = 'button';
+      retry.textContent = 'Retry status';
+      retry.addEventListener('click', () => {
+        this.activate(this.loadSignal && !this.loadSignal.aborted ? this.loadSignal : new AbortController().signal);
+      });
+      root.append(
+        emptyState({
+          className: 'catalog-empty tutor-empty-state',
+          icon: 'bulb',
+          title: 'Could not reach AI status',
+          description: this.statusError,
+          action: retry,
+        }),
+      );
+      return;
+    }
+
+    if (!this.tutorReady) {
+      const unavailable = tutorUnavailableCopy(this.aiStatus);
+      root.append(
+        emptyState({
+          className: 'catalog-empty tutor-empty-state',
+          icon: 'bulb',
+          title: unavailable.title,
+          description: unavailable.description,
+        }),
+      );
+      if (this.history.length > 0) {
+        root.append(this.renderHistoryFeed());
+      }
+      return;
+    }
+
     const layout = el('div', 'tutor-page-layout');
     const mainCol = el('div', 'tutor-main-col');
 
-    // 1. Scope & Mode Controls
     const controlsCard = el('div', 'panel tutor-controls-card');
+    const statusLine = el(
+      'p',
+      'muted tutor-status-line',
+      `Ollama online · ${this.aiStatus?.ollama_chat_model || 'chat model'} · ${this.aiStatus?.transcript_chunks ?? 0} indexed chunks${
+        this.aiStatus?.pgvector_active ? ' · pgvector active' : ' · pgvector inactive'
+      }`,
+    );
 
     const scopeRow = el('div', 'tutor-scope-row');
     const scopeLabel = el('label', 'field-label');
@@ -146,7 +214,6 @@ export class TutorView {
     scopeLabel.append(scopeSelect);
     scopeRow.append(scopeLabel);
 
-    // Modes Bar
     const modesBar = el('div', 'tutor-modes-bar');
     for (const [mKey, mLabel] of [
       ['explain', 'Explain Concepts'],
@@ -163,33 +230,13 @@ export class TutorView {
       modesBar.append(btn);
     }
 
-    controlsCard.append(scopeRow, modesBar);
+    controlsCard.append(statusLine, scopeRow, modesBar);
     mainCol.append(controlsCard);
 
-    // 2. Clickable Prompt Suggestions
-    const suggestionsCard = el('div', 'tutor-suggestions-wrap');
-    suggestionsCard.append(el('span', 'suggestions-heading', 'RECOMMENDED PROMPTS'));
-    const suggestionsRow = el('div', 'tutor-suggestions-row');
-    for (const s of [
-      'Explain how Distributed Systems maintain consensus and quorum.',
-      'Compare Apache Spark RDDs vs DataFrames with memory layout trade-offs.',
-      'Create a concise study guide on Agentic AI tool-calling and LangGraph state machines.',
-    ]) {
-      const pill = el('button', 'prompt-pill', s);
-      pill.type = 'button';
-      pill.addEventListener('click', () => {
-        const input = mainCol.querySelector<HTMLTextAreaElement>('#tutor-question-input');
-        if (input) {
-          input.value = s;
-          input.focus();
-        }
-      });
-      suggestionsRow.append(pill);
+    if (this.askError) {
+      mainCol.append(el('p', 'planning-status-alert', this.askError));
     }
-    suggestionsCard.append(suggestionsRow);
-    mainCol.append(suggestionsCard);
 
-    // 3. Question Form
     const formCard = el('div', 'panel tutor-ask-card');
     const form = el('form', 'tutor-ask-form');
     const textarea = el('textarea', 'form-input tutor-textarea');
@@ -199,7 +246,6 @@ export class TutorView {
     textarea.rows = 3;
     textarea.required = true;
 
-    // Support Enter to submit
     textarea.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -209,12 +255,12 @@ export class TutorView {
 
     const askFooter = el('div', 'tutor-ask-footer');
     const hint = el('span', 'tutor-latency-badge');
-    hint.append(svgIcon('zap'), el('span', '', ' Answers synthesized from lecture transcripts in <3 seconds'));
+    hint.append(svgIcon('zap'), el('span', '', ' Grounded answers only — no offline placeholders'));
 
     const submitBtn = el('button', 'button primary tutor-submit-btn');
     submitBtn.type = 'submit';
     submitBtn.disabled = this.busy;
-    submitBtn.append(svgIcon('send'), el('span', '', this.busy ? ' Synthesizing…' : ' Ask Tutor'));
+    submitBtn.append(svgIcon('send'), el('span', '', this.busy ? ' Asking…' : ' Ask Tutor'));
 
     askFooter.append(hint, submitBtn);
     form.append(textarea, askFooter);
@@ -224,8 +270,14 @@ export class TutorView {
       e.preventDefault();
       const question = textarea.value.trim();
       if (!question || this.busy) return;
+      if (!this.tutorReady) {
+        this.askError = 'AI tutor is offline. Answers are not fabricated.';
+        this.render();
+        return;
+      }
 
       this.busy = true;
+      this.askError = null;
       this.render();
 
       try {
@@ -247,8 +299,9 @@ export class TutorView {
           timestamp: new Date(),
         });
         this.saveUserHistory();
+        this.askError = null;
       } catch (err) {
-        alert(errorMessage(err));
+        this.askError = errorMessage(err);
       } finally {
         this.busy = false;
         this.render();
@@ -257,84 +310,84 @@ export class TutorView {
 
     mainCol.append(formCard);
 
-    // 4. Conversation Feed
     if (this.history.length > 0) {
-      const feed = el('div', 'tutor-feed');
-      const feedHead = el('div', 'tutor-feed-head');
-      feedHead.style.display = 'flex';
-      feedHead.style.justifyContent = 'space-between';
-      feedHead.style.alignItems = 'center';
-      feedHead.append(el('h3', 'tutor-feed-heading', 'Conversation History'));
-      const clearBtn = el('button', 'button quiet', 'Clear History');
-      clearBtn.type = 'button';
-      clearBtn.addEventListener('click', () => {
-        this.history = [];
-        try {
-          if (this.storageKey) localStorage.removeItem(this.storageKey);
-        } catch {}
-        this.render();
-      });
-      feedHead.append(clearBtn);
-      feed.append(feedHead);
-
-      for (const h of this.history) {
-        const threadItem = el('div', 'tutor-thread-item');
-
-        // User Question Bubble
-        const userBubble = el('div', 'tutor-user-bubble');
-        const userAvatar = el('div', 'user-avatar-pill');
-        userAvatar.append(svgIcon('user'));
-        const userText = el('p', 'user-question-text', h.question);
-        userBubble.append(userAvatar, userText);
-
-        // Assistant Response Card
-        const assistCard = el('div', 'tutor-response-card');
-        const assistHead = el('div', 'tutor-response-head');
-        const aiAvatar = el('div', 'ai-avatar-pill');
-        aiAvatar.append(svgIcon('bulb'));
-        const aiTitle = el('div', 'ai-title-wrap');
-        aiTitle.append(el('strong', '', 'CourseForge AI Partner'), el('span', 'tag mode-tag', h.mode.toUpperCase()));
-        assistHead.append(aiAvatar, aiTitle);
-
-        const answerBody = el('div', 'tutor-response-body', h.answer);
-
-        assistCard.append(assistHead, answerBody);
-
-        if (h.sources.length > 0) {
-          const sourcesBox = el('div', 'tutor-sources-box');
-          sourcesBox.append(el('span', 'sources-box-heading', 'GROUNDED LECTURE SOURCES'));
-          const sourcesGrid = el('div', 'tutor-sources-grid');
-
-          for (const s of h.sources) {
-            const cite = el('button', 'citation-link-card');
-            cite.type = 'button';
-            const citeIcon = el('span', 'cite-icon');
-            citeIcon.append(svgIcon('play'));
-            const citeText = el(
-              'span',
-              'cite-title',
-              `${cleanLessonTitle(s.lesson_title)} · ${formatTime(s.start_seconds)}`,
-            );
-            cite.append(citeIcon, citeText);
-            cite.addEventListener('click', () => {
-              this.options.onNavigateLesson(s.lesson_id, s.start_seconds);
-            });
-            sourcesGrid.append(cite);
-            appendExploreCitation(sourcesGrid, this.options.api, s, seconds => {
-              this.options.onNavigateLesson(s.lesson_id, seconds);
-            });
-          }
-          sourcesBox.append(sourcesGrid);
-          assistCard.append(sourcesBox);
-        }
-
-        threadItem.append(userBubble, assistCard);
-        feed.append(threadItem);
-      }
-      mainCol.append(feed);
+      mainCol.append(this.renderHistoryFeed());
     }
 
     layout.append(mainCol);
     root.append(layout);
+  }
+
+  private renderHistoryFeed(): HTMLElement {
+    const feed = el('div', 'tutor-feed');
+    const feedHead = el('div', 'tutor-feed-head');
+    feedHead.style.display = 'flex';
+    feedHead.style.justifyContent = 'space-between';
+    feedHead.style.alignItems = 'center';
+    feedHead.append(el('h3', 'tutor-feed-heading', 'Conversation History'));
+    const clearBtn = el('button', 'button quiet', 'Clear History');
+    clearBtn.type = 'button';
+    clearBtn.addEventListener('click', () => {
+      this.history = [];
+      try {
+        if (this.storageKey) localStorage.removeItem(this.storageKey);
+      } catch {}
+      this.render();
+    });
+    feedHead.append(clearBtn);
+    feed.append(feedHead);
+
+    for (const h of this.history) {
+      const threadItem = el('div', 'tutor-thread-item');
+
+      const userBubble = el('div', 'tutor-user-bubble');
+      const userAvatar = el('div', 'user-avatar-pill');
+      userAvatar.append(svgIcon('user'));
+      const userText = el('p', 'user-question-text', h.question);
+      userBubble.append(userAvatar, userText);
+
+      const assistCard = el('div', 'tutor-response-card');
+      const assistHead = el('div', 'tutor-response-head');
+      const aiAvatar = el('div', 'ai-avatar-pill');
+      aiAvatar.append(svgIcon('bulb'));
+      const aiTitle = el('div', 'ai-title-wrap');
+      aiTitle.append(el('strong', '', 'CourseForge AI Partner'), el('span', 'tag mode-tag', h.mode.toUpperCase()));
+      assistHead.append(aiAvatar, aiTitle);
+
+      const answerBody = el('div', 'tutor-response-body', h.answer);
+      assistCard.append(assistHead, answerBody);
+
+      if (h.sources.length > 0) {
+        const sourcesBox = el('div', 'tutor-sources-box');
+        sourcesBox.append(el('span', 'sources-box-heading', 'GROUNDED LECTURE SOURCES'));
+        const sourcesGrid = el('div', 'tutor-sources-grid');
+
+        for (const s of h.sources) {
+          const cite = el('button', 'citation-link-card');
+          cite.type = 'button';
+          const citeIcon = el('span', 'cite-icon');
+          citeIcon.append(svgIcon('play'));
+          const citeText = el(
+            'span',
+            'cite-title',
+            `${cleanLessonTitle(s.lesson_title)} · ${formatTime(s.start_seconds)}`,
+          );
+          cite.append(citeIcon, citeText);
+          cite.addEventListener('click', () => {
+            this.options.onNavigateLesson(s.lesson_id, s.start_seconds);
+          });
+          sourcesGrid.append(cite);
+          appendExploreCitation(sourcesGrid, this.options.api, s, seconds => {
+            this.options.onNavigateLesson(s.lesson_id, seconds);
+          });
+        }
+        sourcesBox.append(sourcesGrid);
+        assistCard.append(sourcesBox);
+      }
+
+      threadItem.append(userBubble, assistCard);
+      feed.append(threadItem);
+    }
+    return feed;
   }
 }
