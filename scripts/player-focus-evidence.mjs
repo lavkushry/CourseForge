@@ -310,8 +310,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-VjjJf-_E.js',
-    css: 'index-DwzxyWM6.css',
+    js: 'index-CWF9WCiE.js',
+    css: 'index-CenmVDHJ.css',
   },
   phone: {
     ok: phone.ok,

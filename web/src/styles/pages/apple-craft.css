@@ -1707,11 +1707,13 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     letter-spacing: 0.02em;
   }
 
-  /* Sheet open: stage is a tight 16:9 strip — no tall letterbox waste above the sheet */
+  /* Sheet open: player fills the band above the sheet (no empty black spacer) */
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column,
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-column {
-    grid-template-rows: auto !important;
-    align-content: start !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    height: calc(100dvh - 44dvh - 40px - var(--safe-top)) !important;
+    max-height: calc(100dvh - 44dvh - 40px - var(--safe-top)) !important;
+    align-content: stretch !important;
     justify-items: stretch !important;
   }
 
@@ -1719,13 +1721,13 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-stage,
   #classroom.focus-workspace:not(.dock-collapsed) #player-wrap,
   #classroom.focus-workspace:not(.drawer-collapsed) #player-wrap {
-    flex: none !important;
+    flex: 1 1 auto !important;
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     min-height: 0 !important;
-    max-height: calc(100dvh - 44dvh - 40px - var(--safe-top) - var(--safe-bottom)) !important;
-    aspect-ratio: 16 / 9 !important;
-    margin: 0 auto !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
   }
 
   #classroom.focus-workspace:not(.dock-collapsed) #media-controller,
@@ -1734,6 +1736,11 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   #classroom.focus-workspace:not(.drawer-collapsed) media-controller {
     position: absolute !important;
     inset: 0 !important;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #lesson-video,
+  #classroom.focus-workspace:not(.drawer-collapsed) #lesson-video {
+    object-fit: contain !important;
   }
 
   /* Hide meta strip while a sheet is open — stops Complete/Next peeking under chrome */
