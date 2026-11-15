@@ -28,6 +28,20 @@ function seekWhenReady(ctx: AppContext, position: number | undefined, tries = 24
   attempt();
 }
 
+/** Play/open for watch: enroll when needed so lesson lease is not blocked by preview. */
+async function openCourseForWatch(ctx: AppContext, id: string, preview: boolean): Promise<void> {
+  let asPreview = preview;
+  if (asPreview && ctx.user && ctx.user.role !== 'admin') {
+    try {
+      await ctx.api.enroll(id, ctx.navigationScope.signal);
+      asPreview = false;
+    } catch (err) {
+      if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
+    }
+  }
+  await ctx.loadCourse(id, asPreview);
+}
+
 /** Eager: discovery/library/history/settings + player helpers. Heavy studio panels load on first visit. */
 export function installFeatureBootstraps(ctx: AppContext): void {
   ctx.bootstrapFeatureViews = function bootstrapFeatureViews(account: User): void {
@@ -74,7 +88,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         void ctx.openCourseSyllabus(course);
       },
       onPlayCourse: course => {
-        void ctx.loadCourse(course.id, !course.enrolled);
+        void openCourseForWatch(ctx, course.id, !course.enrolled);
       },
       onContinueLesson: (courseId, lessonId, position) => {
         void ctx.resumeLesson(courseId, lessonId).then(() => seekWhenReady(ctx, position));
@@ -235,7 +249,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.discovery = new DiscoveryView({
       api: ctx.api,
       open: (id, preview) => {
-        void ctx.loadCourse(id, preview);
+        void openCourseForWatch(ctx, id, preview);
       },
       resume: (id, lessonId, position) => {
         void ctx.resumeLesson(id, lessonId).then(() => seekWhenReady(ctx, position));
@@ -253,7 +267,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
     ctx.omniSearch?.destroy();
     ctx.omniSearch = new OmniSearch({
       onSelectCourse: courseId => {
-        void ctx.loadCourse(courseId, true);
+        void openCourseForWatch(ctx, courseId, true);
       },
       onSelectLesson: (courseId, lessonId) => {
         void ctx.resumeLesson(courseId, lessonId);

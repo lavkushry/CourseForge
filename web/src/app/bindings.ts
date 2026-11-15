@@ -299,26 +299,50 @@ export function installBindings(ctx: AppContext): void {
     on('#mark-complete', () => {
       void ctx.markComplete();
     });
-    on('#save-note-pill', () => {
+    const syncStudyToolPressed = (tab: 'notes' | 'materials' | 'transcript' | null, dockOpen: boolean) => {
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(dockOpen));
+      document.querySelector('#focus-notes')?.setAttribute('aria-pressed', String(dockOpen && tab === 'notes'));
+      document
+        .querySelector('#focus-materials')
+        ?.setAttribute('aria-pressed', String(dockOpen && tab === 'materials'));
+    };
+
+    /** Open study dock on a tab without remounting the player / breaking lease. */
+    const openStudyTab = (tab: 'notes' | 'materials' | 'transcript') => {
       const classroom = required('#classroom');
       classroom.classList.remove('dock-collapsed');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'true');
+      // One sheet at a time on phone/desktop watch — curriculum stays out of the way.
+      classroom.classList.add('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(tab, true);
       const dock = document.querySelector<HTMLElement>('#focus-dock');
       if (ctx.studyRail && dock) {
-        ctx.studyRail.setTab('notes');
-        dock.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+        ctx.studyRail.setTab(tab);
+        if (tab === 'notes') {
+          window.requestAnimationFrame(() => dock.querySelector<HTMLTextAreaElement>('textarea')?.focus());
+        }
         return;
       }
-      const notesEl = document.querySelector<HTMLElement>('#notes');
-      if (notesEl) {
-        notesEl.hidden = false;
-        const noteInput = document.querySelector<HTMLTextAreaElement>('#note-content');
-        if (noteInput) {
-          noteInput.focus();
-          notesEl.scrollIntoView({ behavior: 'smooth' });
+      if (tab === 'notes') {
+        const notesEl = document.querySelector<HTMLElement>('#notes');
+        if (notesEl) {
+          notesEl.hidden = false;
+          document.querySelector<HTMLTextAreaElement>('#note-content')?.focus();
+          notesEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       }
-    });
+      if (tab === 'materials') {
+        const materialsEl = document.querySelector<HTMLElement>('#materials');
+        if (materialsEl) {
+          materialsEl.hidden = false;
+          materialsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    };
+
+    on('#save-note-pill', () => openStudyTab('notes'));
+    on('#focus-notes', () => openStudyTab('notes'));
+    on('#focus-materials', () => openStudyTab('materials'));
     on('#capture-pill', () => {
       document.querySelector<HTMLButtonElement>('#capture')?.click();
     });
@@ -326,11 +350,23 @@ export function installBindings(ctx: AppContext): void {
       const classroom = required('#classroom');
       const collapsed = classroom.classList.toggle('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', String(!collapsed));
+      if (!collapsed) {
+        // Opening lessons sheet closes study dock so sheets don't stack over the player.
+        classroom.classList.add('dock-collapsed');
+        syncStudyToolPressed(null, false);
+      }
     };
     const toggleDock = () => {
       const classroom = required('#classroom');
       const collapsed = classroom.classList.toggle('dock-collapsed');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(!collapsed));
+      if (!collapsed) {
+        classroom.classList.add('drawer-collapsed');
+        document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+        if (ctx.studyRail) ctx.studyRail.setTab('transcript');
+        syncStudyToolPressed('transcript', true);
+      } else {
+        syncStudyToolPressed(null, false);
+      }
     };
     on('#focus-curriculum', toggleDrawer);
     on('#focus-dock-toggle', toggleDock);
@@ -341,7 +377,7 @@ export function installBindings(ctx: AppContext): void {
       classroom.classList.add('drawer-collapsed');
       classroom.classList.add('dock-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(null, false);
     };
     ensureImmersiveWatch();
     const narrowCurriculum = window.matchMedia('(max-width: 900px)');

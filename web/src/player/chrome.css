@@ -31,14 +31,43 @@
   gap: 6px !important;
 }
 
-/* Hidden elements to maintain minimalist bar exactly matching reference shot */
+/* Hidden volume range / seek chips keep the bar calm; captions stay reachable (WCAG 1.2.2). */
 .player-enhanced media-seek-backward-button,
 .player-enhanced media-seek-forward-button,
 .player-enhanced media-volume-range,
-.player-enhanced media-captions-button,
 .player-enhanced .sr-only-speed,
 .player-enhanced .sr-only-actionable {
   display: none !important;
+}
+
+.player-enhanced media-captions-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: var(--touch-min, 44px) !important;
+  min-height: var(--touch-min, 44px) !important;
+}
+
+.player-enhanced .cinema-button:focus-visible,
+.player-enhanced media-play-button:focus-visible,
+.player-enhanced media-mute-button:focus-visible,
+.player-enhanced media-captions-button:focus-visible,
+.player-enhanced media-fullscreen-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7) !important;
+  outline-offset: 2px !important;
+}
+
+.player-enhanced .cinema-study-opener {
+  min-width: var(--touch-min, 44px);
+  min-height: var(--touch-min, 44px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-enhanced media-play-button,
+  .player-enhanced .cinema-button,
+  .player-enhanced .cinema-center-play {
+    transition: none !important;
+  }
 }
 
 /* Play/Pause Button on Far Left: Translucent Circular Pill */

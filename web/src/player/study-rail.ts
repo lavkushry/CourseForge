@@ -258,7 +258,7 @@ export class StudyRail {
     const tabs: Array<{ id: StudyRailTab; label: string }> = [
       { id: 'transcript', label: 'Transcript' },
       { id: 'notes', label: 'Notes' },
-      { id: 'materials', label: 'Resources' },
+      { id: 'materials', label: 'Materials' },
       { id: 'quiz', label: 'Quiz' },
       { id: 'tutor', label: 'Tutor' },
       { id: 'brief', label: 'Brief' },
@@ -1059,14 +1059,15 @@ export class StudyRail {
       list.append(el('p', 'muted', 'No transcript lines match that search.'));
     } else {
       for (const c of filtered) {
-        const row = el('div', 'transcript-row');
+        const row = el('button', 'transcript-row');
+        row.type = 'button';
         row.dataset.start = String(c.start);
         row.dataset.end = String(c.end);
-        const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
-        timeBtn.type = 'button';
-        timeBtn.title = `Jump to ${formatTime(c.start)}`;
-        timeBtn.addEventListener('click', () => this.options.seekTo(c.start));
-        row.append(timeBtn, el('p', 'transcript-text', c.text));
+        row.title = `Jump to ${formatTime(c.start)}`;
+        row.setAttribute('aria-label', `Seek to ${formatTime(c.start)}: ${c.text}`);
+        row.addEventListener('click', () => this.options.seekTo(c.start));
+        const time = el('span', 'transcript-seek-btn', formatTime(c.start));
+        row.append(time, el('span', 'transcript-text', c.text));
         list.append(row);
       }
     }

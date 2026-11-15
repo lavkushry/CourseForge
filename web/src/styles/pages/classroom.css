@@ -725,10 +725,22 @@ media-volume-range {
   padding: var(--space-2) 10px;
   border-radius: 6px;
   transition: background 0.15s;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .transcript-row:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.transcript-row:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
 }
 
 .transcript-seek-btn {

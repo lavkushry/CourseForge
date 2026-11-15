@@ -18,6 +18,10 @@ export interface ChromeActions {
   getQualityLevels?: () => Array<{ index: number; label: string }>;
   setQuality?: (levelIndex: number | 'auto') => void;
   getSelectedQuality?: () => number | 'auto';
+  /** Open notes/materials/capture without remounting the player (fullscreen-safe). */
+  openNotes?: () => void;
+  openMaterials?: () => void;
+  captureTimestamp?: () => void;
 }
 
 // Enhance the existing controls without creating a second player/ownership or
@@ -164,14 +168,38 @@ export function mountPlayerChrome(
     return node;
   };
 
-  // Streaming watch chrome: keep the top row empty of LMS clutter.
-  // Capture / lessons / workbench live in the heading and meta bar instead.
-  // Theater + lock stay as discreet cinema controls.
+  // Streaming watch chrome: theater + lock + study openers stay inside
+  // #player-wrap so fullscreen (PLAYER_RESTORE_CONTRACT) keeps focus.
   const top = ui('div', 'cinema-top-actions');
   top.slot = 'top-chrome';
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
-  top.append(theater, lock);
+
+  const studyOpener = (label: string, iconName: IconName, run: (() => void) | undefined, fallbackSelector: string) => {
+    const node = document.createElement('button');
+    node.type = 'button';
+    node.className = 'cinema-button cinema-study-opener';
+    node.title = label;
+    node.setAttribute('aria-label', label);
+    node.append(svgIcon(iconName));
+    node.addEventListener(
+      'click',
+      () => {
+        if (run) run();
+        else source(fallbackSelector)?.click();
+        // Return focus to the in-player opener after the sheet/dock updates.
+        queueMicrotask(() => {
+          if (!signal.aborted && wrap.isConnected) node.focus();
+        });
+      },
+      { signal },
+    );
+    return node;
+  };
+  const captureOpener = studyOpener('Capture timestamp', 'clock', actions.captureTimestamp, '#capture');
+  const notesOpener = studyOpener('Open notes', 'edit', actions.openNotes, '#focus-notes');
+  const filesOpener = studyOpener('Open materials', 'file', actions.openMaterials, '#focus-materials');
+  top.append(captureOpener, notesOpener, filesOpener, theater, lock);
   media.append(top);
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations

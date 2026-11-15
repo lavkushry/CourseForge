@@ -7,6 +7,7 @@ import { PreferenceStore } from '../player/preferences';
 import { PlayerController } from '../player/controller';
 import { NativeVideoAdapter } from '../player/video';
 import { mountPlayerChrome } from '../player/chrome';
+import { bindMediaSession } from '../player/media-session';
 import { mountPlayerGestures } from '../player/gestures';
 import { PlayerTelemetry } from '../player/telemetry';
 import { loadLectureSpatial } from '../spatial/catalog';
@@ -372,8 +373,10 @@ export function installShell(ctx: AppContext): void {
       <section id="admin-panel" class="admin-panel" hidden></section>
       <section id="classroom" class="classroom focus-workspace drawer-collapsed dock-collapsed" hidden>
         <div class="classroom-heading">
-          <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Curriculum</button>
-          <button id="focus-dock-toggle" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+J Meta+J" title="Show or hide transcript and notes (Ctrl+J)">Transcript</button>
+          <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Lessons</button>
+          <button id="focus-dock-toggle" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+J Meta+J" title="Show study tools: notes, materials, transcript (Ctrl+J)">Study</button>
+          <button id="focus-notes" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open notes">Notes</button>
+          <button id="focus-materials" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open lesson materials">Files</button>
           <div class="classroom-heading-left">
             <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -684,6 +687,42 @@ export function installShell(ctx: AppContext): void {
           selectedQuality = level;
           videoAdapter.setQuality(level);
         },
+        openNotes: () => document.querySelector<HTMLButtonElement>('#focus-notes')?.click(),
+        openMaterials: () => document.querySelector<HTMLButtonElement>('#focus-materials')?.click(),
+        captureTimestamp: () => document.querySelector<HTMLButtonElement>('#capture')?.click(),
+      },
+      ctx.pageScope.signal,
+    );
+    bindMediaSession(
+      {
+        owns: () => Boolean(ctx.controller?.owns),
+        play: () => {
+          // Ownership-aware only — never takeover from lock-screen / headset.
+          if (!ctx.controller?.owns) return;
+          void ctx.controller.requestPlay(false);
+        },
+        pause: () => ctx.controller?.pause(),
+        seek: position => ctx.controller?.seek(position),
+        seekBy: delta => {
+          if (!ctx.controller?.owns) return;
+          ctx.controller.seek(video.currentTime + delta);
+        },
+        next: () => {
+          const next = ctx.nextLesson();
+          if (next) void ctx.loadLesson(next, true, true);
+        },
+        previous: () => {
+          if (!ctx.selectedLesson) return;
+          const index = ctx.lessons.findIndex(l => l.id === ctx.selectedLesson?.id);
+          if (index > 0) {
+            const prev = ctx.lessons[index - 1];
+            if (prev) void ctx.loadLesson(prev, true, true);
+          }
+        },
+        getPosition: () => ctx.controller?.position ?? video.currentTime,
+        getDuration: () => (Number.isFinite(video.duration) ? video.duration : 0),
+        getTitle: () => ctx.selectedLesson?.title || 'Lesson',
+        getArtist: () => ctx.selectedCourse?.title || 'CourseForge',
       },
       ctx.pageScope.signal,
     );

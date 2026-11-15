@@ -1078,14 +1078,20 @@ body.home-cinema .carousel-row {
   min-height: 48px;
 }
 
-.course-enrollment {
+.course-enrollment:not([hidden]) {
   border: 0 !important;
   background: rgba(255, 255, 255, 0.05) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
 }
 
-.course-enrollment .button.primary {
+.course-enrollment[hidden],
+#ownership-overlay[hidden],
+#playerUpNextCard[hidden] {
+  display: none !important;
+}
+
+.course-enrollment:not([hidden]) .button.primary {
   background: #f5f5f7 !important;
   color: #111 !important;
   border-radius: 980px !important;
@@ -1487,6 +1493,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     flex-direction: column !important;
   }
 
+  /* Phone study rail = undimmed medium bottom sheet (video stays visible/tappable) */
+  .focus-workspace .lesson-sidebar.study-rail,
   #classroom.focus-workspace .lesson-sidebar.study-rail,
   #classroom.focus-workspace #study-rail {
     order: 3 !important;
@@ -1497,19 +1505,24 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     top: auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: min(62dvh, 520px) !important;
-    max-height: min(62dvh, 520px) !important;
+    /* Medium detent ≈ half viewport — not a full-screen modal over the lesson */
+    height: min(48dvh, 420px) !important;
+    max-height: min(48dvh, 420px) !important;
     min-height: 0 !important;
+    flex: none !important;
+    flex-basis: auto !important;
     border-radius: 18px 18px 0 0 !important;
     border: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    background: rgba(18, 18, 20, 0.97) !important;
+    background: rgba(18, 18, 20, 0.94) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     z-index: 80 !important;
-    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.55) !important;
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.4) !important;
     padding-bottom: var(--safe-bottom) !important;
     transform: translateY(0);
+    /* No dimming scrim — lesson above remains interactive */
+    pointer-events: auto;
   }
 
   #classroom.focus-workspace.drawer-collapsed #study-rail {
@@ -1527,6 +1540,13 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     flex: 0 0 auto;
   }
 
+  /* Ensure no full-viewport dim layer when study sheets are open */
+  #classroom.focus-workspace:not(.drawer-collapsed)::after,
+  #classroom.focus-workspace:not(.dock-collapsed)::after {
+    content: none !important;
+    display: none !important;
+  }
+
   #classroom.focus-workspace .study-rail-tab,
   #classroom.focus-workspace .focus-dock-tab {
     min-height: 44px !important;
@@ -1534,27 +1554,95 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     border-radius: 980px !important;
   }
 
-  /* Focus dock also sheets from bottom when open */
+  /* Focus dock = fixed bottom sheet; do not steal stage height from video */
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+  }
+
   #classroom.focus-workspace #focus-dock {
-    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    height: min(48dvh, 420px) !important;
+    max-height: min(48dvh, 420px) !important;
+    min-height: 0 !important;
     margin: 0 !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 18px 18px 0 0 !important;
+    background: rgba(18, 18, 20, 0.97) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    z-index: 85 !important;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.55) !important;
+    padding-bottom: var(--safe-bottom) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #classroom.focus-workspace #focus-dock::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 10px auto 4px;
+    flex: 0 0 auto;
   }
 
   #classroom.focus-workspace.dock-collapsed #focus-dock {
     display: none !important;
   }
 
-  /* Lesson meta: readable, not a dense LMS strip */
-  #classroom .lesson-meta-bar {
-    padding: 12px 14px 8px !important;
+  #classroom.focus-workspace .focus-tool-btn[aria-pressed='true'] {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
   }
 
+  /* Lesson meta: beat focus-workspace nowrap/52% pill row that clips Next */
+  #classroom.focus-workspace .lesson-meta-bar,
+  #classroom .lesson-meta-bar {
+    padding: 12px 14px calc(12px + var(--safe-bottom)) !important;
+    overflow: hidden !important;
+    max-height: none !important;
+  }
+
+  #classroom.focus-workspace .lesson-title-action-row,
+  #classroom .lesson-title-action-row {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #classroom.focus-workspace .lesson-heading-group,
+  #classroom .lesson-heading-group {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  #classroom.focus-workspace .lesson-main-title,
   #classroom .lesson-main-title {
     font-family: var(--font-display);
-    font-size: clamp(1.15rem, 4.8vw, 1.45rem) !important;
+    font-size: clamp(1.05rem, 4.5vw, 1.35rem) !important;
     font-weight: 650 !important;
     letter-spacing: -0.03em !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    text-overflow: unset !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
 
   #classroom .lesson-meta-badges {
@@ -1566,23 +1654,36 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     font-size: 0.68rem !important;
   }
 
+  #classroom.focus-workspace .lesson-action-pills,
   #classroom .lesson-action-pills {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
     width: 100% !important;
-    margin-top: 10px !important;
+    max-width: 100% !important;
+    margin-top: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    flex-wrap: wrap !important;
   }
 
+  #classroom.focus-workspace .lesson-action-pills .action-pill,
   #classroom .action-pill {
     min-height: 48px !important;
+    max-height: none !important;
+    height: auto !important;
+    max-width: 100% !important;
     justify-content: center !important;
     border-radius: 980px !important;
     width: 100% !important;
+    box-sizing: border-box !important;
     background: rgba(255, 255, 255, 0.1) !important;
     color: #f5f5f7 !important;
     border: 0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
+    flex: none !important;
+    padding: 0 12px !important;
   }
 
   #classroom .action-pill.pill-next,
@@ -1605,7 +1706,7 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     display: none !important;
   }
 
-  .course-enrollment {
+  .course-enrollment:not([hidden]) {
     margin: 8px 12px !important;
     padding: 12px !important;
     display: flex !important;
@@ -1613,7 +1714,11 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     gap: 10px !important;
   }
 
-  .course-enrollment .button.primary {
+  .course-enrollment[hidden] {
+    display: none !important;
+  }
+
+  .course-enrollment:not([hidden]) .button.primary {
     min-height: 48px !important;
     width: 100% !important;
   }
