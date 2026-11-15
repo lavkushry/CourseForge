@@ -469,6 +469,7 @@ export class StudyRail {
     }
 
     const captions = this.activeLesson.captions || [];
+    // Only surface captions when present — empty-state noise under Files kills focus.
     if (captions.length > 0) {
       const capBox = el('div', 'materials-captions-note');
       capBox.append(
@@ -481,8 +482,6 @@ export class StudyRail {
         ),
       );
       panel.append(capBox);
-    } else {
-      panel.append(el('p', 'muted materials-captions-empty rail-empty', 'No captions on this lesson.'));
     }
 
     const materials = this.activeLesson.materials || [];

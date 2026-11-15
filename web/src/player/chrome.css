@@ -282,12 +282,17 @@
   transition: opacity 0.18s ease !important;
 }
 
-/* Reveal theater/lock only while the control bar is visible — YouTube restraint. */
-.player-enhanced:hover .cinema-top-actions,
+/* Reveal study/transport chrome only while Media Chrome reports user activity —
+   bare :hover kept the bar stuck on desktop and killed concentration. */
 .player-enhanced:focus-within .cinema-top-actions,
 .player-enhanced media-controller[mediahasuseractive]:not([mediaended]) .cinema-top-actions {
   opacity: 1;
   pointer-events: auto;
+}
+
+.player-enhanced media-controller[userinactive] .cinema-top-actions {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .player-enhanced .cinema-center-actions {

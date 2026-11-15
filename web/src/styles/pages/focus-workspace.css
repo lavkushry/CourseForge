@@ -326,8 +326,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
    stage, title, and dock inside the viewport. */
 #classroom.focus-workspace .lesson-column {
   display: grid;
-  /* Stage stays dominant; open dock gets a real study band (not a 14vh stub). */
-  grid-template-rows: minmax(0, 1fr) auto minmax(200px, 30vh);
+  /* Watch default: stage owns height. Open dock uses a real study band. */
+  grid-template-rows: minmax(0, 1fr) auto minmax(220px, 32vh);
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
@@ -337,6 +337,32 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 #classroom.focus-workspace.dock-collapsed .lesson-column {
   grid-template-rows: minmax(0, 1fr) auto;
+}
+
+/* Desktop study open: keep the picture in a 16:9 frame so dock space is usable,
+   not lost to tall letterboxing around a small video. */
+@media (min-width: 901px) {
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
+    grid-template-rows: auto auto minmax(240px, 36vh);
+    align-content: start;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage {
+    display: flex;
+    justify-content: center;
+    background: #000;
+    min-height: 0;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #player-wrap {
+    position: relative;
+    width: min(100%, calc((100dvh - 48px - 48px - 36vh) * 16 / 9));
+    max-width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 48px - 48px - 36vh);
+    aspect-ratio: 16 / 9;
+    flex: none;
+  }
 }
 
 #classroom.focus-workspace.dock-collapsed #focus-dock {

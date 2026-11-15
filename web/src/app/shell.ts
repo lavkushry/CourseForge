@@ -374,9 +374,11 @@ export function installShell(ctx: AppContext): void {
       <section id="classroom" class="classroom focus-workspace drawer-collapsed dock-collapsed" hidden>
         <div class="classroom-heading">
           <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Lessons</button>
-          <button id="focus-dock-toggle" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+J Meta+J" title="Show study tools: notes, materials, transcript (Ctrl+J)">Study</button>
           <button id="focus-notes" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open notes">Notes</button>
           <button id="focus-materials" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open lesson materials">Files</button>
+          <button id="focus-transcript" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open transcript">Transcript</button>
+          <button id="focus-quiz" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open quiz">Quiz</button>
+          <button id="focus-dock-toggle" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+J Meta+J" title="Show or hide study tools (Ctrl+J)" hidden>Study</button>
           <div class="classroom-heading-left">
             <button id="back" class="text-button back-to-courses-btn" aria-label="Return to course catalog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -689,6 +691,8 @@ export function installShell(ctx: AppContext): void {
         },
         openNotes: () => document.querySelector<HTMLButtonElement>('#focus-notes')?.click(),
         openMaterials: () => document.querySelector<HTMLButtonElement>('#focus-materials')?.click(),
+        openTranscript: () => document.querySelector<HTMLButtonElement>('#focus-transcript')?.click(),
+        openQuiz: () => document.querySelector<HTMLButtonElement>('#focus-quiz')?.click(),
         captureTimestamp: () => document.querySelector<HTMLButtonElement>('#capture')?.click(),
       },
       ctx.pageScope.signal,

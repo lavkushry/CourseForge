@@ -21,6 +21,8 @@ export interface ChromeActions {
   /** Open notes/materials/capture without remounting the player (fullscreen-safe). */
   openNotes?: () => void;
   openMaterials?: () => void;
+  openTranscript?: () => void;
+  openQuiz?: () => void;
   captureTimestamp?: () => void;
 }
 
@@ -199,7 +201,14 @@ export function mountPlayerChrome(
   const captureOpener = studyOpener('Capture timestamp', 'clock', actions.captureTimestamp, '#capture');
   const notesOpener = studyOpener('Open notes', 'edit', actions.openNotes, '#focus-notes');
   const filesOpener = studyOpener('Open materials', 'file', actions.openMaterials, '#focus-materials');
-  top.append(captureOpener, notesOpener, filesOpener, theater, lock);
+  const transcriptOpener = studyOpener(
+    'Open transcript',
+    'captions',
+    actions.openTranscript,
+    '#focus-transcript',
+  );
+  const quizOpener = studyOpener('Open quiz', 'help', actions.openQuiz, '#focus-quiz');
+  top.append(captureOpener, notesOpener, filesOpener, transcriptOpener, quizOpener, theater, lock);
   media.append(top);
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations

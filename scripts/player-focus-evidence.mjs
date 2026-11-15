@@ -2,14 +2,13 @@ import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 
-const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus';
+const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v3';
 const base = 'https://127.0.0.1:8000';
 const chrome = process.env.CHROME;
 const password = 'password123';
 
 async function apiRegister() {
   const email = `player.focus.${Date.now()}@courseforge.test`;
-  // curl ignores the duckdns cert mismatch on 127.0.0.1
   const { execFileSync } = await import('node:child_process');
   const raw = execFileSync(
     'curl',
@@ -42,7 +41,6 @@ async function login(page, email) {
 }
 
 async function openPlayableLesson(page) {
-  // Prefer featured play / continue
   const candidates = [
     '#featured-course .hero-play',
     '#featured-course button:has-text("Play")',
@@ -83,7 +81,6 @@ async function openPlayableLesson(page) {
     if (state === 'ready' || state === 'playing' || state === 'paused') {
       if (!/lesson not found|choose a lesson/i.test(title)) break;
     }
-    // Open lessons sheet and pick first lesson if needed
     const curriculum = page.locator('#focus-curriculum');
     if (await curriculum.count()) {
       const pressed = await curriculum.getAttribute('aria-pressed');
@@ -102,6 +99,31 @@ async function openPlayableLesson(page) {
 
   await page.locator('#play-toggle').click({ force: true }).catch(() => {});
   await page.waitForTimeout(1000);
+}
+
+async function mediaIdentity(page) {
+  return page.evaluate(() => {
+    const video = document.querySelector('#lesson-video');
+    const wrap = document.querySelector('#player-wrap');
+    return {
+      videoNode: video ? 1 : 0,
+      wrapNode: wrap ? 1 : 0,
+      src: video?.currentSrc || video?.src || '',
+      state: wrap?.getAttribute('data-state') || '',
+    };
+  });
+}
+
+function sameMedia(before, after) {
+  return (
+    before.videoNode === 1 &&
+    after.videoNode === 1 &&
+    before.src === after.src &&
+    Boolean(before.src) &&
+    before.wrapNode === 1 &&
+    after.wrapNode === 1 &&
+    !['idle', ''].includes(after.state)
+  );
 }
 
 async function shot(page, dir, name) {
@@ -156,83 +178,110 @@ async function runViewport(label, viewport, email) {
       report.errors.push('enroll banner still visible');
     }
 
-    // Open notes
+    const baseline = await mediaIdentity(page);
+
+    // Notes
     await page.locator('#focus-notes').click({ force: true });
     await page.waitForTimeout(700);
-    const dockOpen = await page.locator('#classroom').evaluate(el => !el.classList.contains('dock-collapsed'));
-    report.notesOpen = dockOpen;
-    report.notesTab = await page
-      .locator('#focus-dock .focus-dock-tab.active')
-      .first()
-      .innerText()
-      .catch(() => '');
-    report.notesPressed = await page.locator('#focus-notes').getAttribute('aria-pressed');
+    const afterNotes = await mediaIdentity(page);
+    report.notesOpen = await page.locator('#classroom').evaluate(el => !el.classList.contains('dock-collapsed'));
+    report.notesTab = await page.locator('#focus-dock .focus-dock-tab.active').first().innerText().catch(() => '');
+    report.sameMediaNotes = sameMedia(baseline, afterNotes);
     await shot(page, dir, '03-notes-open');
-    if (!dockOpen || report.notesTab.toLowerCase() !== 'notes') {
-      report.ok = false;
-      report.errors.push(`notes failed: dock=${dockOpen} tab=${report.notesTab}`);
-    }
-
-    // Open materials without remounting the video element / player wrap
-    const identityBefore = await page.evaluate(() => {
-      const video = document.querySelector('#lesson-video');
-      const wrap = document.querySelector('#player-wrap');
-      return {
-        videoNode: video ? 1 : 0,
-        wrapNode: wrap ? 1 : 0,
-        src: video?.currentSrc || video?.src || '',
-        state: wrap?.getAttribute('data-state') || '',
-      };
-    });
-    await page.locator('#focus-materials').click({ force: true });
-    await page.waitForTimeout(700);
-    report.materialsTab = await page
-      .locator('#focus-dock .focus-dock-tab.active')
-      .first()
-      .innerText()
-      .catch(() => '');
-    const identityAfter = await page.evaluate(() => {
-      const video = document.querySelector('#lesson-video');
-      const wrap = document.querySelector('#player-wrap');
-      return {
-        videoNode: video ? 1 : 0,
-        wrapNode: wrap ? 1 : 0,
-        src: video?.currentSrc || video?.src || '',
-        state: wrap?.getAttribute('data-state') || '',
-        sameVideoEl: Boolean(video && video.isConnected),
-      };
-    });
-    report.sameMedia =
-      identityBefore.videoNode === 1 &&
-      identityAfter.videoNode === 1 &&
-      identityBefore.src === identityAfter.src &&
-      Boolean(identityBefore.src);
-    report.playerIntact =
-      identityBefore.wrapNode === 1 &&
-      identityAfter.wrapNode === 1 &&
-      !['idle', ''].includes(identityAfter.state);
-    await shot(page, dir, '04-materials-open');
-    if (report.materialsTab.toLowerCase() !== 'materials') {
-      report.ok = false;
-      report.errors.push(`materials tab=${report.materialsTab}`);
-    }
-    if (!report.sameMedia || !report.playerIntact) {
+    if (!report.notesOpen || report.notesTab.toLowerCase() !== 'notes' || !report.sameMediaNotes) {
       report.ok = false;
       report.errors.push(
-        `player remounted: sameMedia=${report.sameMedia} intact=${report.playerIntact} state=${identityAfter.state}`,
+        `notes failed: dock=${report.notesOpen} tab=${report.notesTab} sameMedia=${report.sameMediaNotes}`,
       );
     }
 
-    // Close
-    await page.locator('#focus-dock-toggle').click({ force: true });
-    await page.waitForTimeout(500);
-    report.dockClosed = await page.locator('#classroom').evaluate(el => el.classList.contains('dock-collapsed'));
-    await shot(page, dir, '05-closed');
-    if (!report.dockClosed) {
+    // Materials
+    await page.locator('#focus-materials').click({ force: true });
+    await page.waitForTimeout(700);
+    const afterMaterials = await mediaIdentity(page);
+    report.materialsTab = await page.locator('#focus-dock .focus-dock-tab.active').first().innerText().catch(() => '');
+    report.sameMediaMaterials = sameMedia(baseline, afterMaterials);
+    await shot(page, dir, '04-materials-open');
+    if (report.materialsTab.toLowerCase() !== 'materials' || !report.sameMediaMaterials) {
       report.ok = false;
-      report.errors.push('dock did not close');
+      report.errors.push(
+        `materials failed: tab=${report.materialsTab} sameMedia=${report.sameMediaMaterials}`,
+      );
     }
 
+    // Curriculum / transcript / quiz — at least one one-tap path, lease-safe
+    let toolOk = false;
+    const tools = [
+      {
+        name: 'transcript',
+        click: '#focus-transcript',
+        expectTab: 'transcript',
+        shot: '05-transcript-open',
+      },
+      {
+        name: 'quiz',
+        click: '#focus-quiz',
+        expectTab: 'quiz',
+        shot: '06-quiz-open',
+      },
+      {
+        name: 'curriculum',
+        click: '#focus-curriculum',
+        expectDrawer: true,
+        shot: '07-curriculum-open',
+      },
+    ];
+    report.toolChecks = [];
+    for (const tool of tools) {
+      await page.locator(tool.click).click({ force: true });
+      await page.waitForTimeout(700);
+      const after = await mediaIdentity(page);
+      const same = sameMedia(baseline, after);
+      const entry = { name: tool.name, sameMedia: same };
+      if (tool.expectTab) {
+        entry.tab = await page.locator('#focus-dock .focus-dock-tab.active').first().innerText().catch(() => '');
+        entry.ok = same && entry.tab.toLowerCase() === tool.expectTab;
+      } else {
+        entry.drawerOpen = await page
+          .locator('#classroom')
+          .evaluate(el => !el.classList.contains('drawer-collapsed'));
+        entry.ok = same && entry.drawerOpen === true;
+      }
+      report.toolChecks.push(entry);
+      await shot(page, dir, tool.shot);
+      if (entry.ok) toolOk = true;
+    }
+    report.sameMediaExtra = toolOk;
+    if (!toolOk) {
+      report.ok = false;
+      report.errors.push(`no curriculum/transcript/quiz path stayed lease-safe: ${JSON.stringify(report.toolChecks)}`);
+    }
+
+    // Close via Escape — study must not steal focus permanently
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    report.surfacesClosed = await page.locator('#classroom').evaluate(
+      el => el.classList.contains('dock-collapsed') && el.classList.contains('drawer-collapsed'),
+    );
+    await shot(page, dir, '08-closed');
+    if (!report.surfacesClosed) {
+      // Fallback toggle
+      await page.locator('#focus-dock-toggle').click({ force: true }).catch(() => {});
+      await page.locator('#focus-curriculum').evaluate(el => {
+        if (el.getAttribute('aria-pressed') === 'true') el.click();
+      }).catch(() => {});
+      await page.waitForTimeout(400);
+      report.surfacesClosed = await page.locator('#classroom').evaluate(
+        el => el.classList.contains('dock-collapsed') && el.classList.contains('drawer-collapsed'),
+      );
+      await shot(page, dir, '08-closed');
+    }
+    if (!report.surfacesClosed) {
+      report.ok = false;
+      report.errors.push('study surfaces did not close');
+    }
+
+    report.sameMedia = report.sameMediaNotes && report.sameMediaMaterials && report.sameMediaExtra;
     report.playerStateAfter = await page.locator('#player-wrap').getAttribute('data-state');
     report.classroomHidden = await page.locator('#classroom').evaluate(el => el.hidden);
     if (report.classroomHidden) {
@@ -252,7 +301,6 @@ async function runViewport(label, viewport, email) {
 }
 
 fs.mkdirSync(outRoot, { recursive: true });
-// Separate learners so phone+desktop evidence do not fight one lease.
 const phoneUser = await apiRegister();
 const desktopUser = await apiRegister();
 console.log('registered', phoneUser.email, desktopUser.email);
@@ -262,8 +310,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-CkBg_h9-.js',
-    css: 'index-DR5Dgh4A.css',
+    js: 'index-VjjJf-_E.js',
+    css: 'index-DwzxyWM6.css',
   },
   phone: {
     ok: phone.ok,
@@ -272,6 +320,10 @@ const summary = {
     notesTab: phone.notesTab,
     materialsTab: phone.materialsTab,
     sameMedia: phone.sameMedia,
+    sameMediaNotes: phone.sameMediaNotes,
+    sameMediaMaterials: phone.sameMediaMaterials,
+    sameMediaExtra: phone.sameMediaExtra,
+    toolChecks: phone.toolChecks,
   },
   desktop: {
     ok: desktop.ok,
@@ -280,6 +332,10 @@ const summary = {
     notesTab: desktop.notesTab,
     materialsTab: desktop.materialsTab,
     sameMedia: desktop.sameMedia,
+    sameMediaNotes: desktop.sameMediaNotes,
+    sameMediaMaterials: desktop.sameMediaMaterials,
+    sameMediaExtra: desktop.sameMediaExtra,
+    toolChecks: desktop.toolChecks,
   },
 };
 fs.writeFileSync(path.join(outRoot, 'summary.json'), JSON.stringify(summary, null, 2));

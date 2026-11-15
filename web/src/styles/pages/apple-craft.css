@@ -1488,6 +1488,13 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     gap: 2px !important;
   }
 
+  /* Respect Media Chrome userinactive — always-on bar is a concentration killer */
+  #classroom media-controller[userinactive]:not([mediaPaused]) media-control-bar {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease !important;
+  }
+
   #classroom media-play-button,
   #classroom media-seek-backward-button,
   #classroom media-seek-forward-button,
@@ -1700,9 +1707,33 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     letter-spacing: 0.02em;
   }
 
-  /* Focus dock = fixed bottom sheet; do not steal stage height from video */
-  #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
-    grid-template-rows: minmax(0, 1fr) auto !important;
+  /* Sheet open: stage is a tight 16:9 strip — no tall letterbox waste above the sheet */
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-column,
+  #classroom.focus-workspace:not(.drawer-collapsed) .lesson-column {
+    grid-template-rows: auto !important;
+    align-content: start !important;
+    justify-items: stretch !important;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage,
+  #classroom.focus-workspace:not(.drawer-collapsed) .lesson-stage,
+  #classroom.focus-workspace:not(.dock-collapsed) #player-wrap,
+  #classroom.focus-workspace:not(.drawer-collapsed) #player-wrap {
+    flex: none !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 44dvh - 40px - var(--safe-top) - var(--safe-bottom)) !important;
+    aspect-ratio: 16 / 9 !important;
+    margin: 0 auto !important;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #media-controller,
+  #classroom.focus-workspace:not(.drawer-collapsed) #media-controller,
+  #classroom.focus-workspace:not(.dock-collapsed) media-controller,
+  #classroom.focus-workspace:not(.drawer-collapsed) media-controller {
+    position: absolute !important;
+    inset: 0 !important;
   }
 
   /* Hide meta strip while a sheet is open — stops Complete/Next peeking under chrome */

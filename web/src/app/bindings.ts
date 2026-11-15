@@ -299,17 +299,41 @@ export function installBindings(ctx: AppContext): void {
     on('#mark-complete', () => {
       void ctx.markComplete();
     });
-    const syncStudyToolPressed = (tab: 'notes' | 'materials' | 'transcript' | null, dockOpen: boolean) => {
+    type StudyToolTab = 'notes' | 'materials' | 'transcript' | 'quiz';
+    const syncStudyToolPressed = (tab: StudyToolTab | null, dockOpen: boolean) => {
       document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(dockOpen));
       document.querySelector('#focus-notes')?.setAttribute('aria-pressed', String(dockOpen && tab === 'notes'));
       document
         .querySelector('#focus-materials')
         ?.setAttribute('aria-pressed', String(dockOpen && tab === 'materials'));
+      document
+        .querySelector('#focus-transcript')
+        ?.setAttribute('aria-pressed', String(dockOpen && tab === 'transcript'));
+      document.querySelector('#focus-quiz')?.setAttribute('aria-pressed', String(dockOpen && tab === 'quiz'));
+    };
+
+    const closeStudySurfaces = () => {
+      const classroom = required('#classroom');
+      classroom.classList.add('dock-collapsed');
+      classroom.classList.add('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(null, false);
+      const wrap = document.querySelector<HTMLElement>('#player-wrap');
+      wrap?.focus({ preventScroll: true });
     };
 
     /** Open study dock on a tab without remounting the player / breaking lease. */
-    const openStudyTab = (tab: 'notes' | 'materials' | 'transcript') => {
+    const openStudyTab = (tab: StudyToolTab) => {
       const classroom = required('#classroom');
+      const already =
+        !classroom.classList.contains('dock-collapsed') &&
+        document.querySelector(`#focus-${tab === 'materials' ? 'materials' : tab}`)?.getAttribute('aria-pressed') ===
+          'true';
+      // Second tap on the same tool dismisses — study must not steal focus permanently.
+      if (already) {
+        closeStudySurfaces();
+        return;
+      }
       classroom.classList.remove('dock-collapsed');
       // One sheet at a time on phone/desktop watch — curriculum stays out of the way.
       classroom.classList.add('drawer-collapsed');
@@ -343,6 +367,8 @@ export function installBindings(ctx: AppContext): void {
     on('#save-note-pill', () => openStudyTab('notes'));
     on('#focus-notes', () => openStudyTab('notes'));
     on('#focus-materials', () => openStudyTab('materials'));
+    on('#focus-transcript', () => openStudyTab('transcript'));
+    on('#focus-quiz', () => openStudyTab('quiz'));
     on('#capture-pill', () => {
       document.querySelector<HTMLButtonElement>('#capture')?.click();
     });
@@ -413,6 +439,14 @@ export function installBindings(ctx: AppContext): void {
           if (countdown && !countdown.hidden) {
             event.preventDefault();
             ctx.controller?.cancelNext();
+            return;
+          }
+          const classroom = required<HTMLElement>('#classroom');
+          const studyOpen =
+            !classroom.classList.contains('dock-collapsed') || !classroom.classList.contains('drawer-collapsed');
+          if (studyOpen) {
+            event.preventDefault();
+            closeStudySurfaces();
           }
         }
       },
