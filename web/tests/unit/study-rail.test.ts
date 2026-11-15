@@ -27,9 +27,9 @@ describe('study rail honesty', () => {
 
   it('keeps materials downloads same-origin and surfaces real captions when present', () => {
     expect(studyRail).toMatch(/url\.pathname\.startsWith\('\/api\/'\)/);
-    expect(studyRail).toMatch(/Captions in player/);
-    expect(studyRail).toMatch(/No caption tracks are attached/);
-    expect(studyRail).toMatch(/No supplementary download files are attached/);
+    expect(studyRail).toMatch(/Only surface captions when present/);
+    expect(studyRail).toMatch(/empty-materials-card rail-empty',\s*'Empty'/);
+    expect(studyRail).toMatch(/Tap the video to keep watching/);
     expect(bootstrap).toMatch(/onQuizPassed:\s*lessonId\s*=>/);
   });
 });

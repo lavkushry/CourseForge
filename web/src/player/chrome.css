@@ -21,10 +21,11 @@
   height: 48px !important;
   min-height: 48px !important;
   padding: 0 max(12px, var(--safe-right)) max(8px, var(--safe-bottom)) max(12px, var(--safe-left)) !important;
+  /* Deeper scrim so transport stays readable on bright lesson slides */
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.72) 0%,
-    rgba(0, 0, 0, 0.28) 65%,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.42) 55%,
     transparent 100%
   ) !important;
   box-sizing: border-box !important;

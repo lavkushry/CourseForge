@@ -316,6 +316,7 @@ export function installBindings(ctx: AppContext): void {
       const classroom = required('#classroom');
       classroom.classList.add('dock-collapsed');
       classroom.classList.add('drawer-collapsed');
+      classroom.classList.add('sheet-compact');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
       syncStudyToolPressed(null, false);
       const wrap = document.querySelector<HTMLElement>('#player-wrap');
@@ -342,11 +343,14 @@ export function installBindings(ctx: AppContext): void {
       const dock = document.querySelector<HTMLElement>('#focus-dock');
       if (ctx.studyRail && dock) {
         ctx.studyRail.setTab(tab);
-        if (tab === 'notes') {
-          window.requestAnimationFrame(() =>
-            dock.querySelector<HTMLInputElement | HTMLTextAreaElement>('input.note-input, textarea.note-input')?.focus(),
+        classroom.classList.toggle('sheet-compact', tab === 'notes' || tab === 'materials' || tab === 'quiz');
+        if (tab === 'transcript') classroom.classList.remove('sheet-compact');
+        window.requestAnimationFrame(() => {
+          const field = dock.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+            'input.note-input, textarea.note-input',
           );
-        }
+          if (tab === 'notes') field?.focus({ preventScroll: true });
+        });
         return;
       }
       if (tab === 'notes') {

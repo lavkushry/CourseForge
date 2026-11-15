@@ -275,6 +275,15 @@ export class StudyRail {
     marker.textContent = tab === 'materials' ? 'Files' : tab.charAt(0).toUpperCase() + tab.slice(1);
     panel.append(this.panelFor(tab));
     dock.append(this.sheetDismissHandle(), marker, panel);
+    // Compact empty notes/files/quiz sheets — less dead black under the 16:9 band.
+    const classroom = document.querySelector('#classroom');
+    if (classroom instanceof HTMLElement) {
+      const compact =
+        tab === 'notes'
+          ? this.notes.length === 0
+          : tab === 'materials' || tab === 'quiz' || tab === 'brief';
+      classroom.classList.toggle('sheet-compact', compact);
+    }
   }
 
   private panelFor(tab: StudyRailTab): HTMLElement {
@@ -796,6 +805,7 @@ export class StudyRail {
 
     form.append(captureLabel, input, addBtn);
     panel.append(form);
+    panel.append(el('p', 'muted sheet-watch-hint', 'Tap the video to keep watching'));
 
     if (!this.notesLoaded && !this.notesLoading) {
       this.notesLoading = true;

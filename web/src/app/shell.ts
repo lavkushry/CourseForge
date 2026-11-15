@@ -338,7 +338,7 @@ export function installShell(ctx: AppContext): void {
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span class="lms-nav-label">Settings</span>
         </button>
-        ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin" class="lms-nav-item lms-secondary-mobile"><span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="lms-nav-label">Admin</span></button>' : ''}
+        ${account.role === 'admin' ? '<button id="nav-admin" data-catalog-view="admin" class="lms-nav-item" aria-label="Admin"><span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="lms-nav-label">Admin</span></button>' : ''}
         <button id="mobile-more-btn" type="button" class="lms-nav-item mobile-more-trigger" aria-label="More menu options">
           <span class="lms-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg></span>
           <span class="lms-nav-label">Menu</span>
@@ -741,6 +741,20 @@ export function installShell(ctx: AppContext): void {
           ctx.controller?.seek(position);
         },
         openNotes: () => document.querySelector<HTMLButtonElement>('#focus-notes')?.click(),
+        closeStudy: () => {
+          const classroom = document.querySelector('#classroom');
+          if (!(classroom instanceof HTMLElement) || classroom.hidden) return false;
+          const open =
+            !classroom.classList.contains('dock-collapsed') || !classroom.classList.contains('drawer-collapsed');
+          if (!open) return false;
+          classroom.classList.add('dock-collapsed', 'drawer-collapsed', 'sheet-compact');
+          document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+          for (const id of ['#focus-notes', '#focus-materials', '#focus-transcript', '#focus-quiz'] as const) {
+            document.querySelector(id)?.setAttribute('aria-pressed', 'false');
+          }
+          playerWrap.focus({ preventScroll: true });
+          return true;
+        },
       },
       ctx.pageScope.signal,
     );

@@ -311,14 +311,13 @@ body.home-cinema .app-layout-shell {
     font-weight: 500;
   }
 
-  /* Cinema rail: keep Discover + Library + Tutor + Settings only */
+  /* Cinema rail: keep Discover + Library + Tutor + Settings (+ Admin when present). */
   #nav-planner,
   #nav-history,
   #nav-paths,
   #nav-reviews,
   #nav-labs,
   #nav-career,
-  #nav-admin,
   #nav-search-btn,
   .lms-rail-bottom {
     display: none !important;
@@ -2037,6 +2036,21 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-meta-bar,
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-meta-bar {
     display: none !important;
+  }
+
+  /* Empty notes/files: shorter sheet so the lesson stays dominant */
+  #classroom.focus-workspace.sheet-compact:not(.dock-collapsed) #focus-dock {
+    height: min(38dvh, 320px) !important;
+    max-height: min(38dvh, 320px) !important;
+  }
+
+  #classroom.focus-workspace .sheet-watch-hint {
+    margin: 4px 0 0 !important;
+    padding: 0 !important;
+    font-size: 0.72rem !important;
+    color: rgba(245, 245, 247, 0.38) !important;
+    border: 0 !important;
+    background: transparent !important;
   }
 
   #classroom.focus-workspace #focus-dock {

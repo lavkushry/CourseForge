@@ -1,8 +1,14 @@
-/** Touch: tap play/pause, double-tap seek, swipe-up from bottom opens notes (lease-safe). */
+/** Touch: tap play/pause, double-tap seek, swipe-up notes; tap video dismisses open study (lease-safe). */
 export function mountPlayerGestures(
   wrap: HTMLElement,
   video: HTMLVideoElement,
-  actions: { togglePlay(): void; seek(position: number): void; openNotes?: () => void },
+  actions: {
+    togglePlay(): void;
+    seek(position: number): void;
+    openNotes?: () => void;
+    /** Return true when a study sheet was open and is now closed. */
+    closeStudy?: () => boolean;
+  },
   signal: AbortSignal,
 ): void {
   let lastTapAt = 0;
@@ -66,6 +72,8 @@ export function mountPlayerGestures(
     lastX = x;
     window.setTimeout(() => {
       if (lastTapAt !== now) return;
+      // Prefer returning to the lesson over toggling play when a sheet is open.
+      if (actions.closeStudy?.()) return;
       actions.togglePlay();
     }, 260);
   };

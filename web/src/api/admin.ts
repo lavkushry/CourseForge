@@ -191,6 +191,64 @@ export function adminRetentionCurve(
   return client.request(`/admin/analytics/retention${q}`, signal ? { signal } : {});
 }
 
+export type AdminPlaybackSession = {
+  id: string;
+  user_id?: string | undefined;
+  name?: string | undefined;
+  email?: string | undefined;
+  lesson_id?: string | undefined;
+  title?: string | undefined;
+  device?: string | undefined;
+  ip?: string | undefined;
+  device_basis?: string | undefined;
+  snapshot_at?: string | undefined;
+  snapshot_truncated?: boolean | undefined;
+  live?: boolean | undefined;
+  watched_seconds?: number | undefined;
+};
+
+export type AdminPlaybackReport = {
+  sessions: AdminPlaybackSession[];
+  total: number;
+  disclaimer?: string | undefined;
+};
+
+export async function adminPlaybackReport(
+  client: HttpClient,
+  opts: { userId?: string; limit?: number; signal?: AbortSignal } = {},
+): Promise<AdminPlaybackReport> {
+  const query = new URLSearchParams();
+  if (opts.userId) query.set('user_id', opts.userId);
+  if (opts.limit) query.set('limit', String(opts.limit));
+  const q = query.toString() ? `?${query}` : '';
+  const raw = await client.request(`/admin/playback${q}`, opts.signal ? { signal: opts.signal } : {});
+  if (!isRecord(raw)) {
+    return { sessions: [], total: 0 };
+  }
+  const sessions = Array.isArray(raw.sessions)
+    ? (raw.sessions as unknown[]).filter(isRecord).map(s => ({
+        id: String(s.id || ''),
+        user_id: typeof s.user_id === 'string' ? s.user_id : undefined,
+        name: typeof s.name === 'string' ? s.name : undefined,
+        email: typeof s.email === 'string' ? s.email : undefined,
+        lesson_id: typeof s.lesson_id === 'string' ? s.lesson_id : undefined,
+        title: typeof s.title === 'string' ? s.title : undefined,
+        device: typeof s.device === 'string' ? s.device : undefined,
+        ip: typeof s.ip === 'string' ? s.ip : undefined,
+        device_basis: typeof s.device_basis === 'string' ? s.device_basis : undefined,
+        snapshot_at: typeof s.snapshot_at === 'string' ? s.snapshot_at : undefined,
+        snapshot_truncated: typeof s.snapshot_truncated === 'boolean' ? s.snapshot_truncated : undefined,
+        live: typeof s.live === 'boolean' ? s.live : undefined,
+        watched_seconds: typeof s.watched_seconds === 'number' ? s.watched_seconds : undefined,
+      }))
+    : [];
+  return {
+    sessions,
+    total: typeof raw.total === 'number' ? raw.total : sessions.length,
+    disclaimer: typeof raw.disclaimer === 'string' ? raw.disclaimer : undefined,
+  };
+}
+
 export async function exportReport(
   client: HttpClient & { rawFetch(path: string, init?: RequestInit): Promise<Response> },
   type: 'player-activity' | 'playback',
