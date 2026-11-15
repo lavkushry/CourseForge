@@ -214,8 +214,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 .focus-workspace .lesson-sidebar.study-rail {
   order: -1;
-  flex: 0 0 300px;
-  width: 300px;
+  flex: 0 0 280px;
+  width: 280px;
   height: auto;
   max-height: none;
   min-height: 0;
@@ -337,7 +337,7 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 /* Desktop study open: narrower side rail — video stays dominant. */
 @media (min-width: 901px) {
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
     grid-template-rows: minmax(0, 1fr) auto;
   }
 
@@ -396,26 +396,56 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
     aspect-ratio: auto;
   }
 
-  /* Quieter desktop tools — fewer chrome edges */
+  /* Quieter desktop tools — text links, not chip chrome */
   #classroom.focus-workspace .focus-icon-btn {
-    min-height: 34px;
-    height: 34px;
-    padding: 0 12px;
+    min-height: 32px;
+    height: 32px;
+    padding: 0 10px;
     border: 0;
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(245, 245, 247, 0.88);
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(245, 245, 247, 0.7);
+    font-weight: 600;
   }
 
   #classroom.focus-workspace .focus-icon-btn[aria-pressed='true'] {
-    background: #f5f5f7;
-    color: #111;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  #classroom.focus-workspace #course-name {
+    color: rgba(245, 245, 247, 0.78);
+  }
+
+  #classroom.focus-workspace .classroom-heading {
+    background: #050507;
+    border-bottom-color: rgba(255, 255, 255, 0.04);
+  }
+
+  #classroom.focus-workspace #focus-search {
+    display: none;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed:has(
+      media-controller[userinactive]:not([mediaPaused])
+    )
+    .classroom-heading {
+    opacity: 0.35;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed:has(
+      media-controller[userinactive]:not([mediaPaused])
+    )
+    .lesson-meta-bar {
+    opacity: 0;
+    pointer-events: none;
   }
 
   #classroom.focus-workspace #watermark,
   #classroom.focus-workspace .watermark {
     top: 12px;
     right: 16px;
-    opacity: 0.5;
+    opacity: 0.4;
   }
 }
 
@@ -423,9 +453,9 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 @media (min-width: 901px) {
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-sidebar.study-rail,
   #classroom.focus-workspace:not(.drawer-collapsed) #study-rail {
-    width: 300px;
-    max-width: 300px;
-    flex: 0 0 300px;
+    width: 280px;
+    max-width: 280px;
+    flex: 0 0 280px;
   }
 }
 
@@ -597,8 +627,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  flex: 0 0 300px;
-  width: 300px;
+  flex: 0 0 280px;
+  width: 280px;
   height: 100%;
   max-height: none;
   min-height: 0;

@@ -306,27 +306,19 @@ export class StudyRail {
   private renderLessonsPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-lessons');
 
-    // Header with search
-    const head = el('div', 'panel-head');
-    head.append(
-      el('h3', '', 'Lessons'),
-      (() => {
-        const sp = el('span', 'tag', `${this.lessons.length}`);
-        sp.id = 'lesson-count';
-        return sp;
-      })(),
-    );
-
+    // Quiet filter only — header pills already say Lessons.
     const searchInput = el('input', 'form-input rail-search-input');
     searchInput.type = 'search';
-    searchInput.placeholder = 'Filter…';
+    searchInput.placeholder = 'Filter lessons…';
+    searchInput.id = 'lesson-count';
+    searchInput.setAttribute('aria-label', `${this.lessons.length} lessons`);
     searchInput.value = this.lessonFilter;
     searchInput.addEventListener('input', () => {
       this.lessonFilter = searchInput.value.toLowerCase().trim();
       this.render();
     });
 
-    panel.append(head, searchInput);
+    panel.append(searchInput);
 
     // Group lessons by section
     const filtered = this.lessonFilter

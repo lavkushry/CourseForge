@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 
-const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v5';
+const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v6';
 const base = 'https://127.0.0.1:8000';
 const chrome = process.env.CHROME;
 const password = 'password123';
@@ -99,6 +99,9 @@ async function openPlayableLesson(page) {
 
   await page.locator('#play-toggle').click({ force: true }).catch(() => {});
   await page.waitForTimeout(1000);
+  // Guarantee immersive watch for the playing shot (lesson pick collapses sheets).
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
 }
 
 async function mediaIdentity(page) {
@@ -328,8 +331,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-BU9AzpSn.js',
-    css: 'index-LfhWE-2R.css',
+    js: 'index-DTdAC8bV.js',
+    css: 'index-JQEy0pAF.css',
   },
   phone: {
     ok: phone.ok,

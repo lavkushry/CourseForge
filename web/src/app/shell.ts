@@ -376,7 +376,7 @@ export function installShell(ctx: AppContext): void {
           <button id="focus-curriculum" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+B Meta+B" title="Show or hide the curriculum (Ctrl+B)">Lessons</button>
           <button id="focus-notes" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open notes">Notes</button>
           <button id="focus-materials" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open lesson materials">Files</button>
-          <button id="focus-transcript" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open transcript">Transcript</button>
+          <button id="focus-transcript" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open transcript">Script</button>
           <button id="focus-quiz" type="button" class="focus-icon-btn focus-tool-btn" aria-pressed="false" title="Open quiz">Quiz</button>
           <button id="focus-dock-toggle" type="button" class="focus-icon-btn" aria-pressed="false" aria-keyshortcuts="Control+J Meta+J" title="Show or hide study tools (Ctrl+J)" hidden>Study</button>
           <div class="classroom-heading-left">
