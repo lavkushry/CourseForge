@@ -2040,8 +2040,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
 
   /* Empty notes/files: shorter sheet so the lesson stays dominant */
   #classroom.focus-workspace.sheet-compact:not(.dock-collapsed) #focus-dock {
-    height: min(38dvh, 320px) !important;
-    max-height: min(38dvh, 320px) !important;
+    height: min(34dvh, 280px) !important;
+    max-height: min(34dvh, 280px) !important;
   }
 
   #classroom.focus-workspace .sheet-watch-hint {
@@ -2051,6 +2051,43 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     color: rgba(245, 245, 247, 0.38) !important;
     border: 0 !important;
     background: transparent !important;
+  }
+
+  /* While playing, hide Complete/Next/capture pills — they steal concentration */
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed:has(
+      media-controller:not([mediapaused]):not([mediaPaused])
+    )
+    .lesson-action-pills,
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed:has(
+      media-controller[userinactive]:not([mediaPaused])
+    )
+    .lesson-action-pills {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  #classroom.focus-workspace .note-card {
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    gap: 6px !important;
+  }
+
+  #classroom.focus-workspace .note-seek-pill {
+    min-height: 28px !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 0 !important;
+    font-size: 0.72rem !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  #classroom.focus-workspace .note-card p,
+  #classroom.focus-workspace .note-body {
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.35 !important;
+    color: rgba(245, 245, 247, 0.92) !important;
   }
 
   #classroom.focus-workspace #focus-dock {

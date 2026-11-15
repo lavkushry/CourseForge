@@ -177,12 +177,20 @@ export function mountPlayerChrome(
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
 
-  const studyOpener = (label: string, iconName: IconName, run: (() => void) | undefined, fallbackSelector: string) => {
+  const studyOpener = (
+    label: string,
+    iconName: IconName,
+    tool: 'notes' | 'materials' | 'transcript' | 'quiz' | 'capture',
+    run: (() => void) | undefined,
+    fallbackSelector: string,
+  ) => {
     const node = document.createElement('button');
     node.type = 'button';
     node.className = 'cinema-button cinema-study-opener';
     node.title = label;
     node.setAttribute('aria-label', label);
+    node.setAttribute('aria-pressed', 'false');
+    node.dataset.tool = tool;
     node.append(svgIcon(iconName));
     node.addEventListener(
       'click',
@@ -198,16 +206,17 @@ export function mountPlayerChrome(
     );
     return node;
   };
-  const captureOpener = studyOpener('Capture timestamp', 'clock', actions.captureTimestamp, '#capture');
-  const notesOpener = studyOpener('Open notes', 'edit', actions.openNotes, '#focus-notes');
-  const filesOpener = studyOpener('Open files', 'file', actions.openMaterials, '#focus-materials');
+  const captureOpener = studyOpener('Capture timestamp', 'clock', 'capture', actions.captureTimestamp, '#capture');
+  const notesOpener = studyOpener('Open notes', 'edit', 'notes', actions.openNotes, '#focus-notes');
+  const filesOpener = studyOpener('Open files', 'file', 'materials', actions.openMaterials, '#focus-materials');
   const transcriptOpener = studyOpener(
     'Open transcript',
     'book',
+    'transcript',
     actions.openTranscript,
     '#focus-transcript',
   );
-  const quizOpener = studyOpener('Open quiz', 'help', actions.openQuiz, '#focus-quiz');
+  const quizOpener = studyOpener('Open quiz', 'help', 'quiz', actions.openQuiz, '#focus-quiz');
   // Desktop keeps study openers in top chrome; phone moves them into the transport row.
   top.append(captureOpener, theater, lock);
   top.classList.add('cinema-top-actions--chrome');

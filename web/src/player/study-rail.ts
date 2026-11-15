@@ -805,7 +805,7 @@ export class StudyRail {
 
     form.append(captureLabel, input, addBtn);
     panel.append(form);
-    panel.append(el('p', 'muted sheet-watch-hint', 'Tap the video to keep watching'));
+    panel.append(el('p', 'muted sheet-watch-hint', 'Tap video or swipe down to keep watching'));
 
     if (!this.notesLoaded && !this.notesLoading) {
       this.notesLoading = true;

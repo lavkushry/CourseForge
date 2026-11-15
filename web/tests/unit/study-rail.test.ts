@@ -29,7 +29,7 @@ describe('study rail honesty', () => {
     expect(studyRail).toMatch(/url\.pathname\.startsWith\('\/api\/'\)/);
     expect(studyRail).toMatch(/Only surface captions when present/);
     expect(studyRail).toMatch(/empty-materials-card rail-empty',\s*'Empty'/);
-    expect(studyRail).toMatch(/Tap the video to keep watching/);
+    expect(studyRail).toMatch(/Tap video or swipe down to keep watching/);
     expect(bootstrap).toMatch(/onQuizPassed:\s*lessonId\s*=>/);
   });
 });

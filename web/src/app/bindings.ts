@@ -310,6 +310,12 @@ export function installBindings(ctx: AppContext): void {
         .querySelector('#focus-transcript')
         ?.setAttribute('aria-pressed', String(dockOpen && tab === 'transcript'));
       document.querySelector('#focus-quiz')?.setAttribute('aria-pressed', String(dockOpen && tab === 'quiz'));
+      // Keep in-player transport openers in sync so the active tool is obvious.
+      for (const tool of ['notes', 'materials', 'transcript', 'quiz'] as const) {
+        document
+          .querySelector(`.cinema-study-opener[data-tool="${tool}"]`)
+          ?.setAttribute('aria-pressed', String(dockOpen && tab === tool));
+      }
     };
 
     const closeStudySurfaces = () => {
@@ -413,7 +419,7 @@ export function installBindings(ctx: AppContext): void {
     };
     ensureImmersiveWatch();
 
-    // Phone sheet: tap grabber or swipe down to dismiss (lease-safe — no remount).
+    // Phone sheet: tap grabber or swipe down from the top band to dismiss (lease-safe).
     const bindSheetDismiss = (host: HTMLElement | null) => {
       if (!host) return;
       host.addEventListener(
@@ -433,7 +439,13 @@ export function installBindings(ctx: AppContext): void {
         'pointerdown',
         event => {
           const target = event.target;
-          if (!(target instanceof Element) || !target.closest('.sheet-dismiss-handle')) return;
+          if (!(target instanceof Element)) return;
+          // Allow swipe-down from the grabber or the top 48px of the sheet.
+          const onHandle = Boolean(target.closest('.sheet-dismiss-handle'));
+          const rect = host.getBoundingClientRect();
+          const nearTop = event.clientY - rect.top <= 48;
+          if (!onHandle && !nearTop) return;
+          if (target.closest('input, textarea, button:not(.sheet-dismiss-handle), a, select')) return;
           dragging = true;
           dragY = event.clientY;
           host.setPointerCapture?.(event.pointerId);
@@ -447,7 +459,7 @@ export function installBindings(ctx: AppContext): void {
           dragging = false;
           const delta = event.clientY - dragY;
           host.releasePointerCapture?.(event.pointerId);
-          if (delta > 56) closeStudySurfaces();
+          if (delta > 48) closeStudySurfaces();
         },
         { signal },
       );

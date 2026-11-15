@@ -16,3 +16,13 @@ describe('player gestures concentration', () => {
     expect(shell).toMatch(/dock-collapsed.*drawer-collapsed.*sheet-compact/s);
   });
 });
+
+describe('cinema study openers', () => {
+  it('tags transport openers with data-tool for pressed-state sync', () => {
+    const chrome = readFileSync(join(root, 'player/chrome.ts'), 'utf8');
+    const bindings = readFileSync(join(root, 'app/bindings.ts'), 'utf8');
+    expect(chrome).toContain("node.dataset.tool = tool");
+    expect(bindings).toContain('.cinema-study-opener[data-tool=');
+    expect(bindings).toContain('nearTop');
+  });
+});
