@@ -174,6 +174,14 @@ playback, and provider-approved live scale. Claim end-to-end 10k only when evide
 covers the complete path and the actual deployment.
 
 
+
+### Playback lease hold TTL
+
+Go constant `playback.LeaseHoldTTL` (**40s**) is the authoritative hold window
+without a visible pulse. Long media Ranges must heartbeat within this TTL or the
+gateway surfaces lease conflict (**409**), distinct from MaxTransfers **503 busy**
+(`X-CourseForge-Media: busy`, `Retry-After` = `media.BusyRetryAfter`).
+
 ### Bypass-off samples vs open model
 
 Sticky playback without `X-CourseForge-Loadtest` on loopback (`TrustProxy=false`)

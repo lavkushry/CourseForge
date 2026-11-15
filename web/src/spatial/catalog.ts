@@ -25,7 +25,11 @@ export async function loadLectureSpatial(
     return visibleAssets(parseSpatialAssets(body).filter(asset => asset.lecture_id === lectureId));
   } catch (error) {
     if (isAbort(error)) throw error;
-    if (error instanceof ApiError && error.status !== 404) return [];
+    // Missing route (404) or transient admission/overload (503) → vendored fixture
+    // for that lecture only. Other API errors stay empty (no false spatial claims).
+    if (error instanceof ApiError && error.status !== 404 && error.status !== 503) {
+      return [];
+    }
     return visibleAssets(vendoredSpatialAssets().filter(asset => asset.lecture_id === lectureId));
   }
 }

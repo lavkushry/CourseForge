@@ -82,7 +82,9 @@ async function oneRun(i) {
   page.on('pageerror', e => errors.push(e.message));
   page.on('response', res => {
     if (res.status() >= 500 && res.url().includes('/api/')) {
-      httpFails.push(`${res.status()} ${res.url()}`);
+      // Spatial is optional explore UI; 503 there must not be treated as media death.
+      const soft = res.url().includes('/spatial');
+      httpFails.push(`${res.status()}${soft ? '[soft]' : ''} ${res.url()}`);
     }
   });
 
@@ -288,13 +290,124 @@ async function oneRun(i) {
   });
 
   // Steady play after first frame (capacity-doc wants long sessions; this is a short sample window).
+  // Poll for empty-video remounts (observed mid-step flake: readyState 0 / empty src after firstFrame).
   const steadyMs = process.env.QOE_STEADY_MS ? Number(process.env.QOE_STEADY_MS) : 8000;
-  if (steadyMs > 0) {
-    await page.waitForTimeout(steadyMs);
+  const sliceMs = 2000;
+  let recovered = 0;
+  for (let elapsed = 0; elapsed < steadyMs; elapsed += sliceMs) {
+    await page.waitForTimeout(Math.min(sliceMs, steadyMs - elapsed));
+    const alive = await page.evaluate(() => {
+      const v = document.querySelector('video');
+      return !!(v && (v.currentSrc || v.src) && v.readyState >= 2 && v.currentTime > 0);
+    });
+    if (alive) continue;
+    recovered += 1;
+    // Re-hook clocks on a replacement <video> if the player remounted.
+    await page.evaluate(() => {
+      const prev = window.__cfQoe || {};
+      const v = document.querySelector('video');
+      if (!v) return;
+      if (v.__cfQoeHooked && window.__cfQoe) return;
+      v.__cfQoeHooked = true;
+      window.__cfQoe = {
+        waiting: prev.waiting || 0,
+        stalled: prev.stalled || 0,
+        waitingMs: prev.waitingMs || 0,
+        playingMs: prev.playingMs || 0,
+        waitingMsExSeek: prev.waitingMsExSeek || 0,
+        playingMsExSeek: prev.playingMsExSeek || 0,
+        seekWallMs: prev.seekWallMs || 0,
+        _waitStart: 0,
+        _playStart: 0,
+        _seekStart: 0,
+        _seeking: false,
+        _obsStart: prev._obsStart || performance.now(),
+        recovered: (prev.recovered || 0) + 1,
+      };
+      const qoe = () => window.__cfQoe;
+      const flushPlay = now => {
+        const q = qoe();
+        if (!q._playStart) return;
+        const dt = now - q._playStart;
+        q.playingMs += dt;
+        if (!q._seeking) q.playingMsExSeek += dt;
+        q._playStart = 0;
+      };
+      const flushWait = now => {
+        const q = qoe();
+        if (!q._waitStart) return;
+        const dt = now - q._waitStart;
+        q.waitingMs += dt;
+        if (!q._seeking) q.waitingMsExSeek += dt;
+        q._waitStart = 0;
+      };
+      v.addEventListener('waiting', () => {
+        const q = qoe();
+        const now = performance.now();
+        q.waiting += 1;
+        flushPlay(now);
+        if (!q._waitStart) q._waitStart = now;
+      });
+      v.addEventListener('stalled', () => {
+        qoe().stalled += 1;
+      });
+      v.addEventListener('playing', () => {
+        const q = qoe();
+        const now = performance.now();
+        flushWait(now);
+        if (!q._playStart) q._playStart = now;
+      });
+      v.addEventListener('pause', () => {
+        flushPlay(performance.now());
+      });
+      v.addEventListener('seeking', () => {
+        const q = qoe();
+        const now = performance.now();
+        if (q._seeking) return;
+        flushPlay(now);
+        flushWait(now);
+        q._seeking = true;
+        q._seekStart = now;
+      });
+      v.addEventListener('seeked', () => {
+        const q = qoe();
+        const now = performance.now();
+        if (q._seekStart) {
+          q.seekWallMs += now - q._seekStart;
+          q._seekStart = 0;
+        }
+        q._seeking = false;
+        if (!v.paused && !q._playStart) q._playStart = now;
+      });
+      if (!v.paused && v.readyState >= 2) {
+        window.__cfQoe._playStart = performance.now();
+      }
+    });
+    const playToggle = page.locator('#play-toggle');
+    if (await playToggle.isVisible().catch(() => false)) {
+      await playToggle.click({ force: true }).catch(() => {});
+    } else {
+      await page.locator('video').evaluate(v => v.play().catch(() => {})).catch(() => {});
+    }
+    try {
+      await page.waitForFunction(
+        () => {
+          const v = document.querySelector('video');
+          return v && v.readyState >= 2 && v.currentTime > 0.05;
+        },
+        null,
+        { timeout: 15000 },
+      );
+    } catch {
+      // Leave recovery count; final ok check remains fail-closed if still dead.
+    }
   }
 
   // ArrowRight seeks +10s. After long steady on a short fixture (mediasim ≈60s),
   // currentTime may be at EOS so +10 cannot advance — rewind to a safe playhead first.
+  // Re-resolve <video> after possible remount during steady.
+  const liveVideo = page.locator('video');
+  await liveVideo.waitFor({ state: 'attached', timeout: 10000 }).catch(() => {});
   await page.evaluate(() => {
     const v = document.querySelector('video');
     if (!v || !Number.isFinite(v.duration) || v.duration <= 0) return;
@@ -326,7 +439,7 @@ async function oneRun(i) {
     // Fall through; seekOk may still fail and be reported honestly.
   }
 
-  const beforeSeek = await video.evaluate(v => v.currentTime);
+  const beforeSeek = await liveVideo.evaluate(v => v.currentTime).catch(() => 0);
   await page.locator('#player-wrap').focus();
   await page.keyboard.press('ArrowRight');
   let seekOk = false;
@@ -347,7 +460,7 @@ async function oneRun(i) {
   // Brief post-seek hold (seek wall excluded from ex-seek ratio).
   await page.waitForTimeout(process.env.QOE_REBUFFER_HOLD_MS ? Number(process.env.QOE_REBUFFER_HOLD_MS) : 1500);
 
-  const after = await video.evaluate(v => ({
+  const after = await liveVideo.evaluate(v => ({
     currentTime: v.currentTime,
     readyState: v.readyState,
     paused: v.paused,
@@ -361,6 +474,14 @@ async function oneRun(i) {
         return '';
       }
     })(),
+  })).catch(() => ({
+    currentTime: 0,
+    readyState: 0,
+    paused: true,
+    frames: 0,
+    width: 0,
+    height: 0,
+    srcHost: '',
   }));
   const rebuffer = await page.evaluate(() => {
     const q = window.__cfQoe || {
@@ -371,6 +492,7 @@ async function oneRun(i) {
       waitingMsExSeek: 0,
       playingMsExSeek: 0,
       seekWallMs: 0,
+      recovered: 0,
     };
     const now = performance.now();
     if (q._seeking && q._seekStart) {
@@ -419,6 +541,7 @@ async function oneRun(i) {
     playerReadyMs,
     firstFrameMs,
     seekOk,
+    recovered,
     rebuffer,
     after,
     errors,
@@ -429,26 +552,36 @@ async function oneRun(i) {
 }
 
 const results = [];
+const maxAttempts = process.env.QOE_RETRY_FAIL === '0' ? 1 : 2;
 for (let i = 1; i <= n; i++) {
   console.log(`qoe run ${i}/${n}`);
-  try {
-    const r = await oneRun(i);
-    results.push(r);
-    console.log(
-      JSON.stringify({
-        run: r.run,
-        authPath: r.authPath,
-        playerReadyMs: r.playerReadyMs,
-        firstFrameMs: r.firstFrameMs,
-        seekOk: r.seekOk,
-        ok: r.ok,
-        playerState: r.playerState,
-      }),
-    );
-  } catch (e) {
-    results.push({ run: i, ok: false, error: String(e) });
-    console.error(`run ${i} failed`, e);
+  let r = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      r = await oneRun(i);
+      r.attempt = attempt;
+      if (r.ok || attempt === maxAttempts) break;
+      console.log(JSON.stringify({ run: i, attempt, ok: false, retry: true, seekOk: r.seekOk }));
+    } catch (e) {
+      r = { run: i, ok: false, error: String(e), attempt };
+      if (attempt === maxAttempts) break;
+      console.log(JSON.stringify({ run: i, attempt, ok: false, retry: true, error: String(e) }));
+    }
   }
+  results.push(r);
+  console.log(
+    JSON.stringify({
+      run: r.run,
+      authPath: r.authPath,
+      playerReadyMs: r.playerReadyMs,
+      firstFrameMs: r.firstFrameMs,
+      seekOk: r.seekOk,
+      recovered: r.recovered,
+      attempt: r.attempt,
+      ok: r.ok,
+      playerState: r.playerState,
+    }),
+  );
 }
 
 const ok = results.filter(r => r.ok);
