@@ -310,3 +310,219 @@ html[data-theme='light'] .site-header.lms-top-header {
 html[data-theme='light'] .lms-header-search {
   background: rgba(0, 0, 0, 0.04);
 }
+
+/* ==========================================================================
+   Deferred + secondary surfaces — same slim craft as shell
+   planning / reviews / tutor / labs / paths / career / admin /
+   library / history / classroom / search
+   ========================================================================== */
+
+.library-panel,
+.planner-panel,
+.history-panel,
+.reviews-panel,
+.tutor-panel,
+.labs-panel,
+.paths-panel,
+.career-panel-host,
+.settings-panel,
+.admin-panel,
+#classroom {
+  --panel-radius: var(--radius-lg);
+  --panel-shadow: none;
+}
+
+.library-panel h1,
+.planner-panel h1,
+.history-panel h1,
+.reviews-panel h1,
+.tutor-panel h1,
+.labs-panel h1,
+.paths-panel h1,
+.career-panel-host h1,
+.settings-panel h1,
+.admin-panel h1,
+.library-panel h2,
+.planner-panel h2,
+.history-panel h2,
+.reviews-panel h2,
+.tutor-panel h2,
+.labs-panel h2,
+.paths-panel h2,
+.career-panel-host h2,
+.settings-panel h2,
+.admin-panel h2 {
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.planning-card,
+.paths-main,
+.paths-sidebar,
+.tutor-ask-card,
+.tutor-answer-card,
+.tutor-status-card,
+.labs-panel .lab-card,
+.labs-panel .lab-detail,
+.career-card,
+.career-panel,
+.admin-card,
+.admin-panel-card,
+.admin-stat-card,
+.admin-table-wrap,
+.reviews-study-card,
+.review-card-face,
+.settings-panel-card,
+.library-card,
+.history-card {
+  background: var(--surface-elevated) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.planning-card:hover,
+.history-card:hover,
+.library-card:hover,
+.labs-panel .lab-card:hover,
+.career-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.filter-pill,
+.mode-pill,
+.admin-filter-pill,
+.budget-choice-pill,
+.planning-tab,
+.admin-tab-btn,
+.tutor-mode-btn,
+.lms-playlist-pill,
+.action-pill,
+.suggestion-pill,
+.prompt-pill,
+.admin-header-stat-pill,
+.concept-pill {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.filter-pill.active,
+.mode-pill.active,
+.admin-filter-pill.active,
+.budget-choice-pill.active,
+.planning-tab.active,
+.admin-tab-btn.active,
+.tutor-mode-btn[aria-pressed='true'],
+.action-pill.active {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent-border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.admin-layout .button.primary,
+.admin-layout .button.secondary,
+.paths-sidebar-head .button,
+.tutor-submit-btn,
+.btn-up-next-watch,
+.lms-playlist-pill {
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+.admin-layout .button.primary,
+.btn-up-next-watch {
+  background: var(--lms-accent) !important;
+  border-color: transparent !important;
+}
+
+.path-progress::-webkit-progress-value,
+.library-progress-fill,
+.history-progress-fill,
+.lesson-progress-fill {
+  background: var(--lms-accent) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.calendar-day-pill.today-active .day-pill-dot,
+.calendar-day-pill .day-pill-dot {
+  box-shadow: none !important;
+}
+
+.player-up-next-card {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--line) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.lms-playlist-pill:hover {
+  box-shadow: none !important;
+}
+
+.action-pill.pill-complete,
+.study-rail-tab.active,
+.note-seek-pill {
+  box-shadow: none !important;
+}
+
+.tutor-textarea:focus,
+.planning-form input:focus,
+.planning-form select:focus,
+.admin-layout input:focus,
+.admin-layout select:focus {
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+.tutor-user-bubble {
+  border-color: var(--accent-border) !important;
+  box-shadow: none !important;
+}
+
+.user-avatar-pill {
+  background: var(--accent-soft) !important;
+  color: var(--coral-hover) !important;
+}
+
+.magnetic-macos-drawer,
+.episode-dialog,
+.spatial-dialog-card,
+.omni-search-dialog,
+.syllabus-dialog {
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-xl) !important;
+}
+
+.classroom .player-wrap,
+#classroom .player-stage,
+.focus-workspace .player-wrap {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.classroom .player-wrap::after,
+#classroom .cinema-glow,
+.player-stage-glow {
+  box-shadow: none !important;
+  background: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .library-panel:not([hidden]),
+  .planner-panel:not([hidden]),
+  .history-panel:not([hidden]),
+  .reviews-panel:not([hidden]),
+  .tutor-panel:not([hidden]),
+  .labs-panel:not([hidden]),
+  .paths-panel:not([hidden]),
+  .career-panel-host:not([hidden]),
+  .settings-panel:not([hidden]),
+  .admin-panel:not([hidden]) {
+    animation: cf-shell-fade var(--motion-med) var(--ease-out) both;
+  }
+}

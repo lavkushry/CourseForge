@@ -66,9 +66,9 @@
 
 .budget-choice-pill.active {
   background: var(--accent-soft);
-  border-color: var(--accent);
+  border-color: var(--accent-border);
   color: #fff;
-  box-shadow: 0 0 12px var(--accent-glow);
+  box-shadow: none;
 }
 
 .checklist-summary-badge {
@@ -214,5 +214,5 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 12px var(--lms-accent-glow);
+  box-shadow: none;
 }

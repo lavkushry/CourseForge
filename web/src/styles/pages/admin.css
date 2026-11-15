@@ -496,14 +496,14 @@
 
 .admin-layout .button.primary {
   background: var(--lms-accent);
-  border-color: var(--lms-accent);
+  border-color: transparent;
   color: #fff;
-  border-radius: 999px;
-  font-weight: 700;
+  border-radius: 10px;
+  font-weight: 650;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  box-shadow: 0 6px 18px rgba(229, 69, 3, 0.28);
+  box-shadow: none;
 }
 
 .admin-layout .button.primary:hover {
@@ -513,9 +513,9 @@
 
 .admin-layout .button.secondary {
   background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line);
   color: #e5e5ea;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -553,7 +553,7 @@
   border-radius: 24px;
   padding: 0;
   color: #fff;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85);
+  box-shadow: var(--shadow-lg);
 }
 
 .student-access-modal-shell {
@@ -909,9 +909,9 @@
 
 .student-access-dialog .button.primary {
   background: var(--lms-accent);
-  border: 1px solid var(--lms-accent);
+  border: 1px solid transparent;
   color: #fff;
-  box-shadow: 0 6px 18px rgba(229, 69, 3, 0.28);
+  box-shadow: none;
 }
 
 .student-access-dialog .button.primary:hover {

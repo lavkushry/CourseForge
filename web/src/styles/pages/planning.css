@@ -9,12 +9,12 @@
 }
 
 .planning-card {
-  background: var(--surface-elevated, #15161f);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--poster-radius, 6px);
+  background: var(--surface-elevated, #1c1c1e);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
   padding: var(--space-6);
   margin-bottom: var(--space-5);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
 }
 
 .planning-card h2 {
@@ -204,10 +204,10 @@
   background: var(--surface-elevated, #1a1b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--poster-radius, 6px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
   transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--motion-fast) ease,
+    transform var(--motion-med) var(--ease-out);
 }
 
 .momentum-stat-card:hover {
@@ -329,7 +329,7 @@
 
 .calendar-day-pill.today-active .day-pill-dot {
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: none;
 }
 
 .calendar-day-pill.day-complete .day-pill-dot {
@@ -511,20 +511,20 @@
   color: #fff;
   line-height: 1;
   padding: 18px var(--space-9);
-  border-radius: 20px;
-  background: radial-gradient(circle at 50% 0%, var(--accent-soft), rgba(11, 13, 21, 0.95));
-  border: 1px solid var(--accent-border);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-xl);
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  box-shadow: none;
 }
 
 .focus-status-display {
   font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffb395;
+  font-weight: 650;
+  color: var(--muted);
   padding: 6px var(--space-4);
-  border-radius: 999px;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
 }
 
 .focus-actions-row,
@@ -664,7 +664,7 @@ textarea {
 .planning-panel select:focus,
 .login-panel input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* Weekly Budgets Grid Responsiveness */
