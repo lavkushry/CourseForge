@@ -1,5 +1,13 @@
 import { errorMessage } from '../api';
+import { remaining } from './contracts';
 import type { PlanningHost } from './host';
+
+function formatCountdown(totalSeconds: number): string {
+  const secs = Math.max(0, Math.floor(totalSeconds));
+  const mins = Math.floor(secs / 60);
+  const rem = secs % 60;
+  return `${String(mins).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+}
 
 export function renderFocus(host: PlanningHost): HTMLElement {
   const sec = document.createElement('section');
@@ -13,26 +21,54 @@ export function renderFocus(host: PlanningHost): HTMLElement {
   const card = document.createElement('div');
   card.className = 'planning-card focus-card';
 
-  if (host.currentFocus && (host.currentFocus.status === 'running' || host.currentFocus.status === 'paused')) {
+  const session = host.currentFocus;
+  const active = session && (session.status === 'running' || session.status === 'paused');
+
+  if (active && session) {
     const statusP = document.createElement('p');
     statusP.className = 'focus-status-display';
-    const modeName = host.currentFocus.mode === 'focus' ? 'Focus' : 'Break';
-    statusP.textContent = `${modeName} · ${host.currentFocus.status}`;
+    const modeName = session.mode === 'focus' ? 'Focus' : 'Break';
+    statusP.textContent = `${modeName} · ${session.status}${session.title ? ` · ${session.title}` : ''}`;
     card.append(statusP);
+
+    const clockDisplay = document.createElement('div');
+    clockDisplay.className = 'focus-digital-clock';
+    clockDisplay.setAttribute('aria-live', 'polite');
+    const paint = () => {
+      const left = remaining(session, host.focusReceivedAt, Date.now());
+      clockDisplay.textContent = formatCountdown(left);
+    };
+    paint();
+    card.append(clockDisplay);
+
+    if (session.status === 'running' && host.focusReceivedAt > 0) {
+      const timer = window.setInterval(paint, 250);
+      const stop = () => window.clearInterval(timer);
+      sec.addEventListener('planning:dispose', stop, { once: true });
+      // Clean up when the host re-renders and replaces this subtree.
+      const observer = new MutationObserver(() => {
+        if (!sec.isConnected) {
+          stop();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
 
     const controlsRow = document.createElement('div');
     controlsRow.className = 'focus-actions-row';
 
-    if (host.currentFocus.status === 'running') {
+    if (session.status === 'running') {
       const pauseBtn = document.createElement('button');
       pauseBtn.type = 'button';
       pauseBtn.className = 'button';
       pauseBtn.textContent = 'Pause';
       pauseBtn.onclick = async () => {
-        const body = { action: 'pause' as const, expected_revision: host.currentFocus!.revision };
-        const key = host.commands.get(`focus:actions:${host.currentFocus!.id}:pause`, body).key;
+        const body = { action: 'pause' as const, expected_revision: session.revision };
+        const key = host.commands.get(`focus:actions:${session.id}:pause`, body).key;
         try {
-          host.currentFocus = await host.planningApi.focusAction(host.currentFocus!, 'pause', key, host.signal);
+          const next = await host.planningApi.focusAction(session, 'pause', key, host.signal);
+          host.noteFocusSnapshot(next);
           host.render();
         } catch (err) {
           host.statusMessage = errorMessage(err);
@@ -40,16 +76,17 @@ export function renderFocus(host: PlanningHost): HTMLElement {
         }
       };
       controlsRow.append(pauseBtn);
-    } else if (host.currentFocus.status === 'paused') {
+    } else if (session.status === 'paused') {
       const resumeBtn = document.createElement('button');
       resumeBtn.type = 'button';
       resumeBtn.className = 'button primary';
       resumeBtn.textContent = 'Resume';
       resumeBtn.onclick = async () => {
-        const body = { action: 'resume' as const, expected_revision: host.currentFocus!.revision };
-        const key = host.commands.get(`focus:actions:${host.currentFocus!.id}:resume`, body).key;
+        const body = { action: 'resume' as const, expected_revision: session.revision };
+        const key = host.commands.get(`focus:actions:${session.id}:resume`, body).key;
         try {
-          host.currentFocus = await host.planningApi.focusAction(host.currentFocus!, 'resume', key, host.signal);
+          const next = await host.planningApi.focusAction(session, 'resume', key, host.signal);
+          host.noteFocusSnapshot(next);
           host.render();
         } catch (err) {
           host.statusMessage = errorMessage(err);
@@ -64,11 +101,11 @@ export function renderFocus(host: PlanningHost): HTMLElement {
     finishBtn.className = 'button';
     finishBtn.textContent = 'Finish session';
     finishBtn.onclick = async () => {
-      const body = { action: 'finish' as const, expected_revision: host.currentFocus!.revision };
-      const key = host.commands.get(`focus:actions:${host.currentFocus!.id}:finish`, body).key;
+      const body = { action: 'finish' as const, expected_revision: session.revision };
+      const key = host.commands.get(`focus:actions:${session.id}:finish`, body).key;
       try {
-        await host.planningApi.focusAction(host.currentFocus!, 'finish', key, host.signal);
-        host.currentFocus = null;
+        await host.planningApi.focusAction(session, 'finish', key, host.signal);
+        host.noteFocusSnapshot(null);
         host.render();
       } catch (err) {
         host.statusMessage = errorMessage(err);
@@ -82,11 +119,11 @@ export function renderFocus(host: PlanningHost): HTMLElement {
     cancelBtn.className = 'button quiet';
     cancelBtn.textContent = 'Cancel session';
     cancelBtn.onclick = async () => {
-      const body = { action: 'cancel' as const, expected_revision: host.currentFocus!.revision };
-      const key = host.commands.get(`focus:actions:${host.currentFocus!.id}:cancel`, body).key;
+      const body = { action: 'cancel' as const, expected_revision: session.revision };
+      const key = host.commands.get(`focus:actions:${session.id}:cancel`, body).key;
       try {
-        await host.planningApi.focusAction(host.currentFocus!, 'cancel', key, host.signal);
-        host.currentFocus = null;
+        await host.planningApi.focusAction(session, 'cancel', key, host.signal);
+        host.noteFocusSnapshot(null);
         host.render();
       } catch (err) {
         host.statusMessage = errorMessage(err);
@@ -102,7 +139,7 @@ export function renderFocus(host: PlanningHost): HTMLElement {
     clockDisplay.textContent = `${String(host.focusDurationMinutes).padStart(2, '0')}:00`;
     const emptyP = document.createElement('p');
     emptyP.className = 'muted no-active-timer-msg';
-    emptyP.textContent = 'No active timer';
+    emptyP.textContent = 'No active timer — start a measured focus session below.';
     card.append(clockDisplay, emptyP);
   }
 
@@ -142,6 +179,7 @@ export function renderFocus(host: PlanningHost): HTMLElement {
   startBtn.type = 'button';
   startBtn.className = 'button primary';
   startBtn.textContent = 'Start timer';
+  startBtn.disabled = Boolean(active);
   startBtn.onclick = async () => {
     const mins = Number(durInput.value || 25);
     const body: { mode: 'focus'; duration_minutes: number; title: string; lesson_id?: string } = {
@@ -154,7 +192,9 @@ export function renderFocus(host: PlanningHost): HTMLElement {
     }
     const key = host.commands.get('focus:sessions', body).key;
     try {
-      host.currentFocus = await host.planningApi.start(body, key, host.signal);
+      const next = await host.planningApi.start(body, key, host.signal);
+      host.noteFocusSnapshot(next);
+      host.statusMessage = '';
       host.render();
     } catch (err) {
       host.statusMessage = errorMessage(err);

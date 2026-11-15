@@ -29,6 +29,54 @@ export function aiStatus(client: HttpClient, signal?: AbortSignal): Promise<AiDe
   return client.request('/ai/status', signal ? { signal } : {}).then(parseAiStatus);
 }
 
+export interface TutorCitation {
+  chunk_id: string;
+  lesson_id: string;
+  lesson_title: string;
+  start_seconds: number;
+  end_seconds: number;
+  text: string;
+}
+
+export interface TutorAskResponse {
+  answer: string;
+  mode: string;
+  citations: TutorCitation[];
+}
+
+/** Strict tutor ask parser — drops citations without a lesson id / seek time. */
+export function parseTutorAsk(value: unknown): TutorAskResponse {
+  const data = object(value);
+  if (typeof data.answer !== 'string' || !data.answer) {
+    throw new Error('Tutor returned an empty answer');
+  }
+  const citations: TutorCitation[] = [];
+  if (Array.isArray(data.citations)) {
+    for (const raw of data.citations) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+      const c = raw as Record<string, unknown>;
+      if (typeof c.lesson_id !== 'string' || !c.lesson_id) continue;
+      if (typeof c.start_seconds !== 'number' || !Number.isFinite(c.start_seconds) || c.start_seconds < 0) {
+        continue;
+      }
+      citations.push({
+        chunk_id: typeof c.chunk_id === 'string' ? c.chunk_id : '',
+        lesson_id: c.lesson_id,
+        lesson_title: typeof c.lesson_title === 'string' ? c.lesson_title : c.lesson_id,
+        start_seconds: c.start_seconds,
+        end_seconds:
+          typeof c.end_seconds === 'number' && Number.isFinite(c.end_seconds) ? c.end_seconds : c.start_seconds,
+        text: typeof c.text === 'string' ? c.text : '',
+      });
+    }
+  }
+  return {
+    answer: data.answer,
+    mode: typeof data.mode === 'string' && data.mode ? data.mode : 'general',
+    citations,
+  };
+}
+
 export function aiAsk(
   client: HttpClient,
   courseId: string,
@@ -36,23 +84,14 @@ export function aiAsk(
   question: string,
   mode = 'general',
   signal?: AbortSignal,
-): Promise<{
-  answer: string;
-  mode: string;
-  citations: Array<{
-    chunk_id: string;
-    lesson_id: string;
-    lesson_title: string;
-    start_seconds: number;
-    end_seconds: number;
-    text: string;
-  }>;
-}> {
-  return client.request('/ai/tutor/ask', {
-    method: 'POST',
-    body: { course_id: courseId, lesson_id: lessonId, question, mode },
-    ...(signal ? { signal } : {}),
-  });
+): Promise<TutorAskResponse> {
+  return client
+    .request('/ai/tutor/ask', {
+      method: 'POST',
+      body: { course_id: courseId, lesson_id: lessonId, question, mode },
+      ...(signal ? { signal } : {}),
+    })
+    .then(parseTutorAsk);
 }
 
 export function aiSummary(

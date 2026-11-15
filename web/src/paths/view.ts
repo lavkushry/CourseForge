@@ -1,16 +1,26 @@
 import { svgIcon } from '../icons';
 import type { ApiClient } from '../api';
+import { errorMessage, isAbort } from '../api';
 import { button, el, emptyState, sidebar } from '../components';
+import { panelSkeleton } from '../ui/skeleton';
 import { cleanLessonTitle } from '../discovery/view';
 import { loadLectureSpatial } from '../spatial/catalog';
 import { requestSpatialOpen } from '../spatial/pending';
 import { renderPlanExplore } from '../spatial/ui';
 import type { LearningPath, PathStep } from './contracts';
+import {
+  isFixtureCourseId,
+  pathsLoadFailureCopy,
+  realCourseIds,
+  stepUnlocked,
+  unmetPrerequisiteTitles,
+} from './status';
 
 export class PathsView {
   private paths: LearningPath[] = [];
   private activePath: LearningPath | null = null;
   private loading = false;
+  private loadError: string | null = null;
 
   constructor(
     private readonly root: HTMLElement,
@@ -22,15 +32,24 @@ export class PathsView {
   async activate(signal?: AbortSignal): Promise<void> {
     this.root.hidden = false;
     this.loading = true;
+    this.loadError = null;
     this.render();
     try {
       const resp = await this.api.learningPaths('', signal);
-      this.paths = resp.paths;
-      if (this.paths.length > 0 && !this.activePath) {
+      this.paths = resp.paths.map(path => ({
+        ...path,
+        course_ids: realCourseIds(path.course_ids),
+      }));
+      if (this.activePath) {
+        this.activePath = this.paths.find(p => p.id === this.activePath?.id) ?? this.paths[0] ?? null;
+      } else if (this.paths.length > 0) {
         this.activePath = this.paths[0] ?? null;
       }
+      this.loadError = null;
     } catch (err) {
-      this.notice('Could not load learning paths: ' + (err instanceof Error ? err.message : String(err)), true);
+      if (isAbort(err)) return;
+      this.loadError = errorMessage(err);
+      this.notice('Could not load learning paths: ' + this.loadError, true);
     } finally {
       this.loading = false;
       this.render();
@@ -60,14 +79,32 @@ export class PathsView {
 
     const list = el('div', 'paths-list');
     if (this.loading && !this.paths.length) {
-      list.append(el('p', 'muted', 'Loading roadmaps…'));
+      list.append(panelSkeleton({ variant: 'lines', count: 4, label: 'Loading roadmaps…' }));
+    } else if (this.loadError && !this.paths.length) {
+      const retry = button(
+        'Retry',
+        () => {
+          void this.activate();
+        },
+        'button primary',
+      );
+      const failure = pathsLoadFailureCopy(this.loadError);
+      list.append(
+        emptyState({
+          className: 'catalog-empty paths-empty-state',
+          icon: 'sparkle',
+          title: failure.title,
+          description: failure.description,
+          action: retry,
+        }),
+      );
     } else if (!this.paths.length) {
       list.append(
         emptyState({
           className: 'catalog-empty paths-empty-state',
           icon: 'sparkle',
           title: 'No saved learning roadmaps yet',
-          description: 'Create one to chart your learning journey!',
+          description: 'Create one from a published catalog course — fixture placeholders are not accepted.',
         }),
       );
     } else {
@@ -102,10 +139,11 @@ export class PathsView {
     } else {
       const p = this.activePath;
       const head = el('div', 'path-header');
+      const courseLabel = p.course_ids.length ? p.course_ids.join(', ') : 'No published courses linked';
       head.append(
         el('span', 'eyebrow', `LEARNING ROADMAP · ${p.provenance.toUpperCase()}`),
         el('h2', '', p.goal),
-        el('p', 'muted', `Covering: ${p.course_ids.join(', ')}`),
+        el('p', 'muted', `Covering: ${courseLabel}`),
         el('div', 'path-stats-row'),
       );
       const stats = head.querySelector('.path-stats-row')!;
@@ -131,12 +169,19 @@ export class PathsView {
   }
 
   private renderStep(path: LearningPath, step: PathStep, index: number): HTMLElement {
-    const card = el('article', `path-step-card${step.completed ? ' step-done' : ''}`);
+    const unlocked = stepUnlocked(path, step);
+    const blockedTitles = unmetPrerequisiteTitles(path, step);
+    const card = el(
+      'article',
+      `path-step-card${step.completed ? ' step-done' : ''}${!unlocked && !step.completed ? ' step-locked' : ''}`,
+    );
     card.id = `step-card-${index}`;
     const top = el('div', 'step-card-head');
     const indexBadge = el('span', 'step-index-badge', `Step ${index}`);
     if (step.completed) {
       indexBadge.prepend(svgIcon('check'));
+    } else if (!unlocked) {
+      indexBadge.prepend(svgIcon('lock'));
     } else {
       indexBadge.prepend(svgIcon('target'));
     }
@@ -146,7 +191,13 @@ export class PathsView {
     const checkbox = el('input');
     checkbox.type = 'checkbox';
     checkbox.checked = step.completed;
+    checkbox.disabled = !unlocked && !step.completed;
     checkbox.addEventListener('change', async () => {
+      if (!stepUnlocked(path, step) && checkbox.checked) {
+        checkbox.checked = false;
+        this.notice('Complete prerequisite steps before marking this milestone done.', true);
+        return;
+      }
       checkbox.disabled = true;
       try {
         const updated = await this.api.completeStep(path.id, step.id, checkbox.checked, path.revision);
@@ -162,10 +213,19 @@ export class PathsView {
         checkbox.disabled = false;
       }
     });
-    checkLabel.append(checkbox, el('span', '', step.completed ? 'Mastered' : 'Mark done'));
+    checkLabel.append(
+      checkbox,
+      el('span', '', step.completed ? 'Mastered' : unlocked ? 'Mark done' : 'Locked'),
+    );
 
     top.append(indexBadge, title, checkLabel);
     card.append(top);
+
+    if (!unlocked && blockedTitles.length) {
+      card.append(
+        el('p', 'muted path-prereq-note', `Requires: ${blockedTitles.join(' · ')}`),
+      );
+    }
 
     if (step.objectives && step.objectives.length > 0) {
       const objList = el('ul', 'step-objectives');
@@ -175,19 +235,27 @@ export class PathsView {
 
     if (step.sources && step.sources.length > 0) {
       const sourcesWrap = el('div', 'step-sources');
-      sourcesWrap.append(el('span', 'muted', 'Jump to Lecture: '));
+      sourcesWrap.append(el('span', 'muted', unlocked ? 'Jump to Lecture: ' : 'Lectures unlock after prerequisites: '));
       for (const src of step.sources) {
+        if (isFixtureCourseId(src.course_id)) continue;
         const chip = button(
           ` ${cleanLessonTitle(src.title || src.lesson_id)} (${Math.floor(src.start / 60)}:${String(Math.floor(src.start % 60)).padStart(2, '0')})`,
-          () => this.openLesson(src.course_id, src.lesson_id, src.start),
+          () => {
+            if (!unlocked) {
+              this.notice('Complete prerequisite steps before jumping into this lecture.', true);
+              return;
+            }
+            this.openLesson(src.course_id, src.lesson_id, src.start);
+          },
           'button quiet source-chip',
         );
+        chip.disabled = !unlocked;
         chip.prepend(svgIcon('play'));
         sourcesWrap.append(chip);
       }
       card.append(sourcesWrap);
-      const first = step.sources[0];
-      if (first) {
+      const first = step.sources.find(s => !isFixtureCourseId(s.course_id));
+      if (first && unlocked) {
         void loadLectureSpatial(this.api, first.lesson_id)
           .then(assets => {
             if (!card.isConnected) return;
@@ -226,23 +294,28 @@ export class PathsView {
     select.append(el('option', '', 'Loading courses…'));
     form.append(select);
 
+    let catalogReady = false;
     try {
       const res = await this.api.courses('', undefined, '');
       select.replaceChildren();
-      for (const c of res.courses) {
+      const published = res.courses.filter(c => !isFixtureCourseId(c.id));
+      for (const c of published) {
         const opt = el('option', '', c.title);
         opt.value = c.id;
         select.append(opt);
       }
-      if (!res.courses.length) {
-        const opt = el('option', '', 'Default Course');
-        opt.value = 'fixture-course';
+      catalogReady = published.length > 0;
+      if (!catalogReady) {
+        const opt = el('option', '', 'No published courses available');
+        opt.value = '';
+        opt.disabled = true;
         select.append(opt);
       }
     } catch {
       select.replaceChildren();
-      const opt = el('option', '', 'CourseForge demonstration');
-      opt.value = 'fixture-course';
+      const opt = el('option', '', 'Could not load catalog courses');
+      opt.value = '';
+      opt.disabled = true;
       select.append(opt);
     }
 
@@ -255,7 +328,11 @@ export class PathsView {
           this.notice('Goal must be at least 3 characters', true);
           return;
         }
-        const courseId = select.value || 'fixture-course';
+        const courseId = select.value;
+        if (!courseId || isFixtureCourseId(courseId)) {
+          this.notice('Pick a published catalog course. Fixture placeholders are not accepted.', true);
+          return;
+        }
         createBtn.disabled = true;
         try {
           const newPath = await this.api.createLearningPath(goal, [courseId], 4);
@@ -270,6 +347,7 @@ export class PathsView {
       },
       'button primary',
     );
+    createBtn.disabled = !catalogReady;
 
     const cancelBtn = button('Cancel', () => dialog.close(), 'button quiet');
     actions.append(cancelBtn, createBtn);
@@ -316,14 +394,19 @@ export class PathsView {
           generateBtn.disabled = true;
           generateBtn.textContent = 'Generating…';
           const aiResult = await this.api.generateAiRoadmap(goal, role);
-          const steps = (aiResult.steps || []) as Array<{ course_id: string }>;
-          const courseIds = steps.map((s: { course_id: string }) => s.course_id).filter(Boolean);
+          const courseIds = realCourseIds(
+            (aiResult.steps || []).map(s => s.course_id).filter((id): id is string => Boolean(id)),
+          );
           if (!courseIds.length) {
             throw new Error(
-              'AI returned no mapped courses. Roadmaps are not created from placeholder fixture courses.',
+              'AI returned no mapped published courses. Roadmaps are not created from placeholder fixture courses.',
             );
           }
-          const newPath = await this.api.createLearningPath(goal, courseIds.slice(0, 4), steps.length || 4);
+          const newPath = await this.api.createLearningPath(
+            goal,
+            courseIds.slice(0, 4),
+            aiResult.steps.length || 4,
+          );
           dialog.close();
           this.activePath = newPath;
           await this.activate();

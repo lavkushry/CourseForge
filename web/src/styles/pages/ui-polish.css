@@ -21,7 +21,7 @@
   height: 100% !important;
   aspect-ratio: 16 / 9 !important;
   overflow: hidden !important;
-  background: linear-gradient(135deg, #16192b 0%, #0d0f18 100%) !important;
+  background: #141416 !important;
 }
 
 .course-art .course-cover,
@@ -86,18 +86,18 @@
   pointer-events: none !important;
 }
 
-/* 2. Hero Billboard Full-Bleed Layering (Fixes Empty Box Above Hero Content) */
+/* 2. Hero Billboard — cinema shell owns first viewport; keep layering only */
 #featured-course,
 .hero-billboard {
   position: relative !important;
-  border-radius: 22px !important;
+  border-radius: 0 !important;
   overflow: hidden !important;
-  min-height: 330px !important;
+  min-height: 300px !important;
   display: flex !important;
   align-items: flex-end !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
-  background: #0d101d !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: #000 !important;
 }
 
 #featured-course .hero-art,
@@ -147,26 +147,24 @@
 .continue-card {
   display: flex !important;
   flex-direction: column !important;
-  background: rgba(19, 22, 35, 0.78) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
+  background: var(--surface-elevated) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-lg) !important;
   overflow: hidden !important;
   transition:
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.24s ease,
-    box-shadow 0.24s ease !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26) !important;
+    transform var(--motion-med) var(--ease-out),
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-med) ease !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .course-card:hover,
 .continue-card:hover {
-  transform: translateY(-4px) !important;
-  border-color: rgba(139, 92, 246, 0.38) !important;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.42),
-    0 0 0 1px rgba(139, 92, 246, 0.2) !important;
+  transform: var(--lift-hover) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: var(--lift-shadow) !important;
 }
 
 .course-badge,
@@ -254,8 +252,8 @@
 .lesson-progress-fill {
   height: 100% !important;
   border-radius: 999px !important;
-  background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%) !important;
-  transition: width 0.3s ease !important;
+  background: var(--lms-accent) !important;
+  transition: width var(--motion-med) var(--ease-out) !important;
 }
 
 #save-status,

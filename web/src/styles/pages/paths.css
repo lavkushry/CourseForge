@@ -90,17 +90,17 @@ button.path-nav-item {
 }
 
 .path-progress::-webkit-progress-value {
-  background: linear-gradient(90deg, var(--coral), var(--lms-accent));
+  background: var(--lms-accent);
 }
 
 .paths-main {
-  background: var(--surface-elevated, #1a1b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--poster-radius, 6px);
+  background: var(--surface-elevated, #1c1c1e);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
   padding: 1.8rem;
   display: grid;
   gap: 1.5rem;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  box-shadow: none;
 }
 
 .path-header {
@@ -240,7 +240,7 @@ button.path-nav-item {
 }
 
 .skill-node-group:hover circle {
-  filter: drop-shadow(0 0 8px var(--accent-glow));
+  filter: none;
 }
 
 .ai-gen-path-btn {

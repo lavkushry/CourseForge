@@ -346,6 +346,77 @@
   animation: skeleton 2s ease infinite;
 }
 
+/* Shared workspace panel skeletons (web/src/ui/skeleton.ts) */
+
+.cf-panel-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) 0;
+}
+
+.cf-panel-skeleton--inline {
+  padding: var(--space-2) 0 0;
+  gap: var(--space-2);
+}
+
+.cf-skeleton-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cf-panel-skeleton {
+  position: relative;
+}
+
+.cf-skeleton-line,
+.cf-skeleton-block {
+  border-radius: 10px;
+  background: linear-gradient(125deg, #1b1c22, #23242b, #1b1c22);
+  background-size: 200% 100%;
+  animation: skeleton 2s ease infinite;
+}
+
+.cf-skeleton-line {
+  height: 14px;
+  width: 62%;
+}
+
+.cf-skeleton-line--wide {
+  width: 88%;
+  height: 18px;
+}
+
+.cf-skeleton-block {
+  height: 72px;
+  width: 100%;
+  border: 1px solid var(--line);
+}
+
+.cf-panel-skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.cf-panel-skeleton-grid {
+  width: 100%;
+}
+
+html[data-theme='light'] .cf-skeleton-line,
+html[data-theme='light'] .cf-skeleton-block {
+  background: linear-gradient(125deg, #e8eaef, #f4f5f8, #e8eaef);
+  background-size: 200% 100%;
+}
+
 .catalog-empty {
   grid-column: 1/-1;
   text-align: center;

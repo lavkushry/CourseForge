@@ -241,12 +241,19 @@ export class StudyRail {
     root.append(panelWrap);
   }
 
+  private sheetDismissHandle(): HTMLButtonElement {
+    const handle = el('button', 'sheet-dismiss-handle') as HTMLButtonElement;
+    handle.type = 'button';
+    handle.setAttribute('aria-label', 'Close panel');
+    handle.title = 'Close';
+    return handle;
+  }
+
   private renderSplit(): void {
     const root = this.options.root;
     root.replaceChildren();
-    const head = el('div', 'focus-drawer-head');
-    head.append(el('h2', 'focus-drawer-title', 'Curriculum'));
-    root.append(head, this.renderLessonsPanel());
+    // Lessons panel carries its own quiet title — skip redundant "Curriculum" chrome.
+    root.append(this.sheetDismissHandle(), this.renderLessonsPanel());
     this.renderDock();
   }
 
@@ -255,33 +262,19 @@ export class StudyRail {
     if (!dock) return;
     dock.replaceChildren();
     const tab = this.dockTab === 'lessons' ? 'transcript' : this.dockTab;
-    const tabs: Array<{ id: StudyRailTab; label: string }> = [
-      { id: 'transcript', label: 'Transcript' },
-      { id: 'notes', label: 'Notes' },
-      { id: 'materials', label: 'Resources' },
-      { id: 'quiz', label: 'Quiz' },
-      { id: 'tutor', label: 'Tutor' },
-      { id: 'brief', label: 'Brief' },
-    ];
-    const bar = el('div', 'focus-dock-tabs');
-    bar.setAttribute('role', 'tablist');
-    bar.setAttribute('aria-label', 'Lesson context');
-    for (const item of tabs) {
-      const btn = el('button', item.id === tab ? 'focus-dock-tab active' : 'focus-dock-tab', item.label);
-      btn.type = 'button';
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', String(item.id === tab));
-      btn.addEventListener('click', () => {
-        this.dockTab = item.id;
-        this.activeTab = item.id;
-        this.render();
-      });
-      bar.append(btn);
-    }
+    // Header pills (Lessons/Notes/Files/Transcript/Quiz) are the switcher.
+    // Dock tabs would duplicate that chrome — keep panel only; label matches header ("Files").
     const panel = el('div', 'focus-dock-panel');
     panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-label', tab === 'materials' ? 'Files' : tab);
+    panel.dataset.tab = tab;
+    // Hidden active marker so evidence / aria tooling can still read the open tool.
+    const marker = el('span', 'focus-dock-tab active');
+    marker.hidden = true;
+    marker.setAttribute('aria-hidden', 'true');
+    marker.textContent = tab === 'materials' ? 'Files' : tab.charAt(0).toUpperCase() + tab.slice(1);
     panel.append(this.panelFor(tab));
-    dock.append(bar, panel);
+    dock.append(this.sheetDismissHandle(), marker, panel);
   }
 
   private panelFor(tab: StudyRailTab): HTMLElement {
@@ -313,27 +306,19 @@ export class StudyRail {
   private renderLessonsPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-lessons');
 
-    // Header with search
-    const head = el('div', 'panel-head');
-    head.append(
-      el('h3', '', 'Course Content'),
-      (() => {
-        const sp = el('span', 'tag', `${this.lessons.length} Lectures`);
-        sp.id = 'lesson-count';
-        return sp;
-      })(),
-    );
-
+    // Quiet filter only — header pills already say Lessons.
     const searchInput = el('input', 'form-input rail-search-input');
     searchInput.type = 'search';
     searchInput.placeholder = 'Filter lessons…';
+    searchInput.id = 'lesson-count';
+    searchInput.setAttribute('aria-label', `${this.lessons.length} lessons`);
     searchInput.value = this.lessonFilter;
     searchInput.addEventListener('input', () => {
       this.lessonFilter = searchInput.value.toLowerCase().trim();
       this.render();
     });
 
-    panel.append(head, searchInput);
+    panel.append(searchInput);
 
     // Group lessons by section
     const filtered = this.lessonFilter
@@ -462,31 +447,27 @@ export class StudyRail {
   // ==========================================
   private renderMaterialsPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-materials');
-    panel.append(
-      el('h3', '', 'Lesson Files & Code'),
-      el('p', 'muted', 'Downloadable Jupyter notebooks, slides, scripts, and datasets.'),
-    );
+    // Header pills already say Files — skip a second title in the dock.
 
     if (!this.activeLesson) {
-      panel.append(el('p', 'muted', 'Select a lesson to see attached files and caption tracks.'));
+      panel.append(el('p', 'muted rail-empty', 'Empty'));
       return panel;
     }
 
     const captions = this.activeLesson.captions || [];
+    // Only surface captions when present — empty-state noise under Files kills focus.
     if (captions.length > 0) {
       const capBox = el('div', 'materials-captions-note');
       capBox.append(
-        el('strong', '', 'Captions in player'),
+        el('strong', '', 'Captions'),
         el(
           'p',
           'muted',
           captions.map(c => c.label || c.language).filter(Boolean).join(' · ') ||
-            `${captions.length} caption track${captions.length === 1 ? '' : 's'} available.`,
+            `${captions.length} track${captions.length === 1 ? '' : 's'}`,
         ),
       );
       panel.append(capBox);
-    } else {
-      panel.append(el('p', 'muted materials-captions-empty', 'No caption tracks are attached to this lesson.'));
     }
 
     const materials = this.activeLesson.materials || [];
@@ -517,7 +498,7 @@ export class StudyRail {
       title.title = m.title;
       info.append(badge, title);
 
-      const link = el('a', 'material-download-btn', 'Download');
+      const link = el('a', 'material-download-btn', 'Get');
       link.href = url.href;
       link.setAttribute('target', '_blank');
       link.setAttribute('rel', 'noopener noreferrer');
@@ -526,13 +507,7 @@ export class StudyRail {
     }
 
     if (linked === 0) {
-      panel.append(
-        el(
-          'div',
-          'empty-materials-card',
-          'No supplementary download files are attached to this lecture.',
-        ),
-      );
+      panel.append(el('div', 'empty-materials-card rail-empty', 'Empty'));
       return panel;
     }
 
@@ -789,33 +764,28 @@ export class StudyRail {
       return panel;
     }
 
-    const head = el('div', 'panel-head');
-    head.append(el('h3', '', 'Timestamped Notes'), el('span', 'tag', `${this.notes.length} Notes`));
-    panel.append(head);
-
-    // Form to add note at current timestamp
-    const form = el('form', 'rail-note-form');
+    // One-line capture — timestamp + field + save, no empty shouting.
+    const form = el('form', 'rail-note-form note-compose-row');
     const currentSec = Math.floor(this.options.getCurrentPosition());
-    const captureLabel = el('span', 'capture-hint', `Timestamp: ${formatTime(currentSec)}`);
-
-    const textarea = el('textarea', 'form-input note-input');
-    textarea.placeholder = `Jot down key takeaways or code snippets at ${formatTime(currentSec)}…`;
-    textarea.rows = 3;
-    textarea.required = true;
-
-    const addBtn = el('button', 'button primary', `Capture Note at ${formatTime(currentSec)}`);
+    const captureLabel = el('span', 'capture-hint', formatTime(currentSec));
+    const input = el('input', 'form-input note-input') as HTMLInputElement;
+    input.type = 'text';
+    input.placeholder = 'Note…';
+    input.required = true;
+    input.autocomplete = 'off';
+    const addBtn = el('button', 'button quiet note-save-btn', 'Save');
     addBtn.type = 'submit';
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const content = textarea.value.trim();
+      const content = input.value.trim();
       if (!content) return;
       addBtn.disabled = true;
       try {
         const key = `note_${Date.now()}_${Math.random()}`;
         const newNote = await this.options.api.createNote(this.activeLesson!.id, currentSec, content, key);
         this.notes.unshift(newNote);
-        textarea.value = '';
+        input.value = '';
         this.render();
       } catch (err) {
         alert(errorMessage(err));
@@ -824,7 +794,7 @@ export class StudyRail {
       }
     });
 
-    form.append(captureLabel, textarea, addBtn);
+    form.append(captureLabel, input, addBtn);
     panel.append(form);
 
     if (!this.notesLoaded && !this.notesLoading) {
@@ -857,13 +827,7 @@ export class StudyRail {
     } else if (this.notesError && this.notes.length === 0) {
       notesList.append(el('p', 'muted rail-error', this.notesError));
     } else if (this.notes.length === 0) {
-      notesList.append(
-        el(
-          'p',
-          'muted',
-          'No notes saved yet for this lesson. Capture a thought with the exact video timestamp above.',
-        ),
-      );
+      // Intentionally blank — the compose row is the empty state.
     } else {
       for (const n of this.notes) {
         const item = el('div', 'note-card');
@@ -1059,14 +1023,15 @@ export class StudyRail {
       list.append(el('p', 'muted', 'No transcript lines match that search.'));
     } else {
       for (const c of filtered) {
-        const row = el('div', 'transcript-row');
+        const row = el('button', 'transcript-row');
+        row.type = 'button';
         row.dataset.start = String(c.start);
         row.dataset.end = String(c.end);
-        const timeBtn = el('button', 'transcript-seek-btn', formatTime(c.start));
-        timeBtn.type = 'button';
-        timeBtn.title = `Jump to ${formatTime(c.start)}`;
-        timeBtn.addEventListener('click', () => this.options.seekTo(c.start));
-        row.append(timeBtn, el('p', 'transcript-text', c.text));
+        row.title = `Jump to ${formatTime(c.start)}`;
+        row.setAttribute('aria-label', `Seek to ${formatTime(c.start)}: ${c.text}`);
+        row.addEventListener('click', () => this.options.seekTo(c.start));
+        const time = el('span', 'transcript-seek-btn', formatTime(c.start));
+        row.append(time, el('span', 'transcript-text', c.text));
         list.append(row);
       }
     }

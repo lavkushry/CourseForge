@@ -18,27 +18,80 @@
   display: flex !important;
   align-items: center !important;
   width: 100% !important;
-  height: 56px !important;
-  min-height: 56px !important;
-  padding: 0 max(16px, var(--safe-right)) max(12px, var(--safe-bottom)) max(16px, var(--safe-left)) !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 max(12px, var(--safe-right)) max(8px, var(--safe-bottom)) max(12px, var(--safe-left)) !important;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.94) 0%,
-    rgba(0, 0, 0, 0.55) 70%,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 65%,
     transparent 100%
   ) !important;
   box-sizing: border-box !important;
-  gap: 6px !important;
+  gap: 4px !important;
 }
 
-/* Hidden elements to maintain minimalist bar exactly matching reference shot */
+/* Hidden volume range / seek chips keep the bar calm; captions stay reachable (WCAG 1.2.2). */
 .player-enhanced media-seek-backward-button,
 .player-enhanced media-seek-forward-button,
 .player-enhanced media-volume-range,
-.player-enhanced media-captions-button,
 .player-enhanced .sr-only-speed,
 .player-enhanced .sr-only-actionable {
   display: none !important;
+}
+
+.player-enhanced media-captions-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: var(--touch-min, 44px) !important;
+  min-height: var(--touch-min, 44px) !important;
+}
+
+.player-enhanced .cinema-button:focus-visible,
+.player-enhanced media-play-button:focus-visible,
+.player-enhanced media-mute-button:focus-visible,
+.player-enhanced media-captions-button:focus-visible,
+.player-enhanced media-fullscreen-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7) !important;
+  outline-offset: 2px !important;
+}
+
+.player-enhanced .cinema-study-opener {
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.player-enhanced .cinema-study-opener:hover,
+.player-enhanced .cinema-study-opener:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.player-enhanced .cinema-study-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-enhanced media-play-button,
+  .player-enhanced .cinema-button,
+  .player-enhanced .cinema-center-play {
+    transition: none !important;
+  }
 }
 
 /* Play/Pause Button on Far Left: Translucent Circular Pill */
@@ -46,29 +99,27 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: var(--touch-min) !important;
-  height: var(--touch-min) !important;
-  min-width: var(--touch-min) !important;
-  min-height: var(--touch-min) !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
   border-radius: 50% !important;
-  background: rgba(0, 0, 0, 0.45) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: 0 !important;
+  box-shadow: none !important;
   color: #ffffff !important;
   cursor: pointer !important;
   padding: 0 !important;
-  margin: 0 6px 0 0 !important;
+  margin: 0 4px 0 0 !important;
   flex-shrink: 0 !important;
-  transition:
-    transform 0.15s ease,
-    background-color 0.15s ease !important;
+  transition: background-color 0.15s ease !important;
 }
 
 .player-enhanced media-play-button:hover {
-  background: rgba(0, 0, 0, 0.6) !important;
-  transform: scale(1.05) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  transform: none !important;
 }
 
 .player-enhanced .dribbble-icon-slot {
@@ -253,12 +304,17 @@
   transition: opacity 0.18s ease !important;
 }
 
-/* Reveal theater/lock only while the control bar is visible — YouTube restraint. */
-.player-enhanced:hover .cinema-top-actions,
+/* Reveal study/transport chrome only while Media Chrome reports user activity —
+   bare :hover kept the bar stuck on desktop and killed concentration. */
 .player-enhanced:focus-within .cinema-top-actions,
 .player-enhanced media-controller[mediahasuseractive]:not([mediaended]) .cinema-top-actions {
   opacity: 1;
   pointer-events: auto;
+}
+
+.player-enhanced media-controller[userinactive] .cinema-top-actions {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .player-enhanced .cinema-center-actions {

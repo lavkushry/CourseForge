@@ -1,5 +1,6 @@
 import { errorMessage } from '../api';
 import { svgIcon } from '../icons';
+import { inlineSkeleton } from '../ui/skeleton';
 import type { PlanningHost } from './host';
 
 type RoadmapData = {
@@ -88,10 +89,9 @@ export function renderRoadmap(host: PlanningHost): HTMLElement {
   content.className = 'roadmap-content';
 
   if (host.roadmapLoading) {
-    const loading = document.createElement('p');
-    loading.className = 'muted';
-    loading.textContent = 'Synthesizing personalized curriculum from CourseForge masterclasses…';
-    content.append(loading);
+    content.append(
+      inlineSkeleton('Synthesizing personalized curriculum from CourseForge masterclasses…'),
+    );
   } else if (host.roadmapData) {
     const data = host.roadmapData as RoadmapData;
     if (!data.steps?.length) {

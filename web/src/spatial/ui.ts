@@ -1,4 +1,3 @@
-import '@google/model-viewer/dist/model-viewer.min.js';
 import type { ApiClient } from '../api';
 import { loadLectureSpatial } from './catalog';
 import { requestSpatialOpen } from './pending';
@@ -19,6 +18,15 @@ import {
 
 export { SPATIAL_GROUND_TRUTH, SPATIAL_PLAN_NOTE, assetsForRange, exploreLabel, labelWarning, visibleAssets };
 export type { SpatialAsset, SpatialKind };
+
+let modelViewerReady: Promise<void> | null = null;
+
+function ensureModelViewer(): Promise<void> {
+  if (!modelViewerReady) {
+    modelViewerReady = import('@google/model-viewer/dist/model-viewer.min.js').then(() => undefined);
+  }
+  return modelViewerReady;
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text = ''): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -217,49 +225,8 @@ export function mountSpatialDialog(
       for (const label of asset.labels) row.append(el('span', 'spatial-label', label));
       stage.append(row);
     }
-    const model = document.createElement('model-viewer');
-    model.setAttribute('src', asset.asset_url.replace('/spatial/scene?', '/spatial/model?'));
-    model.setAttribute('alt', asset.labels?.join(', ') || 'Spatial view');
-    model.setAttribute('camera-controls', '');
-    model.setAttribute('shadow-intensity', '1');
-    if (asset.kind === 'ar') {
-      model.setAttribute('ar', '');
-      model.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-      model.setAttribute('ar-placement', 'floor');
-    }
-    stage.append(model);
-    if (asset.kind === 'vr') {
-      const enter = el('button', 'button spatial-vr-enter', 'Enter VR');
-      enter.type = 'button';
-      enter.addEventListener('click', () => {
-        if (vr) {
-          const active = vr;
-          vr = null;
-          void active.end().then(() => {
-            enter.textContent = 'Enter VR';
-          });
-          return;
-        }
-        const src = model.getAttribute('src') ?? '';
-        void enterSpatialVr(src)
-          .then(handle => {
-            if (!handle) {
-              enter.textContent = 'No VR headset. Drag to inspect the model.';
-              return;
-            }
-            vr = handle;
-            enter.textContent = 'Exit VR';
-            void handle.ended.then(() => {
-              if (vr === handle) vr = null;
-              enter.textContent = 'Enter VR';
-            });
-          })
-          .catch(() => {
-            enter.textContent = 'This device cannot enter VR. Drag to inspect the model.';
-          });
-      });
-      stage.append(enter);
-    }
+    const loading = el('p', 'muted spatial-loading', 'Loading spatial viewer…');
+    stage.append(loading);
     const evidence = el('p', 'spatial-evidence', asset.evidence ?? '');
     if (!asset.evidence) evidence.hidden = true;
     stage.append(evidence);
@@ -270,6 +237,58 @@ export function mountSpatialDialog(
     card.append(dismiss);
     dialog.append(card);
     if (!dialog.open) dialog.showModal();
+    void ensureModelViewer()
+      .then(() => {
+        if (scope.signal.aborted) return;
+        loading.remove();
+        const model = document.createElement('model-viewer');
+        model.setAttribute('src', asset.asset_url.replace('/spatial/scene?', '/spatial/model?'));
+        model.setAttribute('alt', asset.labels?.join(', ') || 'Spatial view');
+        model.setAttribute('camera-controls', '');
+        model.setAttribute('shadow-intensity', '1');
+        if (asset.kind === 'ar') {
+          model.setAttribute('ar', '');
+          model.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+          model.setAttribute('ar-placement', 'floor');
+        }
+        stage.insertBefore(model, evidence);
+        if (asset.kind === 'vr') {
+          const enter = el('button', 'button spatial-vr-enter', 'Enter VR');
+          enter.type = 'button';
+          enter.addEventListener('click', () => {
+            if (vr) {
+              const active = vr;
+              vr = null;
+              void active.end().then(() => {
+                enter.textContent = 'Enter VR';
+              });
+              return;
+            }
+            const src = model.getAttribute('src') ?? '';
+            void enterSpatialVr(src)
+              .then(handle => {
+                if (!handle) {
+                  enter.textContent = 'No VR headset. Drag to inspect the model.';
+                  return;
+                }
+                vr = handle;
+                enter.textContent = 'Exit VR';
+                void handle.ended.then(() => {
+                  if (vr === handle) vr = null;
+                  enter.textContent = 'Enter VR';
+                });
+              })
+              .catch(() => {
+                enter.textContent = 'This device cannot enter VR. Drag to inspect the model.';
+              });
+          });
+          stage.insertBefore(enter, evidence);
+        }
+      })
+      .catch(() => {
+        if (scope.signal.aborted) return;
+        loading.textContent = 'Spatial viewer could not load on this device.';
+      });
     void readScene(api, asset, scope.signal).then(scene => {
       if (scope.signal.aborted || !scene?.evidence) return;
       evidence.hidden = false;

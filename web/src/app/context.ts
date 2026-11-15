@@ -105,6 +105,13 @@ export type AppContext = {
   restoreBrowserPreferences(video: HTMLVideoElement): void;
   bindInterface(video: HTMLVideoElement, signal: AbortSignal): void;
   bootstrapFeatureViews(account: User): void;
+  ensurePlanningView(): Promise<PlanningView>;
+  ensureReviewsView(): Promise<ReviewsView>;
+  ensureTutorView(): Promise<TutorView>;
+  ensureLabsView(): Promise<LabsView>;
+  ensureCareerView(): Promise<CareerView>;
+  ensurePathsView(): Promise<PathsView>;
+  ensureAdminView(): Promise<AdminView | null>;
 };
 
 export function createBaseContext(app: HTMLElement): AppContext {
@@ -146,12 +153,24 @@ export function createBaseContext(app: HTMLElement): AppContext {
     learnedLoaded: false,
   } as unknown as AppContext;
 
+  let feedbackClearTimer: ReturnType<typeof setTimeout> | undefined;
   ctx.feedback = (message: string, error = false): void => {
     const node = document.querySelector<HTMLElement>('#notice');
     if (!node) return;
+    if (feedbackClearTimer !== undefined) clearTimeout(feedbackClearTimer);
     node.textContent = message;
     node.classList.toggle('is-error', error);
+    node.classList.toggle('is-success', Boolean(message) && !error);
     node.hidden = !message;
+    if (message) {
+      feedbackClearTimer = setTimeout(() => {
+        if (node.textContent === message) {
+          node.textContent = '';
+          node.hidden = true;
+          node.classList.remove('is-error', 'is-success');
+        }
+      }, error ? 8_000 : 5_000);
+    }
   };
 
   return ctx;

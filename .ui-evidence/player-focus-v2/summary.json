@@ -1,0 +1,24 @@
+{
+  "phoneEmail": "player.focus.1794727951332@courseforge.test",
+  "desktopEmail": "player.focus.1794727951412@courseforge.test",
+  "assets": {
+    "js": "index-CkBg_h9-.js",
+    "css": "index-DR5Dgh4A.css"
+  },
+  "phone": {
+    "ok": true,
+    "errors": [],
+    "playerState": "playing",
+    "notesTab": "Notes",
+    "materialsTab": "Materials",
+    "sameMedia": true
+  },
+  "desktop": {
+    "ok": true,
+    "errors": [],
+    "playerState": "playing",
+    "notesTab": "Notes",
+    "materialsTab": "Materials",
+    "sameMedia": true
+  }
+}

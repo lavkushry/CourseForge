@@ -1,5 +1,6 @@
 import { svgIcon } from '../icons';
 import { errorMessage, isAbort } from '../api';
+import { panelSkeleton } from '../ui/skeleton';
 import { CareerApi } from './api';
 import { emptyResumeDraft } from './contracts';
 import './style.css';
@@ -601,6 +602,15 @@ export class CareerView implements CareerStudioHost {
     root.replaceChildren();
 
     const container = el('div', 'career-studio-container');
+
+    if (this.loading && !this.readiness) {
+      container.append(
+        el('h1', 'career-title', 'Career Studio'),
+        panelSkeleton({ variant: 'panel', count: 3, label: 'Loading career studio…' }),
+      );
+      root.append(container);
+      return;
+    }
 
     const profile = this.readiness?.profile;
     const engine = this.readiness?.engine;

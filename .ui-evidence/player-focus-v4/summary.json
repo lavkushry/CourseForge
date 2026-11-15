@@ -1,0 +1,70 @@
+{
+  "phoneEmail": "player.focus.1794730578230@courseforge.test",
+  "desktopEmail": "player.focus.1794730578341@courseforge.test",
+  "assets": {
+    "js": "index-CrK0yBs5.js",
+    "css": "index-C66rWyvg.css"
+  },
+  "phone": {
+    "ok": true,
+    "errors": [],
+    "playerState": "playing",
+    "notesTab": "Notes",
+    "materialsTab": "Files",
+    "sameMedia": true,
+    "sameMediaNotes": true,
+    "sameMediaMaterials": true,
+    "sameMediaExtra": true,
+    "toolChecks": [
+      {
+        "name": "transcript",
+        "sameMedia": true,
+        "tab": "Transcript",
+        "ok": true
+      },
+      {
+        "name": "quiz",
+        "sameMedia": true,
+        "tab": "Quiz",
+        "ok": true
+      },
+      {
+        "name": "curriculum",
+        "sameMedia": true,
+        "drawerOpen": true,
+        "ok": true
+      }
+    ]
+  },
+  "desktop": {
+    "ok": true,
+    "errors": [],
+    "playerState": "playing",
+    "notesTab": "Notes",
+    "materialsTab": "Files",
+    "sameMedia": true,
+    "sameMediaNotes": true,
+    "sameMediaMaterials": true,
+    "sameMediaExtra": true,
+    "toolChecks": [
+      {
+        "name": "transcript",
+        "sameMedia": true,
+        "tab": "Transcript",
+        "ok": true
+      },
+      {
+        "name": "quiz",
+        "sameMedia": true,
+        "tab": "Quiz",
+        "ok": true
+      },
+      {
+        "name": "curriculum",
+        "sameMedia": true,
+        "drawerOpen": true,
+        "ok": true
+      }
+    ]
+  }
+}

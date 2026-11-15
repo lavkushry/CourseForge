@@ -1,6 +1,7 @@
 import { icon, type IconName } from '../icons';
 import { cleanLessonTitle } from '../discovery/view';
 import type { Course, Lesson } from '../contracts';
+import { debounce, type DebouncedFn } from '../ui/debounce';
 
 export interface OmniSearchOptions {
   onSelectCourse: (courseId: string) => void;
@@ -30,9 +31,15 @@ export class OmniSearch {
   private selectedIndex = 0;
   private currentResults: SearchItem[] = [];
   private boundKeyDown: (e: KeyboardEvent) => void;
+  private readonly debouncedRender: DebouncedFn<[]>;
+  /** Input debounce window — keeps typing fluid while limiting DOM churn. */
+  static readonly INPUT_DEBOUNCE_MS = 180;
 
   constructor(private readonly options: OmniSearchOptions) {
     this.boundKeyDown = this.handleGlobalKey.bind(this);
+    this.debouncedRender = debounce(() => {
+      this.renderResults();
+    }, OmniSearch.INPUT_DEBOUNCE_MS);
     window.addEventListener('keydown', this.boundKeyDown);
     this.ensureDialog();
   }
@@ -126,6 +133,8 @@ export class OmniSearch {
         this.input.value = '';
         this.input.focus();
         clearBtn.hidden = true;
+        this.debouncedRender.cancel();
+        this.selectedIndex = 0;
         this.renderResults();
       }
     });
@@ -139,7 +148,7 @@ export class OmniSearch {
         clearBtn.hidden = this.input.value.length === 0;
       }
       this.selectedIndex = 0;
-      this.renderResults();
+      this.debouncedRender();
     });
 
     this.input?.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -170,6 +179,7 @@ export class OmniSearch {
             ? filter
             : 'all';
         this.selectedIndex = 0;
+        this.debouncedRender.cancel();
         this.renderResults();
       });
     });
@@ -186,6 +196,7 @@ export class OmniSearch {
     if (!this.dialog) this.ensureDialog();
     if (!this.dialog) return;
 
+    this.debouncedRender.cancel();
     if (!this.dialog.open) {
       this.dialog.showModal();
     }
@@ -203,6 +214,7 @@ export class OmniSearch {
   }
 
   close(): void {
+    this.debouncedRender.cancel();
     if (this.dialog?.open) {
       this.dialog.close();
     }
@@ -295,10 +307,20 @@ export class OmniSearch {
         type: 'tool',
         title: 'Daily Plan & Weekly Calendar',
         subtitle: 'Weekly calendar, Pomodoro focus timer, habits & insights',
-        badge: 'Planner',
+        badge: 'Daily Plan',
         badgeClass: 'pill-terracotta',
         iconName: 'calendar',
         onSelect: () => this.options.onNavigateView('planner'),
+      },
+      {
+        id: 'tool-history',
+        type: 'tool',
+        title: 'Watch History',
+        subtitle: 'Resume lectures from last-watched timestamps across masterclasses',
+        badge: 'History',
+        badgeClass: 'pill-ocean',
+        iconName: 'history',
+        onSelect: () => this.options.onNavigateView('history'),
       },
       {
         id: 'tool-tutor',
@@ -531,6 +553,7 @@ export class OmniSearch {
   }
 
   destroy(): void {
+    this.debouncedRender.cancel();
     window.removeEventListener('keydown', this.boundKeyDown);
     this.dialog?.remove();
   }

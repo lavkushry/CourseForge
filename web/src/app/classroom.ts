@@ -173,6 +173,14 @@ export function installClassroom(ctx: AppContext): void {
       const start = link && link.lessonId === response.lesson.id && link.t > 0 ? link.t : undefined;
       await ctx.controller?.open(response.lesson, takeOver, start);
       if (ctx.selectedCourse) writeFocusLink(ctx.selectedCourse.id, response.lesson.id, start ?? ctx.controller?.position ?? 0);
+      // Immersive default: picking a lesson collapses study chrome so the picture owns the viewport.
+      const classroom = required<HTMLElement>('#classroom');
+      classroom.classList.add('drawer-collapsed', 'dock-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'false');
+      for (const id of ['#focus-notes', '#focus-materials', '#focus-transcript', '#focus-quiz']) {
+        document.querySelector(id)?.setAttribute('aria-pressed', 'false');
+      }
       const upcoming = ctx.nextLesson();
       if (upcoming) void ctx.prefetchLesson(upcoming.id);
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });

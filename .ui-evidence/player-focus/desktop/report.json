@@ -1,0 +1,25 @@
+{
+  "label": "desktop",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "steps": [
+    "login",
+    "opened-classroom"
+  ],
+  "ok": true,
+  "errors": [],
+  "title": "Day 01 - Intro to Programming Languages & Python Basics",
+  "enrollHidden": true,
+  "playerState": "playing",
+  "notesOpen": true,
+  "notesTab": "Notes",
+  "notesPressed": "true",
+  "materialsTab": "Materials",
+  "sameMedia": true,
+  "playerIntact": true,
+  "dockClosed": true,
+  "playerStateAfter": "playing",
+  "classroomHidden": false
+}

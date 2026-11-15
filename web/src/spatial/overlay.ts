@@ -1,4 +1,3 @@
-import '@google/model-viewer/dist/model-viewer.min.js';
 import './overlay.css';
 import { FIXTURE_ARTIFACT } from './fixture';
 import { describeSource, formatExactTimestamp, placementAttribute, returnSeekSeconds } from './provenance';
@@ -8,6 +7,15 @@ type ArSessionStatus = 'not-presenting' | 'session-started' | 'object-placed' | 
 
 interface ModelViewerElement extends HTMLElement {
   canActivateAR: boolean;
+}
+
+let modelViewerReady: Promise<void> | null = null;
+
+function ensureModelViewer(): Promise<void> {
+  if (!modelViewerReady) {
+    modelViewerReady = import('@google/model-viewer/dist/model-viewer.min.js').then(() => undefined);
+  }
+  return modelViewerReady;
 }
 
 export interface SpatialOverlayOptions {
@@ -79,40 +87,9 @@ export function openSpatialOverlay(options: SpatialOverlayOptions): HTMLDialogEl
   close.addEventListener('click', () => dialog.close());
   heading.append(titles, close);
 
-  const viewer = document.createElement('model-viewer') as ModelViewerElement;
-  viewer.className = 'spatial-ar-viewer';
-  viewer.setAttribute('src', artifact.modelUrl);
-  viewer.setAttribute('alt', artifact.title);
-  viewer.setAttribute('ar', '');
-  viewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-  viewer.setAttribute('ar-placement', placementAttribute(artifact.placement));
-  viewer.setAttribute('camera-controls', '');
-  viewer.setAttribute('interaction-prompt', 'auto');
-  viewer.setAttribute('touch-action', 'pan-y');
-  viewer.setAttribute('shadow-intensity', '1');
-
-  const span = artifact.nodes.length;
-  artifact.nodes.forEach((node, index) => {
-    const hotspot = element('button', 'spatial-ar-hotspot', node.label);
-    hotspot.type = 'button';
-    hotspot.slot = `hotspot-${node.id}`;
-    const x = (index - (span - 1) / 2) * 1.4;
-    hotspot.dataset.position = `${x} 0.72 0`;
-    hotspot.dataset.normal = '0 1 0';
-    viewer.append(hotspot);
-  });
-
-  const status = element('p', 'spatial-ar-status');
+  const viewerHost = element('div', 'spatial-ar-viewer-host');
+  const status = element('p', 'spatial-ar-status', 'Loading spatial viewer…');
   status.setAttribute('role', 'status');
-  const refreshStatus = () => {
-    status.textContent = arStatusMessage(readArStatus(viewer.getAttribute('ar-status')), viewer.canActivateAR);
-  };
-  viewer.addEventListener('ar-status', event => {
-    const detail = (event as CustomEvent<{ status?: string }>).detail;
-    status.textContent = arStatusMessage(readArStatus(detail?.status ?? null), viewer.canActivateAR);
-  });
-  viewer.addEventListener('load', refreshStatus);
-  refreshStatus();
 
   const limits = element(
     'p',
@@ -144,12 +121,58 @@ export function openSpatialOverlay(options: SpatialOverlayOptions): HTMLDialogEl
   });
   actions.append(back);
 
-  body.append(heading, viewer, status, limits, evidence, actions);
+  body.append(heading, viewerHost, status, limits, evidence, actions);
   dialog.append(body);
   dialog.addEventListener('close', () => dialog.remove());
   options.signal?.addEventListener('abort', () => dialog.close(), { once: true });
   document.body.append(dialog);
   dialog.showModal();
+
+  void ensureModelViewer()
+    .then(() => {
+      if (!dialog.isConnected) return;
+      const viewer = document.createElement('model-viewer') as ModelViewerElement;
+      viewer.className = 'spatial-ar-viewer';
+      viewer.setAttribute('src', artifact.modelUrl);
+      viewer.setAttribute('alt', artifact.title);
+      viewer.setAttribute('ar', '');
+      viewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+      viewer.setAttribute('ar-placement', placementAttribute(artifact.placement));
+      viewer.setAttribute('camera-controls', '');
+      viewer.setAttribute('interaction-prompt', 'auto');
+      viewer.setAttribute('touch-action', 'pan-y');
+      viewer.setAttribute('shadow-intensity', '1');
+
+      const span = artifact.nodes.length;
+      artifact.nodes.forEach((node, index) => {
+        const hotspot = element('button', 'spatial-ar-hotspot', node.label);
+        hotspot.type = 'button';
+        hotspot.slot = `hotspot-${node.id}`;
+        const x = (index - (span - 1) / 2) * 1.4;
+        hotspot.dataset.position = `${x} 0.72 0`;
+        hotspot.dataset.normal = '0 1 0';
+        viewer.append(hotspot);
+      });
+
+      const refreshStatus = () => {
+        status.textContent = arStatusMessage(
+          readArStatus(viewer.getAttribute('ar-status')),
+          viewer.canActivateAR,
+        );
+      };
+      viewer.addEventListener('ar-status', event => {
+        const detail = (event as CustomEvent<{ status?: string }>).detail;
+        status.textContent = arStatusMessage(readArStatus(detail?.status ?? null), viewer.canActivateAR);
+      });
+      viewer.addEventListener('load', refreshStatus);
+      viewerHost.replaceChildren(viewer);
+      refreshStatus();
+    })
+    .catch(() => {
+      if (!dialog.isConnected) return;
+      status.textContent = 'Spatial viewer could not load on this device.';
+    });
+
   return dialog;
 }
 

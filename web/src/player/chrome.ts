@@ -18,6 +18,12 @@ export interface ChromeActions {
   getQualityLevels?: () => Array<{ index: number; label: string }>;
   setQuality?: (levelIndex: number | 'auto') => void;
   getSelectedQuality?: () => number | 'auto';
+  /** Open notes/materials/capture without remounting the player (fullscreen-safe). */
+  openNotes?: () => void;
+  openMaterials?: () => void;
+  openTranscript?: () => void;
+  openQuiz?: () => void;
+  captureTimestamp?: () => void;
 }
 
 // Enhance the existing controls without creating a second player/ownership or
@@ -164,15 +170,50 @@ export function mountPlayerChrome(
     return node;
   };
 
-  // Streaming watch chrome: keep the top row empty of LMS clutter.
-  // Capture / lessons / workbench live in the heading and meta bar instead.
-  // Theater + lock stay as discreet cinema controls.
+  // Streaming watch chrome: theater + lock + study openers stay inside
+  // #player-wrap so fullscreen (PLAYER_RESTORE_CONTRACT) keeps focus.
   const top = ui('div', 'cinema-top-actions');
   top.slot = 'top-chrome';
   const theater = delegate('Toggle theater mode', '#theater', 'theater');
   const lock = delegate('Lock player controls', '#lock-controls', 'lock');
-  top.append(theater, lock);
+
+  const studyOpener = (label: string, iconName: IconName, run: (() => void) | undefined, fallbackSelector: string) => {
+    const node = document.createElement('button');
+    node.type = 'button';
+    node.className = 'cinema-button cinema-study-opener';
+    node.title = label;
+    node.setAttribute('aria-label', label);
+    node.append(svgIcon(iconName));
+    node.addEventListener(
+      'click',
+      () => {
+        if (run) run();
+        else source(fallbackSelector)?.click();
+        // Return focus to the in-player opener after the sheet/dock updates.
+        queueMicrotask(() => {
+          if (!signal.aborted && wrap.isConnected) node.focus();
+        });
+      },
+      { signal },
+    );
+    return node;
+  };
+  const captureOpener = studyOpener('Capture timestamp', 'clock', actions.captureTimestamp, '#capture');
+  const notesOpener = studyOpener('Open notes', 'edit', actions.openNotes, '#focus-notes');
+  const filesOpener = studyOpener('Open files', 'file', actions.openMaterials, '#focus-materials');
+  const transcriptOpener = studyOpener(
+    'Open transcript',
+    'book',
+    actions.openTranscript,
+    '#focus-transcript',
+  );
+  const quizOpener = studyOpener('Open quiz', 'help', actions.openQuiz, '#focus-quiz');
+  // Desktop keeps study openers in top chrome; phone moves them into the transport row.
+  top.append(captureOpener, theater, lock);
+  top.classList.add('cinema-top-actions--chrome');
   media.append(top);
+  const studyCluster = ui('div', 'cinema-study-cluster');
+  studyCluster.append(notesOpener, filesOpener, transcriptOpener, quizOpener);
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations
   let loopA: number | null = null;
@@ -480,7 +521,9 @@ export function mountPlayerChrome(
   pip.classList.add('sr-only-actionable');
   const full = delegate('Toggle fullscreen', '#fullscreen', 'popout');
   full.title = 'Fullscreen';
-  row.append(settingsBtn, loopBtn, full, speed, pip);
+  full.classList.add('cinema-fullscreen');
+  // Study cluster sits in the transport so one-tap tools survive fullscreen.
+  row.append(studyCluster, settingsBtn, loopBtn, full, speed, pip);
 
   const center = ui('div', 'cinema-center-actions');
   center.slot = 'centered-chrome';

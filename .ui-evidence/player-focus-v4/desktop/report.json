@@ -1,0 +1,46 @@
+{
+  "label": "desktop",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "steps": [
+    "login",
+    "opened-classroom"
+  ],
+  "ok": true,
+  "errors": [],
+  "title": "Day 01 - Intro to Programming Languages & Python Basics",
+  "enrollHidden": true,
+  "playerState": "playing",
+  "notesOpen": true,
+  "notesTab": "Notes",
+  "sameMediaNotes": true,
+  "materialsTab": "Files",
+  "sameMediaMaterials": true,
+  "toolChecks": [
+    {
+      "name": "transcript",
+      "sameMedia": true,
+      "tab": "Transcript",
+      "ok": true
+    },
+    {
+      "name": "quiz",
+      "sameMedia": true,
+      "tab": "Quiz",
+      "ok": true
+    },
+    {
+      "name": "curriculum",
+      "sameMedia": true,
+      "drawerOpen": true,
+      "ok": true
+    }
+  ],
+  "sameMediaExtra": true,
+  "surfacesClosed": true,
+  "sameMedia": true,
+  "playerStateAfter": "playing",
+  "classroomHidden": false
+}

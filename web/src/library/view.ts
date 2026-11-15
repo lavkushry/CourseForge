@@ -1,9 +1,10 @@
-import { svgIcon } from '../icons';
 import type { Course, HistoryItem } from '../contracts';
 import type { ContinueItem, SavedItem } from '../discovery/contracts';
+import { personalRowsFromHomeFeed } from '../discovery/contracts';
 import { errorMessage, isAbort } from '../api';
 import type { ApiClient } from '../api';
 import { el, emptyState } from '../components';
+import { panelSkeleton } from '../ui/skeleton';
 import { artwork, toTitleCase } from '../discovery/view';
 import {
   completedCourseIds,
@@ -33,7 +34,7 @@ export interface LibraryViewOptions {
   onOpenSyllabus: (course: Course) => void;
   onPlayCourse: (course: Course) => void;
   onContinueLesson?: (courseId: string, lessonId: string, position: number) => void;
-  onToggleSave: (course: Course) => Promise<boolean>;
+  onToggleSave: (course: Course, currentlySaved: boolean) => Promise<boolean>;
   isSaved: (courseId: string) => boolean;
   onOpenMyList?: () => void;
 }
@@ -65,10 +66,11 @@ export class LibraryView {
 
     void Promise.allSettled([
       this.options.api.courses('', signal),
-      this.options.api.continueLearning(signal),
+      this.options.api.homeFeed(signal),
       this.options.api.history('', signal),
+      this.options.api.continueLearning(signal),
       this.options.api.savedItems('', signal),
-    ]).then(([coursesRes, continueRes, historyRes, savedRes]) => {
+    ]).then(([coursesRes, feedRes, historyRes, continueRes, savedRes]) => {
       if (signal.aborted) return;
 
       if (coursesRes.status === 'rejected') {
@@ -80,9 +82,18 @@ export class LibraryView {
       }
 
       this.courses = coursesRes.value.courses.filter(c => !c.id.startsWith('fixture-'));
-      this.continueItems = continueRes.status === 'fulfilled' ? continueRes.value : [];
-      this.historyItems = historyRes.status === 'fulfilled' ? historyRes.value.history || [] : [];
-      this.savedItems = savedRes.status === 'fulfilled' ? savedRes.value.items : [];
+
+      // Prefer consolidated home-feed personal rows; fall back to discrete endpoints.
+      if (feedRes.status === 'fulfilled') {
+        const personal = personalRowsFromHomeFeed(feedRes.value);
+        this.continueItems = personal.continued;
+        this.savedItems = personal.saved;
+      } else {
+        this.continueItems = continueRes.status === 'fulfilled' ? continueRes.value : [];
+        this.savedItems = savedRes.status === 'fulfilled' ? savedRes.value.items : [];
+      }
+
+      this.historyItems = historyRes.status === 'fulfilled' ? historyRes.value.history : [];
       this.progress = progressByCourse(this.continueItems);
       this.completedIds = completedCourseIds(this.historyItems);
       this.savedIds = savedCourseIds(this.savedItems);
@@ -106,17 +117,10 @@ export class LibraryView {
     const root = this.options.root;
     root.replaceChildren();
 
+    root.classList.add('library-panel--cinema');
     const pageHead = el('div', 'page-heading');
     const headText = el('div');
-    headText.append(
-      el('span', 'eyebrow', 'YOUR PERSONAL LEARNING STUDIO'),
-      el('h1', '', 'My Course Library'),
-      el(
-        'p',
-        'muted',
-        'Enrolled and catalog masterclasses with progress from your private continue-watching and history state.',
-      ),
-    );
+    headText.append(el('h1', '', 'Library'), el('p', 'muted', 'Your courses and progress.'));
     pageHead.append(headText);
     root.append(pageHead);
 
@@ -153,19 +157,23 @@ export class LibraryView {
     });
     searchWrap.append(searchInput);
 
-    const filtersGroup = el('div', 'library-status-filters');
+    const filtersGroup = el('div', 'library-status-filters cf-segment');
     filtersGroup.setAttribute('role', 'group');
     filtersGroup.setAttribute('aria-label', 'Filter courses by progress status');
 
     const statusOptions: Array<{ id: LibraryStatusFilter; label: string }> = [
-      { id: 'all', label: 'All Courses' },
+      { id: 'all', label: 'All' },
       { id: 'progress', label: 'In Progress' },
       { id: 'completed', label: 'Completed' },
       { id: 'saved', label: 'Saved' },
     ];
 
     for (const opt of statusOptions) {
-      const btn = el('button', this.statusFilter === opt.id ? 'filter-pill active' : 'filter-pill', opt.label);
+      const btn = el(
+        'button',
+        this.statusFilter === opt.id ? 'filter-pill cf-segment-btn active' : 'filter-pill cf-segment-btn',
+        opt.label,
+      );
       btn.type = 'button';
       btn.addEventListener('click', () => {
         this.statusFilter = opt.id;
@@ -228,7 +236,7 @@ export class LibraryView {
     const countBadge = el('div', 'library-count-badge');
     root.append(countBadge);
 
-    const grid = el('div', 'course-grid library-course-grid');
+    const grid = el('div', 'course-grid library-course-grid library-poster-grid');
     root.append(grid);
 
     this.renderGrid(grid, countBadge);
@@ -238,9 +246,7 @@ export class LibraryView {
     grid.replaceChildren();
 
     if (this.loading) {
-      for (let i = 0; i < 6; i++) {
-        grid.append(el('div', 'course-skeleton'));
-      }
+      grid.append(panelSkeleton({ variant: 'cards', count: 6, label: 'Loading masterclasses…' }));
       countBadge.textContent = 'Loading masterclasses…';
       return;
     }
@@ -305,93 +311,78 @@ export class LibraryView {
     }
 
     for (const c of filtered) {
-      const card = el('article', 'course-card library-card');
+      const card = el('article', 'course-card library-card poster-card');
       const progress = this.progress.get(c.id);
       const isCompleted = this.completedIds.has(c.id) || progress?.completed === true;
 
-      const coverBtn = el('button', 'cover-button');
-      coverBtn.type = 'button';
-      coverBtn.setAttribute('aria-label', `View syllabus for ${c.title}`);
-      const artPlay = el('span', 'art-play');
-      artPlay.append(svgIcon('play'));
-      const catPill = el('span', 'thumb-category-pill', toTitleCase(c.category || 'Masterclass'));
-      const durBadge = el('span', 'thumb-duration-badge', formatDuration(c.duration_seconds || 0));
-      coverBtn.append(artwork(c), catPill, durBadge, artPlay);
-      coverBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
-      card.append(coverBtn);
-
-      if (progress && !isCompleted) {
-        const bar = el('div', 'library-progress-bar');
-        const fill = el('div', 'library-progress-fill');
-        fill.style.width = `${Math.min(100, Math.max(0, progress.percent))}%`;
-        bar.append(fill);
-        bar.setAttribute('aria-label', `${Math.round(progress.percent)}% watched`);
-        card.append(bar);
-      }
-
-      const body = el('div', 'course-card-body');
-      const statusBadge = isCompleted
-        ? 'Completed'
-        : progress
-          ? `${Math.round(progress.percent)}% watched`
-          : c.enrolled
-            ? 'Enrolled'
-            : toTitleCase(c.category || 'Masterclass');
-      body.append(
-        el('span', 'course-badge', statusBadge),
-        el('h2', '', c.title),
-        el(
-          'p',
-          'course-description',
-          c.description ||
-            'Master deep technical principles with source-verified video lectures and hands-on practice.',
-        ),
-        el(
-          'p',
-          'course-meta',
-          `${c.lesson_count || 0} lectures · ${formatDuration(c.duration_seconds || 0)} · ${c.instructor || 'CourseForge Faculty'}`,
-        ),
-      );
-
-      const footer = el('div', 'course-card-footer');
-
-      const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open course' : 'Start Course';
-      const primaryBtn = el('button', 'button primary library-primary-btn', primaryLabel);
-      primaryBtn.type = 'button';
-      primaryBtn.addEventListener('click', () => {
+      const openPrimary = () => {
         if (progress && !isCompleted && this.options.onContinueLesson) {
           this.options.onContinueLesson(c.id, progress.lessonId, progress.position);
           return;
         }
         this.options.onPlayCourse(c);
-      });
+      };
 
-      const syllabusBtn = el('button', 'text-button', 'Syllabus');
-      syllabusBtn.type = 'button';
-      syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
+      const coverBtn = el('button', 'cover-button');
+      coverBtn.type = 'button';
+      coverBtn.setAttribute('aria-label', `Play ${c.title}`);
+      coverBtn.append(artwork(c, false, true));
+      coverBtn.addEventListener('click', openPrimary);
+      if (progress && !isCompleted) {
+        const bar = el('div', 'library-progress-bar poster-progress');
+        const fill = el('div', 'library-progress-fill');
+        fill.style.width = `${Math.min(100, Math.max(0, progress.percent))}%`;
+        bar.append(fill);
+        bar.setAttribute('aria-label', `${Math.round(progress.percent)}% watched`);
+        coverBtn.append(bar);
+      }
+      card.append(coverBtn);
+
+      const body = el('div', 'course-card-body poster-body');
+      const statusLine = isCompleted
+        ? 'Completed'
+        : progress
+          ? `${Math.round(progress.percent)}% watched`
+          : c.enrolled
+            ? 'Enrolled'
+            : toTitleCase(c.category || 'Catalog');
+      body.append(
+        el('h2', '', c.title),
+        el(
+          'p',
+          'course-meta',
+          `${statusLine} · ${c.lesson_count || 0} lessons · ${formatDuration(c.duration_seconds || 0)}`,
+        ),
+      );
+
+      const footer = el('div', 'course-card-footer');
+      const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open' : 'Play';
+      const primaryBtn = el('button', 'button quiet library-primary-btn', primaryLabel);
+      primaryBtn.type = 'button';
+      primaryBtn.addEventListener('click', openPrimary);
 
       const isSaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
-      const saveBtn = el(
-        'button',
-        isSaved ? 'button list-button' : 'button quiet list-button',
-        isSaved ? 'In My List' : '+ My List',
-      );
+      const saveBtn = el('button', 'button quiet list-button', isSaved ? 'Saved' : 'My List');
       saveBtn.type = 'button';
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
         try {
-          const nowSaved = await this.options.onToggleSave(c);
+          const currentlySaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
+          const nowSaved = await this.options.onToggleSave(c, currentlySaved);
           if (nowSaved) this.savedIds.add(c.id);
           else this.savedIds.delete(c.id);
-          saveBtn.textContent = nowSaved ? 'In My List' : '+ My List';
-          saveBtn.className = nowSaved ? 'button list-button' : 'button quiet list-button';
+          saveBtn.textContent = nowSaved ? 'Saved' : 'My List';
           if (this.statusFilter === 'saved') this.renderGrid(grid, countBadge);
         } finally {
           saveBtn.disabled = false;
         }
       });
 
-      footer.append(primaryBtn, syllabusBtn, saveBtn);
+      const syllabusBtn = el('button', 'button quiet', 'Details');
+      syllabusBtn.type = 'button';
+      syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
+
+      footer.append(primaryBtn, saveBtn, syllabusBtn);
       body.append(footer);
       card.append(body);
       grid.append(card);

@@ -6,6 +6,7 @@ import type { TutorSource } from '../learning/contracts';
 import { cleanLessonTitle } from '../discovery/view';
 import { appendExploreCitation } from '../spatial/ui';
 import { el, emptyState } from '../components';
+import { panelSkeleton } from '../ui/skeleton';
 import { tutorIsReady, tutorUnavailableCopy, type TutorAiStatus } from './status';
 
 function formatTime(seconds: number): string {
@@ -131,19 +132,14 @@ export class TutorView {
     const pageHead = el('div', 'page-heading tutor-header');
     const headText = el('div', 'page-heading-left');
     headText.append(
-      el('span', 'eyebrow', 'LOCAL AI STUDY PARTNER'),
-      el('h1', 'page-title', 'Meet Your Personal Tutor'),
-      el(
-        'p',
-        'muted page-subtitle',
-        'Grounded answers require a local Ollama chat model and indexed lecture chunks. No fabricated replies when AI is offline.',
-      ),
+      el('h1', 'page-title', 'Tutor'),
+      el('p', 'muted page-subtitle', 'Ask grounded questions about your courses.'),
     );
     pageHead.append(headText);
     root.append(pageHead);
 
     if (this.statusLoading) {
-      root.append(el('p', 'muted', 'Checking AI tutor availability…'));
+      root.append(panelSkeleton({ variant: 'panel', count: 3, label: 'Checking AI tutor availability…' }));
       return;
     }
 
@@ -282,12 +278,18 @@ export class TutorView {
 
       try {
         const courseId = this.selectedScope !== 'all' ? this.selectedScope : '';
-        const res = await this.options.api.aiAsk(courseId, '', question, this.tutorMode);
+        const res = await this.options.api.aiAsk(
+          courseId,
+          '',
+          question,
+          this.tutorMode,
+          this.loadSignal ?? undefined,
+        );
 
         this.history.unshift({
           question,
           answer: res.answer,
-          sources: (res.citations || []).map(c => ({
+          sources: res.citations.map(c => ({
             course_id: courseId,
             lesson_id: c.lesson_id,
             lesson_title: c.lesson_title,

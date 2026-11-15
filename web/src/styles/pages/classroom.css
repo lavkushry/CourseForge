@@ -423,10 +423,8 @@ media-volume-range {
 /* Cinema Dark Theater Glow */
 
 .classroom.theater #player-wrap {
-  box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.9),
-    0 0 120px var(--accent-glow);
-  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
 }
 
 /* ==========================================================================
@@ -727,10 +725,22 @@ media-volume-range {
   padding: var(--space-2) 10px;
   border-radius: 6px;
   transition: background 0.15s;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .transcript-row:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.transcript-row:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
 }
 
 .transcript-seek-btn {
@@ -1069,9 +1079,9 @@ body.in-zen-studio .classroom-grid {
 }
 
 .lms-playlist-pill:hover {
-  background: rgba(229, 69, 3, 0.28);
-  border-color: var(--lms-accent);
-  box-shadow: 0 0 16px rgba(229, 69, 3, 0.3);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  box-shadow: none;
 }
 
 .lms-playlist-pill .svg-icon {
@@ -1401,9 +1411,9 @@ media-controller {
 
 .study-rail-tab.active {
   color: #fff;
-  background: rgba(229, 69, 3, 0.22);
-  border-color: rgba(229, 69, 3, 0.5);
-  box-shadow: 0 2px 8px var(--accent-glow);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  box-shadow: none;
 }
 
 .action-pill.pill-complete.is-completed {
@@ -1495,9 +1505,9 @@ media-controller {
   border: 1px solid var(--accent-border);
   border-radius: 10px;
   padding: var(--space-3);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px var(--accent-glow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -1581,11 +1591,11 @@ media-controller {
   font-size: 11.5px;
   font-weight: 700;
   border-radius: 6px;
-  background: linear-gradient(135deg, var(--coral), var(--lms-accent));
+  background: var(--lms-accent);
   color: #fff;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px var(--accent-glow);
+  box-shadow: none;
 }
 
 .btn-up-next-watch .svg-icon {

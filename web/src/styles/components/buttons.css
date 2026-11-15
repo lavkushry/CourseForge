@@ -33,16 +33,16 @@
 }
 
 .button.primary {
-  background: linear-gradient(135deg, var(--coral), var(--lms-accent));
+  background: var(--lms-accent);
   color: #fff;
-  border-color: var(--coral);
-  box-shadow: 0 6px 18px var(--accent-glow);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .button.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--coral-hover), var(--coral));
-  border-color: var(--coral-hover);
-  filter: brightness(1.05);
+  background: var(--accent-hover);
+  border-color: transparent;
+  filter: none;
 }
 
 .button.quiet {
@@ -74,10 +74,26 @@
   font-size: 0.88rem;
 }
 
+.lms-shell > .notice,
+.shell-workspace > .notice,
+#app-shell > .notice {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  z-index: var(--z-toast, 950);
+  margin: 0.5rem 1rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
 .notice.is-error {
   background: #3b2324;
   color: #ffcbc6;
   border-color: #874044;
+}
+
+.notice.is-success {
+  background: #1e2a24;
+  color: #c8f0d8;
+  border-color: #3d6b52;
 }
 
 .course-card-footer .list-button {

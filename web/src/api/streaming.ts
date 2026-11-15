@@ -1,5 +1,6 @@
 import type { HistoryItem } from '../contracts';
 import { parseContinued, parseHomeFeed, parseSaved, parseTrending } from '../discovery/contracts';
+import { parseHistory } from '../history/contracts';
 import type { HttpClient } from './http';
 
 export function history(
@@ -9,7 +10,9 @@ export function history(
 ): Promise<{ history: HistoryItem[]; next_cursor?: string | null }> {
   const query = new URLSearchParams({ limit: '30' });
   if (cursor) query.set('cursor', cursor);
-  return client.request(`/streaming/history?${query}`, signal ? { signal } : {});
+  return client
+    .request(`/streaming/history?${query}`, signal ? { signal } : {})
+    .then(parseHistory);
 }
 
 export function clearHistory(client: HttpClient, signal?: AbortSignal): Promise<void> {

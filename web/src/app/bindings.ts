@@ -299,26 +299,78 @@ export function installBindings(ctx: AppContext): void {
     on('#mark-complete', () => {
       void ctx.markComplete();
     });
-    on('#save-note-pill', () => {
+    type StudyToolTab = 'notes' | 'materials' | 'transcript' | 'quiz';
+    const syncStudyToolPressed = (tab: StudyToolTab | null, dockOpen: boolean) => {
+      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(dockOpen));
+      document.querySelector('#focus-notes')?.setAttribute('aria-pressed', String(dockOpen && tab === 'notes'));
+      document
+        .querySelector('#focus-materials')
+        ?.setAttribute('aria-pressed', String(dockOpen && tab === 'materials'));
+      document
+        .querySelector('#focus-transcript')
+        ?.setAttribute('aria-pressed', String(dockOpen && tab === 'transcript'));
+      document.querySelector('#focus-quiz')?.setAttribute('aria-pressed', String(dockOpen && tab === 'quiz'));
+    };
+
+    const closeStudySurfaces = () => {
       const classroom = required('#classroom');
-      classroom.classList.remove('dock-collapsed');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'true');
-      const dock = document.querySelector<HTMLElement>('#focus-dock');
-      if (ctx.studyRail && dock) {
-        ctx.studyRail.setTab('notes');
-        dock.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+      classroom.classList.add('dock-collapsed');
+      classroom.classList.add('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(null, false);
+      const wrap = document.querySelector<HTMLElement>('#player-wrap');
+      wrap?.focus({ preventScroll: true });
+    };
+
+    /** Open study dock on a tab without remounting the player / breaking lease. */
+    const openStudyTab = (tab: StudyToolTab) => {
+      const classroom = required('#classroom');
+      const already =
+        !classroom.classList.contains('dock-collapsed') &&
+        document.querySelector(`#focus-${tab === 'materials' ? 'materials' : tab}`)?.getAttribute('aria-pressed') ===
+          'true';
+      // Second tap on the same tool dismisses — study must not steal focus permanently.
+      if (already) {
+        closeStudySurfaces();
         return;
       }
-      const notesEl = document.querySelector<HTMLElement>('#notes');
-      if (notesEl) {
-        notesEl.hidden = false;
-        const noteInput = document.querySelector<HTMLTextAreaElement>('#note-content');
-        if (noteInput) {
-          noteInput.focus();
-          notesEl.scrollIntoView({ behavior: 'smooth' });
+      classroom.classList.remove('dock-collapsed');
+      // One sheet at a time on phone/desktop watch — curriculum stays out of the way.
+      classroom.classList.add('drawer-collapsed');
+      document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(tab, true);
+      const dock = document.querySelector<HTMLElement>('#focus-dock');
+      if (ctx.studyRail && dock) {
+        ctx.studyRail.setTab(tab);
+        if (tab === 'notes') {
+          window.requestAnimationFrame(() =>
+            dock.querySelector<HTMLInputElement | HTMLTextAreaElement>('input.note-input, textarea.note-input')?.focus(),
+          );
+        }
+        return;
+      }
+      if (tab === 'notes') {
+        const notesEl = document.querySelector<HTMLElement>('#notes');
+        if (notesEl) {
+          notesEl.hidden = false;
+          document.querySelector<HTMLTextAreaElement>('#note-content')?.focus();
+          notesEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       }
-    });
+      if (tab === 'materials') {
+        const materialsEl = document.querySelector<HTMLElement>('#materials');
+        if (materialsEl) {
+          materialsEl.hidden = false;
+          materialsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    };
+
+    on('#save-note-pill', () => openStudyTab('notes'));
+    on('#focus-notes', () => openStudyTab('notes'));
+    on('#focus-materials', () => openStudyTab('materials'));
+    on('#focus-transcript', () => openStudyTab('transcript'));
+    on('#focus-quiz', () => openStudyTab('quiz'));
     on('#capture-pill', () => {
       document.querySelector<HTMLButtonElement>('#capture')?.click();
     });
@@ -326,11 +378,23 @@ export function installBindings(ctx: AppContext): void {
       const classroom = required('#classroom');
       const collapsed = classroom.classList.toggle('drawer-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', String(!collapsed));
+      if (!collapsed) {
+        // Opening lessons sheet closes study dock so sheets don't stack over the player.
+        classroom.classList.add('dock-collapsed');
+        syncStudyToolPressed(null, false);
+      }
     };
     const toggleDock = () => {
       const classroom = required('#classroom');
       const collapsed = classroom.classList.toggle('dock-collapsed');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', String(!collapsed));
+      if (!collapsed) {
+        classroom.classList.add('drawer-collapsed');
+        document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
+        if (ctx.studyRail) ctx.studyRail.setTab('transcript');
+        syncStudyToolPressed('transcript', true);
+      } else {
+        syncStudyToolPressed(null, false);
+      }
     };
     on('#focus-curriculum', toggleDrawer);
     on('#focus-dock-toggle', toggleDock);
@@ -341,9 +405,58 @@ export function installBindings(ctx: AppContext): void {
       classroom.classList.add('drawer-collapsed');
       classroom.classList.add('dock-collapsed');
       document.querySelector('#focus-curriculum')?.setAttribute('aria-pressed', 'false');
-      document.querySelector('#focus-dock-toggle')?.setAttribute('aria-pressed', 'false');
+      syncStudyToolPressed(null, false);
     };
     ensureImmersiveWatch();
+
+    // Phone sheet: tap grabber or swipe down to dismiss (lease-safe — no remount).
+    const bindSheetDismiss = (host: HTMLElement | null) => {
+      if (!host) return;
+      host.addEventListener(
+        'click',
+        event => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest('.sheet-dismiss-handle')) return;
+          event.preventDefault();
+          closeStudySurfaces();
+        },
+        { signal },
+      );
+      let dragY = 0;
+      let dragging = false;
+      host.addEventListener(
+        'pointerdown',
+        event => {
+          const target = event.target;
+          if (!(target instanceof Element) || !target.closest('.sheet-dismiss-handle')) return;
+          dragging = true;
+          dragY = event.clientY;
+          host.setPointerCapture?.(event.pointerId);
+        },
+        { signal },
+      );
+      host.addEventListener(
+        'pointerup',
+        event => {
+          if (!dragging) return;
+          dragging = false;
+          const delta = event.clientY - dragY;
+          host.releasePointerCapture?.(event.pointerId);
+          if (delta > 56) closeStudySurfaces();
+        },
+        { signal },
+      );
+      host.addEventListener(
+        'pointercancel',
+        () => {
+          dragging = false;
+        },
+        { signal },
+      );
+    };
+    bindSheetDismiss(document.querySelector('#focus-dock'));
+    bindSheetDismiss(document.querySelector('#study-rail'));
     const narrowCurriculum = window.matchMedia('(max-width: 900px)');
     narrowCurriculum.addEventListener(
       'change',
@@ -377,6 +490,14 @@ export function installBindings(ctx: AppContext): void {
           if (countdown && !countdown.hidden) {
             event.preventDefault();
             ctx.controller?.cancelNext();
+            return;
+          }
+          const classroom = required<HTMLElement>('#classroom');
+          const studyOpen =
+            !classroom.classList.contains('dock-collapsed') || !classroom.classList.contains('drawer-collapsed');
+          if (studyOpen) {
+            event.preventDefault();
+            closeStudySurfaces();
           }
         }
       },
