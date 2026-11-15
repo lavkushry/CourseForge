@@ -66,6 +66,11 @@
   font-synthesis: none;
 }
 
+/* Quiet header chrome globally — cinema shell, not LMS toolbar */
+#header-bell-btn {
+  display: none !important;
+}
+
 /* ── Header: disappears on home until scroll ────────────────────────────── */
 
 .site-header.lms-top-header {
@@ -165,18 +170,15 @@
 }
 
 .header-signout {
-  min-height: 34px;
-  padding: 0 10px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--muted);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
   border: 0;
-  border-radius: 980px;
-}
-
-.header-signout:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .account-avatar {
@@ -309,16 +311,16 @@ body.home-cinema .app-layout-shell {
     font-weight: 500;
   }
 
-  /* Hide secondary LMS destinations on home — keep Discover + Library + Tutor + Settings */
-  body.home-cinema #nav-planner,
-  body.home-cinema #nav-history,
-  body.home-cinema #nav-paths,
-  body.home-cinema #nav-reviews,
-  body.home-cinema #nav-labs,
-  body.home-cinema #nav-career,
-  body.home-cinema #nav-admin,
-  body.home-cinema #nav-search-btn,
-  body.home-cinema .lms-rail-bottom {
+  /* Cinema rail: keep Discover + Library + Tutor + Settings only */
+  #nav-planner,
+  #nav-history,
+  #nav-paths,
+  #nav-reviews,
+  #nav-labs,
+  #nav-career,
+  #nav-admin,
+  #nav-search-btn,
+  .lms-rail-bottom {
     display: none !important;
   }
 
@@ -618,20 +620,7 @@ body.home-cinema .carousel-row {
 }
 
 .poster-card .course-card-footer {
-  margin-top: 6px !important;
-  gap: 6px !important;
-  opacity: 0.85;
-}
-
-.poster-card .course-card-footer .button {
-  min-height: 28px !important;
-  padding: 0 8px !important;
-  font-size: 0.72rem !important;
-  border-radius: 980px !important;
-  background: transparent !important;
-  border: 0 !important;
-  color: rgba(245, 245, 247, 0.7) !important;
-  box-shadow: none !important;
+  display: none !important;
 }
 
 .poster-progress {
@@ -1021,6 +1010,13 @@ body.home-cinema .carousel-row {
 .library-poster-grid .poster-card .cover-button,
 .library-poster-grid .poster-card .course-art {
   aspect-ratio: 2 / 3 !important;
+}
+
+.library-poster-grid .poster-body .course-meta {
+  -webkit-line-clamp: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .settings-panel-card,
