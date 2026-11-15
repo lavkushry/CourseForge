@@ -522,13 +522,13 @@ class TestTier1_F15_WorkerPytestSuite:
         assert len(test_funcs) == 8
 
     def test_worker_pytest_suite_executes_cleanly(self, repo_root):
-        cmd = ["pytest", str(repo_root / "services" / "career_worker" / "tests"), "-v"]
+        cmd = [sys.executable, "-m", "pytest", str(repo_root / "services" / "career_worker" / "tests"), "-v"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         assert res.returncode == 0
         assert "14 passed" in res.stdout or "8 passed" in res.stdout
 
     def test_pytest_runs_under_0_5_seconds(self, repo_root):
-        cmd = ["pytest", str(repo_root / "services" / "career_worker" / "tests")]
+        cmd = [sys.executable, "-m", "pytest", str(repo_root / "services" / "career_worker" / "tests")]
         res = subprocess.run(cmd, capture_output=True, text=True)
         assert res.returncode == 0
 

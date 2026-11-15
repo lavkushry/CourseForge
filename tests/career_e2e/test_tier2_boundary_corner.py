@@ -520,13 +520,13 @@ class TestTier2_F14_RunnerCLI_Boundary:
 # ==============================================================================
 class TestTier2_F15_WorkerPytestBoundary:
     def test_pytest_discovers_all_test_methods(self, repo_root):
-        cmd = ["pytest", str(repo_root / "services" / "career_worker" / "tests"), "--collect-only"]
+        cmd = [sys.executable, "-m", "pytest", str(repo_root / "services" / "career_worker" / "tests"), "--collect-only"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         assert res.returncode == 0
         assert "8 items" in res.stdout or "collected 8 items" in res.stdout or "14 items" in res.stdout or "collected 14 items" in res.stdout
 
     def test_pytest_executes_without_pdb(self, repo_root):
-        cmd = ["pytest", str(repo_root / "services" / "career_worker" / "tests"), "-q"]
+        cmd = [sys.executable, "-m", "pytest", str(repo_root / "services" / "career_worker" / "tests"), "-q"]
         res = subprocess.run(cmd, capture_output=True, text=True)
         assert res.returncode == 0
 
@@ -832,7 +832,7 @@ class TestTier2_F26_WebBuildBoundary:
     def test_dist_css_bundle_size_boundary(self, repo_root):
         css_files = list((repo_root / "web" / "dist" / "assets").glob("*.css"))
         assert len(css_files) >= 1
-        assert css_files[0].stat().st_size > 50000  # Tailored Tailwind CSS
+        assert max(f.stat().st_size for f in css_files) > 50000  # Tailored Tailwind CSS
 
     def test_dist_js_bundle_size_boundary(self, repo_root):
         js_files = list((repo_root / "web" / "dist" / "assets").glob("index-*.js"))
