@@ -86,18 +86,18 @@
   pointer-events: none !important;
 }
 
-/* 2. Hero Billboard Full-Bleed Layering (Fixes Empty Box Above Hero Content) */
+/* 2. Hero Billboard — cinema shell owns first viewport; keep layering only */
 #featured-course,
 .hero-billboard {
   position: relative !important;
-  border-radius: var(--radius-xl) !important;
+  border-radius: 0 !important;
   overflow: hidden !important;
   min-height: 300px !important;
   display: flex !important;
   align-items: flex-end !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: var(--shadow-md) !important;
-  background: var(--panel) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: #000 !important;
 }
 
 #featured-course .hero-art,

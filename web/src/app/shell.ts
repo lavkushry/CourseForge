@@ -1,8 +1,8 @@
 import type { AppContext } from './context';
 import { errorMessage, isAbort } from '../api';
-import { el as element, required } from '../components';
-import type { Course, User } from '../contracts';
-import { artwork, cleanLessonTitle, createSvgThumbnailDataUri } from '../discovery/view';
+import { required } from '../components';
+import type { User } from '../contracts';
+import { cleanLessonTitle, createSvgThumbnailDataUri } from '../discovery/view';
 import { PreferenceStore } from '../player/preferences';
 import { PlayerController } from '../player/controller';
 import { NativeVideoAdapter } from '../player/video';
@@ -55,50 +55,44 @@ export function installShell(ctx: AppContext): void {
     ctx.learnedLoaded = false;
     ctx.app.innerHTML = `
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <main id="main-content" class="login-page" tabindex="-1">
-      <div class="login-atmosphere" aria-hidden="true"><span></span><span></span><span></span></div>
-      <a class="brand" href="/" aria-label="CourseForge home"><span class="brand-mark" aria-hidden="true">F</span>CourseForge</a>
+    <main id="main-content" class="login-page login-page--slim" tabindex="-1">
+      <a class="brand brand--login" href="/" aria-label="CourseForge home"><span class="brand-mark" aria-hidden="true">F</span><span class="brand-wordmark">CourseForge</span></a>
       <div class="login-panel">
         <div class="auth-tabs" role="tablist" aria-label="Sign in or register">
           <button id="auth-tab-login" class="auth-tab active" type="button" role="tab" aria-selected="true">Sign In</button>
           <button id="auth-tab-register" class="auth-tab" type="button" role="tab" aria-selected="false">Create Account</button>
         </div>
-        <span class="eyebrow" id="auth-eyebrow">Your next chapter starts here</span>
-        <h1 id="auth-title">Welcome back.</h1>
-        <p class="muted" id="auth-desc">Big ideas. Small steps. Sign in to pick up where you left off.</p>
+        <h1 id="auth-title">Welcome back</h1>
+        <p class="muted" id="auth-desc" hidden>Sign in to continue learning.</p>
+        <span id="auth-eyebrow" class="visually-hidden">Sign in</span>
         <form id="login-form">
-          <label for="email">Email address</label>
+          <label for="email">Email</label>
           <input id="email" name="email" type="email" autocomplete="username" required placeholder="name@example.com" />
           <label for="password">Password</label>
           <div class="input-wrap">
-            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter password" />
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Password" />
             <button type="button" class="password-toggle-btn" id="toggle-login-password" aria-label="Show password">Show</button>
           </div>
           <button type="submit" class="button primary">Sign in</button>
-          <p class="auth-switch-text">New to CourseForge? <button type="button" class="auth-link-btn" id="switch-to-signup">Create account</button></p>
+          <p class="auth-switch-text">New here? <button type="button" class="auth-link-btn" id="switch-to-signup">Create account</button></p>
         </form>
         <form id="register-form" hidden>
-          <label for="register-name">Full name</label>
-          <input id="register-name" name="name" type="text" autocomplete="name" required placeholder="Your full name" />
-          <label for="register-email">Work or personal email</label>
+          <label for="register-name">Name</label>
+          <input id="register-name" name="name" type="text" autocomplete="name" required placeholder="Your name" />
+          <label for="register-email">Email</label>
           <input id="register-email" name="email" type="email" autocomplete="username" required placeholder="name@example.com" />
-          <label for="register-password">Password (4+ characters)</label>
+          <label for="register-password">Password</label>
           <div class="input-wrap">
-            <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="Choose a password" />
+            <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="At least 4 characters" />
             <button type="button" class="password-toggle-btn" id="toggle-register-password" aria-label="Show password">Show</button>
           </div>
           <button type="submit" class="button primary">Create account</button>
-          <p class="auth-switch-text">Already registered? <button type="button" class="auth-link-btn" id="switch-to-signin">Sign in</button></p>
+          <p class="auth-switch-text">Have an account? <button type="button" class="auth-link-btn" id="switch-to-signin">Sign in</button></p>
         </form>
         <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
       </div>
-      <p class="login-footer">Make room for what you want to learn.</p>
-      <section class="guest-courses-preview" id="guest-preview-section">
-        <div class="preview-header">
-          <span class="eyebrow">EXPLORE THE 2026 CURRICULUM</span>
-          <h2>29 Masterclasses Ready to Stream</h2>
-          <p class="muted">Agentic AI, LLM Internals, Distributed Systems, Cloud Data Engineering, and Scaler Masterclasses.</p>
-        </div>
+      <p class="login-footer">Learn at your pace.</p>
+      <section class="guest-courses-preview" id="guest-preview-section" hidden>
         <div id="guest-preview-grid" class="guest-grid"></div>
       </section>
     </main>`;
@@ -121,9 +115,9 @@ export function installShell(ctx: AppContext): void {
         tabRegister.setAttribute('aria-selected', 'false');
         loginForm.hidden = false;
         registerForm.hidden = true;
-        authEyebrow.textContent = 'Your next chapter starts here';
-        authTitle.textContent = 'Welcome back.';
-        authDesc.textContent = 'Big ideas. Small steps. Sign in to pick up where you left off.';
+        authEyebrow.textContent = 'Sign in';
+        authTitle.textContent = 'Welcome back';
+        authDesc.hidden = true;
         required<HTMLInputElement>('#email').focus();
       } else {
         tabRegister.classList.add('active');
@@ -132,9 +126,9 @@ export function installShell(ctx: AppContext): void {
         tabLogin.setAttribute('aria-selected', 'false');
         loginForm.hidden = true;
         registerForm.hidden = false;
-        authEyebrow.textContent = 'Join CourseForge today';
-        authTitle.textContent = 'Start learning.';
-        authDesc.textContent = 'Unlimited access to elite engineering and AI courses.';
+        authEyebrow.textContent = 'Create account';
+        authTitle.textContent = 'Create your account';
+        authDesc.hidden = true;
         required<HTMLInputElement>('#register-name').focus();
       }
     }
@@ -216,53 +210,7 @@ export function installShell(ctx: AppContext): void {
       { signal: ctx.pageScope.signal },
     );
 
-    const previewGrid = document.querySelector<HTMLElement>('#guest-preview-grid');
-    if (previewGrid) {
-      void ctx.api
-        .request<{ courses: Course[] }>('/public/courses?limit=30', {
-          signal: ctx.pageScope.signal,
-        })
-        .then(res => {
-          if (!res || !Array.isArray(res.courses)) return;
-          previewGrid.replaceChildren();
-          for (const course of res.courses) {
-            const card = element('article', 'guest-card');
-            card.tabIndex = 0;
-            card.setAttribute('role', 'button');
-            card.setAttribute('aria-label', `Course: ${course.title}`);
-
-            const art = artwork(course);
-            const body = element('div', 'guest-card-body');
-            body.append(
-              element('span', 'eyebrow', course.category || 'Engineering'),
-              element('h3', '', course.title),
-              element(
-                'p',
-                'guest-card-meta',
-                `${course.lesson_count ?? 0} lectures · ${course.instructor || 'CourseForge Faculty'}`,
-              ),
-            );
-            card.append(art, body);
-
-            const selectCourse = () => {
-              setAuthMode('register');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              ctx.feedback(`Create an account to start streaming "${course.title}".`);
-            };
-
-            card.addEventListener('click', selectCourse);
-            card.addEventListener('keydown', (e: KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                selectCourse();
-              }
-            });
-
-            previewGrid.append(card);
-          }
-        })
-        .catch(() => {});
-    }
+    // Guest curriculum strip stays hidden on the slim login — no public catalog fetch on the critical path.
   };
 
   ctx.renderApp = function renderApp(account: User): void {
@@ -288,12 +236,12 @@ export function installShell(ctx: AppContext): void {
           </span>
           <span class="brand-wordmark">CourseForge</span>
         </button>
-        <div id="header-breadcrumb" class="lms-breadcrumb" aria-label="Current location">
+        <div id="header-breadcrumb" class="lms-breadcrumb" aria-label="Current location" hidden>
           <button type="button" class="crumb-link" id="crumb-home">Home</button>
           <span class="crumb-sep" aria-hidden="true">/</span>
           <button type="button" class="crumb-link" id="crumb-section">Courses</button>
           <span class="crumb-sep" aria-hidden="true">/</span>
-          <span id="crumb-current" class="crumb-current">2026 Masterclass Catalog</span>
+          <span id="crumb-current" class="crumb-current">Catalog</span>
         </div>
       </div>
       <div class="account lms-header-right">
@@ -302,22 +250,22 @@ export function installShell(ctx: AppContext): void {
         </button>
         <div class="lms-header-search" id="header-quick-search-wrap" role="search" aria-label="Search">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg>
-          <input id="header-quick-search" type="search" placeholder="Search all pages..." aria-label="Quick catalog filter" autocomplete="off" />
+          <input id="header-quick-search" type="search" placeholder="Search" aria-label="Quick catalog filter" autocomplete="off" />
           <kbd class="omni-shortcut-kbd" aria-hidden="true">⌘K</kbd>
         </div>
-        <button id="workspace-mode-toggle" type="button" class="mode-switch-pill" aria-pressed="false" aria-label="Switch to Academy Studio" title="Switch between Normal Mode (Icon Rail) and Academy Studio Mode (Expanded Sidebar)">
+        <button id="workspace-mode-toggle" type="button" class="lms-circle-icon-btn mode-switch-pill" aria-pressed="false" aria-label="Switch workspace layout" title="Toggle sidebar density">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-          <span id="workspace-mode-label">Academy Studio</span>
+          <span id="workspace-mode-label" class="visually-hidden">Studio</span>
         </button>
-        <button id="header-bell-btn" type="button" class="lms-circle-icon-btn" aria-label="Open daily plan notifications" title="Daily Plan &amp; Schedule">
+        <button id="header-bell-btn" type="button" class="lms-circle-icon-btn" aria-label="Open daily plan notifications" title="Daily Plan">
           <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </button>
         <button id="header-gear-btn" type="button" class="lms-circle-icon-btn header-chrome-secondary" aria-label="Open settings" title="Settings">
-          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
         <span class="account-avatar" aria-hidden="true"></span>
-        <span id="account-name"></span>
-        <button id="logout" class="button quiet">Sign out</button>
+        <span id="account-name" class="visually-hidden"></span>
+        <button id="logout" class="button quiet header-signout" title="Sign out">Sign out</button>
       </div>
     </header>
     <div id="mobile-nav-backdrop" class="mobile-nav-backdrop" hidden></div>
@@ -396,16 +344,16 @@ export function installShell(ctx: AppContext): void {
           </button>
         </div>
       </nav>
-      <main id="main-content" class="workspace" tabindex="-1">
+      <main id="main-content" class="workspace workspace--cinema" tabindex="-1">
       <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
       <section id="catalog" aria-labelledby="catalog-heading">
         <section id="featured-course" class="featured-course" aria-label="Featured course" hidden></section>
-        <section id="continue-section" class="continue-section" aria-labelledby="continue-heading" hidden><div class="row-heading"><span class="eyebrow">Your active sessions</span><h2 id="continue-heading">Continue watching</h2></div><div id="continue-list" class="continue-row"></div></section>
-        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">The learning collection</span><h1 id="catalog-heading" tabindex="-1">Find your next obsession.</h1><p id="catalog-description" class="muted">Big ideas. Small steps. A world of possibility.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true" class="search-icon-slot"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="course-search" type="search" maxlength="100" placeholder="Titles, topics, instructors" autocomplete="off" /></div></form></div>
+        <section id="continue-section" class="continue-section" aria-labelledby="continue-heading" hidden><div class="row-heading"><h2 id="continue-heading">Continue Watching</h2></div><div id="continue-list" class="continue-row"></div></section>
+        <div class="section-heading"><div><span id="catalog-eyebrow" class="eyebrow">Home</span><h1 id="catalog-heading" tabindex="-1">Home</h1><p id="catalog-description" class="muted">Browse and resume.</p></div><form id="search-form" class="catalog-search" role="search"><label for="course-search">Search courses</label><div><span aria-hidden="true" class="search-icon-slot"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="course-search" type="search" maxlength="100" placeholder="Search" autocomplete="off" /></div></form></div>
         <p id="catalog-results" class="catalog-results" role="status" aria-live="polite"></p>
         <div id="course-list" class="course-grid"></div>
         <button id="load-more" class="button" hidden>More courses</button>
-        <footer class="catalog-footer"><span class="footer-wordmark">COURSEFORGE</span><p>Make room for what you want to learn.</p><span>One lesson. A new perspective.</span></footer>
+        <footer class="catalog-footer" hidden><span class="footer-wordmark">CourseForge</span></footer>
       </section>
       <section id="library-panel" class="library-panel" hidden></section>
       <section id="planner-panel" class="planner-panel" hidden></section>
@@ -436,11 +384,11 @@ export function installShell(ctx: AppContext): void {
               <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="focus-progress-track" cx="18" cy="18" r="15"></circle><circle id="focus-progress-ring" class="focus-progress-value" cx="18" cy="18" r="15"></circle></svg>
               <span id="focus-progress-label">0%</span>
             </div>
-            <div class="classroom-mode-switch" role="group" aria-label="Classroom workspace mode">
-              <button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal Mode</button>
-              <button id="mode-studio-btn" type="button" class="mode-seg-btn">Academy Studio</button>
+            <div class="classroom-mode-switch cf-segment" role="group" aria-label="Classroom workspace mode" hidden>
+              <button id="mode-normal-btn" type="button" class="mode-seg-btn active">Normal</button>
+              <button id="mode-studio-btn" type="button" class="mode-seg-btn">Studio</button>
             </div>
-            <button id="episodes" class="button lms-playlist-pill" aria-haspopup="dialog">
+            <button id="episodes" class="button quiet lms-playlist-pill" aria-haspopup="dialog">
               <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               <span>Lessons</span>
             </button>

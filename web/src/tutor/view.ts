@@ -132,13 +132,8 @@ export class TutorView {
     const pageHead = el('div', 'page-heading tutor-header');
     const headText = el('div', 'page-heading-left');
     headText.append(
-      el('span', 'eyebrow', 'LOCAL AI STUDY PARTNER'),
-      el('h1', 'page-title', 'Meet Your Personal Tutor'),
-      el(
-        'p',
-        'muted page-subtitle',
-        'Grounded answers require a local Ollama chat model and indexed lecture chunks. No fabricated replies when AI is offline.',
-      ),
+      el('h1', 'page-title', 'Tutor'),
+      el('p', 'muted page-subtitle', 'Ask grounded questions about your courses.'),
     );
     pageHead.append(headText);
     root.append(pageHead);

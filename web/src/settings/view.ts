@@ -99,13 +99,8 @@ export class SettingsView {
     const pageHead = el('div', 'page-heading settings-header');
     const headText = el('div', 'page-heading-left');
     headText.append(
-      el('span', 'eyebrow', 'ACCOUNT & WORKSPACE PREFERENCES'),
       el('h1', 'page-title', 'Settings'),
-      el(
-        'p',
-        'muted page-subtitle',
-        'Theme, player defaults, study goals, and account session. Status rows only reflect measured preferences — not invented latency.',
-      ),
+      el('p', 'muted page-subtitle', 'Appearance, playback, study goals, and account.'),
     );
     pageHead.append(headText);
     root.append(pageHead);
@@ -147,7 +142,7 @@ export class SettingsView {
     themeWrap.append(themeRow);
 
     const accentWrap = el('div', 'setting-group');
-    accentWrap.append(el('label', 'input-label', 'Accent Glow'));
+    accentWrap.append(el('label', 'input-label', 'Accent'));
     const accentRow = el('div', 'accent-toggle-row');
     const rawAccent =
       document.documentElement.dataset.accent || localStorage.getItem('courseforge_accent') || 'coral';
@@ -158,9 +153,9 @@ export class SettingsView {
     }
 
     for (const [aKey, aLabel] of [
-      ['coral', 'Coral (Default)'],
-      ['teal', 'Teal Glow'],
-      ['rose', 'Crimson Rose'],
+      ['coral', 'Coral'],
+      ['teal', 'Teal'],
+      ['rose', 'Rose'],
     ] as const) {
       const btn = el(
         'button',

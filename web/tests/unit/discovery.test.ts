@@ -237,7 +237,7 @@ describe('discovery honesty chrome', () => {
     expect(view).not.toMatch(/Dolby Audio/);
     expect(view).not.toMatch(/Top 10 Masterclasses/);
     expect(view).toMatch(/measuredTrending/);
-    expect(view).toMatch(/Top 10 This Week/);
+    expect(view).toMatch(/['"]Top 10['"]/);
     expect(syllabus).not.toMatch(/1080p HD/);
   });
 });

@@ -342,15 +342,17 @@ export function createSvgThumbnailDataUri(title: string, category?: string): str
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export function artwork(course: Course, eager = false): HTMLElement {
-  const art = node('div', 'course-art');
+export function artwork(course: Course, eager = false, clean = false): HTMLElement {
+  const art = node('div', clean ? 'course-art course-art--clean' : 'course-art');
   const hash = [...course.id].reduce((sum, letter) => (sum * 31 + letter.charCodeAt(0)) >>> 0, 17);
   art.style.setProperty('--art-hue', String(hash % 360));
   art.setAttribute('aria-hidden', 'true');
-  const orb = node('span', 'art-orb');
-  const label = node('span', 'art-label', toTitleCase(course.category || 'CourseForge Collection'));
-  const glyph = node('span', 'art-glyph', course.title.trim().slice(0, 1).toUpperCase());
-  art.append(orb, glyph, label);
+  if (!clean) {
+    const orb = node('span', 'art-orb');
+    const label = node('span', 'art-label', toTitleCase(course.category || 'CourseForge Collection'));
+    const glyph = node('span', 'art-glyph', course.title.trim().slice(0, 1).toUpperCase());
+    art.append(orb, glyph, label);
+  }
   const url = courseCover(course);
   const fallbackSrc = createSvgThumbnailDataUri(course.title, course.category);
   const image = node('img', 'course-cover');
@@ -431,6 +433,8 @@ export class DiscoveryView {
     this.fetchScope.abort();
     this.generation++;
     if (this.searchTimer !== undefined) clearTimeout(this.searchTimer);
+    document.body.classList.remove('home-cinema');
+    document.querySelector('#catalog')?.classList.remove('is-home');
   }
   isSaved(courseId: string): boolean {
     return this.savedIDs.has(courseId);
@@ -589,6 +593,7 @@ export class DiscoveryView {
     const focusedHero = active instanceof HTMLElement && Boolean(active.closest('#featured-course'));
     const home = this.view === 'home' && !this.query;
     required('#catalog').classList.toggle('is-home', home);
+    document.body.classList.toggle('home-cinema', home);
     const hero = required<HTMLElement>('#featured-course');
     const course =
       (this.feedHero && (this.courseByID(this.feedHero.id) || this.feedHero)) ||
@@ -597,30 +602,25 @@ export class DiscoveryView {
       this.courses[0];
     hero.hidden = !home || !course;
     if (home && course) this.renderHero(course);
+    // Continue watching is folded into the sparse poster rows below — no separate LMS strip.
     const continued = required<HTMLElement>('#continue-section');
-    continued.hidden = !home || this.continued.length === 0;
-    const resume = required('#continue-list');
-    resume.replaceChildren();
-    if (home) for (const item of this.continued) resume.append(this.continueCard(item));
+    continued.hidden = true;
+    required('#continue-list').replaceChildren();
     required('#catalog-heading').textContent = this.query
       ? `Results for “${this.query}”`
       : this.view === 'saved'
         ? 'My List'
         : this.view === 'courses'
-          ? 'Explore courses'
-          : 'Find your next obsession.';
+          ? 'Courses'
+          : 'Home';
     required('#catalog-description').textContent =
       this.view === 'saved'
-        ? 'The courses and lessons you saved. Ready when you are.'
+        ? 'Titles you saved.'
         : this.query
-          ? 'Search published course titles, instructors, categories and tags.'
-          : 'Big ideas. Small steps. A world of possibility.';
+          ? 'Matching published courses.'
+          : 'Browse and resume.';
     required('#catalog-eyebrow').textContent =
-      this.view === 'saved'
-        ? 'Made for your next chapter'
-        : this.query
-          ? 'Discover something new'
-          : 'The learning collection';
+      this.view === 'saved' ? 'Saved' : this.query ? 'Search' : 'Home';
     const list = required('#course-list');
     list.replaceChildren();
     if (this.view === 'saved') {
@@ -631,10 +631,8 @@ export class DiscoveryView {
       for (const item of items) list.append(this.savedCard(item));
       if (!items.length && !this.loading) {
         const empty = this.empty(
-          this.query ? 'No saved titles match your search.' : 'Build your next chapter.',
-          this.query
-            ? 'Try a different title.'
-            : 'Save a course with + My List. Library’s Saved filter shows the same measured list.',
+          this.query ? 'No saved titles match your search.' : 'Nothing saved yet',
+          this.query ? 'Try a different title.' : 'Save a course from Home or Library.',
         );
         if (!this.query && this.options.openLibrarySaved) {
           empty.append(
@@ -644,44 +642,53 @@ export class DiscoveryView {
         list.append(empty);
       }
     } else if (home && this.courses.length > 5) {
-      list.className = 'carousel-container';
+      list.className = 'carousel-container cinema-rows';
+      if (this.continued.length) {
+        const continueCourses = this.continued.map(item => {
+          const known = this.courseByID(item.course_id);
+          return (
+            known || {
+              id: item.course_id,
+              title: item.title,
+              duration_seconds: item.duration_seconds,
+              category: 'Continue',
+            }
+          );
+        });
+        list.append(this.carouselRow('Continue Watching', continueCourses, false, undefined, true));
+      }
+
       const myListCourses = this.saved
         .filter(item => item.item_type === 'course')
         .map(item => this.courseByID(item.id) || { id: item.id, title: item.title, category: 'My List' });
-      if (myListCourses.length) list.append(this.carouselRow('My List', myListCourses, false, 'star'));
+      if (myListCourses.length) list.append(this.carouselRow('My List', myListCourses));
 
-      if (this.forYou.length)
-        list.append(this.carouselRow('Your courses', this.forYou, false, 'book'));
+      if (this.forYou.length) list.append(this.carouselRow('Up Next', this.forYou));
 
       const ranked = this.trendingCourses();
-      if (ranked.length)
-        list.append(this.carouselRow('Top 10 This Week', ranked, true, 'fire'));
-      else {
-        // Catalog order only when backend has no measured playback rankings.
-        list.append(this.carouselRow('Featured masterclasses', this.courses.slice(0, 10), false, 'fire'));
-      }
+      if (ranked.length) list.append(this.carouselRow('Top 10', ranked, true));
+      else list.append(this.carouselRow('Featured', this.courses.slice(0, 10)));
 
       const aiCourses = this.courses.filter(c =>
         /ai|genai|agent|llm|rag|voice/i.test((c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' ')),
       );
-      if (aiCourses.length) list.append(this.carouselRow('GenAI, LLMs & Agentic AI', aiCourses, false, 'zap'));
+      if (aiCourses.length) list.append(this.carouselRow('AI & Agents', aiCourses));
 
       const sysDesign = this.courses.filter(c =>
         /system design|hld|lld|architecture|scale/i.test(
           (c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' '),
         ),
       );
-      if (sysDesign.length)
-        list.append(this.carouselRow('System Design & Distributed Systems', sysDesign, false, 'building'));
+      if (sysDesign.length) list.append(this.carouselRow('Systems', sysDesign));
 
       const dataEng = this.courses.filter(c =>
         /data|spark|hadoop|databricks|azure|sql|lake/i.test(
           (c.category || '') + ' ' + c.title + ' ' + (c.tags || []).join(' '),
         ),
       );
-      if (dataEng.length) list.append(this.carouselRow('Cloud & Big Data Engineering', dataEng, false, 'cloud'));
+      if (dataEng.length) list.append(this.carouselRow('Data', dataEng));
 
-      list.append(this.carouselRow('All masterclasses', this.courses, false, 'rocket'));
+      list.append(this.carouselRow('Browse All', this.courses));
     } else {
       list.className = 'course-grid';
       for (const item of this.courses) list.append(this.courseCard(item));
@@ -716,88 +723,74 @@ export class DiscoveryView {
   private renderHero(course: Course): void {
     const hero = required('#featured-course');
     hero.replaceChildren();
-    const art = artwork(course, true);
+    hero.classList.add('hero-billboard', 'hero-billboard--slim', 'hero-billboard--cinema');
+    const art = artwork(course, true, true);
     art.classList.add('hero-art');
+    const vignette = node('div', 'hero-vignette');
+    vignette.setAttribute('aria-hidden', 'true');
     const content = node('div', 'hero-content');
-    content.append(
-      node('p', 'hero-kicker', 'CourseForge Original Masterclass'),
-      node('h2', 'hero-title', course.title),
-      node(
-        'p',
-        'hero-description',
-        course.description || 'Find a new perspective. Learn something that stays with you.',
-      ),
-    );
-    const metadata = node('div', 'hero-metadata');
-    // Honest metadata only — no fabricated Match/% popularity or unverified tech badges.
-    if (course.enrolled) metadata.append(node('span', 'hero-chip-badge', 'Enrolled'));
-    metadata.append(
-      node(
-        'span',
-        'hero-chip',
-        course.lesson_count === undefined
-          ? 'Self-paced'
-          : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'} · ${duration(course.duration_seconds)}`,
-      ),
-    );
-    if (course.category) metadata.append(node('span', 'hero-category-chip', toTitleCase(course.category)));
-    content.append(metadata);
+    const short =
+      (course.description || '').trim().split(/(?<=[.!?])\s+/)[0] ||
+      (course.category ? toTitleCase(course.category) : 'Featured course');
+    content.append(node('h2', 'hero-title', course.title), node('p', 'hero-description', short));
     const actions = node('div', 'hero-actions');
     const continuation = this.getContinuation(course.id);
-    actions.append(
-      (() => {
-        const label = continuation
-          ? ' Continue watching'
-          : course.enrolled
-            ? ' Continue course'
-            : ' Explore course';
-        const b = action(
-          label,
-          () => {
-            if (continuation) {
-              this.options.resume(continuation.course_id, continuation.id, continuation.position);
-              return;
-            }
-            this.options.open(course.id, !course.enrolled);
-          },
-          'button primary hero-play',
-        );
-        b.prepend(svgIcon('play'));
-        return b;
-      })(),
-      action(
-        'Curriculum',
-        () => (this.options.syllabus ? this.options.syllabus(course) : this.options.open(course.id, !course.enrolled)),
-        'button quiet hero-syllabus',
-      ),
-      (() => {
-        const b = action(
-          ' Roadmap',
-          () => {
-            const btn = document.querySelector<HTMLButtonElement>('#nav-paths');
-            if (btn) btn.click();
-          },
-          'button quiet hero-roadmap',
-        );
-        b.prepend(svgIcon('target'));
-        return b;
-      })(),
-      this.saveButton(course),
+    const play = action(
+      continuation ? ' Continue' : ' Play',
+      () => {
+        if (continuation) {
+          this.options.resume(continuation.course_id, continuation.id, continuation.position);
+          return;
+        }
+        this.options.open(course.id, !course.enrolled);
+      },
+      'button primary hero-play',
     );
-    content.append(
-      actions,
-      node(
-        'p',
-        'hero-footnote',
-        course.instructor ? `With ${course.instructor}` : 'Make room for what you want to learn.',
-      ),
-    );
-    hero.append(art, content);
+    play.prepend(svgIcon('play'));
+    actions.append(play);
+    content.append(actions);
+    hero.append(art, vignette, content);
+  }
+
+  /** Apple TV–style poster: media + title only. Used on Home cinema rows. */
+  private posterCard(course: Course, resumeFirst = false): HTMLElement {
+    const card = node('article', 'course-card poster-card');
+    const continuation = this.getContinuation(course.id);
+    const openCourse = () => {
+      if (resumeFirst && continuation && !continuation.completed) {
+        this.options.resume(continuation.course_id, continuation.id, continuation.position);
+        return;
+      }
+      if (continuation && !continuation.completed) {
+        this.options.resume(continuation.course_id, continuation.id, continuation.position);
+        return;
+      }
+      this.options.open(course.id, !course.enrolled);
+    };
+    card.addEventListener('click', e => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      openCourse();
+    });
+    const cover = action('', openCourse, 'cover-button');
+    cover.setAttribute('aria-label', `Open ${course.title}`);
+    cover.append(artwork(course, false, true));
+    if (continuation && !continuation.completed) {
+      const bar = node('div', 'library-progress-bar poster-progress');
+      const fill = node('div', 'library-progress-fill');
+      fill.style.width = `${Math.min(100, Math.max(0, continuation.percent))}%`;
+      bar.append(fill);
+      cover.append(bar);
+    }
+    card.append(cover);
+    const body = node('div', 'course-card-body poster-body');
+    body.append(node('h2', '', course.title));
+    card.append(body);
+    return card;
   }
   private saveButton(course: Course): HTMLButtonElement {
     const saved = this.savedIDs.has(course.id);
     const value = action(
-      saved ? 'In My List' : '+ My List',
+      saved ? 'Saved' : 'My List',
       () => {
         const focused = document.activeElement === value;
         const featured = Boolean(value.closest('#featured-course'));
@@ -851,9 +844,7 @@ export class DiscoveryView {
     cover.setAttribute('aria-label', `Explore ${course.title}`);
     const artPlay = node('span', 'art-play');
     artPlay.append(svgIcon('play'));
-    const catPill = node('span', 'thumb-category-pill', toTitleCase(course.category || 'Masterclass'));
-    const durBadge = node('span', 'thumb-duration-badge', duration(course.duration_seconds));
-    cover.append(artwork(course), catPill, durBadge, artPlay);
+    cover.append(artwork(course), artPlay);
     card.append(cover);
     if (continuation && !continuation.completed) {
       const bar = node('div', 'library-progress-bar');
@@ -864,40 +855,17 @@ export class DiscoveryView {
       card.append(bar);
     }
     const body = node('div', 'course-card-body');
-    const badge = node(
-      'span',
-      'course-badge',
-      continuation && !continuation.completed
-        ? `${Math.round(continuation.percent)}% watched`
-        : course.enrolled
-          ? 'Enrolled'
-          : toTitleCase(course.category || 'Discover'),
-    );
-    body.append(
-      badge,
-      node('h2', '', course.title),
-      node(
-        'p',
-        'course-description',
-        course.description || 'A new perspective is waiting. Explore the lessons inside.',
-      ),
-    );
+    body.append(node('h2', '', course.title));
     const metadata = node(
       'p',
       'course-meta',
-      `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`} · ${duration(course.duration_seconds)}`,
+      continuation && !continuation.completed
+        ? `${Math.round(continuation.percent)}% · ${duration(course.duration_seconds)}`
+        : `${course.lesson_count === undefined ? 'Self-paced' : `${course.lesson_count} ${course.lesson_count === 1 ? 'lesson' : 'lessons'}`} · ${duration(course.duration_seconds)}`,
     );
     body.append(metadata);
     const footer = node('div', 'course-card-footer');
-    footer.append(
-      action('Open course →', openCourse, 'text-button'),
-      action(
-        'Curriculum',
-        () => (this.options.syllabus ? this.options.syllabus(course) : openCourse()),
-        'text-button syllabus-link-btn',
-      ),
-      this.saveButton(course),
-    );
+    footer.append(this.saveButton(course));
     body.append(footer);
     card.append(body);
     return card;
@@ -932,17 +900,12 @@ export class DiscoveryView {
     open.setAttribute('aria-label', `Resume ${item.title}`);
     const contPlay = node('span', 'continue-play');
     contPlay.append(svgIcon('play'));
-    const thumbPill = node('span', 'thumb-category-pill', 'In Progress');
-    const durBadge = node('span', 'thumb-duration-badge', duration(item.duration_seconds));
     open.append(
       this.artworkForCourse({ id: item.course_id, title: item.title, category: 'In Progress' }),
-      thumbPill,
-      durBadge,
       contPlay,
     );
     const body = node('div', 'continue-body');
     body.append(
-      node('span', 'eyebrow', 'Continue Learning'),
       node('h3', '', cleanLessonTitle(item.title)),
       node(
         'p',
@@ -974,10 +937,9 @@ export class DiscoveryView {
         : this.options.open(item.id, true);
     const cover = action('', open, 'cover-button');
     cover.setAttribute('aria-label', `Explore ${item.title}`);
-    const catPill = node('span', 'thumb-category-pill', toTitleCase(course.category || 'Saved'));
-    cover.append(this.artworkForCourse(course), catPill);
+    cover.append(this.artworkForCourse(course));
     const body = node('div', 'course-card-body');
-    body.append(node('span', 'course-badge', toTitleCase(course.category || 'Saved')), node('h2', '', item.title));
+    body.append(node('h2', '', item.title));
     const footer = node('div', 'course-card-footer');
     const remove = action(
       'Remove',
@@ -1011,26 +973,17 @@ export class DiscoveryView {
     card.append(cover, body);
     return card;
   }
-  private carouselRow(title: string, items: Course[], ranked = false, iconName?: IconName): HTMLElement {
+  private carouselRow(
+    title: string,
+    items: Course[],
+    ranked = false,
+    _iconName?: IconName,
+    resumeFirst = false,
+  ): HTMLElement {
     const section = node('section', 'carousel-row');
     const header = node('div', 'carousel-header');
-    const h2 = node('h2', 'carousel-title');
-    if (iconName) {
-      h2.append(svgIcon(iconName), ' ' + title);
-    } else {
-      h2.textContent = title;
-    }
-    header.append(
-      h2,
-      action(
-        'Explore all →',
-        () => {
-          const btn = document.querySelector<HTMLButtonElement>('#nav-courses');
-          if (btn) btn.click();
-        },
-        'carousel-explore-link',
-      ),
-    );
+    const h2 = node('h2', 'carousel-title', title);
+    header.append(h2);
     section.append(header);
 
     const wrapper = node('div', 'carousel-slider-wrapper');
@@ -1061,9 +1014,9 @@ export class DiscoveryView {
 
     track.addEventListener('scroll', updateNav, { passive: true });
 
-    // Rank numerals only when backed by measured trending from the streaming API.
+    // Poster tiles on Home; rank numerals only when backed by measured trending.
     items.forEach((course, index) => {
-      const card = this.courseCard(course);
+      const card = this.posterCard(course, resumeFirst);
       if (ranked) {
         card.classList.add('top10-card');
         const numeral = node('span', 'rank-numeral', String(index + 1));

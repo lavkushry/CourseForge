@@ -120,15 +120,7 @@ export class LibraryView {
 
     const pageHead = el('div', 'page-heading');
     const headText = el('div');
-    headText.append(
-      el('span', 'eyebrow', 'YOUR PERSONAL LEARNING STUDIO'),
-      el('h1', '', 'My Course Library'),
-      el(
-        'p',
-        'muted',
-        'Enrolled and catalog masterclasses with progress from your private continue-watching and history state.',
-      ),
-    );
+    headText.append(el('h1', '', 'Library'), el('p', 'muted', 'Your courses and progress.'));
     pageHead.append(headText);
     root.append(pageHead);
 
@@ -165,19 +157,23 @@ export class LibraryView {
     });
     searchWrap.append(searchInput);
 
-    const filtersGroup = el('div', 'library-status-filters');
+    const filtersGroup = el('div', 'library-status-filters cf-segment');
     filtersGroup.setAttribute('role', 'group');
     filtersGroup.setAttribute('aria-label', 'Filter courses by progress status');
 
     const statusOptions: Array<{ id: LibraryStatusFilter; label: string }> = [
-      { id: 'all', label: 'All Courses' },
+      { id: 'all', label: 'All' },
       { id: 'progress', label: 'In Progress' },
       { id: 'completed', label: 'Completed' },
       { id: 'saved', label: 'Saved' },
     ];
 
     for (const opt of statusOptions) {
-      const btn = el('button', this.statusFilter === opt.id ? 'filter-pill active' : 'filter-pill', opt.label);
+      const btn = el(
+        'button',
+        this.statusFilter === opt.id ? 'filter-pill cf-segment-btn active' : 'filter-pill cf-segment-btn',
+        opt.label,
+      );
       btn.type = 'button';
       btn.addEventListener('click', () => {
         this.statusFilter = opt.id;
@@ -324,9 +320,7 @@ export class LibraryView {
       coverBtn.setAttribute('aria-label', `View syllabus for ${c.title}`);
       const artPlay = el('span', 'art-play');
       artPlay.append(svgIcon('play'));
-      const catPill = el('span', 'thumb-category-pill', toTitleCase(c.category || 'Masterclass'));
-      const durBadge = el('span', 'thumb-duration-badge', formatDuration(c.duration_seconds || 0));
-      coverBtn.append(artwork(c), catPill, durBadge, artPlay);
+      coverBtn.append(artwork(c), artPlay);
       coverBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
       card.append(coverBtn);
 
@@ -340,32 +334,25 @@ export class LibraryView {
       }
 
       const body = el('div', 'course-card-body');
-      const statusBadge = isCompleted
+      const statusLine = isCompleted
         ? 'Completed'
         : progress
           ? `${Math.round(progress.percent)}% watched`
           : c.enrolled
             ? 'Enrolled'
-            : toTitleCase(c.category || 'Masterclass');
+            : toTitleCase(c.category || 'Catalog');
       body.append(
-        el('span', 'course-badge', statusBadge),
         el('h2', '', c.title),
         el(
           'p',
-          'course-description',
-          c.description ||
-            'Master deep technical principles with source-verified video lectures and hands-on practice.',
-        ),
-        el(
-          'p',
           'course-meta',
-          `${c.lesson_count || 0} lectures · ${formatDuration(c.duration_seconds || 0)} · ${c.instructor || 'CourseForge Faculty'}`,
+          `${statusLine} · ${c.lesson_count || 0} lessons · ${formatDuration(c.duration_seconds || 0)}`,
         ),
       );
 
       const footer = el('div', 'course-card-footer');
 
-      const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open course' : 'Start Course';
+      const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open' : 'Play';
       const primaryBtn = el('button', 'button primary library-primary-btn', primaryLabel);
       primaryBtn.type = 'button';
       primaryBtn.addEventListener('click', () => {
@@ -376,15 +363,11 @@ export class LibraryView {
         this.options.onPlayCourse(c);
       });
 
-      const syllabusBtn = el('button', 'text-button', 'Syllabus');
-      syllabusBtn.type = 'button';
-      syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
-
       const isSaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
       const saveBtn = el(
         'button',
-        isSaved ? 'button list-button' : 'button quiet list-button',
-        isSaved ? 'In My List' : '+ My List',
+        isSaved ? 'button quiet list-button' : 'button quiet list-button',
+        isSaved ? 'Saved' : 'My List',
       );
       saveBtn.type = 'button';
       saveBtn.addEventListener('click', async () => {
@@ -394,15 +377,14 @@ export class LibraryView {
           const nowSaved = await this.options.onToggleSave(c, currentlySaved);
           if (nowSaved) this.savedIds.add(c.id);
           else this.savedIds.delete(c.id);
-          saveBtn.textContent = nowSaved ? 'In My List' : '+ My List';
-          saveBtn.className = nowSaved ? 'button list-button' : 'button quiet list-button';
+          saveBtn.textContent = nowSaved ? 'Saved' : 'My List';
           if (this.statusFilter === 'saved') this.renderGrid(grid, countBadge);
         } finally {
           saveBtn.disabled = false;
         }
       });
 
-      footer.append(primaryBtn, syllabusBtn, saveBtn);
+      footer.append(primaryBtn, saveBtn);
       body.append(footer);
       card.append(body);
       grid.append(card);
