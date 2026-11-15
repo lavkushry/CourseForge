@@ -498,7 +498,7 @@ export class StudyRail {
       title.title = m.title;
       info.append(badge, title);
 
-      const link = el('a', 'material-download-btn', 'Download');
+      const link = el('a', 'material-download-btn', 'Get');
       link.href = url.href;
       link.setAttribute('target', '_blank');
       link.setAttribute('rel', 'noopener noreferrer');

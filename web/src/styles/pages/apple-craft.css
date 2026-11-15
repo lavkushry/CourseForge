@@ -1546,37 +1546,46 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     outline-offset: 2px !important;
   }
 
-  /* Honesty watermark — bottom-left, clear of tools and transport */
+  /* Honesty watermark — inside the picture frame, not fighting the bar */
   #classroom.focus-workspace #watermark,
   #classroom.focus-workspace .watermark {
     top: auto !important;
-    bottom: calc(52px + var(--safe-bottom)) !important;
+    bottom: 8px !important;
     right: auto !important;
-    left: 12px !important;
+    left: 10px !important;
     z-index: 18 !important;
-    font-size: 0.6rem !important;
-    opacity: 0.32;
-    letter-spacing: 0.04em;
+    font-size: 0.55rem !important;
+    opacity: 0.22;
+    letter-spacing: 0.06em;
   }
 
-  /* Keep slides readable — cover cropping made dual-chrome noise worse */
   #classroom.focus-workspace.dock-collapsed.drawer-collapsed #lesson-video {
     object-fit: contain !important;
   }
 
-  /* Watching: hide heading tool pills — transport owns one-tap study icons */
-  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .focus-icon-btn {
+  /* Phone: heading is only Exit — transport owns every study one-tap */
+  #classroom.focus-workspace .focus-icon-btn {
     display: none !important;
   }
 
-  #classroom.focus-workspace.dock-collapsed.drawer-collapsed #back {
+  #classroom.focus-workspace #back {
     display: inline-flex !important;
   }
 
-  /* Sheet open: show pills again so tools stay one-tap switchable */
-  #classroom.focus-workspace:not(.dock-collapsed) .focus-icon-btn:not([hidden]),
-  #classroom.focus-workspace:not(.drawer-collapsed) .focus-icon-btn:not([hidden]) {
-    display: inline-flex !important;
+  #classroom.focus-workspace .classroom-heading {
+    justify-content: flex-start !important;
+    height: calc(36px + var(--safe-top)) !important;
+    min-height: calc(36px + var(--safe-top)) !important;
+    max-height: calc(36px + var(--safe-top)) !important;
+    background: transparent !important;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed:has(
+      media-controller[userinactive]:not([mediaPaused])
+    )
+    .classroom-heading {
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   #classroom.focus-workspace .cinema-top-actions {
@@ -1587,9 +1596,58 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     display: inline-flex !important;
   }
 
+  /* Strip transport noise — play, time, seek, CC, study×4, fullscreen */
+  #classroom media-mute-button,
+  #classroom .cinema-button:not(.cinema-study-opener):not(.cinema-center-play):not(.cinema-fullscreen) {
+    display: none !important;
+  }
+
+  #classroom .cinema-fullscreen,
+  #classroom media-captions-button {
+    display: inline-flex !important;
+  }
+
   #classroom.focus-workspace .lesson-meta-bar,
   #classroom .lesson-meta-bar {
     display: none !important;
+  }
+
+  /* Closed watch: stage fills the phone — picture as large as contain allows */
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .lesson-stage {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    background: #000 !important;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed #player-wrap {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    flex: 1 1 auto !important;
+    margin: 0 !important;
+  }
+
+  /* Sheet open: pin a true 16:9 band under the exit chip; sheet overlays below */
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage,
+  #classroom.focus-workspace:not(.drawer-collapsed) .lesson-stage {
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #player-wrap,
+  #classroom.focus-workspace:not(.drawer-collapsed) #player-wrap {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    flex: 0 0 auto !important;
+    max-height: calc(100dvh - min(36dvh, 320px)) !important;
+  }
+
+  #classroom.focus-workspace #media-controller,
+  #classroom.focus-workspace media-controller {
+    position: absolute !important;
+    inset: 0 !important;
   }
 
   #classroom.focus-workspace .note-compose-row {
@@ -1728,8 +1786,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(28dvh, 260px) !important;
-    max-height: min(28dvh, 260px) !important;
+    height: min(36dvh, 320px) !important;
+    max-height: min(36dvh, 320px) !important;
     min-height: 0 !important;
     flex: none !important;
     flex-basis: auto !important;
@@ -1946,27 +2004,19 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     background: rgba(255, 255, 255, 0.12) !important;
   }
 
-  /* Sheet open: player fills everything above the compact sheet */
+  /* Sheet overlays the lower void — video stays top-pinned 16:9 */
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column,
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-column {
     grid-template-rows: minmax(0, 1fr) !important;
-    height: calc(100dvh - min(28dvh, 260px)) !important;
-    max-height: calc(100dvh - min(28dvh, 260px)) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     align-content: stretch !important;
     justify-items: stretch !important;
   }
 
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage,
-  #classroom.focus-workspace:not(.drawer-collapsed) .lesson-stage,
-  #classroom.focus-workspace:not(.dock-collapsed) #player-wrap,
-  #classroom.focus-workspace:not(.drawer-collapsed) #player-wrap {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-    height: 100% !important;
+  #classroom.focus-workspace:not(.drawer-collapsed) .lesson-stage {
     min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: auto !important;
-    margin: 0 !important;
   }
 
   #classroom.focus-workspace:not(.dock-collapsed) #media-controller,
@@ -1997,8 +2047,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(28dvh, 260px) !important;
-    max-height: min(28dvh, 260px) !important;
+    height: min(36dvh, 320px) !important;
+    max-height: min(36dvh, 320px) !important;
     min-height: 0 !important;
     margin: 0 !important;
     transform: translateY(0) !important;

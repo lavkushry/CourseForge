@@ -203,7 +203,7 @@ export function mountPlayerChrome(
   const filesOpener = studyOpener('Open files', 'file', actions.openMaterials, '#focus-materials');
   const transcriptOpener = studyOpener(
     'Open transcript',
-    'captions',
+    'book',
     actions.openTranscript,
     '#focus-transcript',
   );
@@ -521,6 +521,7 @@ export function mountPlayerChrome(
   pip.classList.add('sr-only-actionable');
   const full = delegate('Toggle fullscreen', '#fullscreen', 'popout');
   full.title = 'Fullscreen';
+  full.classList.add('cinema-fullscreen');
   // Study cluster sits in the transport so one-tap tools survive fullscreen.
   row.append(studyCluster, settingsBtn, loopBtn, full, speed, pip);
 

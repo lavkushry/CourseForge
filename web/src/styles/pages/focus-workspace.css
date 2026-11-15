@@ -214,8 +214,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
 .focus-workspace .lesson-sidebar.study-rail {
   order: -1;
-  flex: 0 0 280px;
-  width: 280px;
+  flex: 0 0 260px;
+  width: 260px;
   height: auto;
   max-height: none;
   min-height: 0;
@@ -337,19 +337,18 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 /* Desktop study open: narrower side rail — video stays dominant. */
 @media (min-width: 901px) {
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-meta-bar {
+    display: none !important;
   }
 
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage {
     grid-column: 1;
     grid-row: 1;
     min-height: 0;
-  }
-
-  #classroom.focus-workspace:not(.dock-collapsed) .lesson-meta-bar {
-    grid-column: 1;
-    grid-row: 2;
   }
 
   /* Drop redundant lesson title under the stage while study is open */
@@ -482,9 +481,34 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 @media (min-width: 901px) {
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-sidebar.study-rail,
   #classroom.focus-workspace:not(.drawer-collapsed) #study-rail {
-    width: 280px;
-    max-width: 280px;
-    flex: 0 0 280px;
+    width: 260px;
+    max-width: 260px;
+    flex: 0 0 260px;
+  }
+
+  /* Desktop watching: tools live in transport — quiet the heading switcher */
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .focus-icon-btn {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) .focus-icon-btn:not([hidden]),
+  #classroom.focus-workspace:not(.drawer-collapsed) .focus-icon-btn:not([hidden]) {
+    display: inline-flex;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .classroom-heading {
+    min-height: 40px;
+    height: 40px;
+  }
+
+  #classroom.focus-workspace media-mute-button,
+  #classroom.focus-workspace .cinema-button:not(.cinema-study-opener):not(.cinema-center-play):not(.cinema-fullscreen) {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .cinema-fullscreen,
+  #classroom.focus-workspace media-captions-button {
+    display: inline-flex !important;
   }
 }
 
@@ -656,8 +680,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  flex: 0 0 280px;
-  width: 280px;
+  flex: 0 0 260px;
+  width: 260px;
   height: 100%;
   max-height: none;
   min-height: 0;
