@@ -343,7 +343,9 @@ export function installBindings(ctx: AppContext): void {
       if (ctx.studyRail && dock) {
         ctx.studyRail.setTab(tab);
         if (tab === 'notes') {
-          window.requestAnimationFrame(() => dock.querySelector<HTMLTextAreaElement>('textarea')?.focus());
+          window.requestAnimationFrame(() =>
+            dock.querySelector<HTMLInputElement | HTMLTextAreaElement>('input.note-input, textarea.note-input')?.focus(),
+          );
         }
         return;
       }

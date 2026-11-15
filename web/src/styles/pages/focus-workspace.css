@@ -443,9 +443,38 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 
   #classroom.focus-workspace #watermark,
   #classroom.focus-workspace .watermark {
-    top: 12px;
-    right: 16px;
-    opacity: 0.4;
+    top: auto;
+    bottom: 56px;
+    right: auto;
+    left: 16px;
+    opacity: 0.32;
+  }
+
+  /* Watching desktop: hide redundant heading tools — in-player openers remain */
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .focus-icon-btn {
+    opacity: 0.55;
+  }
+
+  #classroom.focus-workspace .note-compose-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #classroom.focus-workspace .note-compose-row .note-input {
+    flex: 1 1 auto;
+    min-height: 40px;
+    height: 40px;
+    padding: 0 12px;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-meta-bar {
+    min-height: 40px;
+    padding: 6px 12px;
+  }
+
+  #classroom.focus-workspace .cinema-study-cluster {
+    display: inline-flex;
   }
 }
 
@@ -685,8 +714,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 #classroom.focus-workspace .rail-note-form .note-input {
-  min-height: 88px;
-  border-radius: 12px;
+  min-height: 40px;
+  border-radius: 10px;
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
 }

@@ -764,30 +764,28 @@ export class StudyRail {
       return panel;
     }
 
-    // Form to add note at current timestamp — quiet toolbar, not a loud CTA stack.
-    const form = el('form', 'rail-note-form');
+    // One-line capture — timestamp + field + save, no empty shouting.
+    const form = el('form', 'rail-note-form note-compose-row');
     const currentSec = Math.floor(this.options.getCurrentPosition());
-    const toolRow = el('div', 'note-tool-row');
     const captureLabel = el('span', 'capture-hint', formatTime(currentSec));
+    const input = el('input', 'form-input note-input') as HTMLInputElement;
+    input.type = 'text';
+    input.placeholder = 'Note…';
+    input.required = true;
+    input.autocomplete = 'off';
     const addBtn = el('button', 'button quiet note-save-btn', 'Save');
     addBtn.type = 'submit';
-    toolRow.append(captureLabel, addBtn);
-
-    const textarea = el('textarea', 'form-input note-input');
-    textarea.placeholder = 'Write a note…';
-    textarea.rows = 3;
-    textarea.required = true;
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const content = textarea.value.trim();
+      const content = input.value.trim();
       if (!content) return;
       addBtn.disabled = true;
       try {
         const key = `note_${Date.now()}_${Math.random()}`;
         const newNote = await this.options.api.createNote(this.activeLesson!.id, currentSec, content, key);
         this.notes.unshift(newNote);
-        textarea.value = '';
+        input.value = '';
         this.render();
       } catch (err) {
         alert(errorMessage(err));
@@ -796,7 +794,7 @@ export class StudyRail {
       }
     });
 
-    form.append(textarea, toolRow);
+    form.append(captureLabel, input, addBtn);
     panel.append(form);
 
     if (!this.notesLoaded && !this.notesLoading) {
@@ -829,7 +827,7 @@ export class StudyRail {
     } else if (this.notesError && this.notes.length === 0) {
       notesList.append(el('p', 'muted rail-error', this.notesError));
     } else if (this.notes.length === 0) {
-      notesList.append(el('p', 'muted rail-empty', 'Empty'));
+      // Intentionally blank — the compose row is the empty state.
     } else {
       for (const n of this.notes) {
         const item = el('div', 'note-card');

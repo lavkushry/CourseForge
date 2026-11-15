@@ -208,8 +208,12 @@ export function mountPlayerChrome(
     '#focus-transcript',
   );
   const quizOpener = studyOpener('Open quiz', 'help', actions.openQuiz, '#focus-quiz');
-  top.append(captureOpener, notesOpener, filesOpener, transcriptOpener, quizOpener, theater, lock);
+  // Desktop keeps study openers in top chrome; phone moves them into the transport row.
+  top.append(captureOpener, theater, lock);
+  top.classList.add('cinema-top-actions--chrome');
   media.append(top);
+  const studyCluster = ui('div', 'cinema-study-cluster');
+  studyCluster.append(notesOpener, filesOpener, transcriptOpener, quizOpener);
 
   // A-B Loop Repeat for mastering complex code and engineering demonstrations
   let loopA: number | null = null;
@@ -517,7 +521,8 @@ export function mountPlayerChrome(
   pip.classList.add('sr-only-actionable');
   const full = delegate('Toggle fullscreen', '#fullscreen', 'popout');
   full.title = 'Fullscreen';
-  row.append(settingsBtn, loopBtn, full, speed, pip);
+  // Study cluster sits in the transport so one-tap tools survive fullscreen.
+  row.append(studyCluster, settingsBtn, loopBtn, full, speed, pip);
 
   const center = ui('div', 'cinema-center-actions');
   center.slot = 'centered-chrome';

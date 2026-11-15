@@ -740,6 +740,7 @@ export function installShell(ctx: AppContext): void {
         seek: position => {
           ctx.controller?.seek(position);
         },
+        openNotes: () => document.querySelector<HTMLButtonElement>('#focus-notes')?.click(),
       },
       ctx.pageScope.signal,
     );

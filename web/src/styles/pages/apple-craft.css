@@ -1546,19 +1546,79 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     outline-offset: 2px !important;
   }
 
-  /* Honesty watermark sits under the floating tools — never on Quiz */
+  /* Honesty watermark — bottom-left, clear of tools and transport */
   #classroom.focus-workspace #watermark,
   #classroom.focus-workspace .watermark {
-    top: calc(var(--safe-top) + 48px) !important;
-    right: 12px !important;
-    z-index: 20 !important;
-    font-size: 0.62rem !important;
-    opacity: 0.4;
+    top: auto !important;
+    bottom: calc(52px + var(--safe-bottom)) !important;
+    right: auto !important;
+    left: 12px !important;
+    z-index: 18 !important;
+    font-size: 0.6rem !important;
+    opacity: 0.32;
+    letter-spacing: 0.04em;
   }
 
-  /* Immersive closed watch: fill the stage (crop edges of letterboxed slides) */
+  /* Keep slides readable — cover cropping made dual-chrome noise worse */
   #classroom.focus-workspace.dock-collapsed.drawer-collapsed #lesson-video {
-    object-fit: cover !important;
+    object-fit: contain !important;
+  }
+
+  /* Watching: hide heading tool pills — transport owns one-tap study icons */
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .focus-icon-btn {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed #back {
+    display: inline-flex !important;
+  }
+
+  /* Sheet open: show pills again so tools stay one-tap switchable */
+  #classroom.focus-workspace:not(.dock-collapsed) .focus-icon-btn:not([hidden]),
+  #classroom.focus-workspace:not(.drawer-collapsed) .focus-icon-btn:not([hidden]) {
+    display: inline-flex !important;
+  }
+
+  #classroom.focus-workspace .cinema-top-actions {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .cinema-study-cluster {
+    display: inline-flex !important;
+  }
+
+  #classroom.focus-workspace .lesson-meta-bar,
+  #classroom .lesson-meta-bar {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .note-compose-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin: 0 0 8px !important;
+  }
+
+  #classroom.focus-workspace .note-compose-row .note-input {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+  }
+
+  #classroom.focus-workspace .note-compose-row .capture-hint {
+    flex: 0 0 auto !important;
+    min-width: 2.5rem !important;
+  }
+
+  #classroom.focus-workspace .note-compose-row .note-save-btn {
+    flex: 0 0 auto !important;
+    min-height: 40px !important;
   }
 
   #classroom.focus-workspace {
@@ -1864,21 +1924,13 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   }
 
   #classroom.focus-workspace .rail-note-form .note-input {
-    min-height: 64px !important;
-    padding: 10px 12px !important;
+    min-height: 40px !important;
+    padding: 0 12px !important;
     border-radius: 10px !important;
-  }
-
-  #classroom.focus-workspace .note-tool-row {
-    margin-top: 0 !important;
   }
 
   #classroom.focus-workspace .note-save-btn {
     min-height: 40px !important;
-  }
-
-  #classroom.focus-workspace .rail-note-form .note-input {
-    min-height: 72px !important;
   }
 
   #classroom.focus-workspace .capture-hint {

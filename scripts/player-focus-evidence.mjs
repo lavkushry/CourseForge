@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 
-const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v6';
+const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v7';
 const base = 'https://127.0.0.1:8000';
 const chrome = process.env.CHROME;
 const password = 'password123';
@@ -135,6 +135,21 @@ async function shot(page, dir, name) {
   console.log('shot', p);
 }
 
+/** Click focus tools even when immersive CSS hides the heading pills. */
+async function tapTool(page, selector, openerLabel) {
+  if (openerLabel) {
+    const opener = page.locator(`.cinema-study-opener[aria-label="${openerLabel}"]`).first();
+    if ((await opener.count()) && (await opener.isVisible().catch(() => false))) {
+      await opener.click({ force: true });
+      return;
+    }
+  }
+  await page.evaluate(sel => {
+    const el = document.querySelector(sel);
+    if (el instanceof HTMLElement) el.click();
+  }, selector);
+}
+
 async function runViewport(label, viewport, email) {
   const dir = path.join(outRoot, label);
   fs.mkdirSync(dir, { recursive: true });
@@ -184,7 +199,7 @@ async function runViewport(label, viewport, email) {
     const baseline = await mediaIdentity(page);
 
     // Notes
-    await page.locator('#focus-notes').click({ force: true });
+    await tapTool(page, '#focus-notes', 'Open notes');
     await page.waitForTimeout(700);
     const afterNotes = await mediaIdentity(page);
     report.notesOpen = await page.locator('#classroom').evaluate(el => !el.classList.contains('dock-collapsed'));
@@ -199,7 +214,7 @@ async function runViewport(label, viewport, email) {
     }
 
     // Materials
-    await page.locator('#focus-materials').click({ force: true });
+    await tapTool(page, '#focus-materials', 'Open files');
     await page.waitForTimeout(700);
     const afterMaterials = await mediaIdentity(page);
     report.materialsTab = await page.locator('#focus-dock .focus-dock-tab.active').first().innerText().catch(() => '');
@@ -236,7 +251,9 @@ async function runViewport(label, viewport, email) {
     ];
     report.toolChecks = [];
     for (const tool of tools) {
-      await page.locator(tool.click).click({ force: true });
+      const openerLabel =
+        tool.name === 'transcript' ? 'Open transcript' : tool.name === 'quiz' ? 'Open quiz' : '';
+      await tapTool(page, tool.click, openerLabel);
       await page.waitForTimeout(700);
       const after = await mediaIdentity(page);
       const same = sameMedia(baseline, after);
@@ -293,8 +310,16 @@ async function runViewport(label, viewport, email) {
     }
 
     // Leave classroom — shell chrome must return (site header / nav not stuck hidden)
-    await page.locator('#back').click({ force: true }).catch(async () => {
-      await page.locator('.back-to-courses-btn').click({ force: true });
+    await page.evaluate(async () => {
+      if (document.fullscreenElement) {
+        try {
+          await document.exitFullscreen();
+        } catch {
+          /* ignore */
+        }
+      }
+      const back = document.querySelector('#back, .back-to-courses-btn');
+      if (back instanceof HTMLElement) back.click();
     });
     await page.waitForTimeout(900);
     report.shellRestored = await page.evaluate(() => {
@@ -331,8 +356,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-DTdAC8bV.js',
-    css: 'index-JQEy0pAF.css',
+    js: 'index-CTX3vnr5.js',
+    css: 'index-B9scn66M.css',
   },
   phone: {
     ok: phone.ok,
