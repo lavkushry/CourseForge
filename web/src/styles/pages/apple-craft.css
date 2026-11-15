@@ -1421,29 +1421,73 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     padding: 0 !important;
   }
 
-  /* Tool pills float over the video — no second header band stealing height */
+  /* Tool pills float over the video — readable chips, clear of notch */
   #classroom.focus-workspace .classroom-heading {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 40 !important;
-    min-height: calc(40px + var(--safe-top)) !important;
-    height: calc(40px + var(--safe-top)) !important;
-    max-height: calc(40px + var(--safe-top)) !important;
-    padding: var(--safe-top) 8px 0 !important;
+    min-height: calc(44px + var(--safe-top)) !important;
+    height: calc(44px + var(--safe-top)) !important;
+    max-height: calc(44px + var(--safe-top)) !important;
+    padding: calc(var(--safe-top) + 6px) 10px 0 !important;
     gap: 6px !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent) !important;
+    scrollbar-width: none;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.35) 70%, transparent) !important;
     border-bottom: 0 !important;
     backdrop-filter: none !important;
   }
 
-  #classroom.focus-workspace .classroom-heading-left,
+  #classroom.focus-workspace .classroom-heading::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Keep only a compact exit control — everything else in the left crumb stays gone */
+  #classroom.focus-workspace .classroom-heading-left {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    gap: 0 !important;
+  }
+
+  #classroom.focus-workspace .classroom-heading-left > *:not(#back) {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace #back {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    margin: 0 2px 0 0 !important;
+    border-radius: 980px !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    background: rgba(20, 20, 22, 0.72) !important;
+    color: #f5f5f7 !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+
+  #classroom.focus-workspace #back span {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace #back .svg-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
   #classroom.focus-workspace .classroom-heading-actions,
   #classroom.focus-workspace .focus-progress,
   #classroom.focus-workspace #focus-search {
@@ -1451,26 +1495,30 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   }
 
   #classroom.focus-workspace .focus-icon-btn {
-    min-height: 32px !important;
-    min-width: 32px !important;
-    height: 32px !important;
-    padding: 0 12px !important;
-    font-size: 0.72rem !important;
-    font-weight: 600 !important;
+    min-height: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    padding: 0 14px !important;
+    font-size: 0.75rem !important;
+    font-weight: 650 !important;
     letter-spacing: -0.01em !important;
     border-radius: 980px !important;
-    border: 0 !important;
-    background: rgba(0, 0, 0, 0.45) !important;
-    color: rgba(245, 245, 247, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    background: rgba(20, 20, 22, 0.72) !important;
+    color: #f5f5f7 !important;
     flex: 0 0 auto !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(14px) saturate(1.2) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(1.2) !important;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.35) !important;
   }
 
-  #classroom.focus-workspace .focus-icon-btn[aria-pressed='true'] {
-    background: rgba(255, 255, 255, 0.92) !important;
+  #classroom.focus-workspace .focus-icon-btn[aria-pressed='true'],
+  #classroom.focus-workspace .focus-tool-btn[aria-pressed='true'] {
+    background: #f5f5f7 !important;
     color: #111 !important;
+    border-color: transparent !important;
     opacity: 1 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
   }
 
   #classroom.focus-workspace .focus-icon-btn:focus-visible {
@@ -1478,15 +1526,28 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     outline-offset: 2px !important;
   }
 
+  /* Honesty watermark sits under the floating tools — never on Quiz */
+  #classroom.focus-workspace #watermark,
+  #classroom.focus-workspace .watermark {
+    top: calc(var(--safe-top) + 52px) !important;
+    right: 12px !important;
+    z-index: 20 !important;
+    font-size: 0.65rem !important;
+    opacity: 0.55;
+  }
+
   #classroom.focus-workspace {
     position: relative !important;
   }
 
   #classroom.focus-workspace .lesson-column {
+    position: relative !important;
     padding: 0 !important;
     overflow: hidden !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
+    /* Stage owns the column; meta floats so video is not short */
+    grid-template-rows: minmax(0, 1fr) !important;
   }
 
   #classroom.focus-workspace.dock-collapsed.drawer-collapsed .lesson-column {
@@ -1499,11 +1560,49 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     min-height: 0 !important;
   }
 
-  /* Thumb-zone transport — calm overlay */
+  /* Meta floats over the stage — title gone, actions only */
+  #classroom.focus-workspace .lesson-meta-bar,
+  #classroom .lesson-meta-bar {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 28 !important;
+    grid-row: auto !important;
+    min-height: 0 !important;
+    padding: 8px 12px calc(10px + var(--safe-bottom)) !important;
+    border: 0 !important;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.82), transparent) !important;
+  }
+
+  #classroom.focus-workspace .lesson-main-title,
+  #classroom .lesson-main-title {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .lesson-title-action-row,
+  #classroom .lesson-title-action-row {
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  #classroom.focus-workspace .lesson-heading-group,
+  #classroom .lesson-heading-group {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .action-pill {
+    min-height: 40px !important;
+    padding: 0 14px !important;
+  }
+
+  /* Thumb-zone transport — denser, still 44px hits */
   #classroom media-control-bar {
-    min-height: 48px !important;
-    padding: 0 8px calc(6px + var(--safe-bottom)) !important;
-    gap: 2px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 8px calc(8px + var(--safe-bottom)) !important;
+    gap: 4px !important;
   }
 
   /* Respect Media Chrome userinactive — always-on bar is a concentration killer */
@@ -1544,12 +1643,12 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(38dvh, 340px) !important;
-    max-height: min(38dvh, 340px) !important;
+    height: min(32dvh, 300px) !important;
+    max-height: min(32dvh, 300px) !important;
     min-height: 0 !important;
     flex: none !important;
     flex-basis: auto !important;
-    border-radius: 20px 20px 0 0 !important;
+    border-radius: 18px 18px 0 0 !important;
     border: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     background: rgba(12, 12, 14, 0.97) !important;
@@ -1580,14 +1679,32 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   }
 
   #classroom.focus-workspace:not(.drawer-collapsed) #study-rail::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .sheet-dismiss-handle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 28px;
+    padding: 10px 0 4px;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+    touch-action: none;
+  }
+
+  #classroom.focus-workspace .sheet-dismiss-handle::after {
     content: '';
     display: block;
-    width: 32px;
+    width: 36px;
     height: 4px;
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.22);
-    margin: 8px auto 0;
-    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.32);
   }
 
   /* Ensure no full-viewport dim layer when study sheets are open */
@@ -1752,8 +1869,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column,
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-column {
     grid-template-rows: minmax(0, 1fr) !important;
-    height: calc(100dvh - min(38dvh, 340px)) !important;
-    max-height: calc(100dvh - min(38dvh, 340px)) !important;
+    height: calc(100dvh - min(32dvh, 300px)) !important;
+    max-height: calc(100dvh - min(32dvh, 300px)) !important;
     align-content: stretch !important;
     justify-items: stretch !important;
   }
@@ -1799,8 +1916,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(38dvh, 340px) !important;
-    max-height: min(38dvh, 340px) !important;
+    height: min(32dvh, 300px) !important;
+    max-height: min(32dvh, 300px) !important;
     min-height: 0 !important;
     margin: 0 !important;
     transform: translateY(0) !important;
@@ -1809,7 +1926,7 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
       opacity 200ms ease !important;
     border: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 20px 20px 0 0 !important;
+    border-radius: 18px 18px 0 0 !important;
     background: rgba(12, 12, 14, 0.97) !important;
     backdrop-filter: blur(28px) saturate(1.3) !important;
     -webkit-backdrop-filter: blur(28px) saturate(1.3) !important;
@@ -1822,14 +1939,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   }
 
   #classroom.focus-workspace #focus-dock::before {
-    content: '';
-    display: block;
-    width: 32px;
-    height: 4px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.22);
-    margin: 8px auto 0;
-    flex: 0 0 auto;
+    content: none !important;
+    display: none !important;
   }
 
   /* Sheet content starts immediately under the grab handle — no second tab row */
@@ -1841,15 +1952,9 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     display: none !important;
   }
 
-  #classroom.focus-workspace .focus-tool-btn[aria-pressed='true'] {
-    background: rgba(255, 255, 255, 0.16) !important;
-    color: #fff !important;
-  }
-
   /* Lesson meta: beat focus-workspace nowrap/52% pill row that clips Next */
   #classroom.focus-workspace .lesson-meta-bar,
   #classroom .lesson-meta-bar {
-    padding: 8px 16px calc(8px + var(--safe-bottom)) !important;
     overflow: hidden !important;
     max-height: none !important;
     gap: 8px !important;
@@ -1858,20 +1963,11 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   #classroom.focus-workspace .lesson-title-action-row,
   #classroom .lesson-title-action-row {
     display: flex !important;
-    flex-direction: column !important;
     flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    gap: 8px !important;
+    align-items: center !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-  }
-
-  #classroom.focus-workspace .lesson-heading-group,
-  #classroom .lesson-heading-group {
-    min-width: 0 !important;
-    width: 100% !important;
-    flex: none !important;
   }
 
   #classroom.focus-workspace .lesson-main-title,

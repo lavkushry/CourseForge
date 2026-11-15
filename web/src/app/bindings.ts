@@ -406,6 +406,55 @@ export function installBindings(ctx: AppContext): void {
       syncStudyToolPressed(null, false);
     };
     ensureImmersiveWatch();
+
+    // Phone sheet: tap grabber or swipe down to dismiss (lease-safe — no remount).
+    const bindSheetDismiss = (host: HTMLElement | null) => {
+      if (!host) return;
+      host.addEventListener(
+        'click',
+        event => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest('.sheet-dismiss-handle')) return;
+          event.preventDefault();
+          closeStudySurfaces();
+        },
+        { signal },
+      );
+      let dragY = 0;
+      let dragging = false;
+      host.addEventListener(
+        'pointerdown',
+        event => {
+          const target = event.target;
+          if (!(target instanceof Element) || !target.closest('.sheet-dismiss-handle')) return;
+          dragging = true;
+          dragY = event.clientY;
+          host.setPointerCapture?.(event.pointerId);
+        },
+        { signal },
+      );
+      host.addEventListener(
+        'pointerup',
+        event => {
+          if (!dragging) return;
+          dragging = false;
+          const delta = event.clientY - dragY;
+          host.releasePointerCapture?.(event.pointerId);
+          if (delta > 56) closeStudySurfaces();
+        },
+        { signal },
+      );
+      host.addEventListener(
+        'pointercancel',
+        () => {
+          dragging = false;
+        },
+        { signal },
+      );
+    };
+    bindSheetDismiss(document.querySelector('#focus-dock'));
+    bindSheetDismiss(document.querySelector('#study-rail'));
     const narrowCurriculum = window.matchMedia('(max-width: 900px)');
     narrowCurriculum.addEventListener(
       'change',

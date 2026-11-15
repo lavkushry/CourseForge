@@ -241,11 +241,19 @@ export class StudyRail {
     root.append(panelWrap);
   }
 
+  private sheetDismissHandle(): HTMLButtonElement {
+    const handle = el('button', 'sheet-dismiss-handle') as HTMLButtonElement;
+    handle.type = 'button';
+    handle.setAttribute('aria-label', 'Close panel');
+    handle.title = 'Close';
+    return handle;
+  }
+
   private renderSplit(): void {
     const root = this.options.root;
     root.replaceChildren();
     // Lessons panel carries its own quiet title — skip redundant "Curriculum" chrome.
-    root.append(this.renderLessonsPanel());
+    root.append(this.sheetDismissHandle(), this.renderLessonsPanel());
     this.renderDock();
   }
 
@@ -266,7 +274,7 @@ export class StudyRail {
     marker.setAttribute('aria-hidden', 'true');
     marker.textContent = tab === 'materials' ? 'Files' : tab.charAt(0).toUpperCase() + tab.slice(1);
     panel.append(this.panelFor(tab));
-    dock.append(marker, panel);
+    dock.append(this.sheetDismissHandle(), marker, panel);
   }
 
   private panelFor(tab: StudyRailTab): HTMLElement {

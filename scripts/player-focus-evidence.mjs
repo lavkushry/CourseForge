@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 
-const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v4';
+const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v5';
 const base = 'https://127.0.0.1:8000';
 const chrome = process.env.CHROME;
 const password = 'password123';
@@ -288,6 +288,24 @@ async function runViewport(label, viewport, email) {
       report.ok = false;
       report.errors.push('classroom hidden after study tools');
     }
+
+    // Leave classroom — shell chrome must return (site header / nav not stuck hidden)
+    await page.locator('#back').click({ force: true }).catch(async () => {
+      await page.locator('.back-to-courses-btn').click({ force: true });
+    });
+    await page.waitForTimeout(900);
+    report.shellRestored = await page.evaluate(() => {
+      const classroom = document.querySelector('#classroom');
+      const header = document.querySelector('.site-header.lms-top-header');
+      if (!classroom || !classroom.hidden) return false;
+      if (!header) return false;
+      return getComputedStyle(header).display !== 'none';
+    });
+    await shot(page, dir, '09-shell-restored');
+    if (!report.shellRestored) {
+      report.ok = false;
+      report.errors.push('shell chrome did not restore after leaving classroom');
+    }
   } catch (err) {
     report.ok = false;
     report.errors.push(String(err));
@@ -310,8 +328,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-CrK0yBs5.js',
-    css: 'index-C66rWyvg.css',
+    js: 'index-BU9AzpSn.js',
+    css: 'index-LfhWE-2R.css',
   },
   phone: {
     ok: phone.ok,
@@ -324,6 +342,7 @@ const summary = {
     sameMediaMaterials: phone.sameMediaMaterials,
     sameMediaExtra: phone.sameMediaExtra,
     toolChecks: phone.toolChecks,
+    shellRestored: phone.shellRestored,
   },
   desktop: {
     ok: desktop.ok,
@@ -336,6 +355,7 @@ const summary = {
     sameMediaMaterials: desktop.sameMediaMaterials,
     sameMediaExtra: desktop.sameMediaExtra,
     toolChecks: desktop.toolChecks,
+    shellRestored: desktop.shellRestored,
   },
 };
 fs.writeFileSync(path.join(outRoot, 'summary.json'), JSON.stringify(summary, null, 2));
