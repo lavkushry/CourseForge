@@ -74,13 +74,8 @@ export class HistoryView {
     const pageHead = el('div', 'page-heading history-header');
     const headText = el('div', 'page-heading-left');
     headText.append(
-      el('span', 'eyebrow', 'CONTINUE WATCHING'),
-      el('h1', 'page-title', 'Watch History'),
-      el(
-        'p',
-        'muted page-subtitle',
-        'Pick up right where you left off. Track your completion progress across all masterclass lectures.',
-      ),
+      el('h1', 'page-title', 'History'),
+      el('p', 'muted page-subtitle', 'Pick up where you left off.'),
     );
     pageHead.append(headText);
 

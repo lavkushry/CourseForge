@@ -11,6 +11,22 @@ import { HistoryView } from '../../history/view';
 import { SettingsView } from '../../settings/view';
 import { DiscoveryView } from '../../discovery/view';
 import { OmniSearch } from '../../search/omni';
+import { adminDeniedCopy } from '../../admin/rbac';
+
+/** Seek after resume once the player controller exists (phone load can lag the open). */
+function seekWhenReady(ctx: AppContext, position: number | undefined, tries = 24): void {
+  if (position === undefined || !Number.isFinite(position) || position <= 0) return;
+  const attempt = (): void => {
+    if (ctx.controller) {
+      ctx.controller.seek(position);
+      return;
+    }
+    if (tries <= 0) return;
+    tries -= 1;
+    window.setTimeout(attempt, 120);
+  };
+  attempt();
+}
 
 /** Eager: discovery/library/history/settings + player helpers. Heavy studio panels load on first visit. */
 export function installFeatureBootstraps(ctx: AppContext): void {
@@ -61,9 +77,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         void ctx.loadCourse(course.id, !course.enrolled);
       },
       onContinueLesson: (courseId, lessonId, position) => {
-        void ctx.resumeLesson(courseId, lessonId).then(() => {
-          if (Number.isFinite(position) && position > 0 && ctx.controller) ctx.controller.seek(position);
-        });
+        void ctx.resumeLesson(courseId, lessonId).then(() => seekWhenReady(ctx, position));
       },
       onToggleSave: async (course, currentlySaved) => {
         if (currentlySaved) {
@@ -84,9 +98,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       root: required<HTMLElement>('#history-panel'),
       api: ctx.api,
       onResumeLesson: (courseId, lessonId, position) => {
-        void ctx.resumeLesson(courseId, lessonId).then(() => {
-          if (Number.isFinite(position) && position > 0 && ctx.controller) ctx.controller.seek(position);
-        });
+        void ctx.resumeLesson(courseId, lessonId).then(() => seekWhenReady(ctx, position));
       },
     });
     ctx.settingsView = new SettingsView({
@@ -149,9 +161,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
           void ctx.api
             .lesson(lessonId, ctx.navigationScope.signal)
             .then(res => {
-              void ctx.resumeLesson(res.lesson.course_id, lessonId).then(() => {
-                if (timestamp !== undefined && ctx.controller) ctx.controller.seek(timestamp);
-              });
+              void ctx.resumeLesson(res.lesson.course_id, lessonId).then(() => seekWhenReady(ctx, timestamp));
             })
             .catch(err => {
               if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
@@ -191,16 +201,31 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         required<HTMLElement>('#paths-panel'),
         ctx.api,
         (courseId, lessonId, start) => {
-          void ctx.resumeLesson(courseId, lessonId).then(() => {
-            if (start !== undefined && ctx.controller) ctx.controller.seek(start);
-          });
+          void ctx.resumeLesson(courseId, lessonId).then(() => seekWhenReady(ctx, start));
         },
         ctx.feedback,
       );
       return ctx.pathsView;
     };
     ctx.ensureAdminView = async () => {
-      if (account.role !== 'admin') return null;
+      if (account.role !== 'admin') {
+        const panel = document.querySelector<HTMLElement>('#admin-panel');
+        if (panel) {
+          const denied = adminDeniedCopy();
+          panel.hidden = false;
+          panel.replaceChildren();
+          const wrap = document.createElement('div');
+          wrap.className = 'page-heading';
+          const h = document.createElement('h1');
+          h.textContent = denied.title;
+          const p = document.createElement('p');
+          p.className = 'muted';
+          p.textContent = denied.description;
+          wrap.append(h, p);
+          panel.append(wrap);
+        }
+        return null;
+      }
       if (ctx.adminView) return ctx.adminView;
       const { AdminView } = await import('../../admin/view');
       ctx.adminView = new AdminView(required<HTMLElement>('#admin-panel'), ctx.api, ctx.feedback);
@@ -213,11 +238,7 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         void ctx.loadCourse(id, preview);
       },
       resume: (id, lessonId, position) => {
-        void ctx.resumeLesson(id, lessonId).then(() => {
-          if (position !== undefined && Number.isFinite(position) && position > 0 && ctx.controller) {
-            ctx.controller.seek(position);
-          }
-        });
+        void ctx.resumeLesson(id, lessonId).then(() => seekWhenReady(ctx, position));
       },
       notice: ctx.feedback,
       syllabus: course => {
