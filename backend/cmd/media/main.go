@@ -20,6 +20,7 @@ import (
 	"courseforge/backend/internal/media"
 	"courseforge/backend/internal/observe"
 	"courseforge/backend/internal/playback"
+	"courseforge/backend/internal/ratelimit"
 	"courseforge/backend/internal/store"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
@@ -47,13 +48,17 @@ func run() error {
 	defer stop()
 	startup, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
-		MaxConns:          c.MaxConnections,
-		MinConns:          c.MinConnections,
-		MaxConnLifetime:   c.MaxConnLifetime,
-		MaxConnIdleTime:   c.MaxConnIdleTime,
-		HealthCheckPeriod: c.HealthCheckPeriod,
-	})
+	// Media gateway pool is for lease/auth only; connections are never held while proxying bytes.
+	mediaPool := store.PoolConfigFor(store.PoolMediaAuth)
+	mediaPool.MaxConns = c.MaxConnections
+	mediaPool.MinConns = c.MinConnections
+	if mediaPool.MinConns > mediaPool.MaxConns {
+		mediaPool.MinConns = mediaPool.MaxConns
+	}
+	mediaPool.MaxConnLifetime = c.MaxConnLifetime
+	mediaPool.MaxConnIdleTime = c.MaxConnIdleTime
+	mediaPool.HealthCheckPeriod = c.HealthCheckPeriod
+	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, mediaPool)
 	if err != nil {
 		return errors.New("cannot connect to configured PostgreSQL")
 	}
@@ -84,6 +89,23 @@ func run() error {
 		httpx.JSON(w, 200, map[string]string{"status": "ok"})
 	})
 	metrics := observe.New(pool)
+	metrics.AttachMedia(gateway.Gauges)
+	if circuit, ok := resolver.(interface{ CircuitGauges() observe.CircuitGauges }); ok {
+		metrics.AttachCircuit(circuit.CircuitGauges)
+	}
+	// Media plane keeps its own admission budget so browse/AI saturation on the API
+	// replica cannot starve Range delivery. Critical class covers /media and HLS.
+	priority := ratelimit.NewPriority(ratelimit.PriorityFromEnv(os.Getenv))
+	metrics.AttachAdmission(func() []observe.AdmissionGauges {
+		out := make([]observe.AdmissionGauges, 0, 4)
+		for _, class := range ratelimit.Classes() {
+			out = append(out, observe.AdmissionGauges{
+				Class: class.String(), InUse: priority.InUse(class),
+				Capacity: priority.Capacity(class), Sheds: priority.Sheds(class),
+			})
+		}
+		return out
+	})
 	if address := os.Getenv("CF_OBSERVABILITY_ADDR"); address != "" {
 		closeMetrics, err := metrics.Start(address)
 		if err != nil {
@@ -92,10 +114,13 @@ func run() error {
 		defer closeMetrics()
 	}
 	// Standalone media never sets WriteTimeout: range streams outlive ordinary API deadlines.
+	// Product /metrics is loopback-only; pprof stays on CF_OBSERVABILITY_ADDR.
 	readHeader, readTimeout, _, idleTimeout, maxHeader := c.HTTPServerTimeouts()
 	server := &http.Server{
-		Addr:              c.Address,
-		Handler:           api.Middleware(metrics.Wrap(mux), c.RequestTimeout),
+		Addr: c.Address,
+		Handler: metrics.WithLoopbackMetrics(
+			priority.Middleware(api.Middleware(metrics.Wrap(mux), c.RequestTimeout)),
+		),
 		ReadHeaderTimeout: readHeader,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      0,

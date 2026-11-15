@@ -79,15 +79,15 @@ func makeDetail(kind string, f filters, at time.Time) detailQuery {
 		q.Seconds = "d.watched_seconds"
 		q.Filename = "courseforge-playback.csv"
 		q.Basis = "accepted_browser_playback"
-		q.Base = `SELECT d.created_at sort_at,d.id key,jsonb_build_object('id',d.id,'user_id',u.id,'name',u.name,'email',u.email,'lesson_id',l.id,'title',l.title,'course_id',c.id,'watched_seconds',d.watched_seconds,'visible_diagnostic_seconds',d.visible_seconds,'position',d.position,'duration_seconds',l.duration_seconds,'state',CASE WHEN d.closed_at IS NOT NULL THEN 'closed' WHEN d.baseline_playing AND d.baseline_visible THEN 'playing' ELSE 'paused' END,'created_at',d.created_at,'last_active',d.last_seen_at,'device',COALESCE(a.device,''),'ip',COALESCE(a.ip,''),'device_basis','current_login_record','live',COALESCE(` + q.Live + `,false)) data`
+		q.Base = `SELECT d.created_at sort_at,d.id key,jsonb_build_object('id',d.id,'user_id',u.id,'name',u.name,'email',u.email,'lesson_id',l.id,'title',l.title,'course_id',c.id,'watched_seconds',d.watched_seconds,'visible_diagnostic_seconds',d.visible_seconds,'position',d.position,'duration_seconds',l.duration_seconds,'state',CASE WHEN d.closed_at IS NOT NULL THEN 'closed' WHEN d.baseline_playing AND d.baseline_visible THEN 'playing' ELSE 'paused' END,'created_at',d.created_at,'last_active',d.last_seen_at,'device',d.device_snapshot,'ip',d.ip_snapshot,'device_basis',d.snapshot_basis,'snapshot_at',d.snapshot_at,'snapshot_truncated',d.snapshot_truncated,'live',COALESCE(` + q.Live + `,false)) data`
 		q.Fields = []string{"name", "email", "title", "course_id", "watched_seconds", "position", "duration_seconds", "state", "created_at", "device", "ip", "live"}
-		q.Headings = []string{"Student", "Email", "Lecture", "Course", "Accepted browser playback seconds", "Position seconds", "Duration seconds", "State", "Session opened (UTC)", "Current login device", "Current login IP", "Live playing baseline"}
+		q.Headings = []string{"Student", "Email", "Lecture", "Course", "Accepted browser playback seconds", "Position seconds", "Duration seconds", "State", "Session opened (UTC)", "Native device snapshot", "Native IP snapshot", "Live playing baseline"}
 	}
 	q.TextBytes = `octet_length(u.name)+octet_length(u.email)+octet_length(l.title)+octet_length(c.id)`
 	if kind == "activity" {
 		q.TextBytes += `+octet_length(d.device)+octet_length(d.ip)`
 	} else {
-		q.TextBytes += `+octet_length(COALESCE(a.device,''))+octet_length(COALESCE(a.ip,''))`
+		q.TextBytes += `+octet_length(d.device_snapshot)+octet_length(d.ip_snapshot)`
 	}
 	q.Where = ` WHERE d.created_at>=$2 AND ($3='' OR position(lower($3)in lower(u.name))>0 OR position(lower($3)in lower(u.email))>0 OR position(lower($3)in lower(l.title))>0) AND ($4='' OR c.id=$4) AND ($5='' OR u.id=$5) AND ($6='all' OR COALESCE(` + q.Live + `,false))`
 	return q
@@ -131,7 +131,7 @@ func (s *Service) detail(w http.ResponseWriter, r *http.Request, kind string) {
 	q := makeDetail(kind, f, at)
 	result := detailReport{Basis: q.Basis, Period: "Sessions opened in the last " + strconv.Itoa(f.Days) + " days (UTC)", RetentionDays: 90, ServerNow: at, Disclaimer: "Visible page time and browser playback are distinct; live status does not establish attention. Session sums are retained detail, not lifetime totals."}
 	if kind == "playback" {
-		result.Disclaimer += " Native detail currently depends on retained login records; device/IP comes from the current login record."
+		result.Disclaimer += " Native device/IP are immutable open-time snapshots; live status still requires a current matching login."
 	}
 	err := tx.QueryRow(ctx, `SELECT count(*),count(DISTINCT d.user_id),count(DISTINCT d.lesson_id),COALESCE(sum(`+q.Seconds+`),0)`+q.Joins+q.Where, q.Args...).Scan(&result.Total, &result.Summary.Learners, &result.Summary.Lessons, &result.Summary.SessionSeconds)
 	if err != nil {

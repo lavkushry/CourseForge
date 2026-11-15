@@ -1,0 +1,56 @@
+# Minimal local/operator Prometheus example for CourseForge shed visibility.
+# NOT a capacity-doc SLO stack and NOT a 10k-learner claim.
+#
+# Scrapes loopback observe planes (CF_OBSERVABILITY_ADDR) and loads
+# courseforge-shed-alerts.yml. Prefer these over public listeners.
+#
+# Run from repo root (paths relative to this file's directory):
+#   prometheus --config.file=deploy/prometheus/prometheus.yml \
+#     --storage.tsdb.path=/tmp/courseforge-prom-data \
+#     --web.listen-address=127.0.0.1:19090
+#
+# Validate (if promtool is installed):
+#   promtool check config deploy/prometheus/prometheus.yml
+#   promtool check rules deploy/prometheus/courseforge-shed-alerts.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - courseforge-shed-alerts.yml
+
+scrape_configs:
+  - job_name: courseforge-api-observe
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:18190"]
+        labels:
+          plane: api
+          role: observe
+
+  - job_name: courseforge-media-observe
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:18194"]
+        labels:
+          plane: media
+          role: observe
+
+  # Optional product loopback scrapes (same metric families; useful if observe
+  # addr is unset). Non-loopback clients get 404 from WithLoopbackMetrics.
+  - job_name: courseforge-api-product
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:18090"]
+        labels:
+          plane: api
+          role: product
+
+  - job_name: courseforge-media-product
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:18094"]
+        labels:
+          plane: media
+          role: product

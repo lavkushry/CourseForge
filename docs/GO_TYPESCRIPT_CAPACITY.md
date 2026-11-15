@@ -160,6 +160,34 @@ browser first-frame/seek/rebuffer metrics, job queue ages and cost assumptions.
 
 Record at least three repeatable target-load runs on the same configuration. Compare
 language/implementation variants serially on shared hardware, not simultaneously.
+## Open-model honesty (Cloud / local samples)
+
+Measured API sticky/openish k6 waves, mixed-plane scrapes, and browser QoE cohorts are
+**host-shared samples** with loadtest bypass and (often) mediasim FORCE. They are not
+the capacity-doc **open model**: pinned cgroup/`cpu.max`, multi-host replicas, full
+catalog+pulse mix without bypass, or a 10,000-learner claim. Report API latency, media
+delivery, and AI/job throughput as **separate** verdicts. Live Odysee multi-learner
+Range samples prove provider path only at the measured N — not CDN account-scale.
+
 Publish separate verdicts: application target, media simulator target, sampled live
 playback, and provider-approved live scale. Claim end-to-end 10k only when evidence
 covers the complete path and the actual deployment.
+
+
+### Bypass-off samples vs open model
+
+Sticky playback without `X-CourseForge-Loadtest` on loopback (`TrustProxy=false`)
+shares one per-IP bucket (defaults ~120 RPS / 240 burst). Moderate sticky pulse
+cohorts may record **0×429** under that budget; concurrent register bursts may
+instead hit **503** admission/password-hash sheds — distinct from lease **409**
+isolation. Prior fairness probes used a tightened RPS=10 API to force **429**
+majorities. At higher load without bypass: concurrent register waves shed with **503** (admission/password-hash); a serial-seeded pulse storm sheds with **429** (per-IP rate limit) while **409** lease conflicts stay at zero — separate these codes in reports. None of these are the capacity-doc open model (pinned cgroup/`cpu.max`, multi-host, full catalog+pulse mix at target load).
+
+### Rebuffer gate: sample vs full
+
+Fail-closed harness: `web/scripts/qoe-rebuffer-gate.mjs` (uses `ratioExSeek`, shell
+selectors, require all runs ok). **Full gate** remains: ≥100 sessions, ~5‑minute
+media each, p95 per-session rebuffer ratio &lt;1%, seeks excluded. A **stepped**
+mediasim cohort (e.g. N=20 × 8s steady) may PASS a looser local threshold and still
+leave the full gate open — report both verdicts. Simulator PASS is not live Odysee
+QoE.

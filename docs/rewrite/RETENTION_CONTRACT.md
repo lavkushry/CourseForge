@@ -45,15 +45,18 @@ rows cannot be rebound to a new login or reopened by snapshot mutation.
 
 ## Explicit SQL-only batch seam
 
-No scheduler, HTTP cleanup route or automatic startup cleanup is enabled. Root
-may call `retention.New(pool).Cleanup(ctx, kind, limit)` using the server/test clock
-and an explicit known kind. Limit is1..1000 records; invalid kinds/limits fail before
-writes. One transaction and a five-second context bound each call; no provider/model
-or HTTP streaming work occurs. It returns the requested kind, bounded changed count,
-server time/cutoff and deferred-work explanation where applicable. Repeating a
-finished batch returns zero. Concurrent calls select/revalidate candidates and
-serialize relevant learner rows before auth, player/activity and lease mutations.
-No private IDs, snapshots, tokens or audit resources are returned by cleanup.
+No HTTP cleanup route and no API-process startup cleanup are enabled. The job
+worker may run `retention.IdleSweep` (ordered `Cleanup` batches) while its claim
+loop is idle—the same class of maintenance as outbox/terminal job prune. Root and
+tests may also call `retention.New(pool).Cleanup(ctx, kind, limit)` using the
+server/test clock and an explicit known kind. Limit is1..1000 records; invalid
+kinds/limits fail before writes. One transaction and a five-second context bound
+each call; no provider/model or HTTP streaming work occurs. It returns the
+requested kind, bounded changed count, server time/cutoff and deferred-work
+explanation where applicable. Repeating a finished batch returns zero. Concurrent
+calls select/revalidate candidates and serialize relevant learner rows before auth,
+player/activity and lease mutations. No private IDs, snapshots, tokens or audit
+resources are returned by cleanup.
 
 | Kind | Eligible operation |
 | --- | --- |
@@ -72,10 +75,12 @@ No private IDs, snapshots, tokens or audit resources are returned by cleanup.
 
 Caller ordering for draining a finite backlog: activity_expiry, playback_expiry,
 activity_leases, playback_leases, activity_detail, playback_detail, auth_sessions,
-then independent event/token/admission cleanup. Dependency guards can defer a native
-or login row until earlier batches finish. More thanlimit eligible records needs
-another explicit call. Backlog age/count metrics and scheduling are root's future
-work; a zero changed count does not promise no deferred references exist.
+then independent event/token/admission cleanup (including `player_telemetry`).
+`IdleSweep` uses that order with a per-kind batch limit (default 100). Dependency
+guards can defer a native or login row until earlier batches finish. More than
+limit eligible records needs another idle pass or explicit call. Backlog age/count
+metrics remain optional; a zero changed count does not promise no deferred
+references exist.
 
 Historical learning_events has no current destination table, so that retention
 kind remains unavailable rather than fabricated. Focus, assessments, notes,
@@ -93,9 +98,10 @@ and bounded candidate revalidation to avoid hidden unbounded lifecycle cascades.
 Administration switches native device/IP to immutable native snapshots with basis,
 capture time and truncation metadata. Native detail then survives login cleanup and
 is reportable as closed/inactive; current auth joins continue to drive live status.
-System retention metadata separates policy, schema capability and unscheduled
-execution. Existing migrated snapshots remain labeled as backfilled current-login
-records. CSV contains snapshots without capabilities; provenance is explicit.
+System retention metadata separates policy, schema capability and worker-idle
+execution (`scheduler_status=worker_idle`). Existing migrated snapshots remain
+labeled as backfilled current-login records. CSV contains snapshots without
+capabilities; provenance is explicit.
 
 Tests use disposable PostgreSQL and public auth/activity/native/report/media
 interfaces, with synthetic controlled clock and independent service instances.

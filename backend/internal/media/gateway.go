@@ -12,9 +12,11 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/observe"
 	"courseforge/backend/internal/playback"
 )
 
@@ -26,6 +28,10 @@ var ErrNoSource = fmt.Errorf("%w: lesson has no media source", ErrProvider)
 
 // MediaStatusHeader distinguishes "not available yet" from a transient 503.
 const MediaStatusHeader = "X-CourseForge-Media"
+
+// BusyRetryAfter is the Retry-After value (seconds) on MaxTransfers / transient
+// media sheds. Clients and probes should back off; not a capacity-doc SLO.
+const BusyRetryAfter = "5"
 
 type Target struct{ URL, Referer string }
 type Resolver interface {
@@ -42,13 +48,19 @@ type Config struct {
 	MaxTransfers    int
 	RevalidateEvery time.Duration
 	SimulatorOrigin string
+	// ClientWriteIdle is the per-chunk write deadline while proxying to the learner.
+	// Defaults to 30s (was historically hardcoded at 180s). Override via CF_MEDIA_CLIENT_WRITE_IDLE.
+	ClientWriteIdle time.Duration
 }
 type Gateway struct {
-	authority Authority
-	resolver  Resolver
-	client    *http.Client
-	slots     chan struct{}
-	config    Config
+	authority    Authority
+	resolver     Resolver
+	client       *http.Client
+	slots        chan struct{}
+	config       Config
+	busySheds    atomic.Int64 // MaxTransfers admission rejects (no session IDs)
+	noSource     atomic.Int64 // permanent missing source (no-source header)
+	providerFail atomic.Int64 // transient resolve/upstream failures
 }
 
 var byteRange = regexp.MustCompile(`^bytes=(?:[0-9]{1,16}-[0-9]{0,16}|-[0-9]{1,16})$`)
@@ -64,12 +76,84 @@ func New(authority Authority, resolver Resolver, c Config) *Gateway {
 		c.MaxTransfers = 64
 	}
 	if c.RevalidateEvery <= 0 {
-		c.RevalidateEvery = 8 * time.Second
+		c.RevalidateEvery = 3 * time.Second
+	}
+	if c.ClientWriteIdle <= 0 {
+		c.ClientWriteIdle = 30 * time.Second
 	}
 	g := &Gateway{authority: authority, resolver: resolver, slots: make(chan struct{}, c.MaxTransfers), config: c}
 	g.client = &http.Client{Transport: &http.Transport{Proxy: nil, MaxIdleConns: c.MaxTransfers, MaxIdleConnsPerHost: c.MaxTransfers, MaxConnsPerHost: c.MaxTransfers, IdleConnTimeout: 90 * time.Second, ResponseHeaderTimeout: 20 * time.Second}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return g
 }
+
+// TransferOccupancy reports MaxTransfers slot use for media-plane dashboards.
+func (g *Gateway) TransferOccupancy() (inUse, capacity int) {
+	if g == nil || g.slots == nil {
+		return 0, 0
+	}
+	return len(g.slots), cap(g.slots)
+}
+
+// BusySheds returns cumulative MaxTransfers admission rejects (no session labels).
+func (g *Gateway) BusySheds() int64 {
+	if g == nil {
+		return 0
+	}
+	return g.busySheds.Load()
+}
+
+// NoSourceSheds returns cumulative permanent missing-source responses.
+func (g *Gateway) NoSourceSheds() int64 {
+	if g == nil {
+		return 0
+	}
+	return g.noSource.Load()
+}
+
+// ProviderFailSheds returns cumulative transient provider/upstream failures.
+func (g *Gateway) ProviderFailSheds() int64 {
+	if g == nil {
+		return 0
+	}
+	return g.providerFail.Load()
+}
+
+// Gauges returns media-plane dashboard values for observe /metrics (no session labels).
+func (g *Gateway) Gauges() observe.MediaGauges {
+	if g == nil {
+		return observe.MediaGauges{}
+	}
+	in, capacity := g.TransferOccupancy()
+	return observe.MediaGauges{
+		InUse: in, Capacity: capacity,
+		BusySheds: g.BusySheds(), NoSourceSheds: g.NoSourceSheds(), ProviderFails: g.ProviderFailSheds(),
+	}
+}
+
+// tryAdmit takes one MaxTransfers slot or records a busy shed.
+func (g *Gateway) tryAdmit() (release func(), ok bool) {
+	select {
+	case g.slots <- struct{}{}:
+		return func() { <-g.slots }, true
+	default:
+		g.busySheds.Add(1)
+		return nil, false
+	}
+}
+
+func (g *Gateway) markNoSource()     { g.noSource.Add(1) }
+func (g *Gateway) markProviderFail() { g.providerFail.Add(1) }
+
+// RevokeWorstCase returns the maximum time to detect an inactive lease under the
+// consecutive-failure cancel path (3 ticks × RevalidateEvery).
+func (c Config) RevokeWorstCase() time.Duration {
+	every := c.RevalidateEvery
+	if every <= 0 {
+		every = 3 * time.Second
+	}
+	return 3 * every
+}
+
 func (g *Gateway) Close() { g.client.CloseIdleConnections() }
 func (g *Gateway) Register(mux *http.ServeMux, id *identity.Service) {
 	mux.Handle("GET /api/v1/playback/sessions/{id}/media", id.Require(http.HandlerFunc(g.ServeHTTP)))
@@ -109,28 +193,41 @@ func (g *Gateway) valid(raw string) bool {
 // authFailure maps an AuthorizeMedia error. A lost lease with intact access is
 // 409 playback_conflict (reclaimable); a real denial stays 403.
 func authFailure(w http.ResponseWriter, err error) {
+	authFailureCtx(context.Background(), w, err)
+}
+
+func authFailureCtx(ctx context.Context, w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, playback.ErrConflict):
+		observe.AlwaysWarn(ctx, "media lease conflict")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		_, _ = w.Write([]byte(`{"code":"playback_conflict","error":"Playback lease is not held by this session."}`))
 	case errors.Is(err, playback.ErrDenied):
+		observe.AlwaysWarn(ctx, "media access denied")
 		http.Error(w, "Playback access ended.", http.StatusForbidden)
 	default:
+		observe.AlwaysError(ctx, "media authorization unavailable")
 		busy(w)
 	}
 }
 
 // notReady reports a lesson with no configured media source. It is not a
 // transient outage, so it carries no Retry-After.
-func notReady(w http.ResponseWriter) {
+func (g *Gateway) notReady(w http.ResponseWriter) {
+	g.markNoSource()
 	w.Header().Set(MediaStatusHeader, "no-source")
 	http.Error(w, "This video isn't available yet.", http.StatusServiceUnavailable)
 }
 
 func busy(w http.ResponseWriter) {
-	w.Header().Set("Retry-After", "5")
+	w.Header().Set("Retry-After", BusyRetryAfter)
 	http.Error(w, "Media is temporarily unavailable. Retry shortly.", http.StatusServiceUnavailable)
+}
+
+func (g *Gateway) providerBusy(w http.ResponseWriter) {
+	g.markProviderFail()
+	busy(w)
 }
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, no-store, no-transform")
@@ -140,27 +237,34 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Sign in required.", http.StatusUnauthorized)
 		return
 	}
-	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
+	sessionID := r.PathValue("id")
+	source, err := g.authority.AuthorizeMedia(r.Context(), p, sessionID, r.URL.Query().Get("t"))
 	if err != nil {
-		authFailure(w, err)
+		ctx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), sessionID, ""), sessionID), observe.DomainMedia)
+		authFailureCtx(ctx, w, err)
 		return
 	}
 	rangeValue := r.Header.Get("Range")
 	if rangeValue == "" {
 		rangeValue = "bytes=0-"
 	}
+	// Startup ranges only; sampled so reconnect storms cannot unbounded-grow logs.
+	if rangeValue == "bytes=0-" {
+		ctxLog := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), sessionID, source.LessonID), sessionID), observe.DomainMedia)
+		observe.SampledInfo(ctxLog, "media-admit:"+sessionID, "media delivery authorized")
+	}
 	if !byteRange.MatchString(rangeValue) {
 		w.Header().Set("Accept-Ranges", "bytes")
 		http.Error(w, "One byte range is supported.", http.StatusRequestedRangeNotSatisfiable)
 		return
 	}
-	select {
-	case g.slots <- struct{}{}:
-		defer func() { <-g.slots }()
-	default:
+	release, ok := g.tryAdmit()
+	if !ok {
+		w.Header().Set(MediaStatusHeader, "busy")
 		busy(w)
 		return
 	}
+	defer release()
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	controller := http.NewResponseController(w)
@@ -207,11 +311,11 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 	target, err := g.resolver.Resolve(ctx, source)
 	if errors.Is(err, ErrNoSource) {
-		notReady(w)
+		g.notReady(w)
 		return
 	}
 	if err != nil || !g.valid(target.URL) {
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 
@@ -220,13 +324,13 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		filePath := strings.TrimPrefix(target.URL, "file://")
 		f, err := os.Open(filePath)
 		if err != nil {
-			busy(w)
+			g.providerBusy(w)
 			return
 		}
 		defer f.Close()
 		fi, err := f.Stat()
 		if err != nil || fi.IsDir() {
-			busy(w)
+			g.providerBusy(w)
 			return
 		}
 		ext := strings.ToLower(filepath.Ext(filePath))
@@ -253,7 +357,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var response *http.Response
 	for hop := 0; hop < 4; hop++ {
 		if !g.valid(target.URL) {
-			busy(w)
+			g.providerBusy(w)
 			return
 		}
 		// Use GET with Range for both GET and HEAD requests so upstream CDN does not redirect to HLS
@@ -264,7 +368,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		req, e := http.NewRequestWithContext(ctx, reqMethod, target.URL, nil)
 		if e != nil {
-			busy(w)
+			g.providerBusy(w)
 			return
 		}
 		req.Header.Set("Range", upstreamRange)
@@ -280,11 +384,12 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			case <-time.After(150 * time.Millisecond):
 				response, err = g.client.Do(req)
 			case <-ctx.Done():
+				// Lease revoke / client cancel — not a provider outage counter.
 				busy(w)
 				return
 			}
 			if err != nil {
-				busy(w)
+				g.providerBusy(w)
 				return
 			}
 		}
@@ -295,13 +400,13 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		response.Body.Close()
 		response = nil
 		if e != nil {
-			busy(w)
+			g.providerBusy(w)
 			return
 		}
 		target.URL = req.URL.ResolveReference(next).String()
 	}
 	if response == nil {
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 	defer response.Body.Close()
@@ -311,12 +416,12 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		invalidate()
 	}
 	if response.StatusCode != 200 && response.StatusCode != 206 && response.StatusCode != 416 {
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 	if response.StatusCode != 416 && !mediaType(response.Header.Get("Content-Type")) {
 		invalidate()
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 	for _, key := range []string{"Content-Type", "Content-Range", "Accept-Ranges", "Content-Length"} {
@@ -330,6 +435,11 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(response.StatusCode)
+	// Flush headers immediately so clients (and revoke probes) observe 206
+	// before the first upstream body byte — required when upstream stalls.
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
 	if r.Method == "HEAD" {
 		return
 	}
@@ -348,7 +458,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				deadlineMu.Unlock()
 				return
 			}
-			_ = controller.SetWriteDeadline(time.Now().Add(180 * time.Second))
+			_ = controller.SetWriteDeadline(time.Now().Add(g.config.ClientWriteIdle))
 			deadlineMu.Unlock()
 			if _, e = w.Write(buf[:n]); e != nil {
 				return

@@ -417,4 +417,10 @@ export class ApiClient extends HttpClient implements PlaybackTransport {
   exportReport(type: 'player-activity' | 'playback', userId?: string, signal?: AbortSignal): Promise<string> {
     return adminApi.exportReport(this, type, userId, signal);
   }
+
+  adminPlaybackReport(
+    opts: { userId?: string; limit?: number; signal?: AbortSignal } = {},
+  ): Promise<adminApi.AdminPlaybackReport> {
+    return adminApi.adminPlaybackReport(this, opts);
+  }
 }

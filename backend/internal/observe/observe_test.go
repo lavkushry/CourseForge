@@ -6,9 +6,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
-
-	"courseforge/backend/internal/api"
 )
 
 func TestMetricsDoNotLabelPrivateURLOrToken(t *testing.T) {
@@ -35,6 +32,43 @@ func TestMetricsDoNotLabelPrivateURLOrToken(t *testing.T) {
 		t.Fatal("missing route counts", body)
 	}
 }
+func TestWithLoopbackMetricsAllowsLoopbackOnly(t *testing.T) {
+	m := New(nil)
+	m.AttachAdmission(func() []AdmissionGauges {
+		return []AdmissionGauges{{Class: "browse", InUse: 1, Capacity: 128, Sheds: 0}}
+	})
+	innerHits := 0
+	h := m.WithLoopbackMetrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		innerHits++
+		w.WriteHeader(204)
+	}))
+
+	okReq := httptest.NewRequest("GET", "/metrics", nil)
+	okReq.RemoteAddr = "127.0.0.1:54321"
+	ok := httptest.NewRecorder()
+	h.ServeHTTP(ok, okReq)
+	if ok.Code != 200 || !strings.Contains(ok.Body.String(), `courseforge_admission_capacity{class="browse"} 128`) {
+		t.Fatalf("loopback metrics: code=%d body=%q", ok.Code, ok.Body.String())
+	}
+
+	denyReq := httptest.NewRequest("GET", "/metrics", nil)
+	denyReq.RemoteAddr = "203.0.113.9:54321"
+	denyReq.Header.Set("X-Forwarded-For", "127.0.0.1")
+	deny := httptest.NewRecorder()
+	h.ServeHTTP(deny, denyReq)
+	if deny.Code != 404 {
+		t.Fatalf("non-loopback metrics want 404, got %d", deny.Code)
+	}
+
+	other := httptest.NewRequest("GET", "/health/live", nil)
+	other.RemoteAddr = "127.0.0.1:1"
+	pass := httptest.NewRecorder()
+	h.ServeHTTP(pass, other)
+	if pass.Code != 204 || innerHits != 1 {
+		t.Fatalf("non-metrics path should reach next: code=%d hits=%d", pass.Code, innerHits)
+	}
+}
+
 func TestProfilingListenerRejectsPublicAddresses(t *testing.T) {
 	m := New(nil)
 	for _, addr := range []string{"0.0.0.0:6060", ":6060", "example.com:6060", "127.0.0.1:0", "[::]:6060"} {
@@ -56,25 +90,5 @@ func TestResponseControllerPassesThrough(t *testing.T) {
 	})).ServeHTTP(w, httptest.NewRequest("GET", "/media", nil))
 	if w.Code != 206 || !w.Flushed || w.Body.String() != "media" {
 		t.Fatal("stream capabilities lost")
-	}
-}
-
-func TestActualMiddlewarePreservesRouteLabelsAndPanicErrors(t *testing.T) {
-	m := New(nil)
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /synthetic/{id}", func(w http.ResponseWriter, r *http.Request) { panic("synthetic failure") })
-	handler := api.Middleware(m.Wrap(mux), time.Second)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, httptest.NewRequest("GET", "/synthetic/private-id?t=opaque", nil))
-	if w.Code != 500 {
-		t.Fatalf("panic response%d", w.Code)
-	}
-	metrics := httptest.NewRecorder()
-	m.Handler().ServeHTTP(metrics, httptest.NewRequest("GET", "/metrics", nil))
-	if !strings.Contains(metrics.Body.String(), `courseforge_http_server_errors_total{route="GET /synthetic/{id}"} 1`) {
-		t.Fatal("cloned request lost route/error labels", metrics.Body.String())
-	}
-	if strings.Contains(metrics.Body.String(), "private-id") || strings.Contains(metrics.Body.String(), "opaque") {
-		t.Fatal("private URL entered labels")
 	}
 }

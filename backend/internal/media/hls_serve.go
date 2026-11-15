@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/observe"
 )
 
 // HLSLocator resolves ready HLS artifact paths for a lesson.
@@ -52,9 +53,11 @@ func (g *Gateway) hlsRoot(w http.ResponseWriter, r *http.Request) (root string, 
 		http.Error(w, "Sign in required.", http.StatusUnauthorized)
 		return "", "", false
 	}
-	source, err := g.authority.AuthorizeMedia(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("t"))
+	sessionID := r.PathValue("id")
+	source, err := g.authority.AuthorizeMedia(r.Context(), p, sessionID, r.URL.Query().Get("t"))
 	if err != nil {
-		authFailure(w, err)
+		ctx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), sessionID, ""), sessionID), observe.DomainMedia)
+		authFailureCtx(ctx, w, err)
 		return "", "", false
 	}
 	loc, has := g.authority.(HLSLocator)
@@ -67,6 +70,8 @@ func (g *Gateway) hlsRoot(w http.ResponseWriter, r *http.Request) (root string, 
 		http.Error(w, "HLS not available.", http.StatusNotFound)
 		return "", "", false
 	}
+	// Stash lesson on request context for playlist-only logging in serveHLS.
+	*r = *r.WithContext(observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), sessionID, source.LessonID), sessionID), observe.DomainMedia))
 	return filepath.Dir(master), posterPath, true
 }
 
@@ -85,7 +90,7 @@ func (g *Gateway) serveHLS(w http.ResponseWriter, r *http.Request) {
 	full := filepath.Join(root, filepath.FromSlash(rel))
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 	absFull, err := filepath.Abs(full)
@@ -98,10 +103,25 @@ func (g *Gateway) serveHLS(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not found.", http.StatusNotFound)
 		return
 	}
-	setHLSCacheHeaders(w, strings.ToLower(filepath.Ext(absFull)))
+	// HLS playlists and segments share MaxTransfers with progressive media so
+	// segment storms cannot bypass media-plane admission under overload.
+	release, admitted := g.tryAdmit()
+	if !admitted {
+		w.Header().Set(MediaStatusHeader, "busy")
+		busy(w)
+		return
+	}
+	defer release()
+	ext := strings.ToLower(filepath.Ext(absFull))
+	setHLSCacheHeaders(w, ext)
+	// Playlist fetches vs segments; sampled per session+file to bound slog volume.
+	if ext == ".m3u8" {
+		sid := observe.PlaybackSessionID(r.Context())
+		observe.SampledInfo(r.Context(), "hls-playlist:"+sid+":"+filepath.Base(absFull), "hls playlist authorized", "path", filepath.Base(absFull))
+	}
 	f, err := os.Open(absFull)
 	if err != nil {
-		busy(w)
+		g.providerBusy(w)
 		return
 	}
 	defer f.Close()
@@ -125,9 +145,16 @@ func (g *Gateway) servePoster(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	fi, err := f.Stat()
 	if err != nil {
+		g.providerBusy(w)
+		return
+	}
+	release, admitted := g.tryAdmit()
+	if !admitted {
+		w.Header().Set(MediaStatusHeader, "busy")
 		busy(w)
 		return
 	}
+	defer release()
 	w.Header().Set("Cache-Control", "private, max-age=3600")
 	w.Header().Set("Content-Type", "image/jpeg")
 	http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)

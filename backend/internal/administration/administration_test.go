@@ -427,12 +427,74 @@ func TestAuthCleanupReportRetentionIsTruthfulAndLifetimeSurvives(t *testing.T) {
 	f.exec(t, `UPDATE playback_totals SET watched_seconds=20 WHERE user_id='alice';DELETE FROM auth_sessions WHERE id='aliceauth'`)
 	activity := f.get(t, "/api/v1/admin/player-activity")
 	native := f.get(t, "/api/v1/admin/playback")
-	if activity["total"] != float64(1) || native["total"] != float64(0) || activity["sessions"].([]any)[0].(map[string]any)["live"] != false {
+	// Native detail survives login deletion (no CASCADE); live status is false.
+	if activity["total"] != float64(1) || native["total"] != float64(1) || activity["sessions"].([]any)[0].(map[string]any)["live"] != false {
 		t.Fatal("native/session retention fabricated", activity, native)
+	}
+	if native["sessions"].([]any)[0].(map[string]any)["live"] != false {
+		t.Fatal("native stayed live after auth delete", native)
 	}
 	learner := f.get(t, "/api/v1/admin/users/alice/learning-report")["user"].(map[string]any)
 	if learner["watched_seconds"] != float64(20) || learner["activity_seconds"] != float64(10) {
 		t.Fatal("detail retention reduced lifetime", learner)
+	}
+}
+
+func TestAdminPlaybackReportUsesNativeSnapshotsAfterLoginDelete(t *testing.T) {
+	f := setup(t)
+	_ = f.player(t, "alice")
+	f.exec(t, `UPDATE playback_totals SET watched_seconds=11 WHERE user_id='alice';DELETE FROM auth_sessions WHERE id='aliceauth'`)
+	native := f.get(t, "/api/v1/admin/playback")
+	if native["total"] != float64(1) {
+		t.Fatalf("expected retained native row, got %+v", native)
+	}
+	sess := native["sessions"].([]any)[0].(map[string]any)
+	if sess["live"] != false {
+		t.Fatal("expected live=false after login delete", sess)
+	}
+	if sess["device"] != "Synthetic device" || sess["ip"] != "192.0.2.1" {
+		t.Fatalf("admin report missing open-time snapshots: device=%v ip=%v", sess["device"], sess["ip"])
+	}
+	if sess["device_basis"] != "session_open" {
+		t.Fatalf("device_basis=%v", sess["device_basis"])
+	}
+	if truncated, ok := sess["snapshot_truncated"].(bool); !ok || truncated {
+		t.Fatalf("snapshot_truncated=%v", sess["snapshot_truncated"])
+	}
+	if sess["snapshot_at"] == nil || sess["snapshot_at"] == "" {
+		t.Fatal("missing snapshot_at", sess)
+	}
+	// Easy CSV evidence: export still carries snapshot device/IP, not live login join.
+	w := f.call("admin", "GET", "/api/v1/admin/playback/export", nil)
+	expect(t, w, 200)
+	body := w.Body.String()
+	if !strings.Contains(body, "Synthetic device") || !strings.Contains(body, "192.0.2.1") {
+		t.Fatalf("CSV missing native snapshots: %s", body)
+	}
+	if strings.Contains(body, "Current login device") {
+		t.Fatal("CSV still labeled as current login device")
+	}
+}
+
+func TestAuthRevokeClosesNativeWithoutWipingAdminTotals(t *testing.T) {
+	f := setup(t)
+	p := f.player(t, "alice")
+	a := f.open(t, "alice", "lesson1", p)
+	f.advance(10)
+	f.credit(t, "alice", a, 1)
+	f.exec(t, `UPDATE playback_totals SET watched_seconds=20 WHERE user_id='alice';UPDATE auth_sessions SET revoked_at=now() WHERE id='aliceauth'`)
+	native := f.get(t, "/api/v1/admin/playback")
+	activity := f.get(t, "/api/v1/admin/player-activity")
+	if native["total"] != float64(1) || activity["total"] != float64(1) {
+		t.Fatal("revoke wiped detail", native, activity)
+	}
+	sess := native["sessions"].([]any)[0].(map[string]any)
+	if sess["live"] != false || sess["device"] != "Synthetic device" {
+		t.Fatal("revoke live/snapshot", sess)
+	}
+	learner := f.get(t, "/api/v1/admin/users/alice/learning-report")["user"].(map[string]any)
+	if learner["watched_seconds"] != float64(20) || learner["activity_seconds"] != float64(10) {
+		t.Fatal("revoke reduced lifetime", learner)
 	}
 }
 
@@ -446,8 +508,9 @@ func TestSystemReportsSQLFactsUnknownCapabilitiesAndNoProviderDetails(t *testing
 	if caps["provider_configured"] != nil || caps["email_configured"] != nil || v["pending_invitations"] != float64(1) || v["tasks"].(map[string]any)["queued"] != float64(1) {
 		t.Fatal("system invented config or facts", v)
 	}
-	if v["retention"].(map[string]any)["scheduler_status"] != "not_integrated_by_this_module" {
-		t.Fatal("scheduler claimed")
+	ret := v["retention"].(map[string]any)
+	if ret["scheduler_status"] != "worker_idle" || ret["idle_entry"] != "cmd/worker IdleSweep" {
+		t.Fatal("retention scheduler honesty", ret)
 	}
 	for _, secret := range []string{"private-provider-name", "private-provider-id", "private-account-token", "secret-password-hash", "token_hash", "csrf-secret"} {
 		if strings.Contains(w.Body.String(), secret) {

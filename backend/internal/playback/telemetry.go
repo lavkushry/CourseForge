@@ -185,6 +185,41 @@ func percentile(values []int, p float64) float64 {
 	return float64(cp[idx])
 }
 
+// TelemetryRetention bounds durable QoE sample rows (capacity contract: no
+// unbounded pulse/telemetry growth). Aggregates for admin windows remain
+// computable from retained recent samples.
+const TelemetryRetention = 7 * 24 * time.Hour
+
+// TelemetryPruneBatch caps delete work per call so idle/maintenance loops stay bounded.
+const TelemetryPruneBatch = 500
+
+// PruneTelemetry deletes the oldest player_telemetry rows past retention.
+// Lifetime watched totals and coverage are never touched.
+func (s *Service) PruneTelemetry(ctx context.Context, olderThan time.Duration, limit int) (int64, error) {
+	if olderThan <= 0 {
+		olderThan = TelemetryRetention
+	}
+	if limit < 1 {
+		limit = TelemetryPruneBatch
+	}
+	hours := int(olderThan.Hours())
+	if hours < 1 {
+		hours = 1
+	}
+	tag, err := s.Pool.Exec(ctx, `
+		DELETE FROM player_telemetry
+		WHERE id IN (
+			SELECT id FROM player_telemetry
+			WHERE created_at < now() - make_interval(hours => $1)
+			ORDER BY created_at ASC, id ASC
+			LIMIT $2
+		)`, hours, limit)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 func (s *Service) telemetryAggregate(w http.ResponseWriter, r *http.Request) {
 	p, ok := identity.FromContext(r.Context())
 	if !ok {

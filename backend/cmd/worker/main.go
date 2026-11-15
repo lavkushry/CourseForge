@@ -18,6 +18,7 @@ import (
 	"courseforge/backend/internal/learning"
 	"courseforge/backend/internal/paths"
 	"courseforge/backend/internal/publication"
+	"courseforge/backend/internal/retention"
 	"courseforge/backend/internal/store"
 
 	"github.com/jackc/pgx/v5"
@@ -63,6 +64,7 @@ func run() error {
 	if e != nil {
 		return e
 	}
+	retain := retention.New(pool)
 	learner := learning.New(pool, q)
 	pathService := paths.New(pool, q)
 	publish := (publication.Router{Learning: learner.PublishResult, Paths: pathService.PublishResult}).Publish
@@ -85,13 +87,37 @@ func run() error {
 	for i := 0; i < parallel; i++ {
 		worker := prefix + "-" + strconv.Itoa(i)
 		wg.Go(func() {
+			var lastIdle time.Time
 			for ctx.Err() == nil {
 				claim, stopClaim := context.WithTimeout(ctx, 5*time.Second)
 				lease, e := q.Claim(claim, resource, worker)
 				stopClaim()
 				if e == nil {
 					_ = q.ExecuteLeaseWithPublisher(ctx, lease, executor, publish)
-				} else if !errors.Is(e, pgx.ErrNoRows) && !errors.Is(e, jobs.ErrBusy) && ctx.Err() == nil {
+				} else if errors.Is(e, pgx.ErrNoRows) || errors.Is(e, jobs.ErrBusy) {
+					// Bounded outbox/terminal prune + retention sweep only while idle.
+					if time.Since(lastIdle) >= jobs.IdleMaintenanceInterval {
+						idleCtx, idleCancel := context.WithTimeout(ctx, 5*time.Second)
+						stats, idleErr := q.IdleMaintenance(idleCtx)
+						idleCancel()
+						if idleErr != nil && ctx.Err() == nil {
+							slog.Warn("Job idle maintenance unavailable", "resource", resource, "error", idleErr)
+						} else if stats.OutboxPruned > 0 || stats.JobsPruned > 0 || stats.Parked > 0 {
+							slog.Info("Job idle maintenance", "resource", resource,
+								"outbox_pruned", stats.OutboxPruned, "jobs_pruned", stats.JobsPruned, "parked", stats.Parked)
+						}
+						retCtx, retCancel := context.WithTimeout(ctx, 45*time.Second)
+						retStats, retErr := retain.IdleSweep(retCtx, retention.IdleBatchLimit)
+						retCancel()
+						lastIdle = time.Now()
+						if retErr != nil && ctx.Err() == nil {
+							slog.Warn("Retention idle sweep unavailable", "resource", resource, "error", retErr)
+						} else if retStats.Changed > 0 {
+							slog.Info("Retention idle sweep", "resource", resource,
+								"changed", retStats.Changed, "kinds_run", retStats.KindsRun)
+						}
+					}
+				} else if ctx.Err() == nil {
 					slog.Warn("Job claim unavailable", "resource", resource)
 				}
 				wait := time.NewTimer(time.Second)

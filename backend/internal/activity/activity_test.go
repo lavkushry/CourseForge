@@ -707,8 +707,14 @@ func TestBoundActivityReportsSurviveLoginCleanupWithoutRevivingBinding(t *testin
 	f.exec(t, `DELETE FROM auth_sessions WHERE id='aliceauth'`)
 	var player *string
 	var closed, bound bool
-	if err := f.s.Pool.QueryRow(context.Background(), `SELECT player_session_id,closed,player_bound FROM activity_sessions WHERE id=$1`, a.ID).Scan(&player, &closed, &bound); err != nil || player != nil || !closed || !bound {
+	// Playback detail is retained (no auth CASCADE); closure keeps player_session_id
+	// provenance instead of wiping the native row and SET NULLing the link.
+	if err := f.s.Pool.QueryRow(context.Background(), `SELECT player_session_id,closed,player_bound FROM activity_sessions WHERE id=$1`, a.ID).Scan(&player, &closed, &bound); err != nil || player == nil || *player == "" || !closed || !bound {
 		t.Fatal("login cleanup lost retained binding provenance", player, closed, bound, err)
+	}
+	var native int
+	if err := f.s.Pool.QueryRow(context.Background(), `SELECT count(*) FROM playback_sessions WHERE id=$1 AND closed_at IS NOT NULL`, p).Scan(&native); err != nil || native != 1 {
+		t.Fatal("login cleanup deleted native detail", native, err)
 	}
 	expect(t, f.call("aliceother", "POST", "/api/v1/activity/"+a.ID+"/heartbeat", map[string]any{"sequence": 2, "visible": true, "elapsed_seconds": 5}), 404)
 	result := f.summary(t, "aliceother", "")

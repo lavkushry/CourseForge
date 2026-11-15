@@ -94,3 +94,10 @@ node_modules
 /MATERIAL_VIDEO_MAPPINGS.json
 *.session
 *.session-journal
+
+# Test evidence and scratch artifacts
+.ui-evidence/
+*.bak_*
+tmp/
+*.env
+backend/api

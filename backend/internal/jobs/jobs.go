@@ -324,3 +324,38 @@ func (q *Queue) Cancel(ctx context.Context, p identity.Principal, jobID string) 
 func (q *Queue) String() string {
 	return fmt.Sprintf("durable queue limits %d total/%d per learner", q.Config.MaxQueued, q.Config.MaxQueuedPerUser)
 }
+
+// TerminalJobRetention bounds durable completed/failed/canceled job rows.
+const TerminalJobRetention = 14 * 24 * time.Hour
+
+// TerminalJobPruneBatch caps delete work per call so worker idle loops stay bounded.
+const TerminalJobPruneBatch = 500
+
+// PruneTerminalJobs deletes the oldest terminal job rows past retention.
+// Queued/running leases are never deleted by prune (JOBS_CONTRACT).
+func (q *Queue) PruneTerminalJobs(ctx context.Context, olderThan time.Duration, limit int) (int64, error) {
+	if olderThan <= 0 {
+		olderThan = TerminalJobRetention
+	}
+	if limit < 1 {
+		limit = TerminalJobPruneBatch
+	}
+	hours := int(olderThan.Hours())
+	if hours < 1 {
+		hours = 1
+	}
+	tag, err := q.Pool.Exec(ctx, `
+		DELETE FROM jobs
+		WHERE id IN (
+			SELECT id FROM jobs
+			WHERE state IN ('completed','failed','canceled')
+			  AND finished_at IS NOT NULL
+			  AND finished_at < now() - make_interval(hours => $1)
+			ORDER BY finished_at ASC
+			LIMIT $2
+		)`, hours, limit)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"courseforge/backend/internal/identity"
+	"courseforge/backend/internal/observe"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -85,9 +86,20 @@ func (s *Service) open(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id = "ps_" + id
-	_, err = tx.Exec(ctx, `INSERT INTO playback_sessions(id,user_id,auth_session_id,lesson_id,token_hash,expires_at,position,baseline_position)VALUES($1,$2,$3,$4,$5,now()+interval '6 hours',$6,$6)`, id, p.UserID, p.SessionID, body.LessonID, digest(mediaToken), pos)
+	// Immutable device/IP snapshots from the exact matching live login at open
+	// (RETENTION_CONTRACT). Truncation is disclosed; snapshots are never edited later.
+	var device, ip string
+	err = tx.QueryRow(ctx, `SELECT device,ip FROM auth_sessions WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL AND expires_at>now()`, p.SessionID, p.UserID).Scan(&device, &ip)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	deviceSnap, deviceCut := clipSnapshot(device, 220)
+	ipSnap, ipCut := clipSnapshot(ip, 100)
+	_, err = tx.Exec(ctx, `INSERT INTO playback_sessions(id,user_id,auth_session_id,lesson_id,token_hash,expires_at,position,baseline_position,device_snapshot,ip_snapshot,snapshot_at,snapshot_basis,snapshot_truncated)VALUES($1,$2,$3,$4,$5,now()+interval '6 hours',$6,$6,$7,$8,now(),'session_open',$9)`,
+		id, p.UserID, p.SessionID, body.LessonID, digest(mediaToken), pos, deviceSnap, ipSnap, deviceCut || ipCut)
 	if err == nil {
-		_, err = tx.Exec(ctx, `INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,now()+interval '40 seconds')ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at`, p.UserID, id)
+		_, err = tx.Exec(ctx, `INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,$3)ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at`, p.UserID, id, leaseHoldExpiry(time.Now()))
 	}
 	if err == nil {
 		_, err = tx.Exec(ctx, `INSERT INTO playback_totals(user_id,lesson_id)VALUES($1,$2)ON CONFLICT DO NOTHING`, p.UserID, body.LessonID)
@@ -117,6 +129,8 @@ func (s *Service) open(w http.ResponseWriter, r *http.Request) {
 	if poster != "" {
 		payload["poster_url"] = fmt.Sprintf("/api/v1/playback/sessions/%s/poster?t=%s", id, mediaToken)
 	}
+	logCtx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), id, body.LessonID), id), observe.DomainAPI)
+	observe.Logger(logCtx).Info("playback lease acquired", "take_over", body.TakeOver)
 	write(w, 201, payload)
 }
 
@@ -239,7 +253,7 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 			_, err = tx.Exec(ctx, `DELETE FROM playback_leases WHERE user_id=$1 AND session_id=$2`, p.UserID, v.ID)
 		}
 	} else if err == nil {
-		_, err = tx.Exec(ctx, `UPDATE playback_leases SET expires_at=$3 WHERE user_id=$1 AND session_id=$2`, p.UserID, v.ID, now.Add(40*time.Second))
+		_, err = tx.Exec(ctx, `UPDATE playback_leases SET expires_at=$3 WHERE user_id=$1 AND session_id=$2`, p.UserID, v.ID, leaseHoldExpiry(now))
 	}
 	if err == nil {
 		err = tx.Commit(ctx)
@@ -247,6 +261,10 @@ func (s *Service) pulse(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, err)
 		return
+	}
+	if !ack.Owner {
+		logCtx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), v.ID, v.LessonID), v.ID), observe.DomainAPI)
+		observe.Logger(logCtx).Info("playback lease released by pulse", "kind", b.Kind)
 	}
 	write(w, 200, ack)
 }
@@ -294,7 +312,7 @@ func (s *Service) claim(w http.ResponseWriter, r *http.Request) {
 		err = nil
 	}
 	if err == nil {
-		_, err = tx.Exec(ctx, `INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,now()+interval '40 seconds')ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at`, p.UserID, v.ID)
+		_, err = tx.Exec(ctx, `INSERT INTO playback_leases(user_id,session_id,expires_at)VALUES($1,$2,$3)ON CONFLICT(user_id)DO UPDATE SET session_id=excluded.session_id,expires_at=excluded.expires_at`, p.UserID, v.ID, leaseHoldExpiry(time.Now()))
 	}
 	if err == nil {
 		_, err = tx.Exec(ctx, `UPDATE playback_sessions SET baseline_at=now(),baseline_position=position,baseline_playing=false,baseline_visible=false WHERE id=$1`, v.ID)
@@ -306,6 +324,8 @@ func (s *Service) claim(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	logCtx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), v.ID, v.LessonID), v.ID), observe.DomainAPI)
+	observe.Logger(logCtx).Info("playback lease claimed", "take_over", b.TakeOver)
 	write(w, 200, map[string]any{"owner": true, "position": v.Position, "sequence": v.Sequence})
 }
 func (s *Service) release(w http.ResponseWriter, r *http.Request) {
@@ -336,5 +356,7 @@ func (s *Service) release(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	logCtx := observe.WithDomain(observe.WithLease(observe.WithPlayback(r.Context(), sessionID, ""), sessionID), observe.DomainAPI)
+	observe.Logger(logCtx).Info("playback lease released")
 	write(w, 200, map[string]bool{"owner": false})
 }

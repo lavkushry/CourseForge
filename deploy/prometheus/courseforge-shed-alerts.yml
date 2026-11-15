@@ -1,0 +1,81 @@
+# CourseForge shed recording + alert rule examples
+#
+# Scrape loopback observe / product /metrics (see CF_OBSERVABILITY_ADDR and
+# observe.WithLoopbackMetrics). These are operator starting points for media-
+# plane overload visibility — NOT capacity-doc SLOs and NOT a 10k-learner claim.
+#
+# Tune thresholds to your replica size and measured busy/admission rates from
+# intentional shed probes (CF_MEDIA_TRANSFER_LIMIT / CF_PRIORITY_*_SLOTS).
+#
+# Example load (Prometheus 2.x / compatible):
+#   rule_files:
+#     - /etc/prometheus/rules/courseforge-shed-alerts.yml
+
+groups:
+  - name: courseforge_shed_recording
+    interval: 30s
+    rules:
+      # Media MaxTransfers rejects (gateway busy path).
+      - record: courseforge:media_busy_sheds:rate5m
+        expr: rate(courseforge_media_busy_sheds_total[5m])
+
+      # Priority admission rejects by class (API and/or media plane).
+      - record: courseforge:admission_sheds:rate5m
+        expr: rate(courseforge_admission_sheds_total[5m])
+
+      # Occupancy ratios (0..1) for dashboards — not hard capacity claims.
+      - record: courseforge:media_transfers:occupancy
+        expr: |
+          courseforge_media_transfers_in_use
+          /
+          clamp_min(courseforge_media_transfers_capacity, 1)
+
+      - record: courseforge:admission:occupancy
+        expr: |
+          courseforge_admission_in_use
+          /
+          clamp_min(courseforge_admission_capacity, 1)
+
+  - name: courseforge_shed_alerts
+    rules:
+      # Sustained MaxTransfers sheds → learners get 503 + X-CourseForge-Media: busy.
+      # Threshold is illustrative; raise/lower from live rate after intentional shed proofs.
+      - alert: CourseForgeMediaBusyShedsElevated
+        expr: courseforge:media_busy_sheds:rate5m > 1
+        for: 5m
+        labels:
+          severity: warning
+          plane: media
+        annotations:
+          summary: Media gateway busy sheds elevated
+          description: >-
+            courseforge_media_busy_sheds_total is shedding at
+            {{ $value | humanize }} /s (5m rate). Check MaxTransfers occupancy
+            and upstream stall; not a 10k capacity signal.
+
+      # Critical-class admission saturation (503 admission_saturated on playback paths).
+      - alert: CourseForgeCriticalAdmissionShedsElevated
+        expr: courseforge:admission_sheds:rate5m{class="critical"} > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          plane: admission
+        annotations:
+          summary: Critical admission sheds elevated
+          description: >-
+            Critical-class admission sheds at {{ $value | humanize }} /s (5m).
+            Playback capacity may be saturated; verify CF_PRIORITY_CRITICAL_SLOTS
+            and concurrent Range load. Not a 10k capacity signal.
+
+      # Near-full transfer slots (early warning before sustained sheds).
+      - alert: CourseForgeMediaTransfersNearCapacity
+        expr: courseforge:media_transfers:occupancy > 0.85
+        for: 10m
+        labels:
+          severity: info
+          plane: media
+        annotations:
+          summary: Media transfer slots near capacity
+          description: >-
+            Transfers in_use/capacity ≈ {{ $value | humanizePercentage }} for 10m.
+            Informative only; tune after measuring your replica under load.

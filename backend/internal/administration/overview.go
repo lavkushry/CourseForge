@@ -120,7 +120,7 @@ func (s *Service) system(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	complete(w, ctx, tx, map[string]any{"capabilities": s.Capabilities, "tasks": jobs, "courses": courses, "course_limit": 100, "course_count": courseCount, "courses_truncated": courseCount > 100, "pending_invitations": invitations, "audit": recent.Items, "server_now": at,
-		"retention":   map[string]any{"access_days": 30, "session_days": 90, "admin_audit_days": 90, "lifetime_totals": "until_account_or_catalog_deletion", "scheduler_status": "not_integrated_by_this_module", "native_detail_login_dependency": true},
+		"retention":   map[string]any{"access_days": 30, "session_days": 90, "admin_audit_days": 90, "lifetime_totals": "until_account_or_catalog_deletion", "scheduler_status": "worker_idle", "native_detail_login_dependency": false, "cleanup_seam": "internal/retention.Cleanup", "idle_entry": "cmd/worker IdleSweep"},
 		"unavailable": []string{"external_service_checks", "streaming_interaction_analytics", "provider_mapping_refresh", "engagement_teacher_insights"}})
 }
 

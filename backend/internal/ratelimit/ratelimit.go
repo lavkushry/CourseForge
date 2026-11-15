@@ -51,13 +51,35 @@ func New(cfg Config) *Limiter {
 	return &Limiter{cfg: cfg, items: make(map[string]*bucket)}
 }
 
-// DefaultExempt skips liveness and readiness probes.
+// DefaultExempt skips liveness and readiness probes (and loopback /metrics if
+// a caller mounts it inside the limiter — product wiring keeps it outside).
 func DefaultExempt(r *http.Request) bool {
 	switch r.URL.Path {
-	case "/health/live", "/health/ready", "/health":
+	case "/health/live", "/health/ready", "/health", "/metrics":
 		return true
 	default:
 		return false
+	}
+}
+
+// LoadtestBypassExempt skips rate limiting when the request carries a matching
+// X-CourseForge-Loadtest header. Empty expected tokens never bypass.
+// Combine with DefaultExempt for health + synthetic load harnesses.
+func LoadtestBypassExempt(expected string, base func(*http.Request) bool) func(*http.Request) bool {
+	if expected == "" {
+		if base == nil {
+			return DefaultExempt
+		}
+		return base
+	}
+	if base == nil {
+		base = DefaultExempt
+	}
+	return func(r *http.Request) bool {
+		if base(r) {
+			return true
+		}
+		return r.Header.Get("X-CourseForge-Loadtest") == expected
 	}
 }
 

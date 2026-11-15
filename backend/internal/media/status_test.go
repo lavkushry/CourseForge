@@ -56,16 +56,33 @@ func TestLostLeaseIsReclaimableConflictNotDenial(t *testing.T) {
 }
 
 func TestNoSourceIsNotReadyWithoutRetryAfter(t *testing.T) {
-	w := serveStatus(t, errAuthority{}, errResolver{ErrNoSource}, "HEAD")
+	gNo := New(errAuthority{}, errResolver{ErrNoSource}, Config{MaxTransfers: 1, RevalidateEvery: 1e9})
+	t.Cleanup(gNo.Close)
+	w := httptest.NewRecorder()
+	wrapGateway(gNo).ServeHTTP(w, httptest.NewRequest("HEAD", "/?t=opaque", nil))
 	if w.Code != http.StatusServiceUnavailable || w.Header().Get(MediaStatusHeader) != "no-source" || w.Header().Get("Retry-After") != "" {
 		t.Fatalf("no source: %d headers %v", w.Code, w.Header())
 	}
-	w = serveStatus(t, errAuthority{}, errResolver{ErrProvider}, "HEAD")
+	if gNo.NoSourceSheds() != 1 || gNo.ProviderFailSheds() != 0 {
+		t.Fatalf("no-source gauges: no=%d provider=%d", gNo.NoSourceSheds(), gNo.ProviderFailSheds())
+	}
+
+	gProv := New(errAuthority{}, errResolver{ErrProvider}, Config{MaxTransfers: 1, RevalidateEvery: 1e9})
+	t.Cleanup(gProv.Close)
+	w = httptest.NewRecorder()
+	wrapGateway(gProv).ServeHTTP(w, httptest.NewRequest("HEAD", "/?t=opaque", nil))
 	if w.Code != http.StatusServiceUnavailable || w.Header().Get(MediaStatusHeader) != "" || w.Header().Get("Retry-After") == "" {
 		t.Fatalf("transient outage: %d headers %v", w.Code, w.Header())
 	}
+	if gProv.ProviderFailSheds() != 1 || gProv.NoSourceSheds() != 0 {
+		t.Fatalf("provider gauges: no=%d provider=%d", gProv.NoSourceSheds(), gProv.ProviderFailSheds())
+	}
 	if !errors.Is(ErrNoSource, ErrProvider) {
 		t.Fatal("ErrNoSource must wrap ErrProvider")
+	}
+	gauges := gNo.Gauges()
+	if gauges.Capacity != 1 || gauges.NoSourceSheds != 1 {
+		t.Fatalf("Gauges snapshot %+v", gauges)
 	}
 }
 

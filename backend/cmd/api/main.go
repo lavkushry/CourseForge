@@ -57,17 +57,30 @@ func run() error {
 	defer stop()
 	startup, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, store.PoolConfig{
-		MaxConns:          c.MaxConnections,
-		MinConns:          c.MinConnections,
-		MaxConnLifetime:   c.MaxConnLifetime,
-		MaxConnIdleTime:   c.MaxConnIdleTime,
-		HealthCheckPeriod: c.HealthCheckPeriod,
-	})
+	poolCfg, jobsPoolCfg, err := store.SplitAPIPools(c.MaxConnections, 0)
+	if err != nil {
+		return err
+	}
+	poolCfg.MinConns = c.MinConnections
+	if poolCfg.MinConns > poolCfg.MaxConns {
+		poolCfg.MinConns = poolCfg.MaxConns
+	}
+	poolCfg.MaxConnLifetime = c.MaxConnLifetime
+	poolCfg.MaxConnIdleTime = c.MaxConnIdleTime
+	poolCfg.HealthCheckPeriod = c.HealthCheckPeriod
+	jobsPoolCfg.MaxConnLifetime = c.MaxConnLifetime
+	jobsPoolCfg.MaxConnIdleTime = c.MaxConnIdleTime
+	jobsPoolCfg.HealthCheckPeriod = c.HealthCheckPeriod
+	pool, err := store.OpenWithConfig(startup, c.DatabaseURL, poolCfg)
 	if err != nil {
 		return errors.New("cannot connect to configured PostgreSQL")
 	}
 	defer pool.Close()
+	jobsPool, err := store.OpenWithConfig(startup, c.DatabaseURL, jobsPoolCfg)
+	if err != nil {
+		return errors.New("cannot connect jobs pool to configured PostgreSQL")
+	}
+	defer jobsPool.Close()
 	if c.Migrate {
 		if err = store.Migrate(startup, pool); err != nil {
 			return err
@@ -92,7 +105,7 @@ func run() error {
 	reports := administration.New(pool)
 	reports.Capabilities.RegistrationMode = c.RegistrationMode
 	player := playback.New(pool, auth)
-	queue, err := jobs.New(pool, jobs.Config{MaxQueued: 5000, MaxQueuedPerUser: 20, Lease: 30 * time.Second})
+	queue, err := jobs.New(jobsPool, jobs.Config{MaxQueued: 5000, MaxQueuedPerUser: 20, Lease: 30 * time.Second})
 	if err != nil {
 		return err
 	}
@@ -125,18 +138,47 @@ func run() error {
 			Fn:    deps.AI.Embed,
 		}
 	}
+	var embeddedGateway *media.Gateway
+	var embeddedResolver media.Resolver
 	if c.MediaMode == "embedded" {
 		resolver, mediaConfig, closeResolver, err := media.FromEnvironment(c.CookieSecure, os.Getenv)
 		if err != nil {
 			return err
 		}
 		defer closeResolver()
-		gateway := media.New(player, resolver, mediaConfig)
-		defer gateway.Close()
-		deps.Media = gateway
+		embeddedResolver = resolver
+		embeddedGateway = media.New(player, resolver, mediaConfig)
+		defer embeddedGateway.Close()
+		deps.Media = embeddedGateway
 	}
 	registerAPIRoutes(app.Mux, deps)
 	metrics := observe.New(pool)
+	limiter := ratelimit.New(ratelimit.Config{
+		Enabled:    c.RateLimitEnabled,
+		RPS:        c.RateLimitRPS,
+		Burst:      c.RateLimitBurst,
+		TrustProxy: c.TrustProxy,
+		Exempt:     ratelimit.LoadtestBypassExempt(os.Getenv("CF_LOADTEST_BYPASS_TOKEN"), ratelimit.DefaultExempt),
+	})
+	// PlayAPI-style admission: lease/media > pulse > browse > AI submit.
+	// Slot budgets from CF_PRIORITY_*_SLOTS (unset → defaults).
+	priority := ratelimit.NewPriority(ratelimit.PriorityFromEnv(os.Getenv))
+	if embeddedGateway != nil {
+		metrics.AttachMedia(embeddedGateway.Gauges)
+	}
+	if circuit, ok := embeddedResolver.(interface{ CircuitGauges() observe.CircuitGauges }); ok {
+		metrics.AttachCircuit(circuit.CircuitGauges)
+	}
+	metrics.AttachAdmission(func() []observe.AdmissionGauges {
+		out := make([]observe.AdmissionGauges, 0, 4)
+		for _, class := range ratelimit.Classes() {
+			out = append(out, observe.AdmissionGauges{
+				Class: class.String(), InUse: priority.InUse(class),
+				Capacity: priority.Capacity(class), Sheds: priority.Sheds(class),
+			})
+		}
+		return out
+	})
 	if address := firstNonEmpty(c.PprofAddr, os.Getenv("CF_OBSERVABILITY_ADDR")); address != "" {
 		closeMetrics, e := metrics.Start(address)
 		if e != nil {
@@ -144,13 +186,11 @@ func run() error {
 		}
 		defer closeMetrics()
 	}
-	limiter := ratelimit.New(ratelimit.Config{
-		Enabled:    c.RateLimitEnabled,
-		RPS:        c.RateLimitRPS,
-		Burst:      c.RateLimitBurst,
-		TrustProxy: c.TrustProxy,
-	})
-	handler := limiter.Middleware(api.Middleware(metrics.Wrap(app.Handler()), c.RequestTimeout))
+	// Product /metrics is loopback-only (outside rate limit). pprof stays on
+	// CF_OBSERVABILITY_ADDR / PPROF_ADDR via metrics.Start above.
+	handler := metrics.WithLoopbackMetrics(
+		priority.Middleware(limiter.Middleware(api.Middleware(metrics.Wrap(app.Handler()), c.RequestTimeout))),
+	)
 	readHeader, readTimeout, writeTimeout, idleTimeout, maxHeader := c.HTTPServerTimeouts()
 	server := &http.Server{
 		Addr:              c.Address,

@@ -11,8 +11,10 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"courseforge/backend/internal/observe"
 	"courseforge/backend/internal/playback"
 
 	"golang.org/x/sync/singleflight"
@@ -23,6 +25,47 @@ type cached struct {
 	Target  Target
 	Expires time.Time
 }
+
+// circuitBreaker sheds cold-resolve stampedes after repeated provider failures.
+// Open state returns ErrProvider cheaply until cooldown elapses.
+type circuitBreaker struct {
+	failures  int
+	openUntil time.Time
+	trips     int64
+}
+
+const (
+	circuitFailureThreshold = 5
+	circuitCooldown         = 10 * time.Second
+)
+
+func (c *circuitBreaker) allow(now time.Time) bool {
+	if c.openUntil.IsZero() {
+		return true
+	}
+	return now.After(c.openUntil)
+}
+
+func (c *circuitBreaker) isOpen(now time.Time) bool {
+	return !c.openUntil.IsZero() && !now.After(c.openUntil)
+}
+
+func (c *circuitBreaker) success() {
+	c.failures = 0
+	c.openUntil = time.Time{}
+}
+
+func (c *circuitBreaker) failure(now time.Time) {
+	c.failures++
+	if c.failures >= circuitFailureThreshold {
+		wasOpen := c.isOpen(now)
+		c.openUntil = now.Add(circuitCooldown)
+		if !wasOpen {
+			c.trips++
+		}
+	}
+}
+
 type Odysee struct {
 	Accounts     []Account
 	byChannel    map[string]Account
@@ -31,6 +74,8 @@ type Odysee struct {
 	channelCache map[string]string
 	mu           sync.Mutex
 	flights      singleflight.Group
+	circuit      circuitBreaker
+	rejects      atomic.Int64 // cheap rejects while circuit is open
 	slots        chan struct{}
 	now          func() time.Time
 	ctx          context.Context
@@ -73,6 +118,21 @@ func NewOdysee(accounts []Account) *Odysee {
 
 func (o *Odysee) Close() { o.cancel(); o.client.CloseIdleConnections() }
 
+// CircuitGauges reports provider circuit open/trip/reject counters for dashboards.
+// Never includes tokens, claim IDs, or account labels.
+func (o *Odysee) CircuitGauges() observe.CircuitGauges {
+	if o == nil {
+		return observe.CircuitGauges{}
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return observe.CircuitGauges{
+		Open:    o.circuit.isOpen(o.now()),
+		Trips:   o.circuit.trips,
+		Rejects: o.rejects.Load(),
+	}
+}
+
 func (o *Odysee) Invalidate(source playback.Source, target Target) {
 	key := source.ClaimName + ":" + source.ClaimID
 	o.mu.Lock()
@@ -86,11 +146,17 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 	if !claimName.MatchString(source.ClaimName) || !claimID.MatchString(source.ClaimID) || len(o.Accounts) == 0 {
 		return Target{}, ErrProvider
 	}
-	key := source.ClaimName + ":" + source.ClaimID
+	now := o.now()
 	o.mu.Lock()
+	if !o.circuit.allow(now) {
+		o.mu.Unlock()
+		o.rejects.Add(1)
+		return Target{}, ErrProvider
+	}
+	key := source.ClaimName + ":" + source.ClaimID
 	v, ok := o.cache[key]
 	o.mu.Unlock()
-	if ok && o.now().Before(v.Expires) {
+	if ok && now.Before(v.Expires) {
 		return v.Target, nil
 	}
 	result := o.flights.DoChan(key, func() (any, error) {
@@ -184,9 +250,14 @@ func (o *Odysee) Resolve(ctx context.Context, source playback.Source) (Target, e
 	case <-ctx.Done():
 		return Target{}, ctx.Err()
 	case r := <-result:
+		o.mu.Lock()
 		if r.Err != nil {
+			o.circuit.failure(o.now())
+			o.mu.Unlock()
 			return Target{}, r.Err
 		}
+		o.circuit.success()
+		o.mu.Unlock()
 		return r.Val.(Target), nil
 	}
 }

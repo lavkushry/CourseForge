@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,8 @@ import (
 func main() {
 	file := flag.String("file", os.Getenv("CF_MEDIA_FIXTURE"), "synthetic decodable video fixture")
 	addr := flag.String("addr", "127.0.0.1:18092", "local listener")
+	// Optional per-connection body throttle so overlapping Ranges raise transfers_in_use.
+	bytesPerSec := flag.Int("bytes-per-sec", 0, "throttle media.mp4 body bytes/sec (0=unlimited)")
 	flag.Parse()
 	if *file == "" {
 		log.Fatal("a synthetic fixture file is required")
@@ -41,16 +44,27 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "video/mp4")
-		http.ServeContent(w, r, "media.mp4", info.ModTime(), f)
+		var content io.ReadSeeker = f
+		if *bytesPerSec > 0 {
+			content = &throttledSeeker{r: f, bytesPerSec: *bytesPerSec}
+		}
+		http.ServeContent(w, r, "media.mp4", info.ModTime(), content)
 	})
 	mux.HandleFunc("GET /fault/rate-limit", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "5")
 		http.Error(w, "synthetic provider throttle", http.StatusTooManyRequests)
 	})
 	mux.HandleFunc("GET /fault/stall", func(w http.ResponseWriter, r *http.Request) {
+		// Emit enough Range response headers for gateway proxies to finish
+		// WriteHeader before the body stalls (cancel-latency probes).
 		w.Header().Set("Content-Type", "video/mp4")
-		w.WriteHeader(206)
-		w.(http.Flusher).Flush()
+		w.Header().Set("Accept-Ranges", "bytes")
+		w.Header().Set("Content-Range", "bytes 0-1048575/1073741824")
+		w.Header().Set("Content-Length", "1048576")
+		w.WriteHeader(http.StatusPartialContent)
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}
 		<-r.Context().Done()
 	})
 	s := &http.Server{Addr: *addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second}
@@ -71,4 +85,37 @@ func main() {
 		}
 		<-done
 	}
+}
+
+// throttledSeeker slows body reads so gateway MaxTransfers occupancy stays visible.
+type throttledSeeker struct {
+	r           io.ReadSeeker
+	bytesPerSec int
+}
+
+func (t *throttledSeeker) Seek(offset int64, whence int) (int64, error) {
+	return t.r.Seek(offset, whence)
+}
+
+func (t *throttledSeeker) Read(p []byte) (int, error) {
+	if t.bytesPerSec <= 0 {
+		return t.r.Read(p)
+	}
+	// Cap each read so sleep granularity stays useful under Range proxies.
+	max := t.bytesPerSec / 20 // ~50ms of budget
+	if max < 1024 {
+		max = 1024
+	}
+	if len(p) > max {
+		p = p[:max]
+	}
+	start := time.Now()
+	n, err := t.r.Read(p)
+	if n > 0 {
+		want := time.Duration(float64(n) / float64(t.bytesPerSec) * float64(time.Second))
+		if sleep := want - time.Since(start); sleep > 0 {
+			time.Sleep(sleep)
+		}
+	}
+	return n, err
 }

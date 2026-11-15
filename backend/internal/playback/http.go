@@ -64,6 +64,19 @@ func token() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 func digest(t string) string { h := sha256.Sum256([]byte(t)); return hex.EncodeToString(h[:]) }
+
+// clipSnapshot bounds device/IP snapshot strings and reports truncation.
+func clipSnapshot(s string, max int) (string, bool) {
+	if max < 1 {
+		return "", s != ""
+	}
+	runes := []rune(s)
+	if len(runes) <= max {
+		return s, false
+	}
+	return string(runes[:max]), true
+}
+
 func lockUser(ctx context.Context, tx pgx.Tx, p identity.Principal) error {
 	var id string
 	return tx.QueryRow(ctx, `SELECT u.id FROM users u JOIN auth_sessions a ON a.user_id=u.id WHERE u.id=$1 AND a.id=$2 AND u.role=$3 AND u.verified AND NOT u.suspended AND a.revoked_at IS NULL AND a.expires_at>now() FOR UPDATE OF u FOR SHARE OF a`, p.UserID, p.SessionID, p.Role).Scan(&id)

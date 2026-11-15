@@ -187,5 +187,74 @@ export function renderActivityTab(host: AdminHost): HTMLElement {
 
   exportGrid.append(activityCard, playbackCard);
   wrap.append(exportGrid);
+
+  // Open-time device/IP snapshots survive login revoke/delete (RETENTION_CONTRACT).
+  const snapshotBox = el('div', 'admin-snapshot-preview');
+  snapshotBox.dataset.testid = 'playback-snapshot-preview';
+  snapshotBox.append(
+    el('h3', '', 'Recent playback snapshots'),
+    el(
+      'p',
+      'muted',
+      'Device/IP are immutable open-time snapshots. Live status still requires a current matching login.',
+    ),
+  );
+  const loading = el('p', 'muted', 'Loading playback snapshot rows…');
+  loading.dataset.testid = 'playback-snapshot-loading';
+  snapshotBox.append(loading);
+  wrap.append(snapshotBox);
+
+  void host.api
+    .adminPlaybackReport({ limit: 20 })
+    .then(report => {
+      loading.remove();
+      if (!report.sessions.length) {
+        snapshotBox.append(el('p', 'muted', 'No playback sessions in the current report window.'));
+        return;
+      }
+      const table = el('table', 'admin-table');
+      table.dataset.testid = 'playback-snapshot-table';
+      const thead = el('thead');
+      thead.innerHTML =
+        '<tr><th>Learner</th><th>Lesson</th><th>Device snapshot</th><th>IP snapshot</th><th>Basis</th><th>Live</th></tr>';
+      const tbody = el('tbody');
+      for (const s of report.sessions) {
+        const tr = el('tr');
+        tr.dataset.testid = 'playback-snapshot-row';
+        tr.dataset.sessionId = s.id || '';
+        tr.dataset.device = s.device || '';
+        tr.dataset.ip = s.ip || '';
+        tr.dataset.basis = s.device_basis || '';
+        tr.dataset.live = s.live ? 'true' : 'false';
+        const learner = s.name || s.email || s.user_id || '—';
+        tr.innerHTML = `
+          <td>${escapeCell(learner)}</td>
+          <td>${escapeCell(s.title || s.lesson_id || '—')}</td>
+          <td data-field="device">${escapeCell(s.device || '')}</td>
+          <td data-field="ip">${escapeCell(s.ip || '')}</td>
+          <td data-field="basis">${escapeCell(s.device_basis || '')}</td>
+          <td data-field="live">${s.live ? 'live' : 'closed'}</td>
+        `;
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      snapshotBox.append(table);
+      if (report.disclaimer) {
+        snapshotBox.append(el('p', 'muted', report.disclaimer));
+      }
+    })
+    .catch(err => {
+      loading.textContent =
+        'Could not load playback snapshots: ' + (err instanceof Error ? err.message : String(err));
+    });
+
   return wrap;
+}
+
+function escapeCell(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
