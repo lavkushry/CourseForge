@@ -1,4 +1,3 @@
-import { svgIcon } from '../icons';
 import type { Course, HistoryItem } from '../contracts';
 import type { ContinueItem, SavedItem } from '../discovery/contracts';
 import { personalRowsFromHomeFeed } from '../discovery/contracts';
@@ -118,6 +117,7 @@ export class LibraryView {
     const root = this.options.root;
     root.replaceChildren();
 
+    root.classList.add('library-panel--cinema');
     const pageHead = el('div', 'page-heading');
     const headText = el('div');
     headText.append(el('h1', '', 'Library'), el('p', 'muted', 'Your courses and progress.'));
@@ -236,7 +236,7 @@ export class LibraryView {
     const countBadge = el('div', 'library-count-badge');
     root.append(countBadge);
 
-    const grid = el('div', 'course-grid library-course-grid');
+    const grid = el('div', 'course-grid library-course-grid library-poster-grid');
     root.append(grid);
 
     this.renderGrid(grid, countBadge);
@@ -311,29 +311,34 @@ export class LibraryView {
     }
 
     for (const c of filtered) {
-      const card = el('article', 'course-card library-card');
+      const card = el('article', 'course-card library-card poster-card');
       const progress = this.progress.get(c.id);
       const isCompleted = this.completedIds.has(c.id) || progress?.completed === true;
 
+      const openPrimary = () => {
+        if (progress && !isCompleted && this.options.onContinueLesson) {
+          this.options.onContinueLesson(c.id, progress.lessonId, progress.position);
+          return;
+        }
+        this.options.onPlayCourse(c);
+      };
+
       const coverBtn = el('button', 'cover-button');
       coverBtn.type = 'button';
-      coverBtn.setAttribute('aria-label', `View syllabus for ${c.title}`);
-      const artPlay = el('span', 'art-play');
-      artPlay.append(svgIcon('play'));
-      coverBtn.append(artwork(c), artPlay);
-      coverBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
-      card.append(coverBtn);
-
+      coverBtn.setAttribute('aria-label', `Play ${c.title}`);
+      coverBtn.append(artwork(c, false, true));
+      coverBtn.addEventListener('click', openPrimary);
       if (progress && !isCompleted) {
-        const bar = el('div', 'library-progress-bar');
+        const bar = el('div', 'library-progress-bar poster-progress');
         const fill = el('div', 'library-progress-fill');
         fill.style.width = `${Math.min(100, Math.max(0, progress.percent))}%`;
         bar.append(fill);
         bar.setAttribute('aria-label', `${Math.round(progress.percent)}% watched`);
-        card.append(bar);
+        coverBtn.append(bar);
       }
+      card.append(coverBtn);
 
-      const body = el('div', 'course-card-body');
+      const body = el('div', 'course-card-body poster-body');
       const statusLine = isCompleted
         ? 'Completed'
         : progress
@@ -351,24 +356,13 @@ export class LibraryView {
       );
 
       const footer = el('div', 'course-card-footer');
-
       const primaryLabel = progress && !isCompleted ? 'Continue' : c.enrolled || isCompleted ? 'Open' : 'Play';
-      const primaryBtn = el('button', 'button primary library-primary-btn', primaryLabel);
+      const primaryBtn = el('button', 'button quiet library-primary-btn', primaryLabel);
       primaryBtn.type = 'button';
-      primaryBtn.addEventListener('click', () => {
-        if (progress && !isCompleted && this.options.onContinueLesson) {
-          this.options.onContinueLesson(c.id, progress.lessonId, progress.position);
-          return;
-        }
-        this.options.onPlayCourse(c);
-      });
+      primaryBtn.addEventListener('click', openPrimary);
 
       const isSaved = this.savedIds.has(c.id) || this.options.isSaved(c.id);
-      const saveBtn = el(
-        'button',
-        isSaved ? 'button quiet list-button' : 'button quiet list-button',
-        isSaved ? 'Saved' : 'My List',
-      );
+      const saveBtn = el('button', 'button quiet list-button', isSaved ? 'Saved' : 'My List');
       saveBtn.type = 'button';
       saveBtn.addEventListener('click', async () => {
         saveBtn.disabled = true;
@@ -384,7 +378,11 @@ export class LibraryView {
         }
       });
 
-      footer.append(primaryBtn, saveBtn);
+      const syllabusBtn = el('button', 'button quiet', 'Details');
+      syllabusBtn.type = 'button';
+      syllabusBtn.addEventListener('click', () => this.options.onOpenSyllabus(c));
+
+      footer.append(primaryBtn, saveBtn, syllabusBtn);
       body.append(footer);
       card.append(body);
       grid.append(card);

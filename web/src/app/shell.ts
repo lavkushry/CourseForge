@@ -55,17 +55,20 @@ export function installShell(ctx: AppContext): void {
     ctx.learnedLoaded = false;
     ctx.app.innerHTML = `
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <main id="main-content" class="login-page login-page--slim" tabindex="-1">
-      <a class="brand brand--login" href="/" aria-label="CourseForge home"><span class="brand-mark" aria-hidden="true">F</span><span class="brand-wordmark">CourseForge</span></a>
-      <div class="login-panel">
-        <div class="auth-tabs" role="tablist" aria-label="Sign in or register">
+    <main id="main-content" class="login-page login-page--cinema" tabindex="-1">
+      <div class="login-cinema-card">
+        <a class="brand brand--login brand--lockup" href="/" aria-label="CourseForge home">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span class="brand-wordmark">CourseForge</span>
+        </a>
+        <div class="auth-tabs visually-hidden" role="tablist" aria-label="Sign in or register">
           <button id="auth-tab-login" class="auth-tab active" type="button" role="tab" aria-selected="true">Sign In</button>
           <button id="auth-tab-register" class="auth-tab" type="button" role="tab" aria-selected="false">Create Account</button>
         </div>
-        <h1 id="auth-title">Welcome back</h1>
-        <p class="muted" id="auth-desc" hidden>Sign in to continue learning.</p>
+        <h1 id="auth-title">Sign in</h1>
+        <p class="muted login-lede" id="auth-desc">Use your CourseForge account.</p>
         <span id="auth-eyebrow" class="visually-hidden">Sign in</span>
-        <form id="login-form">
+        <form id="login-form" class="login-field-group">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" autocomplete="username" required placeholder="name@example.com" />
           <label for="password">Password</label>
@@ -73,10 +76,10 @@ export function installShell(ctx: AppContext): void {
             <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Password" />
             <button type="button" class="password-toggle-btn" id="toggle-login-password" aria-label="Show password">Show</button>
           </div>
-          <button type="submit" class="button primary">Sign in</button>
+          <button type="submit" class="button primary login-submit">Continue</button>
           <p class="auth-switch-text">New here? <button type="button" class="auth-link-btn" id="switch-to-signup">Create account</button></p>
         </form>
-        <form id="register-form" hidden>
+        <form id="register-form" class="login-field-group" hidden>
           <label for="register-name">Name</label>
           <input id="register-name" name="name" type="text" autocomplete="name" required placeholder="Your name" />
           <label for="register-email">Email</label>
@@ -86,7 +89,7 @@ export function installShell(ctx: AppContext): void {
             <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="At least 4 characters" />
             <button type="button" class="password-toggle-btn" id="toggle-register-password" aria-label="Show password">Show</button>
           </div>
-          <button type="submit" class="button primary">Create account</button>
+          <button type="submit" class="button primary login-submit">Create account</button>
           <p class="auth-switch-text">Have an account? <button type="button" class="auth-link-btn" id="switch-to-signin">Sign in</button></p>
         </form>
         <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
@@ -116,8 +119,9 @@ export function installShell(ctx: AppContext): void {
         loginForm.hidden = false;
         registerForm.hidden = true;
         authEyebrow.textContent = 'Sign in';
-        authTitle.textContent = 'Welcome back';
-        authDesc.hidden = true;
+        authTitle.textContent = 'Sign in';
+        authDesc.hidden = false;
+        authDesc.textContent = 'Use your CourseForge account.';
         required<HTMLInputElement>('#email').focus();
       } else {
         tabRegister.classList.add('active');
@@ -127,8 +131,9 @@ export function installShell(ctx: AppContext): void {
         loginForm.hidden = true;
         registerForm.hidden = false;
         authEyebrow.textContent = 'Create account';
-        authTitle.textContent = 'Create your account';
-        authDesc.hidden = true;
+        authTitle.textContent = 'Create account';
+        authDesc.hidden = false;
+        authDesc.textContent = 'One account for every course.';
         required<HTMLInputElement>('#register-name').focus();
       }
     }

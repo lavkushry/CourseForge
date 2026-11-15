@@ -296,7 +296,11 @@ function escapeXml(unsafe: string): string {
   });
 }
 
-export function createSvgThumbnailDataUri(title: string, category?: string): string {
+export function createSvgThumbnailDataUri(
+  title: string,
+  category?: string,
+  options: { cinema?: boolean } = {},
+): string {
   const hash = [...(title || '')].reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) >>> 0, 17);
   const themes = [
     { bg1: '#1a1024', bg2: '#2a163e', accent: '#b39ddb', glow: 'rgba(179,157,219,0.3)', cat: 'AI & Agents' },
@@ -314,6 +318,35 @@ export function createSvgThumbnailDataUri(title: string, category?: string): str
   };
   const _catLabel = escapeXml(toTitleCase(category || theme.cat));
   const cleanTitle = escapeXml(cleanLessonTitle(title || 'CourseForge Masterclass'));
+  if (options.cinema) {
+    // Portrait 2:3 cinema poster — abstract art only, no baked-in title ghosting the hero.
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="100%" height="100%">
+      <defs>
+        <linearGradient id="g_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${theme.bg1}"/>
+          <stop offset="55%" stop-color="${theme.bg2}"/>
+          <stop offset="100%" stop-color="#050506"/>
+        </linearGradient>
+        <radialGradient id="r_${hash}" cx="72%" cy="28%" r="58%">
+          <stop offset="0%" stop-color="${theme.glow}"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <linearGradient id="s_${hash}" x1="0%" y1="70%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="transparent"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="600" fill="url(#g_${hash})"/>
+      <rect width="400" height="600" fill="url(#r_${hash})"/>
+      <rect width="400" height="600" fill="url(#s_${hash})"/>
+      <circle cx="290" cy="210" r="118" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.25"/>
+      <circle cx="290" cy="210" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1.25"/>
+      <circle cx="140" cy="420" r="90" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+      <circle cx="200" cy="270" r="28" fill="rgba(255,255,255,0.07)"/>
+      <polygon points="194,258 212,270 194,282" fill="#ffffff" opacity="0.92"/>
+    </svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
     <defs>
       <linearGradient id="g_${hash}" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -354,7 +387,7 @@ export function artwork(course: Course, eager = false, clean = false): HTMLEleme
     art.append(orb, glyph, label);
   }
   const url = courseCover(course);
-  const fallbackSrc = createSvgThumbnailDataUri(course.title, course.category);
+  const fallbackSrc = createSvgThumbnailDataUri(course.title, course.category, { cinema: clean });
   const image = node('img', 'course-cover');
   image.alt = '';
   image.loading = eager ? 'eager' : 'lazy';
@@ -392,6 +425,11 @@ export class DiscoveryView {
   private query = '';
   private cursor: string | null = null;
   private loading = false;
+  private cinemaScrollBound = false;
+  private readonly onCinemaScroll = (): void => {
+    const scrolled = window.scrollY > 36 || document.documentElement.scrollTop > 36;
+    document.body.classList.toggle('home-cinema-scrolled', scrolled);
+  };
   constructor(private readonly options: Options) {}
   private courseByID(id: string): Course | undefined {
     return (
@@ -433,8 +471,22 @@ export class DiscoveryView {
     this.fetchScope.abort();
     this.generation++;
     if (this.searchTimer !== undefined) clearTimeout(this.searchTimer);
-    document.body.classList.remove('home-cinema');
+    this.unbindCinemaScroll();
+    document.body.classList.remove('home-cinema', 'home-cinema-scrolled');
     document.querySelector('#catalog')?.classList.remove('is-home');
+  }
+
+  private bindCinemaScroll(): void {
+    if (this.cinemaScrollBound) return;
+    window.addEventListener('scroll', this.onCinemaScroll, { passive: true });
+    this.cinemaScrollBound = true;
+    this.onCinemaScroll();
+  }
+
+  private unbindCinemaScroll(): void {
+    if (!this.cinemaScrollBound) return;
+    window.removeEventListener('scroll', this.onCinemaScroll);
+    this.cinemaScrollBound = false;
   }
   isSaved(courseId: string): boolean {
     return this.savedIDs.has(courseId);
@@ -594,6 +646,11 @@ export class DiscoveryView {
     const home = this.view === 'home' && !this.query;
     required('#catalog').classList.toggle('is-home', home);
     document.body.classList.toggle('home-cinema', home);
+    if (home) this.bindCinemaScroll();
+    else {
+      this.unbindCinemaScroll();
+      document.body.classList.remove('home-cinema-scrolled');
+    }
     const hero = required<HTMLElement>('#featured-course');
     const course =
       (this.feedHero && (this.courseByID(this.feedHero.id) || this.feedHero)) ||
@@ -732,7 +789,9 @@ export class DiscoveryView {
     const short =
       (course.description || '').trim().split(/(?<=[.!?])\s+/)[0] ||
       (course.category ? toTitleCase(course.category) : 'Featured course');
-    content.append(node('h2', 'hero-title', course.title), node('p', 'hero-description', short));
+    const lockup = node('div', 'hero-lockup');
+    lockup.append(node('h2', 'hero-title', course.title), node('p', 'hero-description', short));
+    content.append(lockup);
     const actions = node('div', 'hero-actions');
     const continuation = this.getContinuation(course.id);
     const play = action(
@@ -747,7 +806,7 @@ export class DiscoveryView {
       'button primary hero-play',
     );
     play.prepend(svgIcon('play'));
-    actions.append(play);
+    actions.append(play, this.saveButton(course));
     content.append(actions);
     hero.append(art, vignette, content);
   }
