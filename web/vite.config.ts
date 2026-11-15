@@ -18,7 +18,16 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: true,
     cssMinify: true,
-    modulePreload: { polyfill: false },
+    modulePreload: {
+      polyfill: false,
+      // Keep model-viewer/three off the critical path; load only when spatial opens.
+      resolveDependencies(filename, deps) {
+        if (filename.includes('index')) {
+          return deps.filter(dep => !dep.includes('spatial-viewer'));
+        }
+        return deps;
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
