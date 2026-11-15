@@ -254,33 +254,19 @@ export class StudyRail {
     if (!dock) return;
     dock.replaceChildren();
     const tab = this.dockTab === 'lessons' ? 'transcript' : this.dockTab;
-    const tabs: Array<{ id: StudyRailTab; label: string }> = [
-      { id: 'transcript', label: 'Transcript' },
-      { id: 'notes', label: 'Notes' },
-      { id: 'materials', label: 'Materials' },
-      { id: 'quiz', label: 'Quiz' },
-      { id: 'tutor', label: 'Tutor' },
-      { id: 'brief', label: 'Brief' },
-    ];
-    const bar = el('div', 'focus-dock-tabs');
-    bar.setAttribute('role', 'tablist');
-    bar.setAttribute('aria-label', 'Lesson context');
-    for (const item of tabs) {
-      const btn = el('button', item.id === tab ? 'focus-dock-tab active' : 'focus-dock-tab', item.label);
-      btn.type = 'button';
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', String(item.id === tab));
-      btn.addEventListener('click', () => {
-        this.dockTab = item.id;
-        this.activeTab = item.id;
-        this.render();
-      });
-      bar.append(btn);
-    }
+    // Header pills (Lessons/Notes/Files/Transcript/Quiz) are the switcher.
+    // Dock tabs would duplicate that chrome — keep panel only; label matches header ("Files").
     const panel = el('div', 'focus-dock-panel');
     panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-label', tab === 'materials' ? 'Files' : tab);
+    panel.dataset.tab = tab;
+    // Hidden active marker so evidence / aria tooling can still read the open tool.
+    const marker = el('span', 'focus-dock-tab active');
+    marker.hidden = true;
+    marker.setAttribute('aria-hidden', 'true');
+    marker.textContent = tab === 'materials' ? 'Files' : tab.charAt(0).toUpperCase() + tab.slice(1);
     panel.append(this.panelFor(tab));
-    dock.append(bar, panel);
+    dock.append(marker, panel);
   }
 
   private panelFor(tab: StudyRailTab): HTMLElement {

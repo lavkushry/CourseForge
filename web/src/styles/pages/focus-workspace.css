@@ -273,38 +273,18 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   overflow: hidden;
 }
 
-.focus-dock-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  overflow-x: auto;
-  background: #0c0c0e;
-}
-
-.focus-dock-tab {
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0 12px;
-  min-height: 32px;
-  height: 32px;
-  border-radius: 980px;
-  cursor: pointer;
-}
-
-.focus-dock-tab.active {
-  color: inherit;
-  background: rgba(255, 255, 255, 0.1);
+/* Dual chrome kill: header pills own tool switching; dock tabs stay collapsed. */
+.focus-dock-tabs,
+#focus-dock > .focus-dock-tab {
+  display: none !important;
 }
 
 .focus-dock-panel {
   overflow: auto;
   max-height: 320px;
   padding: 8px 16px 16px;
+  flex: 1;
+  min-height: 0;
 }
 
 .transcript-row.is-current {

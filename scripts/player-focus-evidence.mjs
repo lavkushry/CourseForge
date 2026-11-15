@@ -202,10 +202,10 @@ async function runViewport(label, viewport, email) {
     report.materialsTab = await page.locator('#focus-dock .focus-dock-tab.active').first().innerText().catch(() => '');
     report.sameMediaMaterials = sameMedia(baseline, afterMaterials);
     await shot(page, dir, '04-materials-open');
-    if (report.materialsTab.toLowerCase() !== 'materials' || !report.sameMediaMaterials) {
+    if (report.materialsTab.toLowerCase() !== 'files' || !report.sameMediaMaterials) {
       report.ok = false;
       report.errors.push(
-        `materials failed: tab=${report.materialsTab} sameMedia=${report.sameMediaMaterials}`,
+        `files failed: tab=${report.materialsTab} sameMedia=${report.sameMediaMaterials}`,
       );
     }
 
@@ -310,8 +310,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-CWF9WCiE.js',
-    css: 'index-CenmVDHJ.css',
+    js: 'index-DvTBQV9d.js',
+    css: 'index-BDkPAgSk.css',
   },
   phone: {
     ok: phone.ok,

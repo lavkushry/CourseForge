@@ -1571,8 +1571,17 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     display: none !important;
   }
 
-  #classroom.focus-workspace .study-rail-tabs-wrap,
-  #classroom.focus-workspace .focus-dock-tabs {
+  /* Header pills are the only tool switcher while the sheet is open */
+  #classroom.focus-workspace .focus-dock-tabs,
+  #classroom.focus-workspace #focus-dock > .focus-dock-tab {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .tab-scroll-btn {
+    display: none !important;
+  }
+
+  #classroom.focus-workspace .study-rail-tabs-wrap {
     padding: 8px 8px 0 !important;
     gap: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -1580,18 +1589,12 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     flex: 0 0 auto !important;
   }
 
-  #classroom.focus-workspace .tab-scroll-btn {
-    display: none !important;
-  }
-
-  #classroom.focus-workspace .study-rail-tabs,
-  #classroom.focus-workspace .focus-dock-tabs {
+  #classroom.focus-workspace .study-rail-tabs {
     gap: 4px !important;
     padding: 0 8px 8px !important;
   }
 
-  #classroom.focus-workspace .study-rail-tab,
-  #classroom.focus-workspace .focus-dock-tab {
+  #classroom.focus-workspace .study-rail-tab {
     min-height: 36px !important;
     height: 36px !important;
     padding: 0 12px !important;
@@ -1603,8 +1606,7 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     box-shadow: none !important;
   }
 
-  #classroom.focus-workspace .study-rail-tab.active,
-  #classroom.focus-workspace .focus-dock-tab.active {
+  #classroom.focus-workspace .study-rail-tab.active {
     background: rgba(255, 255, 255, 0.12) !important;
     color: #fff !important;
     box-shadow: none !important;
@@ -1786,6 +1788,11 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     background: rgba(255, 255, 255, 0.22);
     margin: 8px auto 0;
     flex: 0 0 auto;
+  }
+
+  /* Sheet content starts immediately under the grab handle — no second tab row */
+  #classroom.focus-workspace #focus-dock .focus-dock-panel {
+    padding: 8px 16px calc(8px + var(--safe-bottom)) !important;
   }
 
   #classroom.focus-workspace.dock-collapsed #focus-dock {

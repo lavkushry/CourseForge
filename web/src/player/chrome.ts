@@ -200,7 +200,7 @@ export function mountPlayerChrome(
   };
   const captureOpener = studyOpener('Capture timestamp', 'clock', actions.captureTimestamp, '#capture');
   const notesOpener = studyOpener('Open notes', 'edit', actions.openNotes, '#focus-notes');
-  const filesOpener = studyOpener('Open materials', 'file', actions.openMaterials, '#focus-materials');
+  const filesOpener = studyOpener('Open files', 'file', actions.openMaterials, '#focus-materials');
   const transcriptOpener = studyOpener(
     'Open transcript',
     'captions',
