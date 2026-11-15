@@ -356,8 +356,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-DqlnSBwD.js',
-    css: 'index-D-HBTWmP.css',
+    js: 'index-Dcq6FKXy.js',
+    css: 'index-CrhepEJp.css',
   },
   phone: {
     ok: phone.ok,

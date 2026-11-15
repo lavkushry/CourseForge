@@ -1641,7 +1641,7 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     height: auto !important;
     aspect-ratio: 16 / 9 !important;
     flex: 0 0 auto !important;
-    max-height: calc(100dvh - min(36dvh, 320px)) !important;
+    max-height: min(100vw * 9 / 16, 56dvh) !important;
   }
 
   #classroom.focus-workspace #media-controller,
@@ -1786,8 +1786,9 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(36dvh, 320px) !important;
-    max-height: min(36dvh, 320px) !important;
+    /* Fill everything under the pinned 16:9 band — no dead black gap */
+    height: calc(100dvh - min(100vw * 9 / 16, 56dvh) - 4px) !important;
+    max-height: calc(100dvh - min(100vw * 9 / 16, 56dvh) - 4px) !important;
     min-height: 0 !important;
     flex: none !important;
     flex-basis: auto !important;
@@ -2047,8 +2048,8 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(36dvh, 320px) !important;
-    max-height: min(36dvh, 320px) !important;
+    height: calc(100dvh - min(100vw * 9 / 16, 56dvh) - 4px) !important;
+    max-height: calc(100dvh - min(100vw * 9 / 16, 56dvh) - 4px) !important;
     min-height: 0 !important;
     margin: 0 !important;
     transform: translateY(0) !important;
