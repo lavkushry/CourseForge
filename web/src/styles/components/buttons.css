@@ -33,16 +33,16 @@
 }
 
 .button.primary {
-  background: linear-gradient(135deg, var(--coral), var(--lms-accent));
+  background: var(--lms-accent);
   color: #fff;
-  border-color: var(--coral);
-  box-shadow: 0 6px 18px var(--accent-glow);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .button.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--coral-hover), var(--coral));
-  border-color: var(--coral-hover);
-  filter: brightness(1.05);
+  background: var(--accent-hover);
+  border-color: transparent;
+  filter: none;
 }
 
 .button.quiet {

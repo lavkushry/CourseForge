@@ -105,6 +105,13 @@ export type AppContext = {
   restoreBrowserPreferences(video: HTMLVideoElement): void;
   bindInterface(video: HTMLVideoElement, signal: AbortSignal): void;
   bootstrapFeatureViews(account: User): void;
+  ensurePlanningView(): Promise<PlanningView>;
+  ensureReviewsView(): Promise<ReviewsView>;
+  ensureTutorView(): Promise<TutorView>;
+  ensureLabsView(): Promise<LabsView>;
+  ensureCareerView(): Promise<CareerView>;
+  ensurePathsView(): Promise<PathsView>;
+  ensureAdminView(): Promise<AdminView | null>;
 };
 
 export function createBaseContext(app: HTMLElement): AppContext {

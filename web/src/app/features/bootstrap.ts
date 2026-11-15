@@ -7,18 +7,12 @@ import { LearningView } from '../../learning/view';
 import { SyllabusDialog } from '../../discovery/syllabus-dialog';
 import { StudyRail } from '../../player/study-rail';
 import { LibraryView } from '../../library/view';
-import { PlanningView } from '../../planning/view';
 import { HistoryView } from '../../history/view';
 import { SettingsView } from '../../settings/view';
-import { ReviewsView } from '../../reviews/view';
-import { TutorView } from '../../tutor/view';
-import { LabsView } from '../../labs/view';
-import { PathsView } from '../../paths/view';
-import { CareerView } from '../../career/view';
-import { AdminView } from '../../admin/view';
 import { DiscoveryView } from '../../discovery/view';
 import { OmniSearch } from '../../search/omni';
 
+/** Eager: discovery/library/history/settings + player helpers. Heavy studio panels load on first visit. */
 export function installFeatureBootstraps(ctx: AppContext): void {
   ctx.bootstrapFeatureViews = function bootstrapFeatureViews(account: User): void {
     ctx.certificates = new CertificatesView(ctx.api, ctx.feedback);
@@ -86,20 +80,6 @@ export function installFeatureBootstraps(ctx: AppContext): void {
         void ctx.loadCatalog(false, 'saved');
       },
     });
-    ctx.planningView = new PlanningView({
-      root: required<HTMLElement>('#planner-panel'),
-      api: ctx.api,
-      onNavigateLesson: lessonId => {
-        void ctx.api
-          .lesson(lessonId, ctx.navigationScope.signal)
-          .then(res => {
-            void ctx.resumeLesson(res.lesson.course_id, lessonId);
-          })
-          .catch(err => {
-            if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
-          });
-      },
-    });
     ctx.historyView = new HistoryView({
       root: required<HTMLElement>('#history-panel'),
       api: ctx.api,
@@ -121,54 +101,112 @@ export function installFeatureBootstraps(ctx: AppContext): void {
       },
       feedback: ctx.feedback,
     });
-    ctx.reviewsView = new ReviewsView({
-      root: required<HTMLElement>('#reviews-panel'),
-      api: ctx.api,
-    });
-    ctx.tutorView = new TutorView({
-      root: required<HTMLElement>('#tutor-panel'),
-      api: ctx.api,
-      account,
-      onNavigateLesson: (lessonId, timestamp) => {
-        void ctx.api
-          .lesson(lessonId, ctx.navigationScope.signal)
-          .then(res => {
-            void ctx.resumeLesson(res.lesson.course_id, lessonId).then(() => {
-              if (timestamp !== undefined && ctx.controller) ctx.controller.seek(timestamp);
+
+    // Deferred studio panels — constructed on first navigation to keep login→home fast.
+    ctx.planningView = null;
+    ctx.reviewsView = null;
+    ctx.tutorView = null;
+    ctx.labsView = null;
+    ctx.careerView = null;
+    ctx.pathsView = null;
+    ctx.adminView = null;
+    ctx.ensurePlanningView = async () => {
+      if (ctx.planningView) return ctx.planningView;
+      const { PlanningView } = await import('../../planning/view');
+      ctx.planningView = new PlanningView({
+        root: required<HTMLElement>('#planner-panel'),
+        api: ctx.api,
+        onNavigateLesson: lessonId => {
+          void ctx.api
+            .lesson(lessonId, ctx.navigationScope.signal)
+            .then(res => {
+              void ctx.resumeLesson(res.lesson.course_id, lessonId);
+            })
+            .catch(err => {
+              if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
             });
-          })
-          .catch(err => {
-            if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
+        },
+      });
+      return ctx.planningView;
+    };
+    ctx.ensureReviewsView = async () => {
+      if (ctx.reviewsView) return ctx.reviewsView;
+      const { ReviewsView } = await import('../../reviews/view');
+      ctx.reviewsView = new ReviewsView({
+        root: required<HTMLElement>('#reviews-panel'),
+        api: ctx.api,
+      });
+      return ctx.reviewsView;
+    };
+    ctx.ensureTutorView = async () => {
+      if (ctx.tutorView) return ctx.tutorView;
+      const { TutorView } = await import('../../tutor/view');
+      ctx.tutorView = new TutorView({
+        root: required<HTMLElement>('#tutor-panel'),
+        api: ctx.api,
+        account,
+        onNavigateLesson: (lessonId, timestamp) => {
+          void ctx.api
+            .lesson(lessonId, ctx.navigationScope.signal)
+            .then(res => {
+              void ctx.resumeLesson(res.lesson.course_id, lessonId).then(() => {
+                if (timestamp !== undefined && ctx.controller) ctx.controller.seek(timestamp);
+              });
+            })
+            .catch(err => {
+              if (!isAbort(err)) ctx.feedback(errorMessage(err), true);
+            });
+        },
+      });
+      return ctx.tutorView;
+    };
+    ctx.ensureLabsView = async () => {
+      if (ctx.labsView) return ctx.labsView;
+      const { LabsView } = await import('../../labs/view');
+      ctx.labsView = new LabsView({
+        root: required<HTMLElement>('#labs-panel'),
+        api: ctx.api,
+      });
+      return ctx.labsView;
+    };
+    ctx.ensureCareerView = async () => {
+      if (ctx.careerView) return ctx.careerView;
+      const { CareerView } = await import('../../career/view');
+      ctx.careerView = new CareerView({
+        root: required<HTMLElement>('#career-panel'),
+        api: ctx.api,
+        account,
+        feedback: ctx.feedback,
+        onNavigatePlan: () => {
+          const btn = document.querySelector<HTMLButtonElement>('#primary-nav [data-catalog-view="planner"]');
+          btn?.click();
+        },
+      });
+      return ctx.careerView;
+    };
+    ctx.ensurePathsView = async () => {
+      if (ctx.pathsView) return ctx.pathsView;
+      const { PathsView } = await import('../../paths/view');
+      ctx.pathsView = new PathsView(
+        required<HTMLElement>('#paths-panel'),
+        ctx.api,
+        (courseId, lessonId, start) => {
+          void ctx.resumeLesson(courseId, lessonId).then(() => {
+            if (start !== undefined && ctx.controller) ctx.controller.seek(start);
           });
-      },
-    });
-    ctx.labsView = new LabsView({
-      root: required<HTMLElement>('#labs-panel'),
-      api: ctx.api,
-    });
-    ctx.careerView = new CareerView({
-      root: required<HTMLElement>('#career-panel'),
-      api: ctx.api,
-      account,
-      feedback: ctx.feedback,
-      onNavigatePlan: () => {
-        const btn = document.querySelector<HTMLButtonElement>('#primary-nav [data-catalog-view="planner"]');
-        btn?.click();
-      },
-    });
-    ctx.pathsView = new PathsView(
-      required<HTMLElement>('#paths-panel'),
-      ctx.api,
-      (courseId, lessonId, start) => {
-        void ctx.resumeLesson(courseId, lessonId).then(() => {
-          if (start !== undefined && ctx.controller) ctx.controller.seek(start);
-        });
-      },
-      ctx.feedback,
-    );
-    if (account.role === 'admin') {
+        },
+        ctx.feedback,
+      );
+      return ctx.pathsView;
+    };
+    ctx.ensureAdminView = async () => {
+      if (account.role !== 'admin') return null;
+      if (ctx.adminView) return ctx.adminView;
+      const { AdminView } = await import('../../admin/view');
       ctx.adminView = new AdminView(required<HTMLElement>('#admin-panel'), ctx.api, ctx.feedback);
-    }
+      return ctx.adminView;
+    };
+
     ctx.discovery = new DiscoveryView({
       api: ctx.api,
       open: (id, preview) => {

@@ -3,17 +3,19 @@
 html[data-accent='teal'] .button.primary,
 html[data-accent='teal'] .mode-switch-pill[aria-pressed='true'],
 html[data-accent='teal'] .pill-next {
-  background: linear-gradient(135deg, #14b8a6, #0d9488);
-  border-color: #2dd4bf;
-  color: #041f1e;
+  background: #0d9488;
+  border-color: transparent;
+  color: #fff;
+  box-shadow: none;
 }
 
 html[data-accent='rose'] .button.primary,
 html[data-accent='rose'] .mode-switch-pill[aria-pressed='true'],
 html[data-accent='rose'] .pill-next {
-  background: linear-gradient(135deg, #f43f5e, #e11d48);
-  border-color: #fb7185;
+  background: #e11d48;
+  border-color: transparent;
   color: #fff;
+  box-shadow: none;
 }
 
 html[data-theme='light'] body {

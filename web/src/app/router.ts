@@ -95,6 +95,8 @@ export function installRouter(ctx: AppContext): void {
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
     if (!navigation.current()) return;
+    const view = await ctx.ensurePlanningView();
+    if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
     ctx.lessons = [];
@@ -102,7 +104,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#planner-panel').hidden = false;
     ctx.setActiveNav('planner');
     ctx.feedback('');
-    ctx.planningView?.activate(navigation.signal);
+    view.activate(navigation.signal);
   };
 
   ctx.showHistory = async function showHistory(): Promise<void> {
@@ -140,6 +142,8 @@ export function installRouter(ctx: AppContext): void {
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
     if (!navigation.current()) return;
+    const view = await ctx.ensureReviewsView();
+    if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
     ctx.lessons = [];
@@ -147,13 +151,15 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#reviews-panel').hidden = false;
     ctx.setActiveNav('reviews');
     ctx.feedback('');
-    ctx.reviewsView?.activate(navigation.signal);
+    view.activate(navigation.signal);
   };
 
   ctx.showTutor = async function showTutor(): Promise<void> {
     if (!ctx.user) return;
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
+    if (!navigation.current()) return;
+    const view = await ctx.ensureTutorView();
     if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
@@ -162,13 +168,15 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#tutor-panel').hidden = false;
     ctx.setActiveNav('tutor');
     ctx.feedback('');
-    ctx.tutorView?.activate(navigation.signal);
+    view.activate(navigation.signal);
   };
 
   ctx.showLabs = async function showLabs(): Promise<void> {
     if (!ctx.user) return;
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
+    if (!navigation.current()) return;
+    const view = await ctx.ensureLabsView();
     if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
@@ -177,7 +185,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#labs-panel').hidden = false;
     ctx.setActiveNav('labs');
     ctx.feedback('');
-    ctx.labsView?.activate(navigation.signal);
+    view.activate(navigation.signal);
   };
 
   ctx.openCourseSyllabus = async function openCourseSyllabus(course: Course): Promise<void> {
@@ -215,6 +223,8 @@ export function installRouter(ctx: AppContext): void {
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
     if (!navigation.current()) return;
+    const view = await ctx.ensurePathsView();
+    if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
     ctx.lessons = [];
@@ -222,13 +232,15 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#paths-panel').hidden = false;
     ctx.setActiveNav('paths');
     ctx.feedback('');
-    await ctx.pathsView?.activate(navigation.signal);
+    await view.activate(navigation.signal);
   };
 
   ctx.showCareer = async function showCareer(): Promise<void> {
     if (!ctx.user) return;
     const navigation = ctx.newNavigation();
     await ctx.controller?.close();
+    if (!navigation.current()) return;
+    const view = await ctx.ensureCareerView();
     if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
@@ -237,7 +249,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#career-panel').hidden = false;
     ctx.setActiveNav('career');
     ctx.feedback('');
-    ctx.careerView?.activate(navigation.signal);
+    view.activate(navigation.signal);
   };
 
   ctx.showAdmin = async function showAdmin(): Promise<void> {
@@ -246,12 +258,14 @@ export function installRouter(ctx: AppContext): void {
       ctx.feedback(`${denied.title}. ${denied.description}`, true);
       return;
     }
-    if (!ctx.adminView) {
+    const navigation = ctx.newNavigation();
+    await ctx.controller?.close();
+    if (!navigation.current()) return;
+    const view = await ctx.ensureAdminView();
+    if (!view) {
       ctx.feedback('Administrator workspace is not available for this session.', true);
       return;
     }
-    const navigation = ctx.newNavigation();
-    await ctx.controller?.close();
     if (!navigation.current()) return;
     ctx.selectedCourse = null;
     ctx.selectedLesson = null;
@@ -260,7 +274,7 @@ export function installRouter(ctx: AppContext): void {
     required<HTMLElement>('#admin-panel').hidden = false;
     ctx.setActiveNav('admin');
     ctx.feedback('');
-    await ctx.adminView.activate(navigation.signal);
+    await view.activate(navigation.signal);
   };
 
   ctx.loadCatalog = async function loadCatalog(_append = false, view: CatalogView = 'home'): Promise<void> {

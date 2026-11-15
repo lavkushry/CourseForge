@@ -1,0 +1,312 @@
+/* Apple-like craft pass: slim chrome, quiet borders, restrained motion.
+   Loaded last so it can calm earlier cinema/glow rules without a React rewrite. */
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes cf-shell-fade {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  #catalog.is-home #featured-course:not([hidden]),
+  #catalog.is-home #course-list {
+    animation: cf-shell-fade var(--motion-med) var(--ease-out) both;
+  }
+
+  #catalog.is-home #course-list {
+    animation-delay: 40ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.site-header.lms-top-header {
+  height: calc(56px + var(--safe-top));
+  min-height: calc(56px + var(--safe-top));
+  padding: var(--safe-top) var(--space-5) 0 var(--space-4);
+  background: rgba(11, 11, 12, 0.82);
+  backdrop-filter: saturate(1.4) blur(18px);
+  -webkit-backdrop-filter: saturate(1.4) blur(18px);
+  border-bottom-color: var(--line);
+}
+
+.brand {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  gap: 8px;
+}
+
+.brand .lms-floral-mark,
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.brand-wordmark {
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.lms-breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lms-header-search {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.lms-circle-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.lms-circle-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.mode-switch-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--line);
+  box-shadow: none;
+  color: var(--muted);
+}
+
+.mode-switch-pill[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.workspace {
+  padding-top: var(--space-5);
+}
+
+.featured-course,
+#featured-course {
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-xl);
+}
+
+.hero-kicker {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+.hero-title {
+  font-weight: 650;
+  letter-spacing: -0.04em;
+}
+
+.hero-play {
+  box-shadow: none;
+  border-radius: 10px;
+}
+
+.carousel-title {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.carousel-track .course-card:hover,
+.course-card:hover {
+  transform: var(--lift-hover);
+  box-shadow: var(--lift-shadow);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.carousel-nav-btn:hover {
+  background: rgba(28, 28, 30, 0.96);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-md);
+}
+
+.rank-numeral {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.55);
+  color: transparent;
+  text-shadow: none;
+}
+
+.library-panel,
+.planner-panel,
+.history-panel,
+.reviews-panel,
+.tutor-panel,
+.labs-panel,
+.paths-panel,
+.career-panel-host,
+.settings-panel,
+.admin-panel {
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
+}
+
+.settings-panel-card,
+.planning-card,
+.history-card,
+.paths-card,
+.admin-panel-card,
+.tutor-card,
+.review-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: var(--lift-shadow);
+}
+
+.filter-pill.active,
+.theme-choice-btn.active,
+.accent-choice-btn.active {
+  box-shadow: none;
+}
+
+.classroom-heading,
+.focus-workspace .classroom-heading {
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 11, 12, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.study-rail {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+
+:is(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring) !important;
+  outline-offset: 2px !important;
+}
+
+.academy-sidebar {
+  top: 56px;
+  height: calc(100vh - 56px);
+}
+
+@media (min-width: 1025px) {
+  #primary-nav.lms-left-rail {
+    top: 56px;
+    width: 64px;
+    padding: 10px 0 var(--space-3);
+    gap: 4px;
+    background: var(--canvas);
+    border-right: 1px solid var(--line);
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-scroll {
+    gap: 4px;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    box-shadow: none;
+    transition:
+      background var(--motion-fast) ease,
+      color var(--motion-fast) ease,
+      border-color var(--motion-fast) ease;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border-color: transparent;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-item[aria-current='page'],
+  #primary-nav.lms-left-rail .lms-nav-item.active {
+    background: var(--accent-soft);
+    color: var(--text);
+    border-color: var(--accent-border);
+    box-shadow: none;
+  }
+
+  #primary-nav.lms-left-rail .lms-nav-label {
+    left: 48px;
+    border-radius: 8px;
+    background: #2c2c2e;
+    border-color: var(--line);
+    box-shadow: var(--shadow-md);
+    font-size: 12px;
+    font-weight: 550;
+  }
+
+  .lms-rail-exit-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
+
+  .app-layout-shell {
+    padding-left: 64px;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail {
+    width: 220px;
+    padding: 12px;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item {
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item[aria-current='page'],
+  body.academy-studio-mode #primary-nav.lms-left-rail .lms-nav-item.active {
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+    box-shadow: none;
+  }
+
+  body.academy-studio-mode .app-layout-shell {
+    padding-left: 220px;
+  }
+}
+
+html[data-theme='light'] .site-header.lms-top-header {
+  background: rgba(245, 245, 247, 0.86);
+}
+
+html[data-theme='light'] .lms-header-search {
+  background: rgba(0, 0, 0, 0.04);
+}

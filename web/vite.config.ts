@@ -17,6 +17,8 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    cssMinify: true,
+    modulePreload: { polyfill: false },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -25,6 +27,9 @@ export default defineConfig({
           }
           if (id.includes('node_modules/hls.js')) {
             return 'hls';
+          }
+          if (id.includes('@google/model-viewer') || id.includes('node_modules/three')) {
+            return 'spatial-viewer';
           }
         },
       },
