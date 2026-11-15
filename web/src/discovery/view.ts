@@ -342,8 +342,7 @@ export function createSvgThumbnailDataUri(
       <circle cx="290" cy="210" r="118" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.25"/>
       <circle cx="290" cy="210" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1.25"/>
       <circle cx="140" cy="420" r="90" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-      <circle cx="200" cy="270" r="28" fill="rgba(255,255,255,0.07)"/>
-      <polygon points="194,258 212,270 194,282" fill="#ffffff" opacity="0.92"/>
+      <circle cx="210" cy="280" r="56" fill="${theme.accent}" opacity="0.14"/>
     </svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
