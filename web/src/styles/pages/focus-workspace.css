@@ -17,6 +17,17 @@ body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
   flex: 0 0 auto;
 }
 
+/* Desktop watch: drop the brand bar — classroom heading is enough */
+@media (min-width: 901px) {
+  body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
+    display: none !important;
+  }
+
+  body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
+    height: 100dvh !important;
+  }
+}
+
 body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
   flex: 1 1 auto;
   height: auto;
@@ -306,8 +317,8 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
    stage, title, and dock inside the viewport. */
 #classroom.focus-workspace .lesson-column {
   display: grid;
-  /* Watch default: stage owns height. Open dock uses a real study band. */
-  grid-template-rows: minmax(0, 1fr) auto minmax(220px, 32vh);
+  /* Watch default: stage owns height. */
+  grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
@@ -319,29 +330,48 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
   grid-template-rows: minmax(0, 1fr) auto;
 }
 
-/* Desktop study open: keep the picture in a 16:9 frame so dock space is usable,
-   not lost to tall letterboxing around a small video. */
+/* Desktop study open: side rail — video stays edge-to-edge left, tools on the right. */
 @media (min-width: 901px) {
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column {
-    grid-template-rows: auto auto minmax(240px, 36vh);
-    align-content: start;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-stage {
-    display: flex;
-    justify-content: center;
-    background: #000;
+    grid-column: 1;
+    grid-row: 1;
     min-height: 0;
   }
 
+  #classroom.focus-workspace:not(.dock-collapsed) .lesson-meta-bar {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #focus-dock {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 0;
+    border-radius: 0;
+    background: #0c0c0e;
+    box-shadow: none;
+    z-index: 4;
+  }
+
+  #classroom.focus-workspace:not(.dock-collapsed) #focus-dock::before {
+    display: none !important;
+  }
+
   #classroom.focus-workspace:not(.dock-collapsed) #player-wrap {
-    position: relative;
-    width: min(100%, calc((100dvh - 48px - 48px - 36vh) * 16 / 9));
-    max-width: 100%;
-    height: auto;
-    max-height: calc(100dvh - 48px - 48px - 36vh);
-    aspect-ratio: 16 / 9;
-    flex: none;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
   }
 }
 
@@ -474,7 +504,6 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 #classroom.focus-workspace #focus-dock {
-  grid-row: 3;
   width: 100%;
   max-width: none;
   height: 100%;
@@ -545,9 +574,44 @@ body:has(#classroom.focus-workspace:not([hidden])) .workspace {
 }
 
 #classroom.focus-workspace #focus-dock .rail-panel-materials > h3 {
-  margin: 0 0 8px;
-  font-size: 0.82rem;
-  font-weight: 650;
+  display: none;
+}
+
+#classroom.focus-workspace .note-tool-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#classroom.focus-workspace .note-save-btn {
+  min-height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: 980px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #f5f5f7 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+}
+
+#classroom.focus-workspace .note-save-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+#classroom.focus-workspace .rail-note-form .note-input {
+  min-height: 88px;
+  border-radius: 12px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#classroom.focus-workspace .rail-empty {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.55;
 }
 
 #classroom.focus-workspace #focus-dock .empty-materials-card {

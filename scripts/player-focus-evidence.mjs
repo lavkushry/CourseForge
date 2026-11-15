@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 
-const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v3';
+const outRoot = '/home/ubuntu/CourseForge/.ui-evidence/player-focus-v4';
 const base = 'https://127.0.0.1:8000';
 const chrome = process.env.CHROME;
 const password = 'password123';
@@ -310,8 +310,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-DvTBQV9d.js',
-    css: 'index-BDkPAgSk.css',
+    js: 'index-CrK0yBs5.js',
+    css: 'index-C66rWyvg.css',
   },
   phone: {
     ok: phone.ok,

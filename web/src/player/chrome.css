@@ -18,17 +18,17 @@
   display: flex !important;
   align-items: center !important;
   width: 100% !important;
-  height: 56px !important;
-  min-height: 56px !important;
-  padding: 0 max(16px, var(--safe-right)) max(12px, var(--safe-bottom)) max(16px, var(--safe-left)) !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 max(12px, var(--safe-right)) max(8px, var(--safe-bottom)) max(12px, var(--safe-left)) !important;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.94) 0%,
-    rgba(0, 0, 0, 0.55) 70%,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 65%,
     transparent 100%
   ) !important;
   box-sizing: border-box !important;
-  gap: 6px !important;
+  gap: 4px !important;
 }
 
 /* Hidden volume range / seek chips keep the bar calm; captions stay reachable (WCAG 1.2.2). */
@@ -75,29 +75,27 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: var(--touch-min) !important;
-  height: var(--touch-min) !important;
-  min-width: var(--touch-min) !important;
-  min-height: var(--touch-min) !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
   border-radius: 50% !important;
-  background: rgba(0, 0, 0, 0.45) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: 0 !important;
+  box-shadow: none !important;
   color: #ffffff !important;
   cursor: pointer !important;
   padding: 0 !important;
-  margin: 0 6px 0 0 !important;
+  margin: 0 4px 0 0 !important;
   flex-shrink: 0 !important;
-  transition:
-    transform 0.15s ease,
-    background-color 0.15s ease !important;
+  transition: background-color 0.15s ease !important;
 }
 
 .player-enhanced media-play-button:hover {
-  background: rgba(0, 0, 0, 0.6) !important;
-  transform: scale(1.05) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  transform: none !important;
 }
 
 .player-enhanced .dribbble-icon-slot {

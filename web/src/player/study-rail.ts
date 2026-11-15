@@ -447,10 +447,10 @@ export class StudyRail {
   // ==========================================
   private renderMaterialsPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-materials');
-    panel.append(el('h3', '', 'Files'));
+    // Header pills already say Files — skip a second title in the dock.
 
     if (!this.activeLesson) {
-      panel.append(el('p', 'muted rail-empty', 'Pick a lesson to see files.'));
+      panel.append(el('p', 'muted rail-empty', 'Empty'));
       return panel;
     }
 
@@ -507,7 +507,7 @@ export class StudyRail {
     }
 
     if (linked === 0) {
-      panel.append(el('div', 'empty-materials-card rail-empty', 'No downloadable files yet.'));
+      panel.append(el('div', 'empty-materials-card rail-empty', 'Empty'));
       return panel;
     }
 
@@ -764,22 +764,19 @@ export class StudyRail {
       return panel;
     }
 
-    const head = el('div', 'panel-head');
-    head.append(el('h3', '', 'Notes'), el('span', 'tag', String(this.notes.length)));
-    panel.append(head);
-
-    // Form to add note at current timestamp
+    // Form to add note at current timestamp — quiet toolbar, not a loud CTA stack.
     const form = el('form', 'rail-note-form');
     const currentSec = Math.floor(this.options.getCurrentPosition());
+    const toolRow = el('div', 'note-tool-row');
     const captureLabel = el('span', 'capture-hint', formatTime(currentSec));
+    const addBtn = el('button', 'button quiet note-save-btn', 'Save');
+    addBtn.type = 'submit';
+    toolRow.append(captureLabel, addBtn);
 
     const textarea = el('textarea', 'form-input note-input');
-    textarea.placeholder = 'Note at this moment…';
-    textarea.rows = 2;
+    textarea.placeholder = 'Write a note…';
+    textarea.rows = 3;
     textarea.required = true;
-
-    const addBtn = el('button', 'button primary', 'Capture note');
-    addBtn.type = 'submit';
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -799,7 +796,7 @@ export class StudyRail {
       }
     });
 
-    form.append(captureLabel, textarea, addBtn);
+    form.append(textarea, toolRow);
     panel.append(form);
 
     if (!this.notesLoaded && !this.notesLoading) {
@@ -832,7 +829,7 @@ export class StudyRail {
     } else if (this.notesError && this.notes.length === 0) {
       notesList.append(el('p', 'muted rail-error', this.notesError));
     } else if (this.notes.length === 0) {
-      notesList.append(el('p', 'muted rail-empty', 'No notes yet.'));
+      notesList.append(el('p', 'muted rail-empty', 'Empty'));
     } else {
       for (const n of this.notes) {
         const item = el('div', 'note-card');

@@ -1405,41 +1405,42 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
 
   /* ── Classroom / player: phone watch mode ─────────────────────────────── */
 
-  /* Hide bottom dock while watching — full screen for the lesson */
-  body:has(#classroom.focus-workspace:not([hidden])) #primary-nav.lms-left-rail {
+  /* Hide shell chrome while watching — video owns the phone */
+  body:has(#classroom.focus-workspace:not([hidden])) #primary-nav.lms-left-rail,
+  body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
     display: none !important;
   }
 
   body:has(#classroom.focus-workspace:not([hidden])) .app-layout-shell {
-    height: calc(100dvh - 40px - var(--safe-top)) !important;
+    height: 100dvh !important;
     padding-bottom: 0 !important;
+    padding-top: 0 !important;
   }
 
-  body:has(#classroom.focus-workspace:not([hidden])) .site-header.lms-top-header {
-    height: calc(40px + var(--safe-top)) !important;
-    min-height: calc(40px + var(--safe-top)) !important;
+  body:has(#classroom.focus-workspace:not([hidden])) .workspace {
+    padding: 0 !important;
   }
 
-  body:has(#classroom.focus-workspace:not([hidden])) .lms-header-search,
-  body:has(#classroom.focus-workspace:not([hidden])) #header-gear-btn,
-  body:has(#classroom.focus-workspace:not([hidden])) #mobile-menu-toggle,
-  body:has(#classroom.focus-workspace:not([hidden])) #mobile-search-btn,
-  body:has(#classroom.focus-workspace:not([hidden])) .header-signout {
-    display: none !important;
-  }
-
-  /* One compact mode row — crumb lives under the stage, not stacked here */
+  /* Tool pills float over the video — no second header band stealing height */
   #classroom.focus-workspace .classroom-heading {
-    min-height: 48px !important;
-    height: 48px !important;
-    max-height: 48px !important;
-    padding: 0 8px !important;
-    gap: 8px !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 40 !important;
+    min-height: calc(40px + var(--safe-top)) !important;
+    height: calc(40px + var(--safe-top)) !important;
+    max-height: calc(40px + var(--safe-top)) !important;
+    padding: var(--safe-top) 8px 0 !important;
+    gap: 6px !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent) !important;
+    border-bottom: 0 !important;
+    backdrop-filter: none !important;
   }
 
   #classroom.focus-workspace .classroom-heading-left,
@@ -1450,41 +1451,58 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
   }
 
   #classroom.focus-workspace .focus-icon-btn {
-    min-height: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    padding: 0 14px !important;
-    font-size: 0.75rem !important;
+    min-height: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 0.72rem !important;
     font-weight: 600 !important;
     letter-spacing: -0.01em !important;
     border-radius: 980px !important;
     border: 0 !important;
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    color: rgba(245, 245, 247, 0.85) !important;
     flex: 0 0 auto !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
   }
 
   #classroom.focus-workspace .focus-icon-btn[aria-pressed='true'] {
-    background: rgba(255, 255, 255, 0.16) !important;
-    color: #fff !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #111 !important;
     opacity: 1 !important;
   }
 
+  #classroom.focus-workspace .focus-icon-btn:focus-visible {
+    outline: 2px solid #fff !important;
+    outline-offset: 2px !important;
+  }
+
+  #classroom.focus-workspace {
+    position: relative !important;
+  }
+
   #classroom.focus-workspace .lesson-column {
-    padding: 0 0 calc(12px + var(--safe-bottom)) !important;
-    overflow: auto !important;
-    -webkit-overflow-scrolling: touch;
+    padding: 0 !important;
+    overflow: hidden !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  #classroom.focus-workspace.dock-collapsed.drawer-collapsed .lesson-column {
+    height: 100dvh !important;
   }
 
   #classroom.focus-workspace .lesson-stage,
   #classroom.focus-workspace .player-wrap {
     border-radius: 0 !important;
-    min-height: min(56dvw, 42dvh) !important;
+    min-height: 0 !important;
   }
 
-  /* Thumb-zone transport: larger controls along the bottom of the player */
+  /* Thumb-zone transport — calm overlay */
   #classroom media-control-bar {
-    min-height: 52px !important;
-    padding: 4px 6px calc(4px + var(--safe-bottom)) !important;
+    min-height: 48px !important;
+    padding: 0 8px calc(6px + var(--safe-bottom)) !important;
     gap: 2px !important;
   }
 
@@ -1513,7 +1531,7 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     flex-direction: column !important;
   }
 
-  /* Phone study rail = undimmed medium bottom sheet (video stays visible/tappable) */
+  /* Phone study rail = compact undimmed sheet with slide-up motion */
   .focus-workspace .lesson-sidebar.study-rail,
   #classroom.focus-workspace .lesson-sidebar.study-rail,
   #classroom.focus-workspace #study-rail {
@@ -1526,27 +1544,35 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    /* Medium detent — 8px grid, not a full-screen modal over the lesson */
-    height: min(44dvh, 400px) !important;
-    max-height: min(44dvh, 400px) !important;
+    height: min(38dvh, 340px) !important;
+    max-height: min(38dvh, 340px) !important;
     min-height: 0 !important;
     flex: none !important;
     flex-basis: auto !important;
-    border-radius: 16px 16px 0 0 !important;
+    border-radius: 20px 20px 0 0 !important;
     border: 0 !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    /* Near-opaque sheet — no dimming scrim, but no video bleed through chrome */
-    background: rgba(14, 14, 16, 0.98) !important;
-    backdrop-filter: blur(24px) saturate(1.2) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(12, 12, 14, 0.97) !important;
+    backdrop-filter: blur(28px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.3) !important;
     z-index: 80 !important;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45) !important;
     padding: 0 0 var(--safe-bottom) !important;
-    transform: none !important;
+    transform: translateY(0) !important;
+    transition:
+      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease !important;
     pointer-events: auto;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #classroom.focus-workspace #study-rail,
+    #classroom.focus-workspace #focus-dock {
+      transition: none !important;
+    }
   }
 
   #classroom.focus-workspace.drawer-collapsed #study-rail {
@@ -1697,24 +1723,37 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     border-radius: 10px !important;
   }
 
-  #classroom.focus-workspace .rail-note-form .button.primary {
-    min-height: 44px !important;
-    border-radius: 980px !important;
-    font-size: 0.88rem !important;
+  #classroom.focus-workspace .note-tool-row {
+    margin-top: 0 !important;
+  }
+
+  #classroom.focus-workspace .note-save-btn {
+    min-height: 40px !important;
+  }
+
+  #classroom.focus-workspace .rail-note-form .note-input {
+    min-height: 72px !important;
   }
 
   #classroom.focus-workspace .capture-hint {
     font-size: 0.72rem !important;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
+    color: rgba(245, 245, 247, 0.55) !important;
   }
 
-  /* Sheet open: player fills the band above the sheet (no empty black spacer) */
+  #classroom media-play-button {
+    box-shadow: none !important;
+    border: 0 !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* Sheet open: player fills everything above the compact sheet */
   #classroom.focus-workspace:not(.dock-collapsed) .lesson-column,
   #classroom.focus-workspace:not(.drawer-collapsed) .lesson-column {
     grid-template-rows: minmax(0, 1fr) !important;
-    height: calc(100dvh - 44dvh - 40px - var(--safe-top)) !important;
-    max-height: calc(100dvh - 44dvh - 40px - var(--safe-top)) !important;
+    height: calc(100dvh - min(38dvh, 340px)) !important;
+    max-height: calc(100dvh - min(38dvh, 340px)) !important;
     align-content: stretch !important;
     justify-items: stretch !important;
   }
@@ -1760,19 +1799,22 @@ html[data-theme='light'] body.home-cinema.home-cinema-scrolled .site-header.lms-
     inset-inline: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: min(44dvh, 400px) !important;
-    max-height: min(44dvh, 400px) !important;
+    height: min(38dvh, 340px) !important;
+    max-height: min(38dvh, 340px) !important;
     min-height: 0 !important;
     margin: 0 !important;
-    transform: none !important;
+    transform: translateY(0) !important;
+    transition:
+      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 200ms ease !important;
     border: 0 !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px 16px 0 0 !important;
-    background: rgba(14, 14, 16, 0.98) !important;
-    backdrop-filter: blur(24px) saturate(1.2) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px 20px 0 0 !important;
+    background: rgba(12, 12, 14, 0.97) !important;
+    backdrop-filter: blur(28px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.3) !important;
     z-index: 85 !important;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45) !important;
     padding: 0 0 var(--safe-bottom) !important;
     display: flex !important;
     flex-direction: column !important;
