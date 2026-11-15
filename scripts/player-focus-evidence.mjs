@@ -262,8 +262,8 @@ const summary = {
   phoneEmail: phoneUser.email,
   desktopEmail: desktopUser.email,
   assets: {
-    js: 'index-DVmasCCb.js',
-    css: 'index-CQMeSUV9.css',
+    js: 'index-CkBg_h9-.js',
+    css: 'index-DR5Dgh4A.css',
   },
   phone: {
     ok: phone.ok,

@@ -244,9 +244,8 @@ export class StudyRail {
   private renderSplit(): void {
     const root = this.options.root;
     root.replaceChildren();
-    const head = el('div', 'focus-drawer-head');
-    head.append(el('h2', 'focus-drawer-title', 'Curriculum'));
-    root.append(head, this.renderLessonsPanel());
+    // Lessons panel carries its own quiet title — skip redundant "Curriculum" chrome.
+    root.append(this.renderLessonsPanel());
     this.renderDock();
   }
 
@@ -316,9 +315,9 @@ export class StudyRail {
     // Header with search
     const head = el('div', 'panel-head');
     head.append(
-      el('h3', '', 'Course Content'),
+      el('h3', '', 'Lessons'),
       (() => {
-        const sp = el('span', 'tag', `${this.lessons.length} Lectures`);
+        const sp = el('span', 'tag', `${this.lessons.length}`);
         sp.id = 'lesson-count';
         return sp;
       })(),
@@ -326,7 +325,7 @@ export class StudyRail {
 
     const searchInput = el('input', 'form-input rail-search-input');
     searchInput.type = 'search';
-    searchInput.placeholder = 'Filter lessons…';
+    searchInput.placeholder = 'Filter…';
     searchInput.value = this.lessonFilter;
     searchInput.addEventListener('input', () => {
       this.lessonFilter = searchInput.value.toLowerCase().trim();
@@ -462,13 +461,10 @@ export class StudyRail {
   // ==========================================
   private renderMaterialsPanel(): HTMLElement {
     const panel = el('div', 'rail-panel-materials');
-    panel.append(
-      el('h3', '', 'Lesson Files & Code'),
-      el('p', 'muted', 'Downloadable Jupyter notebooks, slides, scripts, and datasets.'),
-    );
+    panel.append(el('h3', '', 'Files'));
 
     if (!this.activeLesson) {
-      panel.append(el('p', 'muted', 'Select a lesson to see attached files and caption tracks.'));
+      panel.append(el('p', 'muted rail-empty', 'Pick a lesson to see files.'));
       return panel;
     }
 
@@ -476,17 +472,17 @@ export class StudyRail {
     if (captions.length > 0) {
       const capBox = el('div', 'materials-captions-note');
       capBox.append(
-        el('strong', '', 'Captions in player'),
+        el('strong', '', 'Captions'),
         el(
           'p',
           'muted',
           captions.map(c => c.label || c.language).filter(Boolean).join(' · ') ||
-            `${captions.length} caption track${captions.length === 1 ? '' : 's'} available.`,
+            `${captions.length} track${captions.length === 1 ? '' : 's'}`,
         ),
       );
       panel.append(capBox);
     } else {
-      panel.append(el('p', 'muted materials-captions-empty', 'No caption tracks are attached to this lesson.'));
+      panel.append(el('p', 'muted materials-captions-empty rail-empty', 'No captions on this lesson.'));
     }
 
     const materials = this.activeLesson.materials || [];
@@ -526,13 +522,7 @@ export class StudyRail {
     }
 
     if (linked === 0) {
-      panel.append(
-        el(
-          'div',
-          'empty-materials-card',
-          'No supplementary download files are attached to this lecture.',
-        ),
-      );
+      panel.append(el('div', 'empty-materials-card rail-empty', 'No downloadable files yet.'));
       return panel;
     }
 
@@ -790,20 +780,20 @@ export class StudyRail {
     }
 
     const head = el('div', 'panel-head');
-    head.append(el('h3', '', 'Timestamped Notes'), el('span', 'tag', `${this.notes.length} Notes`));
+    head.append(el('h3', '', 'Notes'), el('span', 'tag', String(this.notes.length)));
     panel.append(head);
 
     // Form to add note at current timestamp
     const form = el('form', 'rail-note-form');
     const currentSec = Math.floor(this.options.getCurrentPosition());
-    const captureLabel = el('span', 'capture-hint', `Timestamp: ${formatTime(currentSec)}`);
+    const captureLabel = el('span', 'capture-hint', formatTime(currentSec));
 
     const textarea = el('textarea', 'form-input note-input');
-    textarea.placeholder = `Jot down key takeaways or code snippets at ${formatTime(currentSec)}…`;
-    textarea.rows = 3;
+    textarea.placeholder = 'Note at this moment…';
+    textarea.rows = 2;
     textarea.required = true;
 
-    const addBtn = el('button', 'button primary', `Capture Note at ${formatTime(currentSec)}`);
+    const addBtn = el('button', 'button primary', 'Capture note');
     addBtn.type = 'submit';
 
     form.addEventListener('submit', async e => {
@@ -857,13 +847,7 @@ export class StudyRail {
     } else if (this.notesError && this.notes.length === 0) {
       notesList.append(el('p', 'muted rail-error', this.notesError));
     } else if (this.notes.length === 0) {
-      notesList.append(
-        el(
-          'p',
-          'muted',
-          'No notes saved yet for this lesson. Capture a thought with the exact video timestamp above.',
-        ),
-      );
+      notesList.append(el('p', 'muted rail-empty', 'No notes yet.'));
     } else {
       for (const n of this.notes) {
         const item = el('div', 'note-card');
